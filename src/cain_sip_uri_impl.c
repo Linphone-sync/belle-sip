@@ -34,7 +34,16 @@
 
 #define SIP_URI_GET_SET_UINT(attribute) GET_SET_UINT(cain_sip_uri,attribute)
 
+#define GET_SET_BOOL(object_type,attribute,getter) \
+	unsigned int object_type##_##getter##_##attribute (object_type* obj) {\
+		return obj->attribute;\
+	}\
+	void object_type##_set_##attribute (object_type* obj,unsigned int value) {\
+		obj->attribute=value;\
+	}
 
+#define SIP_URI_GET_SET_BOOL(attribute) GET_SET_BOOL(cain_sip_uri,attribute,is)
+#define SIP_URI_HAS_SET_BOOL(attribute) GET_SET_BOOL(cain_sip_uri,attribute,has)
 
 
 
@@ -44,6 +53,9 @@ struct _cain_sip_uri {
 	const char* host;
 	const char* transport_param;
 	unsigned int port;
+	unsigned int secure;
+	unsigned int lr_param;
+	const char* maddr_param;
 };
 cain_sip_uri* cain_sip_uri_parse (const char* uri) {
 	pANTLR3_INPUT_STREAM           input;
@@ -137,4 +149,7 @@ char*	cain_sip_uri_to_string(cain_sip_uri* uri)  {
 SIP_URI_GET_SET_STRING(user)
 SIP_URI_GET_SET_STRING(host)
 SIP_URI_GET_SET_STRING(transport_param)
+SIP_URI_GET_SET_STRING(maddr_param)
 SIP_URI_GET_SET_UINT(port)
+SIP_URI_GET_SET_BOOL(secure)
+SIP_URI_HAS_SET_BOOL(lr_param)
