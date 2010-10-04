@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include "cain_sip_uriParser.h"
 #include "cain_sip_uriLexer.h"
+#include "cain_sip_utils.h"
 
 #define GET_SET_STRING(object_type,attribute) \
 	const char* object_type##_get_##attribute (object_type* obj) {\
@@ -56,7 +57,39 @@ struct _cain_sip_uri {
 	unsigned int secure;
 	unsigned int lr_param;
 	const char* maddr_param;
+	cain_sip_list* header_list;
+	cain_sip_list* headernames_list;
 };
+void cain_sip_uri_delete(cain_sip_uri* uri) {
+	if (uri->user) free (uri->user);
+	if (uri->host) free (uri->host);
+	if (uri->transport_param) free (uri->transport_param);
+	if (uri->maddr_param) free (uri->maddr_param);
+	if (uri->header_list) cain_sip_list_free (uri->header_list);
+	if (uri->headernames_list) cain_sip_list_free (uri->headernames_list);
+	free(uri);
+}
+
+typedef struct _header_pair {
+	const char* name;
+	const char* value;
+
+} header_pair;
+static const header_pair* header_pair_new(const char* name,const char* value) {
+	header_pair* lPair = (header_pair*)malloc( sizeof(header_pair));
+	lPair->name=strdup(name);
+	lPair->value=strdup(value);
+	return lPair;
+}
+static void header_pair_delete(header_pair*  pair) {
+	free(pair->name);
+	free(pair->value);
+	free (pair);
+}
+static int header_pair_comp_func(const header_pair *a, const char*b) {
+	return strcmp(a->name,b);
+}
+
 cain_sip_uri* cain_sip_uri_parse (const char* uri) {
 	pANTLR3_INPUT_STREAM           input;
 	pcain_sip_uriLexer               lex;
@@ -85,59 +118,11 @@ cain_sip_uri* cain_sip_uri_new () {
 	memset(lUri,0,sizeof(cain_sip_uri));
 	return lUri;
 }
-void cain_sip_uri_delete(cain_sip_uri* uri) {
-	free(uri);
-}
 
-static char * concat (const char *str, ...) {
-  va_list ap;
-  size_t allocated = 100;
-  char *result = (char *) malloc (allocated);
 
-  if (result != NULL)
-    {
-      char *newp;
-      char *wp;
-      const char* s;
 
-      va_start (ap, str);
-
-      wp = result;
-      for (s = str; s != NULL; s = va_arg (ap, const char *)) {
-          size_t len = strlen (s);
-
-          /* Resize the allocated memory if necessary.  */
-          if (wp + len + 1 > result + allocated)
-            {
-              allocated = (allocated + len) * 2;
-              newp = (char *) realloc (result, allocated);
-              if (newp == NULL)
-                {
-                  free (result);
-                  return NULL;
-                }
-              wp = newp + (wp - result);
-              result = newp;
-            }
-          memcpy (wp, s, len);
-          wp +=len;
-        }
-
-      /* Terminate the result string.  */
-      *wp++ = '\0';
-
-      /* Resize memory to the optimal size.  */
-      newp = realloc (result, wp - result);
-      if (newp != NULL)
-        result = newp;
-
-      va_end (ap);
-    }
-
-  return result;
-}
 char*	cain_sip_uri_to_string(cain_sip_uri* uri)  {
-	return concat(	"sip:"
+	return cain_sip_concat(	"sip:"
 					,(uri->user?uri->user:"")
 					,(uri->user?"@":"")
 					,uri->host
@@ -145,6 +130,42 @@ char*	cain_sip_uri_to_string(cain_sip_uri* uri)  {
 					,(uri->transport_param?uri->transport_param:"")
 					,NULL);
 }
+
+
+const char*	cain_sip_uri_get_header(cain_sip_uri* uri,const char* name) {
+	cain_sip_list * lResult = cain_sip_list_find_custom(uri->header_list, header_pair_comp_func, name);
+	if (lResult) {
+		return ((header_pair*)(lResult->data))->value;
+	}
+	else {
+		return NULL;
+	}
+}
+void	cain_sip_uri_set_header(cain_sip_uri* uri,const char* name,const char* value) {
+	/*1 check if present*/
+	cain_sip_list * lResult = cain_sip_list_find_custom(uri->headernames_list, strcmp, name);
+	/* first remove from headersnames list*/
+	if (lResult) {
+		cain_sip_list_remove_link(uri->headernames_list,lResult);
+	}
+	/* next from header list*/
+	lResult = cain_sip_list_find_custom(uri->header_list, header_pair_comp_func, name);
+	if (lResult) {
+		header_pair_delete(lResult->data);
+		cain_sip_list_remove_link(uri->header_list,lResult);
+	}
+	/* 2 insert*/
+	header_pair* lNewpair = header_pair_new(name,value);
+	uri->header_list=cain_sip_list_append(uri->header_list,lNewpair);
+	uri->headernames_list=cain_sip_list_append(uri->headernames_list,lNewpair->name);
+}
+
+cain_sip_list*	cain_sip_uri_get_header_names(cain_sip_uri* uri) {
+	return uri->headernames_list;
+}
+
+
+
 
 SIP_URI_GET_SET_STRING(user)
 SIP_URI_GET_SET_STRING(host)

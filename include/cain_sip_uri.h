@@ -9,8 +9,10 @@
 #define CAIN_SIP_URI_H_
 
 
+#include "cain_sip_list.h"
 
 typedef struct _cain_sip_uri cain_sip_uri;
+
 
 	cain_sip_uri* cain_sip_uri_new();
 
@@ -26,7 +28,7 @@ typedef struct _cain_sip_uri cain_sip_uri;
 			 * Returns an Iterator over the const char*names of all headers present in this SipURI.
 			 *
 			 */
-	 /*list<const char*>::iterator	cain_sip_uri_get_header_names(SipUri* uri) ;*/
+	 cain_sip_list*	cain_sip_uri_get_header_names(cain_sip_uri* uri) ;
 	/**
 	 * 	          Returns the host part of this SipURI.
 	 *
