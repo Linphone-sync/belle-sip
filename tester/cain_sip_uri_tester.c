@@ -36,10 +36,10 @@ void testCOMPLEXURI(void) {
 	cain_sip_uri_delete(L_uri);
 }
 void testSIPSURI(void) {
-	cain_sip_uri* L_uri = cain_sip_uri_parse("sips:titi.com");
+	cain_sip_uri* L_uri = cain_sip_uri_parse("sips:linphone.org");
 	CU_ASSERT_EQUAL(cain_sip_uri_is_secure(L_uri), 1);
 	cain_sip_uri_delete(L_uri);
-	L_uri = cain_sip_uri_parse("sip:titi.com");
+	L_uri = cain_sip_uri_parse("sip:linphone.org");
 	CU_ASSERT_EQUAL(cain_sip_uri_is_secure(L_uri), 0);
 	cain_sip_uri_delete(L_uri);
 }
@@ -94,8 +94,8 @@ int main (int argc, char *argv[]) {
 
 	   /* add the tests to the suite */
 	   /* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
-	   if ((NULL == CU_add_test(pSuite, "test of simple uri", testSIMPLEURI)) ||
-	       (NULL == CU_add_test(pSuite, "test of complex uri", testCOMPLEXURI))
+	   if ((NULL == CU_add_test(pSuite, "test of simple uri", testSIMPLEURI))
+	     ||  (NULL == CU_add_test(pSuite, "test of complex uri", testCOMPLEXURI))
 		   || (NULL == CU_add_test(pSuite, "test of ip uri", test_ip_host))
 		   || (NULL == CU_add_test(pSuite, "test of lr uri", test_lr))
 		   || (NULL == CU_add_test(pSuite, "test of maddr uri", test_maddr))
