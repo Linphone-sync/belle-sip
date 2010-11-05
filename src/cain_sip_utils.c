@@ -1,9 +1,6 @@
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include "cain_sip_utils.h"
+
+#include "cain_sip_internal.h"
 
 
 static FILE *__log_file=0;
@@ -142,21 +139,23 @@ static void __cain_sip_logv_out(cain_sip_log_level lev, const char *fmt, va_list
 }
 
 cain_sip_list_t* cain_sip_list_new(void *data){
-	cain_sip_list_t* new_elem=(cain_sip_list_t* )malloc(sizeof(cain_sip_list_t));
-	memset(new_elem,0,sizeof(cain_sip_list_t));
-	new_elem->prev=new_elem->next=NULL;
+	cain_sip_list_t* new_elem=cain_sip_new0(cain_sip_list_t);
 	new_elem->data=data;
 	return new_elem;
 }
 
-cain_sip_list_t*  cain_sip_list_append(cain_sip_list_t* elem, void * data){
-	cain_sip_list_t* new_elem=cain_sip_list_new(data);
+cain_sip_list_t*  cain_sip_list_append_link(cain_sip_list_t* elem,cain_sip_list_t *new_elem){
 	cain_sip_list_t* it=elem;
 	if (elem==NULL) return new_elem;
 	while (it->next!=NULL) it=cain_sip_list_next(it);
 	it->next=new_elem;
 	new_elem->prev=it;
 	return elem;
+}
+
+cain_sip_list_t*  cain_sip_list_append(cain_sip_list_t* elem, void * data){
+	cain_sip_list_t* new_elem=cain_sip_list_new(data);
+	return cain_sip_list_append_link(elem,new_elem);
 }
 
 cain_sip_list_t*  cain_sip_list_prepend(cain_sip_list_t* elem, void *data){
@@ -185,9 +184,9 @@ cain_sip_list_t*  cain_sip_list_free(cain_sip_list_t* list){
 	while(elem->next!=NULL) {
 		tmp = elem;
 		elem = elem->next;
-		free(tmp);
+		cain_sip_free(tmp);
 	}
-	free(elem);
+	cain_sip_free(elem);
 	return NULL;
 }
 
@@ -381,5 +380,24 @@ char * cain_sip_concat (const char *str, ...) {
       va_end (ap);
     }
 
-  return result;
+	return result;
 }
+
+void *cain_sip_malloc(size_t size){
+	return malloc(size);
+}
+
+void *cain_sip_malloc0(size_t size){
+	void *p=malloc(size);
+	memset(p,0,size);
+	return p;
+}
+
+void *cain_sip_realloc(void *ptr, size_t size){
+	return realloc(ptr,size);
+}
+
+void cain_sip_free(void *ptr){
+	free(ptr);
+}
+

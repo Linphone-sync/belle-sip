@@ -1,5 +1,9 @@
 cainsipdir=$(includedir)/cain-sip
 
-cainsip_HEADERS=uri.h list.h
+cainsip_HEADERS=\
+				uri.h \
+				list.h \
+				mainloop.h \
+				cain-sip.h
 
 EXTRA_DIST=$(cainsip_HEADERS)

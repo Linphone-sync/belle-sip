@@ -1,6 +1,12 @@
 
 #ifndef cain_utils_h
 #define cain_utils_h
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+
 #include "cain-sip/list.h"
 
 struct _cain_sip_list {
@@ -19,7 +25,16 @@ struct _cain_sip_list {
 extern "C"{
 #endif
 
+void *cain_sip_malloc(size_t size);
+void *cain_sip_malloc0(size_t size);
+void *cain_sip_realloc(void *ptr, size_t size);
+void cain_sip_free(void *ptr);
+
+#define cain_sip_new(type) (type*)cain_sip_malloc(sizeof(type))
+#define cain_sip_new0(type) (type*)cain_sip_malloc0(sizeof(type))
+	
 cain_sip_list_t *cain_sip_list_new(void *data);
+cain_sip_list_t*  cain_sip_list_append_link(cain_sip_list_t* elem,cain_sip_list_t *new_elem);
 cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 #define cain_sip_list_next(elem) ((elem)->next)
 /***************/

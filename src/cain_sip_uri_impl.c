@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include "cain_sip_uriParser.h"
 #include "cain_sip_uriLexer.h"
-#include "cain_sip_utils.h"
+#include "cain_sip_internal.h"
 
 #define GET_SET_STRING(object_type,attribute) \
 	const char* object_type##_get_##attribute (object_type##_t* obj) {\
@@ -128,8 +128,7 @@ cain_sip_uri_t* cain_sip_uri_parse (const char* uri) {
 }
 
 cain_sip_uri_t* cain_sip_uri_new () {
-	cain_sip_uri_t* lUri = (cain_sip_uri_t*)malloc(sizeof(cain_sip_uri_t));
-	memset(lUri,0,sizeof(cain_sip_uri_t));
+	cain_sip_uri_t* lUri = cain_sip_new0(cain_sip_uri_t);
 	lUri->ttl_param=-1;
 	return lUri;
 }
