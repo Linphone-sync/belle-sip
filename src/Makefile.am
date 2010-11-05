@@ -1,0 +1,36 @@
+ANTLR=antlr3
+
+grammar_files= \
+						$(srcdir)/cain_sip_uri.g
+
+generated_src= \
+	cain_sip_uriParser.c cain_sip_uriParser.h \
+	cain_sip_uriLexer.c cain_sip_uriLexer.h
+
+$(generated_src)	:	$(grammar_files)
+	$(ANTLR) -make -fo $(builddir) $(grammar_files)
+
+BUILT_SOURCES=$(generated_src)
+
+noinst_LTLIBRARIES=libcainsip_generated.la
+
+nodist_libcainsip_generated_la_SOURCES=$(generated_src)
+
+libcainsip_generated_la_CFLAGS=$(LESS_STRICT_OPTIONS)
+
+lib_LTLIBRARIES=libcainsip.la
+
+
+libcainsip_la_SOURCES=cain_sip_uri_impl.c \
+									cain_sip_utils.c cain_sip_utils.h
+
+libcainsip_la_CFLAGS=$(STRICT_OPTIONS)
+
+libcainsip_la_LIBADD=libcainsip_generated.la -lantlr3c
+
+INCLUDES=-I$(top_srcdir)/include
+
+
+EXTRA_DIST=$(grammar_files)
+
+CLEANFILES=$(generated_src) *.tokens

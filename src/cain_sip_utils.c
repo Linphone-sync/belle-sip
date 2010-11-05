@@ -19,13 +19,13 @@ void cain_sip_set_log_file(FILE *file)
 
 static void __cain_sip_logv_out(cain_sip_log_level lev, const char *fmt, va_list args);
 
-cain_sip_log_function cain_sip_logv_out=__cain_sip_logv_out;
+cain_sip_log_function_t cain_sip_logv_out=__cain_sip_logv_out;
 
 /**
  *@param func: your logging function, compatible with the OrtpLogFunc prototype.
  *
 **/
-void cain_sip_set_log_handler(cain_sip_log_function func){
+void cain_sip_set_log_handler(cain_sip_log_function_t func){
         cain_sip_logv_out=func;
 }
 
@@ -141,17 +141,17 @@ static void __cain_sip_logv_out(cain_sip_log_level lev, const char *fmt, va_list
         free(msg);
 }
 
-cain_sip_list *cain_sip_list_new(void *data){
-	cain_sip_list *new_elem=(cain_sip_list *)malloc(sizeof(cain_sip_list));
-	memset(new_elem,0,sizeof(cain_sip_list));
+cain_sip_list_t* cain_sip_list_new(void *data){
+	cain_sip_list_t* new_elem=(cain_sip_list_t* )malloc(sizeof(cain_sip_list_t));
+	memset(new_elem,0,sizeof(cain_sip_list_t));
 	new_elem->prev=new_elem->next=NULL;
 	new_elem->data=data;
 	return new_elem;
 }
 
-cain_sip_list * cain_sip_list_append(cain_sip_list *elem, void * data){
-	cain_sip_list *new_elem=cain_sip_list_new(data);
-	cain_sip_list *it=elem;
+cain_sip_list_t*  cain_sip_list_append(cain_sip_list_t* elem, void * data){
+	cain_sip_list_t* new_elem=cain_sip_list_new(data);
+	cain_sip_list_t* it=elem;
 	if (elem==NULL) return new_elem;
 	while (it->next!=NULL) it=cain_sip_list_next(it);
 	it->next=new_elem;
@@ -159,8 +159,8 @@ cain_sip_list * cain_sip_list_append(cain_sip_list *elem, void * data){
 	return elem;
 }
 
-cain_sip_list * cain_sip_list_prepend(cain_sip_list *elem, void *data){
-	cain_sip_list *new_elem=cain_sip_list_new(data);
+cain_sip_list_t*  cain_sip_list_prepend(cain_sip_list_t* elem, void *data){
+	cain_sip_list_t* new_elem=cain_sip_list_new(data);
 	if (elem!=NULL) {
 		new_elem->next=elem;
 		elem->prev=new_elem;
@@ -169,8 +169,8 @@ cain_sip_list * cain_sip_list_prepend(cain_sip_list *elem, void *data){
 }
 
 
-cain_sip_list * cain_sip_list_concat(cain_sip_list *first, cain_sip_list *second){
-	cain_sip_list *it=first;
+cain_sip_list_t*  cain_sip_list_concat(cain_sip_list_t* first, cain_sip_list_t* second){
+	cain_sip_list_t* it=first;
 	if (it==NULL) return second;
 	while(it->next!=NULL) it=cain_sip_list_next(it);
 	it->next=second;
@@ -178,9 +178,9 @@ cain_sip_list * cain_sip_list_concat(cain_sip_list *first, cain_sip_list *second
 	return first;
 }
 
-cain_sip_list * cain_sip_list_free(cain_sip_list *list){
-	cain_sip_list *elem = list;
-	cain_sip_list *tmp;
+cain_sip_list_t*  cain_sip_list_free(cain_sip_list_t* list){
+	cain_sip_list_t* elem = list;
+	cain_sip_list_t* tmp;
 	if (list==NULL) return NULL;
 	while(elem->next!=NULL) {
 		tmp = elem;
@@ -191,8 +191,8 @@ cain_sip_list * cain_sip_list_free(cain_sip_list *list){
 	return NULL;
 }
 
-cain_sip_list * cain_sip_list_remove(cain_sip_list *first, void *data){
-	cain_sip_list *it;
+cain_sip_list_t*  cain_sip_list_remove(cain_sip_list_t* first, void *data){
+	cain_sip_list_t* it;
 	it=cain_sip_list_find(first,data);
 	if (it) return cain_sip_list_remove_link(first,it);
 	else {
@@ -201,7 +201,7 @@ cain_sip_list * cain_sip_list_remove(cain_sip_list *first, void *data){
 	}
 }
 
-int cain_sip_list_size(const cain_sip_list *first){
+int cain_sip_list_size(const cain_sip_list_t* first){
 	int n=0;
 	while(first!=NULL){
 		++n;
@@ -210,20 +210,20 @@ int cain_sip_list_size(const cain_sip_list *first){
 	return n;
 }
 
-void cain_sip_list_for_each(const cain_sip_list *list, void (*func)(void *)){
+void cain_sip_list_for_each(const cain_sip_list_t* list, void (*func)(void *)){
 	for(;list!=NULL;list=list->next){
 		func(list->data);
 	}
 }
 
-void cain_sip_list_for_each2(const cain_sip_list *list, void (*func)(void *, void *), void *user_data){
+void cain_sip_list_for_each2(const cain_sip_list_t* list, void (*func)(void *, void *), void *user_data){
 	for(;list!=NULL;list=list->next){
 		func(list->data,user_data);
 	}
 }
 
-cain_sip_list *cain_sip_list_remove_link(cain_sip_list *list, cain_sip_list *elem){
-	cain_sip_list *ret;
+cain_sip_list_t* cain_sip_list_remove_link(cain_sip_list_t* list, cain_sip_list_t* elem){
+	cain_sip_list_t* ret;
 	if (elem==list){
 		ret=elem->next;
 		elem->prev=NULL;
@@ -240,21 +240,21 @@ cain_sip_list *cain_sip_list_remove_link(cain_sip_list *list, cain_sip_list *ele
 	return list;
 }
 
-cain_sip_list *cain_sip_list_find(cain_sip_list *list, void *data){
+cain_sip_list_t* cain_sip_list_find(cain_sip_list_t* list, void *data){
 	for(;list!=NULL;list=list->next){
 		if (list->data==data) return list;
 	}
 	return NULL;
 }
 
-cain_sip_list *cain_sip_list_find_custom(cain_sip_list *list, int (*compare_func)(const void *, const void*), void *user_data){
+cain_sip_list_t* cain_sip_list_find_custom(cain_sip_list_t* list, cain_sip_compare_func compare_func, const void *user_data){
 	for(;list!=NULL;list=list->next){
 		if (compare_func(list->data,user_data)==0) return list;
 	}
 	return NULL;
 }
 
-void * cain_sip_list_nth_data(const cain_sip_list *list, int index){
+void * cain_sip_list_nth_data(const cain_sip_list_t* list, int index){
 	int i;
 	for(i=0;list!=NULL;list=list->next,++i){
 		if (i==index) return list->data;
@@ -263,7 +263,7 @@ void * cain_sip_list_nth_data(const cain_sip_list *list, int index){
 	return NULL;
 }
 
-int cain_sip_list_position(const cain_sip_list *list, cain_sip_list *elem){
+int cain_sip_list_position(const cain_sip_list_t* list, cain_sip_list_t* elem){
 	int i;
 	for(i=0;list!=NULL;list=list->next,++i){
 		if (elem==list) return i;
@@ -272,7 +272,7 @@ int cain_sip_list_position(const cain_sip_list *list, cain_sip_list *elem){
 	return -1;
 }
 
-int cain_sip_list_index(const cain_sip_list *list, void *data){
+int cain_sip_list_index(const cain_sip_list_t* list, void *data){
 	int i;
 	for(i=0;list!=NULL;list=list->next,++i){
 		if (data==list->data) return i;
@@ -281,10 +281,10 @@ int cain_sip_list_index(const cain_sip_list *list, void *data){
 	return -1;
 }
 
-cain_sip_list *cain_sip_list_insert_sorted(cain_sip_list *list, void *data, int (*compare_func)(const void *, const void*)){
-	cain_sip_list *it,*previt=NULL;
-	cain_sip_list *nelem;
-	cain_sip_list *ret=list;
+cain_sip_list_t* cain_sip_list_insert_sorted(cain_sip_list_t* list, void *data, int (*compare_func)(const void *, const void*)){
+	cain_sip_list_t* it,*previt=NULL;
+	cain_sip_list_t* nelem;
+	cain_sip_list_t* ret=list;
 	if (list==NULL) return cain_sip_list_append(list,data);
 	else{
 		nelem=cain_sip_list_new(data);
@@ -308,15 +308,15 @@ cain_sip_list *cain_sip_list_insert_sorted(cain_sip_list *list, void *data, int 
 	return ret;
 }
 
-cain_sip_list *cain_sip_list_insert(cain_sip_list *list, cain_sip_list *before, void *data){
-	cain_sip_list *elem;
+cain_sip_list_t* cain_sip_list_insert(cain_sip_list_t* list, cain_sip_list_t* before, void *data){
+	cain_sip_list_t* elem;
 	if (list==NULL || before==NULL) return cain_sip_list_append(list,data);
 	for(elem=list;elem!=NULL;elem=cain_sip_list_next(elem)){
 		if (elem==before){
 			if (elem->prev==NULL)
 				return cain_sip_list_prepend(list,data);
 			else{
-				cain_sip_list *nelem=cain_sip_list_new(data);
+				cain_sip_list_t* nelem=cain_sip_list_new(data);
 				nelem->prev=elem->prev;
 				nelem->next=elem;
 				elem->prev->next=nelem;
@@ -327,9 +327,9 @@ cain_sip_list *cain_sip_list_insert(cain_sip_list *list, cain_sip_list *before, 
 	return list;
 }
 
-cain_sip_list *cain_sip_list_copy(const cain_sip_list *list){
-	cain_sip_list *copy=NULL;
-	const cain_sip_list *iter;
+cain_sip_list_t* cain_sip_list_copy(const cain_sip_list_t* list){
+	cain_sip_list_t* copy=NULL;
+	const cain_sip_list_t* iter;
 	for(iter=list;iter!=NULL;iter=cain_sip_list_next(iter)){
 		copy=cain_sip_list_append(copy,iter->data);
 	}

@@ -4,13 +4,13 @@ options {
 	language = C;
 	
 } 
-@header { #include "cain_sip_uri.h"}
+@header { #include "cain-sip/uri.h"}
 
 
 to_header : 'TO' ':' an_sip_uri; 
 
-an_sip_uri  returns [cain_sip_uri* ret]    
-scope { cain_sip_uri* current; }
+an_sip_uri  returns [cain_sip_uri_t* ret]    
+scope { cain_sip_uri_t* current; }
 @init { $an_sip_uri::current = cain_sip_uri_new(); }
    :  sip_schema ((userinfo hostport) | hostport ) uri_parameters? headers? {$ret = $an_sip_uri::current;}; 
 sip_schema : ('sip' | is_sips='sips') ':' {if ($is_sips) cain_sip_uri_set_secure($an_sip_uri::current,1);};
@@ -41,15 +41,15 @@ uri_parameter  //all parameters are considered as other
 	:	   other_param ;
 other_param       :  pname ( '=' pvalue )?
   {
-    if (strcmp("lr",$pname.text->chars) == 0) {
+    if (strcmp("lr",(const char *)$pname.text->chars) == 0) {
       cain_sip_uri_set_lr_param($an_sip_uri::current,1);
-      } else if (strcmp("transport",$pname.text->chars)==0) {
+      } else if (strcmp("transport",(const char*)$pname.text->chars)==0) {
         cain_sip_uri_set_transport_param($an_sip_uri::current,(const char *)$pvalue.text->chars);
-      } else if (strcmp("user",$pname.text->chars)==0) {
+      } else if (strcmp("user",(const char *)$pname.text->chars)==0) {
         cain_sip_uri_set_user_param($an_sip_uri::current,(const char *)$pvalue.text->chars);
-      } else if (strcmp("maddr",$pname.text->chars)==0) {
+      } else if (strcmp("maddr",(const char *)$pname.text->chars)==0) {
         cain_sip_uri_set_maddr_param($an_sip_uri::current,(const char *)$pvalue.text->chars);
-      } else if (strcmp("ttl",$pname.text->chars)==0) {
+      } else if (strcmp("ttl",(const char *)$pname.text->chars)==0) {
         cain_sip_uri_set_ttl_param($an_sip_uri::current,atoi((const char *)$pvalue.text->chars));
       }
   };
@@ -63,7 +63,7 @@ param_unreserved
 	:	  '[' | ']' | '/' | ':' | '&' | '+' | '$' | '.';
 
 headers         :  '?' header ( '&' header )* ;
-header          :  hname '=' hvalue? {cain_sip_uri_set_header($an_sip_uri::current,$hname.text->chars,$hvalue.text->chars);};
+header          :  hname '=' hvalue? {cain_sip_uri_set_header($an_sip_uri::current,(const char *)$hname.text->chars,(const char *)$hvalue.text->chars);};
 hname           :  ( hnv_unreserved | unreserved | escaped )+;
 hvalue          :  ( hnv_unreserved | unreserved | escaped )+;
 

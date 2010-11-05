@@ -1,7 +1,7 @@
 
 #ifndef cain_utils_h
 #define cain_utils_h
-#include "cain_sip_list.h"
+#include "cain-sip/list.h"
 
 struct _cain_sip_list {
 	struct _cain_sip_list *next;
@@ -19,8 +19,8 @@ struct _cain_sip_list {
 extern "C"{
 #endif
 
-cain_sip_list *cain_sip_list_new(void *data);
-cain_sip_list * cain_sip_list_free(cain_sip_list *list);
+cain_sip_list_t *cain_sip_list_new(void *data);
+cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 #define cain_sip_list_next(elem) ((elem)->next)
 /***************/
 /* logging api */
@@ -36,12 +36,12 @@ typedef enum {
 } cain_sip_log_level;
 
 
-typedef void (*cain_sip_log_function)(cain_sip_log_level lev, const char *fmt, va_list args);
+typedef void (*cain_sip_log_function_t)(cain_sip_log_level lev, const char *fmt, va_list args);
 
 void cain_sip_set_log_file(FILE *file);
-void cain_sip_set_log_handler(cain_sip_log_function func);
+void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
-extern cain_sip_log_function cain_sip_logv_out;
+extern cain_sip_log_function_t cain_sip_logv_out;
 
 extern unsigned int __cain_sip_log_mask;
 
