@@ -2,6 +2,8 @@
 
 #include "cain_sip_internal.h"
 
+#include <time.h>
+
 
 static FILE *__log_file=0;
 
@@ -400,4 +402,19 @@ void *cain_sip_realloc(void *ptr, size_t size){
 void cain_sip_free(void *ptr){
 	free(ptr);
 }
+
+uint64_t cain_sip_time_ms(void){
+	struct timespec ts;
+	static int clock_id=CLOCK_MONOTONIC;
+	if (clock_gettime(clock_id,&ts)==-1){
+		cain_sip_error("clock_gettime() error for clock_id=%i: %s",clock_id,strerror(errno));
+		if (clock_id==CLOCK_MONOTONIC){
+			clock_id=CLOCK_REALTIME;
+			return cain_sip_time_ms();
+		}
+		return 0;
+	}
+	return (ts.tv_sec*1000LL) + (ts.tv_nsec/1000000LL);
+}
+
 

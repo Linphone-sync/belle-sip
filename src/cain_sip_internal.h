@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <errno.h>
 
 #include "cain-sip/list.h"
 
@@ -149,6 +151,8 @@ static inline void cain_sip_fatal(const char *fmt,...)
 
 
 char * cain_sip_concat (const char *str, ...);
+
+uint64_t cain_sip_time_ms(void);
 
 #ifdef __cplusplus
 }

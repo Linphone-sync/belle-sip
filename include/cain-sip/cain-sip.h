@@ -22,4 +22,11 @@
 #include "cain-sip/list.h"
 #include "cain-sip/mainloop.h"
 
+#undef TRUE
+#define TRUE 1
+
+
+#undef FALSE
+#define FALSE 0
+
 #endif

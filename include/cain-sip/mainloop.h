@@ -20,11 +20,12 @@
 #define CAIN_SIP_MAINLOOP_H
 
 #define CAIN_SIP_EVENT_READ 1
-#define CAIN_SIP_EVENT_ERROR (1<<1)
+#define CAIN_SIP_EVENT_WRITE (1<<1)
+#define CAIN_SIP_EVENT_ERROR (1<<2)
 
 typedef struct cain_sip_source cain_sip_source_t;
 
-typedef int (*cain_sip_source_func_t)(void *user_data, int events);
+typedef int (*cain_sip_source_func_t)(void *user_data, unsigned int events);
 
 cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
 
