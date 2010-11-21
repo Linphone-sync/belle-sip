@@ -22,17 +22,6 @@
 #include <unistd.h>
 #include <poll.h>
 
-struct cain_sip_source{
-	cain_sip_list_t node;
-	int fd;
-	unsigned int events;
-	int timeout;
-	void *data;
-	uint64_t expire_ms;
-	int index; /* index in pollfd table */
-	cain_sip_source_func_t notify;
-	void (*on_remove)(cain_sip_source_t *);
-};
 
 void cain_sip_source_destroy(cain_sip_source_t *obj){
 	if (obj->node.next || obj->node.prev){
@@ -41,13 +30,19 @@ void cain_sip_source_destroy(cain_sip_source_t *obj){
 	cain_sip_free(obj);
 }
 
-static cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
-	cain_sip_source_t *s=cain_sip_new0(cain_sip_source_t);
+void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
+	static unsigned long global_id=1;
+	s->id=global_id++;
 	s->fd=fd;
 	s->events=events;
 	s->timeout=timeout_value_ms;
 	s->data=data;
 	s->notify=func;
+}
+
+static cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
+	cain_sip_source_t *s=cain_sip_new0(cain_sip_source_t);
+	cain_sip_fd_source_init(s,func,data,fd,events,timeout_value_ms);
 	return s;
 }
 
@@ -98,10 +93,11 @@ void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_
 		source->on_remove(source);
 }
 
-void cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
+unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
 	cain_sip_source_t * s=cain_sip_timeout_source_new(func,data,timeout_value_ms);
 	s->on_remove=cain_sip_source_destroy;
 	cain_sip_main_loop_add_source(ml,s);
+	return s->id;
 }
 
 /*
@@ -204,6 +200,11 @@ void cain_sip_main_loop_run(cain_sip_main_loop_t *ml){
 void cain_sip_main_loop_quit(cain_sip_main_loop_t *ml){
 	ml->run=0;
 	write(ml->control_fds[1],"a",1);
+}
+
+void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){
+	cain_sip_main_loop_add_timeout(ml,(cain_sip_source_func_t)cain_sip_main_loop_quit,ml,milliseconds);
+	cain_sip_main_loop_run(ml);
 }
 
 void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
