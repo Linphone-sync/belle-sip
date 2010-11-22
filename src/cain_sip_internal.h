@@ -10,7 +10,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+/* include all public headers*/
 #include "cain-sip/cain-sip.h"
+
 
 struct _cain_sip_list {
 	struct _cain_sip_list *next;
@@ -173,5 +175,8 @@ uint64_t cain_sip_time_ms(void);
 #ifdef __cplusplus
 }
 #endif
+
+/*include private headers */
+#include "cain_sip_resolver.h"
 
 #endif
