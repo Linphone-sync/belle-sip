@@ -18,9 +18,15 @@
 #ifndef CAIN_SIP_H
 #define CAIN_SIP_H
 
-#include "cain-sip/uri.h"
-#include "cain-sip/headers.h"
 #include "cain-sip/list.h"
 #include "cain-sip/mainloop.h"
+#include "cain-sip/uri.h"
+#include "cain-sip/headers.h"
+#undef TRUE
+#define TRUE 1
+
+
+#undef FALSE
+#define FALSE 0
 
 #endif

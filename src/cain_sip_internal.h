@@ -22,8 +22,11 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <errno.h>
+#include <unistd.h>
 
-#include "cain-sip/list.h"
+#include "cain-sip/cain-sip.h"
 
 struct _cain_sip_list {
 	struct _cain_sip_list *next;
@@ -31,8 +34,22 @@ struct _cain_sip_list {
 	void *data;
 };
 
+typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 
+struct cain_sip_source{
+	cain_sip_list_t node;
+	unsigned long id;
+	int fd;
+	unsigned int events;
+	int timeout;
+	void *data;
+	uint64_t expire_ms;
+	int index; /* index in pollfd table */
+	cain_sip_source_func_t notify;
+	cain_sip_source_remove_callback_t on_remove;
+};
 
+void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
 
 #define cain_list_next(elem) ((elem)->next)
 
@@ -45,6 +62,7 @@ void *cain_sip_malloc(size_t size);
 void *cain_sip_malloc0(size_t size);
 void *cain_sip_realloc(void *ptr, size_t size);
 void cain_sip_free(void *ptr);
+char * cain_sip_strdup(const char *s);
 
 #define cain_sip_new(type) (type*)cain_sip_malloc(sizeof(type))
 #define cain_sip_new0(type) (type*)cain_sip_malloc0(sizeof(type))
@@ -165,6 +183,8 @@ static inline void cain_sip_fatal(const char *fmt,...)
 
 
 char * cain_sip_concat (const char *str, ...);
+
+uint64_t cain_sip_time_ms(void);
 
 /*parameters accessors*/
 #define GET_SET_STRING(object_type,attribute) \
