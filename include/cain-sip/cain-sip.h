@@ -42,13 +42,12 @@ _type *_type##_cast(void *obj, const char *file, int line){ \
 _type *_type##_cast(void *obj, const char *file, int line);
 
 #define CAIN_SIP_CAST(obj,_type) _type##_cast(obj, __FILE__, __LINE__)
-
 #include "cain-sip/list.h"
 #include "cain-sip/mainloop.h"
 #include "cain-sip/uri.h"
+#include "cain-sip/headers.h"
 #include "cain-sip/message.h"
 #include "cain-sip/transaction.h"
-
 #undef TRUE
 #define TRUE 1
 

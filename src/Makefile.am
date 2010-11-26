@@ -1,11 +1,14 @@
 ANTLR=antlr3
 
 grammar_files= \
-						$(srcdir)/cain_sip_uri.g
+						$(srcdir)/cain_sip_uri.g \
+						$(srcdir)/cain_sip_message.g
 
 generated_src= \
 	cain_sip_uriParser.c cain_sip_uriParser.h \
-	cain_sip_uriLexer.c cain_sip_uriLexer.h
+	cain_sip_uriLexer.c cain_sip_uriLexer.h \
+	cain_sip_messageParser.c cain_sip_messageParser.h \
+	cain_sip_messageLexer.c cain_sip_messageLexer.h
 
 $(generated_src)	:	$(grammar_files)
 	$(ANTLR) -make -fo $(builddir) $(grammar_files)
@@ -22,6 +25,7 @@ lib_LTLIBRARIES=libcainsip.la
 
 
 libcainsip_la_SOURCES=cain_sip_uri_impl.c \
+									cain_sip_headers_impl.c \
 									cain_sip_utils.c cain_sip_internal.h \
 									cain_sip_loop.c \
 									cain_sip_resolver.c cain_sip_resolver.h \
@@ -32,7 +36,6 @@ libcainsip_la_CFLAGS=$(STRICT_OPTIONS)
 libcainsip_la_LIBADD=libcainsip_generated.la -lantlr3c
 
 INCLUDES=-I$(top_srcdir)/include
-
 
 EXTRA_DIST=$(grammar_files)
 
