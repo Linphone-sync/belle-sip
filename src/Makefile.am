@@ -24,7 +24,8 @@ lib_LTLIBRARIES=libcainsip.la
 libcainsip_la_SOURCES=cain_sip_uri_impl.c \
 									cain_sip_utils.c cain_sip_internal.h \
 									cain_sip_loop.c \
-									cain_sip_resolver.c cain_sip_resolver.h
+									cain_sip_resolver.c cain_sip_resolver.h \
+									transaction.c
 
 libcainsip_la_CFLAGS=$(STRICT_OPTIONS)
 
