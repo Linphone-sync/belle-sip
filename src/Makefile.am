@@ -27,6 +27,7 @@ lib_LTLIBRARIES=libcainsip.la
 libcainsip_la_SOURCES=cain_sip_uri_impl.c \
 									cain_sip_headers_impl.c \
 									cain_sip_utils.c cain_sip_internal.h \
+									cain_sip_object.c \
 									cain_sip_loop.c \
 									cain_sip_resolver.c cain_sip_resolver.h \
 									transaction.c

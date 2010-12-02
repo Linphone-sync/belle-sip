@@ -6,6 +6,7 @@ cainsip_HEADERS=\
 				mainloop.h \
 				transaction.h \
 				message.h \
+				transport.h \
 				cain-sip.h
 
 EXTRA_DIST=$(cainsip_HEADERS)

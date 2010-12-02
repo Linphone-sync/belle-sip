@@ -46,9 +46,6 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t)
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t);
 void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);
 
-CAIN_SIP_DECLARE_CAST(cain_sip_transaction_t);
-CAIN_SIP_DECLARE_CAST(cain_sip_client_transaction_t);
-CAIN_SIP_DECLARE_CAST(cain_sip_server_transaction_t);
 
 #define CAIN_SIP_TRANSACTION(t) CAIN_SIP_CAST(t,cain_sip_transaction_t)
 #define CAIN_SIP_SERVER_TRANSACTION(t) CAIN_SIP_CAST(t,cain_sip_server_transaction_t)

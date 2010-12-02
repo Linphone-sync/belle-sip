@@ -19,7 +19,7 @@
 #include "cain_sip_internal.h"
 
 struct cain_sip_transaction{
-	cain_sip_magic_t magic;
+	cain_sip_object_t base;
 	char *branch_id;
 	cain_sip_transaction_state_t state;
 	void *appdata;
@@ -28,17 +28,11 @@ struct cain_sip_transaction{
 
 struct cain_sip_server_transaction{
 	cain_sip_transaction_t base;
-	cain_sip_magic_t magic;
 };
 
 struct cain_sip_client_transaction{
 	cain_sip_transaction_t base;
-	cain_sip_magic_t magic;
 };
-
-CAIN_SIP_IMPLEMENT_CAST(cain_sip_transaction_t);
-CAIN_SIP_IMPLEMENT_CAST(cain_sip_server_transaction_t);
-CAIN_SIP_IMPLEMENT_CAST(cain_sip_client_transaction_t);
 
 void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t){
 	return t->appdata;
@@ -75,21 +69,32 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 }
 
 static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_request_t *req){
-	t->magic=CAIN_SIP_MAGIC(cain_sip_transaction_t);
+	cain_sip_object_init_type(t,cain_sip_transaction_t);
+	if (req) cain_sip_object_ref(req);
 	t->request=req;
 }
 
+static void transaction_destroy(cain_sip_transaction_t *t){
+	if (t->request) cain_sip_object_unref(t->request);
+}
+
+static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
+	transaction_destroy((cain_sip_transaction_t*)t);
+}
+
+static void server_transaction_destroy(cain_sip_server_transaction_t *t){
+	transaction_destroy((cain_sip_transaction_t*)t);
+}
+
 cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_request_t *req){
-	cain_sip_client_transaction_t *t=cain_sip_new0(cain_sip_client_transaction_t);
+	cain_sip_client_transaction_t *t=cain_sip_object_new(cain_sip_client_transaction_t,(cain_sip_object_destroy_t)client_transaction_destroy);
 	cain_sip_transaction_init((cain_sip_transaction_t*)t,req);
-	t->magic=CAIN_SIP_MAGIC(cain_sip_client_transaction_t);
 	return t;
 }
 
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_request_t *req){
-	cain_sip_server_transaction_t *t=cain_sip_new0(cain_sip_server_transaction_t);
+	cain_sip_server_transaction_t *t=cain_sip_object_new(cain_sip_server_transaction_t,(cain_sip_object_destroy_t)server_transaction_destroy);
 	cain_sip_transaction_init((cain_sip_transaction_t*)t,req);
-	t->magic=CAIN_SIP_MAGIC(cain_sip_server_transaction_t);
 	return t;
 }
 
