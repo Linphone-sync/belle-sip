@@ -26,7 +26,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+/* include all public headers*/
 #include "cain-sip/cain-sip.h"
+
 
 struct _cain_sip_list {
 	struct _cain_sip_list *next;
@@ -236,7 +238,7 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 }
 
 #define CAIN_SIP_NEW(object_type) \
-cain_sip_##object_type##_t* cain_sip_##object_type##_ref (cain_sip_##object_type##_t* obj) { \
+cain_sip_##object_type##_t* cain_sip_##object_type##_new (cain_sip_##object_type##_t* obj) { \
 	return (cain_sip_##object_type##_t*)cain_sip_new0(cain_sip_##object_type##_t);\
 }
 
@@ -276,5 +278,8 @@ void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* a
 #ifdef __cplusplus
 }
 #endif
+
+/*include private headers */
+#include "cain_sip_resolver.h"
 
 #endif

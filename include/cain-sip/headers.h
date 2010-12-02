@@ -120,7 +120,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 
  void cain_sip_header_from_unref (cain_sip_header_from_t* from) ;
 
- void cain_sip_header_from_set_tag(cain_sip_header_from_t* from,const char* tag);
+ void cain_sip_header_from_set_tag(cain_sip_header_from_t* from, const char* tag);
 
  const char* cain_sip_header_from_get_tag(cain_sip_header_from_t* from);
 
