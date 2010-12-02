@@ -20,28 +20,53 @@
 
 #include <stdlib.h>
 
-#define CAIN_SIP_MAGIC(_type) _type##_magic
+#define CAIN_SIP_TYPE_ID(_type) _type##_id
 
-typedef enum cain_sip_magic{
-	cain_sip_magic_first=0x32445191,
-	CAIN_SIP_MAGIC(cain_sip_transaction_t),
-	CAIN_SIP_MAGIC(cain_sip_server_transaction_t),
-	CAIN_SIP_MAGIC(cain_sip_client_transaction_t),
-	cain_sip_magic_end
-}cain_sip_magic_t;
+typedef enum cain_sip_type_id{
+	cain_sip_type_id_first=1,
+	CAIN_SIP_TYPE_ID(cain_sip_transaction_t),
+	CAIN_SIP_TYPE_ID(cain_sip_server_transaction_t),
+	CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t),
+	CAIN_SIP_TYPE_ID(cain_sip_transport_t),
+	cain_sip_type_id_end
+}cain_sip_type_id_t;
 
 
-#define CAIN_SIP_IMPLEMENT_CAST(_type) \
-_type *_type##_cast(void *obj, const char *file, int line){ \
-	if (((_type*)obj)->magic==CAIN_SIP_MAGIC(_type)) return (_type*)obj; \
-	cain_sip_fatal("Bad cast to "#_type " at %s:%i", file, line);\
-	return NULL; \
-}
+/**
+ * cain_sip_object_t is the base object.
+ * It is the base class for all cain sip non trivial objects.
+ * It owns a reference count which allows to trigger the destruction of the object when the last
+ * user of it calls cain_sip_object_unref().
+**/
 
-#define CAIN_SIP_DECLARE_CAST(_type)\
-_type *_type##_cast(void *obj, const char *file, int line);
+typedef struct _cain_sip_object cain_sip_object_t;
 
-#define CAIN_SIP_CAST(obj,_type) _type##_cast(obj, __FILE__, __LINE__)
+int cain_sip_object_is_unowed(const cain_sip_object_t *obj);
+
+/**
+ * Increments reference counter, which prevents the object from being destroyed.
+ * If the object is initially unowed, this acquires the first reference.
+**/
+#define cain_sip_object_ref(obj) _cain_sip_object_ref((cain_sip_object_t*)obj)
+void _cain_sip_object_ref(cain_sip_object_t *obj);
+
+/**
+ * Decrements the reference counter. When it drops to zero, the object is destroyed.
+**/
+#define cain_sip_object_unref(obj) _cain_sip_object_unref((cain_sip_object_t*)obj)
+void _cain_sip_object_unref(cain_sip_object_t *obj);
+
+/**
+ * Destroy the object: this function is intended for unowed object, that is objects
+ * that were created with a 0 reference count.
+**/
+#define cain_sip_object_destroy(obj) _cain_sip_object_destroy((cain_sip_object_t*)obj)
+void _cain_sip_object_destroy(cain_sip_object_t *obj);
+
+void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
+
+#define CAIN_SIP_CAST(obj,_type) (_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__)
+
 #include "cain-sip/list.h"
 #include "cain-sip/mainloop.h"
 #include "cain-sip/uri.h"

@@ -29,6 +29,20 @@
 /* include all public headers*/
 #include "cain-sip/cain-sip.h"
 
+typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
+
+struct _cain_sip_object{
+	uint8_t type_ids[8]; /*table of cain_sip_type_id_t for all inheritance chain*/
+	int ref;
+	cain_sip_object_destroy_t destroy;
+};
+
+cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_type_id_t id, cain_sip_object_destroy_t destroy_func, int initially_unowed);
+void _cain_sip_object_init_type(cain_sip_object_t *obj, cain_sip_type_id_t id);
+
+#define cain_sip_object_new(_type,destroy) (_type*)_cain_sip_object_new(sizeof(_type),CAIN_SIP_TYPE_ID(_type),destroy,0)
+#define cain_sip_object_new_unowed(_type,destroy) (_type*)_cain_sip_object_new(sizeof(_type),CAIN_SIP_TYPE_ID(_type),destroy,1)
+#define cain_sip_object_init_type(obj, _type) _cain_sip_object_init_type((cain_sip_object_t*)obj, CAIN_SIP_TYPE_ID(_type))
 
 struct _cain_sip_list {
 	struct _cain_sip_list *next;
