@@ -46,6 +46,12 @@ void cain_sip_header_address_delete(cain_sip_header_address_t* contact) {
 
 GET_SET_STRING(cain_sip_header_address,displayname);
 
+void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value) {
+		if (address->displayname != NULL) cain_sip_free((void*)(address->displayname));
+		size_t value_size = strlen(value);
+		address->displayname=cain_sip_malloc0(value_size-2+1);
+		strncpy((char*)(address->displayname),value+1,value_size-2);
+}
 cain_sip_uri_t* cain_sip_header_address_get_uri(cain_sip_header_address_t* address) {
 	return address->uri;
 }
@@ -63,7 +69,6 @@ CAIN_SIP_REF(header_address)
 struct _cain_sip_header_contact {
 	cain_sip_header_address_t address;
 	int ref;
-	cain_sip_header_address_t* header_address;
 	int expires;
 	float qvalue;
 	unsigned int wildcard;
@@ -74,7 +79,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_new() {
 }
 
 void cain_sip_header_contact_delete(cain_sip_header_contact_t* contact) {
-	if (contact->header_address) cain_sip_header_address_delete(contact->header_address);
+	cain_sip_header_address_delete((cain_sip_header_address_t*)contact);
 }
 
 CAIN_SIP_PARSE(header_contact);
@@ -91,13 +96,31 @@ int cain_sip_header_contact_set_expires(cain_sip_header_contact_t* contact, int 
 	return 0;
  }
 int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float qValue) {
-	 if (qValue != -1 || qValue < 0 || qValue >1) {
+	 if (qValue != -1 && qValue < 0 && qValue >1) {
 		 return -1;
 	 }
 	 _cain_sip_header_contact_set_qvalue(contact,qValue);
 	 return 0;
 }
 
+/**
+* From header object inherent from header_address
+*
+*/
+struct _cain_sip_header_from  {
+	cain_sip_header_address_t address;
+	int ref;
+	const char* tag;
+};
+
+CAIN_SIP_NEW(header_from)
+CAIN_SIP_REF(header_from)
+CAIN_SIP_PARSE(header_from)
+GET_SET_STRING(cain_sip_header_from,tag);
+
+void cain_sip_header_from_delete(cain_sip_header_from_t* from) {
+	cain_sip_header_address_delete((cain_sip_header_address_t*)from);
+}
 
 
 

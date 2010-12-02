@@ -235,6 +235,11 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	return l_parsed_object;\
 }
 
+#define CAIN_SIP_NEW(object_type) \
+cain_sip_##object_type##_t* cain_sip_##object_type##_ref (cain_sip_##object_type##_t* obj) { \
+	return (cain_sip_##object_type##_t*)cain_sip_new0(cain_sip_##object_type##_t);\
+}
+
 #define CAIN_SIP_REF(object_type) \
 cain_sip_##object_type##_t* cain_sip_##object_type##_ref (cain_sip_##object_type##_t* obj) { \
 	obj->ref++;\
@@ -266,6 +271,7 @@ cain_sip_param_pair_t* cain_sip_param_pair_ref(cain_sip_param_pair_t* obj);
 void cain_sip_param_pair_unref(cain_sip_param_pair_t* obj);
 
 
+void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value);
 
 #ifdef __cplusplus
 }

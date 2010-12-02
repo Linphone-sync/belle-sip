@@ -19,7 +19,7 @@
 #include "cain_sip_internal.h"
 
 #include <time.h>
-
+#include "clock_gettime.h" /*for apple*/
 
 static FILE *__log_file=0;
 
@@ -435,6 +435,7 @@ uint64_t cain_sip_time_ms(void){
 		return 0;
 	}
 	return (ts.tv_sec*1000LL) + (ts.tv_nsec/1000000LL);
+
 }
 
 
@@ -446,8 +447,8 @@ uint64_t cain_sip_time_ms(void){
 
 cain_sip_param_pair_t* cain_sip_param_pair_new(const char* name,const char* value) {
 	cain_sip_param_pair_t* lPair = (cain_sip_param_pair_t*)cain_sip_new0(cain_sip_param_pair_t);
-	lPair->name=strdup(name);
-	lPair->value=strdup(value);
+	lPair->name=name?cain_sip_strdup(name):NULL;
+	lPair->value=value?cain_sip_strdup(value):NULL;
 	return lPair;
 }
 

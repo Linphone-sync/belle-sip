@@ -97,12 +97,34 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 /**
  *  Sets the qValue value of the Name Address.
  */
- int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float qValue);
+ int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float qvalue);
 /**
  * Sets a wildcard on this contact address that is "*" is assigned to the contact header so that the header will have the format of Contact: *.
  *
  */
- void cain_sip_header_contact_set_wilcard(cain_sip_header_contact_t* contact);
+ void cain_sip_header_contact_set_wildcard(cain_sip_header_contact_t* contact,unsigned int is_wildcard);
+
+ /**
+ * From header object inherent from header_address
+ *
+ */
+ typedef struct _cain_sip_header_from cain_sip_header_from_t;
+
+ cain_sip_header_from_t* cain_sip_header_from_new();
+
+ void cain_sip_header_from_delete(cain_sip_header_from_t* from);
+
+ cain_sip_header_from_t* cain_sip_header_from_parse (const char* from) ;
+
+ cain_sip_header_from_t* cain_sip_header_from_ref (cain_sip_header_from_t* from) ;
+
+ void cain_sip_header_from_unref (cain_sip_header_from_t* from) ;
+
+ void cain_sip_header_from_set_tag(cain_sip_header_from_t* from,const char* tag);
+
+ const char* cain_sip_header_from_get_tag(cain_sip_header_from_t* from);
+
+
 
 
 #endif /* HEADERS_H_ */
