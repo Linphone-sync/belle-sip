@@ -47,8 +47,9 @@ int cain_sip_object_is_unowed(const cain_sip_object_t *obj){
 	return obj->ref==0;
 }
 
-void _cain_sip_object_ref(cain_sip_object_t *obj){
+cain_sip_object_t * _cain_sip_object_ref(cain_sip_object_t *obj){
 	obj->ref++;
+	return obj;
 }
 
 void _cain_sip_object_unref(cain_sip_object_t *obj){
@@ -77,5 +78,8 @@ void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const 
 		return NULL;
 	}
 	return obj;
+}
+void cain_sip_object_init(cain_sip_object_t *obj) {
+	cain_sip_object_init_type(obj,cain_sip_object_t);
 }
 

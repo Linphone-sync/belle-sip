@@ -17,6 +17,7 @@
 */
 
 #include "cain-sip/uri.h"
+#include "cain-sip/parameters.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -26,60 +27,42 @@
 
 
 #define SIP_URI_GET_SET_STRING(attribute) GET_SET_STRING(cain_sip_uri,attribute)
+#define SIP_URI_GET_SET_STRING_PARAM(attribute) GET_SET_STRING_PARAM2(cain_sip_uri,attribute,attribute##_param)
 
 
 #define SIP_URI_GET_SET_UINT(attribute) GET_SET_INT(cain_sip_uri,attribute,unsigned int)
 #define SIP_URI_GET_SET_INT(attribute) GET_SET_INT(cain_sip_uri,attribute,int)
+#define SIP_URI_GET_SET_INT_PARAM(attribute) GET_SET_INT_PARAM2(cain_sip_uri,attribute,int,attribute##_param)
 
 
 #define SIP_URI_GET_SET_BOOL(attribute) GET_SET_BOOL(cain_sip_uri,attribute,is)
 #define SIP_URI_HAS_SET_BOOL(attribute) GET_SET_BOOL(cain_sip_uri,attribute,has)
-
+#define SIP_URI_HAS_SET_BOOL_PARAM(attribute) GET_SET_BOOL_PARAM2(cain_sip_uri,attribute,has,attribute##_param)
 
 
 
 struct _cain_sip_uri {
-	int ref;
+	cain_sip_parameters_t params;
 	unsigned int secure;
 	char* user;
 	char* host;
 	unsigned int port;
-
-	char* transport_param;
-	char* user_param;
-	char* method_param;
-	unsigned int lr_param;
-	char* maddr_param;
-	int 		ttl_param;
-
-	cain_sip_list_t* header_list;
-	cain_sip_list_t* headernames_list;
+	cain_sip_parameters_t * header_list;
 };
-void cain_sip_uri_delete(cain_sip_uri_t* uri) {
-	if (uri->user) free (uri->user);
-	if (uri->host) free (uri->host);
 
-	if (uri->transport_param) free (uri->transport_param);
-	if (uri->user_param) free (uri->user_param);
-	if (uri->method_param) free (uri->method_param);
-	if (uri->maddr_param) free (uri->maddr_param);
-
-	if (uri->header_list) cain_sip_list_free (uri->header_list);
-	if (uri->headernames_list) cain_sip_list_free (uri->headernames_list);
-	free(uri);
+void cain_sip_uri_destroy(cain_sip_uri_t* uri) {
+	if (uri->user) cain_sip_free (uri->user);
+	if (uri->host) cain_sip_free (uri->host);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(uri->header_list));
 }
-
-CAIN_SIP_REF(uri)
-
-
-
 
 CAIN_SIP_PARSE(uri);
 
 cain_sip_uri_t* cain_sip_uri_new () {
-	cain_sip_uri_t* lUri = cain_sip_new0(cain_sip_uri_t);
-	lUri->ttl_param=-1;
-	return lUri;
+	cain_sip_uri_t* l_object = (cain_sip_uri_t*)cain_sip_object_new(cain_sip_uri_t,(cain_sip_object_destroy_t)cain_sip_uri_destroy);
+	cain_sip_parameters_init((cain_sip_parameters_t*)l_object); /*super*/
+	l_object->header_list = cain_sip_parameters_new();
+	return l_object;
 }
 
 
@@ -89,42 +72,19 @@ char*	cain_sip_uri_to_string(cain_sip_uri_t* uri)  {
 					,(uri->user?uri->user:"")
 					,(uri->user?"@":"")
 					,uri->host
-					,(uri->transport_param?";transport=":"")
-					,(uri->transport_param?uri->transport_param:"")
 					,NULL);
 }
 
 
 const char*	cain_sip_uri_get_header(cain_sip_uri_t* uri,const char* name) {
-	cain_sip_list_t *  lResult = cain_sip_list_find_custom(uri->header_list, (cain_sip_compare_func)cain_sip_param_pair_comp_func, name);
-	if (lResult) {
-		return ((cain_sip_param_pair_t*)(lResult->data))->value;
-	}
-	else {
-		return NULL;
-	}
+	return cain_sip_parameters_get_parameter(uri->header_list,name);
 }
 void	cain_sip_uri_set_header(cain_sip_uri_t* uri,const char* name,const char* value) {
-	/*1 check if present*/
-	cain_sip_list_t *  lResult = cain_sip_list_find_custom(uri->headernames_list, (cain_sip_compare_func)strcmp, name);
-	/* first remove from header names list*/
-	if (lResult) {
-		cain_sip_list_remove_link(uri->headernames_list,lResult);
-	}
-	/* next from header list*/
-	lResult = cain_sip_list_find_custom(uri->header_list, (cain_sip_compare_func)cain_sip_param_pair_comp_func, name);
-	if (lResult) {
-		cain_sip_param_pair_delete(lResult->data);
-		cain_sip_list_remove_link(uri->header_list,lResult);
-	}
-	/* 2 insert*/
-	cain_sip_param_pair_t* lNewpair = cain_sip_param_pair_new(name,value);
-	uri->header_list=cain_sip_list_append(uri->header_list,lNewpair);
-	uri->headernames_list=cain_sip_list_append(uri->headernames_list,lNewpair->name);
+	cain_sip_parameters_set_parameter(uri->header_list,name,value);
 }
 
-cain_sip_list_t*	cain_sip_uri_get_header_names(cain_sip_uri_t* uri) {
-	return uri->headernames_list;
+const cain_sip_list_t*	cain_sip_uri_get_header_names(cain_sip_uri_t* uri) {
+	return cain_sip_parameters_get_parameter_names(uri->header_list);
 }
 
 
@@ -135,9 +95,9 @@ SIP_URI_GET_SET_STRING(user)
 SIP_URI_GET_SET_STRING(host)
 SIP_URI_GET_SET_UINT(port)
 
-SIP_URI_GET_SET_STRING(transport_param)
-SIP_URI_GET_SET_STRING(user_param)
-SIP_URI_GET_SET_STRING(method_param)
-SIP_URI_GET_SET_STRING(maddr_param)
-SIP_URI_GET_SET_INT(ttl_param)
-SIP_URI_HAS_SET_BOOL(lr_param)
+SIP_URI_GET_SET_STRING_PARAM(transport)
+SIP_URI_GET_SET_STRING_PARAM(user)
+SIP_URI_GET_SET_STRING_PARAM(method)
+SIP_URI_GET_SET_STRING_PARAM(maddr)
+SIP_URI_GET_SET_INT_PARAM(ttl)
+SIP_URI_HAS_SET_BOOL_PARAM(lr)

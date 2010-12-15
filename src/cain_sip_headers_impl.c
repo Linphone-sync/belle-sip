@@ -19,6 +19,7 @@
 
 
 #include "cain-sip/headers.h"
+#include "cain-sip/parameters.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -31,19 +32,21 @@
  * header_address
  ***********************/
 struct _cain_sip_header_address {
-	int ref;
+	cain_sip_parameters_t params;
 	const char* displayname;
 	cain_sip_uri_t* uri;
 };
-cain_sip_header_address_t* cain_sip_header_address_new() {
-	return (cain_sip_header_address_t*)cain_sip_new0(cain_sip_header_address_t);
+static void cain_sip_header_address_init(cain_sip_header_address_t* object){
+	cain_sip_object_init_type(object,cain_sip_header_address_t);
+	cain_sip_parameters_init((cain_sip_parameters_t*)object); /*super*/
 }
 
-void cain_sip_header_address_delete(cain_sip_header_address_t* contact) {
-	if (contact->displayname) free((void*)(contact->displayname));
-	if (contact->uri) cain_sip_uri_delete(contact->uri);
+static void cain_sip_header_address_destroy(cain_sip_header_address_t* contact) {
+	if (contact->displayname) cain_sip_free((void*)(contact->displayname));
+	if (contact->uri) cain_sip_object_unref(CAIN_SIP_OBJECT(contact->uri));
 }
 
+CAIN_SIP_NEW(header_address,object)
 GET_SET_STRING(cain_sip_header_address,displayname);
 
 void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value) {
@@ -60,7 +63,6 @@ void cain_sip_header_address_set_uri(cain_sip_header_address_t* address, cain_si
 	address->uri=uri;
 }
 
-CAIN_SIP_REF(header_address)
 
 
 /************************
@@ -68,25 +70,20 @@ CAIN_SIP_REF(header_address)
  ***********************/
 struct _cain_sip_header_contact {
 	cain_sip_header_address_t address;
-	int ref;
-	int expires;
-	float qvalue;
 	unsigned int wildcard;
  };
 
-cain_sip_header_contact_t* cain_sip_header_contact_new() {
-	return (cain_sip_header_contact_t*)cain_sip_new0(cain_sip_header_contact_t);
+void cain_sip_header_contact_destroy(cain_sip_header_contact_t* contact) {
+	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(contact));
 }
 
-void cain_sip_header_contact_delete(cain_sip_header_contact_t* contact) {
-	cain_sip_header_address_delete((cain_sip_header_address_t*)contact);
-}
+CAIN_SIP_NEW(header_contact,header_address)
+CAIN_SIP_PARSE(header_contact)
 
-CAIN_SIP_PARSE(header_contact);
-
-GET_SET_INT_PRIVATE(cain_sip_header_contact,expires,int,_);
-GET_SET_INT_PRIVATE(cain_sip_header_contact,qvalue,float,_);
+GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,expires,int,_)
+GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,q,float,_);
 GET_SET_BOOL(cain_sip_header_contact,wildcard,is);
+
 
 int cain_sip_header_contact_set_expires(cain_sip_header_contact_t* contact, int expires) {
 	if (expires < 0 ) {
@@ -99,28 +96,57 @@ int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float
 	 if (qValue != -1 && qValue < 0 && qValue >1) {
 		 return -1;
 	 }
-	 _cain_sip_header_contact_set_qvalue(contact,qValue);
+	 _cain_sip_header_contact_set_q(contact,qValue);
 	 return 0;
 }
-
-/**
+float	cain_sip_header_contact_get_qvalue(cain_sip_header_contact_t* contact) {
+	return cain_sip_header_contact_get_q(contact);
+}
+/**************************
 * From header object inherent from header_address
-*
+****************************
 */
 struct _cain_sip_header_from  {
 	cain_sip_header_address_t address;
-	int ref;
-	const char* tag;
 };
 
-CAIN_SIP_NEW(header_from)
-CAIN_SIP_REF(header_from)
-CAIN_SIP_PARSE(header_from)
-GET_SET_STRING(cain_sip_header_from,tag);
-
-void cain_sip_header_from_delete(cain_sip_header_from_t* from) {
-	cain_sip_header_address_delete((cain_sip_header_address_t*)from);
+static void cain_sip_header_from_destroy(cain_sip_header_from_t* from) {
+	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(from));
 }
+
+CAIN_SIP_NEW(header_from,header_address)
+CAIN_SIP_PARSE(header_from)
+GET_SET_STRING_PARAM(cain_sip_header_from,tag);
+
+/**************************
+* To header object inherent from header_address
+****************************
+*/
+struct _cain_sip_header_to  {
+	cain_sip_header_address_t address;
+};
+
+static void cain_sip_header_to_destroy(cain_sip_header_to_t* to) {
+	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(to));
+}
+
+CAIN_SIP_NEW(header_to,header_address)
+CAIN_SIP_PARSE(header_to)
+GET_SET_STRING_PARAM(cain_sip_header_to,tag);
+/**************************
+* Viq header object inherent from header_address
+****************************
+*/
+struct _cain_sip_header_via  {
+	cain_sip_header_address_t address;
+};
+
+static void cain_sip_header_via_destroy(cain_sip_header_via_t* to) {
+	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(to));
+}
+
+CAIN_SIP_NEW(header_via,header_address)
+CAIN_SIP_PARSE(header_via)
 
 
 

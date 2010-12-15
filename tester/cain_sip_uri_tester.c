@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cain-sip/uri.h"
+#include "cain-sip/cain-sip.h"
 #include <stdio.h>
 #include "CUnit/Basic.h"
 
@@ -34,7 +34,7 @@ static void testSIMPLEURI(void) {
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "titi.com");
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_transport_param(L_uri));
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 }
 
 static void testCOMPLEXURI(void) {
@@ -43,37 +43,37 @@ static void testCOMPLEXURI(void) {
 	CU_ASSERT_EQUAL(cain_sip_uri_get_port(L_uri), 5060);
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "titi.com");
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_transport_param(L_uri), "tcp");
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 }
 static void testSIPSURI(void) {
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sips:linphone.org");
 	CU_ASSERT_EQUAL(cain_sip_uri_is_secure(L_uri), 1);
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 	L_uri = cain_sip_uri_parse("sip:linphone.org");
 	CU_ASSERT_EQUAL(cain_sip_uri_is_secure(L_uri), 0);
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 }
 static void test_ip_host(void) {
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:192.168.0.1");
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "192.168.0.1");
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 }
 static void test_lr(void) {
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:192.168.0.1;lr");
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "192.168.0.1");
 	CU_ASSERT_EQUAL(cain_sip_uri_has_lr_param(L_uri), 1);
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 
 }
 static void test_maddr(void) {
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:192.168.0.1;lr;maddr=linphone.org");
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_maddr_param(L_uri), "linphone.org");
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 
 }
 static void test_uri_parameters () {
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:192.168.0.1;ttl=12");
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 
 	L_uri = cain_sip_uri_parse("sip:maddr=@192.168.0.1;lr;maddr=192.168.0.1;user=ip;ttl=140;transport=sctp;method=INVITE;rport=5060");
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_maddr_param(L_uri), "192.168.0.1");
@@ -82,7 +82,7 @@ static void test_uri_parameters () {
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_transport_param(L_uri), "sctp");
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_method_param(L_uri), "INVITE");
 
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 }
 static void test_headers(void) {
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:192.168.0.1?toto=titi");
@@ -90,7 +90,7 @@ static void test_headers(void) {
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_header(L_uri,"toto"), "titi");
 
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_header(L_uri,"bla"));
-	cain_sip_uri_delete(L_uri);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 	L_uri = cain_sip_uri_parse("sip:192.168.0.1?toto=titi&header2=popo");
 
 	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_uri_get_header(L_uri,"toto"));

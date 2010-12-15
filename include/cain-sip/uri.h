@@ -42,7 +42,7 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 			 * Returns an Iterator over the const char*names of all headers present in this SipURI.
 			 *
 			 */
-	 cain_sip_list_t*	cain_sip_uri_get_header_names(cain_sip_uri_t* uri) ;
+	 const cain_sip_list_t*	cain_sip_uri_get_header_names(cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Returns the host part of this SipURI.
 	 *
@@ -170,6 +170,7 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 	 */
 	 char*	cain_sip_uri_to_string(cain_sip_uri_t* uri) ;
 
+	#define CAIN_SIP_URI(obj) CAIN_SIP_CAST(obj,cain_sip_uri_t)
 
 #endif  /*CAIN_SIP_URI_H_*/
 

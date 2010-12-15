@@ -452,15 +452,15 @@ cain_sip_param_pair_t* cain_sip_param_pair_new(const char* name,const char* valu
 	return lPair;
 }
 
-void cain_sip_param_pair_delete(cain_sip_param_pair_t*  pair) {
-	free(pair->name);
-	free(pair->value);
-	free (pair);
+void cain_sip_param_pair_destroy(cain_sip_param_pair_t*  pair) {
+	if (pair->name) cain_sip_free(pair->name);
+	if (pair->value) cain_sip_free(pair->value);
+	cain_sip_free (pair);
 }
 
 int cain_sip_param_pair_comp_func(const cain_sip_param_pair_t *a, const char*b) {
 	return strcmp(a->name,b);
 }
 
-CAIN_SIP_REF(param_pair)
+
 
