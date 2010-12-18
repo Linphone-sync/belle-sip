@@ -23,12 +23,13 @@
 #include <poll.h>
 
 
-void cain_sip_source_destroy(cain_sip_source_t *obj){
+static void cain_sip_source_destroy(cain_sip_source_t *obj){
 	if (obj->node.next || obj->node.prev){
 		cain_sip_fatal("Destroying source currently used in main loop !");
 	}
-	cain_sip_free(obj);
 }
+
+
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
 	static unsigned long global_id=1;
@@ -41,7 +42,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 }
 
 static cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
-	cain_sip_source_t *s=cain_sip_new0(cain_sip_source_t);
+	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t, cain_sip_source_destroy);
 	cain_sip_fd_source_init(s,func,data,fd,events,timeout_value_ms);
 	return s;
 }
@@ -58,13 +59,20 @@ struct cain_sip_main_loop{
 	int control_fds[2];
 };
 
+static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
+	cain_sip_main_loop_remove_source (ml,ml->control);
+	cain_sip_source_destroy(ml->control);
+	close(ml->control_fds[0]);
+	close(ml->control_fds[1]);
+}
+
 static int main_loop_done(void *data, unsigned int events){
 	cain_sip_debug("Got data on control fd...");
 	return TRUE;
 }
 
 cain_sip_main_loop_t *cain_sip_main_loop_new(void){
-	cain_sip_main_loop_t*m=cain_sip_new0(cain_sip_main_loop_t);
+	cain_sip_main_loop_t*m=cain_sip_object_new(cain_sip_main_loop_t, cain_sip_main_loop_destroy);
 	if (pipe(m->control_fds)==-1){
 		cain_sip_fatal("Could not create control pipe.");
 	}
@@ -207,10 +215,3 @@ void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){
 	cain_sip_main_loop_run(ml);
 }
 
-void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
-	cain_sip_main_loop_remove_source (ml,ml->control);
-	cain_sip_source_destroy(ml->control);
-	close(ml->control_fds[0]);
-	close(ml->control_fds[1]);
-	cain_sip_free(ml);
-}

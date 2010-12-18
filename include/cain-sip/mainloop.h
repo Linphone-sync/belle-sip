@@ -38,6 +38,7 @@ typedef int (*cain_sip_source_func_t)(void *user_data, unsigned int events);
 
 typedef struct cain_sip_main_loop cain_sip_main_loop_t;
 
+CAIN_SIP_BEGIN_DECLS
 
 void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
 
@@ -86,5 +87,7 @@ void cain_sip_main_loop_quit(cain_sip_main_loop_t *ml);
  * Cancel (removes) a source. It is not freed.
 **/
 void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id);
+
+CAIN_SIP_END_DECLS
 
 #endif

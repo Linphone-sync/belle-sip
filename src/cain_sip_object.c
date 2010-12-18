@@ -35,10 +35,11 @@ void _cain_sip_object_init_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
 	*t=id;
 }
 
-cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_type_id_t id, cain_sip_object_destroy_t destroy_func, int initially_unowed){
+cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_type_id_t id, void *vptr, cain_sip_object_destroy_t destroy_func, int initially_unowed){
 	cain_sip_object_t *obj=(cain_sip_object_t *)cain_sip_malloc0(objsize);
 	obj->type_ids[0]=id;
 	obj->ref=initially_unowed ? 0 : 1;
+	obj->vptr=vptr;
 	obj->destroy=destroy_func;
 	return obj;
 }
@@ -47,12 +48,13 @@ int cain_sip_object_is_unowed(const cain_sip_object_t *obj){
 	return obj->ref==0;
 }
 
-cain_sip_object_t * _cain_sip_object_ref(cain_sip_object_t *obj){
-	obj->ref++;
+cain_sip_object_t * cain_sip_object_ref(void *obj){
+	CAIN_SIP_OBJECT(obj)->ref++;
 	return obj;
 }
 
-void _cain_sip_object_unref(cain_sip_object_t *obj){
+void cain_sip_object_unref(void *ptr){
+	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
 	if (obj->ref==0){
 		cain_sip_warning("Destroying unowed object");
 		cain_sip_object_destroy(obj);
@@ -64,7 +66,8 @@ void _cain_sip_object_unref(cain_sip_object_t *obj){
 	}
 }
 
-void _cain_sip_object_destroy(cain_sip_object_t *obj){
+void cain_sip_object_destroy(void *ptr){
+	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
 	if (obj->ref!=0){
 		cain_sip_error("Destroying referenced object !");
 		if (obj->destroy) obj->destroy(obj);
