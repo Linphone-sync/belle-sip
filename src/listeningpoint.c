@@ -38,6 +38,7 @@ struct cain_sip_channel{
 typedef struct cain_sip_channel_vptr{
 	int (*channel_send)(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 	int (*channel_recv)(cain_sip_channel_t *obj, void *buf, size_t buflen);
+	cain_sip_source_t *(*create_source)(cain_sip_channel_t *obj, unsigned int events, unsigned int timeout, cain_sip_source_func_t callback, void *data);
 }cain_sip_channel_vptr_t;
 
 static void cain_sip_channel_init(cain_sip_channel_t *obj){
@@ -52,6 +53,11 @@ int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t bufle
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_vptr_t)->channel_recv(obj,buf,buflen);
 }
+
+cain_sip_source_t *cain_sip_channel_create_source(cain_sip_channel_t *obj, unsigned int events, int timeout, cain_sip_source_func_t callback, void *data){
+	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_vptr_t)->create_source(obj,events,timeout,callback,data);
+}
+
 
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj){
 	return &obj->peer;
@@ -75,6 +81,7 @@ static int udp_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buf
 	err=sendto(chan->sock,buf,buflen,0,obj->peer.ai_addr,obj->peer.ai_addrlen);
 	if (err==-1){
 		cain_sip_error("Could not send UDP packet: %s",strerror(errno));
+		return -errno;
 	}
 	return err;
 }
@@ -86,18 +93,20 @@ static int udp_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	err=recvfrom(chan->sock,buf,buflen,MSG_DONTWAIT,obj->peer.ai_addr,&obj->peer.ai_addrlen);
 	if (err==-1 && errno!=EWOULDBLOCK){
 		cain_sip_error("Could not receive UDP packet: %s",strerror(errno));
+		return -errno;
 	}
 	return err;
 }
 
-void cain_sip_udp_channel_set_dest(cain_sip_udp_channel_t *chan, const struct addrinfo *ai){
-	memcpy(chan->base.peer.ai_addr,ai->ai_addr,ai->ai_addrlen);
-	chan->base.peer.ai_addrlen=ai->ai_addrlen;
+static cain_sip_source_t *udp_channel_create_source(cain_sip_channel_t *obj, unsigned int events, unsigned int timeout, cain_sip_source_func_t callback, void *data){
+	cain_sip_udp_channel_t *chan=(cain_sip_udp_channel_t *)obj;
+	return cain_sip_fd_source_new(callback,data,chan->sock,events,timeout);
 }
 
 static cain_sip_channel_vptr_t udp_channel_vptr={
 	udp_channel_send,
-	udp_channel_recv
+	udp_channel_recv,
+	udp_channel_create_source
 };
 
 static int create_udp_socket(const char *addr, int port){
@@ -128,14 +137,12 @@ static int create_udp_socket(const char *addr, int port){
 	return sock;
 }
 
-cain_sip_udp_channel_t *cain_sip_udp_channel_new(const char *addr, int port){
+cain_sip_udp_channel_t *cain_sip_udp_channel_new(int sock, const struct addrinfo *dest){
 	cain_sip_udp_channel_t *obj=cain_sip_object_new_with_vptr(cain_sip_udp_channel_t,&udp_channel_vptr,udp_channel_uninit);
 	cain_sip_channel_init((cain_sip_channel_t*)obj);
-	obj->sock=create_udp_socket(addr,port);
-	if (obj->sock==-1){
-		cain_sip_object_unref(obj);
-		return NULL;
-	}
+	obj->sock=sock;
+	memcpy(obj->base.peer.ai_addr,dest->ai_addr,dest->ai_addrlen);
+	obj->base.peer.ai_addrlen=dest->ai_addrlen;
 	return obj;
 }
 
@@ -187,13 +194,14 @@ cain_sip_channel_t *cain_sip_listening_point_find_output_channel (cain_sip_liste
 struct cain_sip_udp_listening_point{
 	cain_sip_listening_point_t base;
 	cain_sip_udp_channel_t *channel;
+	int sock;
 };
 
 
 static cain_sip_channel_t *udp_listening_point_find_output_channel(cain_sip_listening_point_t* obj,const struct addrinfo *dest){
 	cain_sip_udp_listening_point_t *lp=(cain_sip_udp_listening_point_t*)obj;
-	cain_sip_udp_channel_set_dest(lp->channel,dest);
-	return CAIN_SIP_CHANNEL(lp);
+	cain_sip_udp_channel_t * chan=cain_sip_udp_channel_new (lp->sock,dest);
+	return CAIN_SIP_CHANNEL(chan);
 }
 
 static void cain_sip_udp_listening_point_uninit(cain_sip_udp_listening_point_t *lp){
@@ -209,10 +217,10 @@ static cain_sip_listening_point_vptr_t udp_listening_point_vptr={
 cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port){
 	cain_sip_udp_listening_point_t *lp=cain_sip_object_new_with_vptr(cain_sip_udp_listening_point_t,&udp_listening_point_vptr,cain_sip_udp_listening_point_uninit);
 	cain_sip_listening_point_init((cain_sip_listening_point_t*)lp,s,"UDP",ipaddress,port);
-	lp->channel=cain_sip_udp_channel_new(ipaddress,port);
-	if (lp->channel==NULL){
-		cain_sip_object_unref(lp);
-		lp=NULL;
+	lp->sock=create_udp_socket(ipaddress,port);
+	if (lp->sock==-1){
+		cain_sip_object_unref(s);
+		return NULL;
 	}
 	return CAIN_SIP_LISTENING_POINT(lp);
 }

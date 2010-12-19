@@ -33,6 +33,7 @@ static void cain_sip_source_destroy(cain_sip_source_t *obj){
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
 	static unsigned long global_id=1;
+	s->node.data=s;
 	s->id=global_id++;
 	s->fd=fd;
 	s->events=events;
@@ -41,7 +42,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 	s->notify=func;
 }
 
-static cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
+cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
 	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t, cain_sip_source_destroy);
 	cain_sip_fd_source_init(s,func,data,fd,events,timeout_value_ms);
 	return s;
@@ -51,13 +52,28 @@ cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, voi
 	return cain_sip_fd_source_new(func,data,-1,0,timeout_value_ms);
 }
 
+unsigned long cain_sip_source_get_id(cain_sip_source_t *s){
+	return s->id;
+}
+
 struct cain_sip_main_loop{
-	cain_sip_source_t *sources;
+	cain_sip_object_t base;
+	cain_sip_list_t *sources;
 	cain_sip_source_t *control;
 	int nsources;
 	int run;
 	int control_fds[2];
 };
+
+static void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source){
+	ml->sources=cain_sip_list_remove_link(ml->sources,&source->node);
+	ml->nsources--;
+	
+	if (source->on_remove)
+		source->on_remove(source);
+	cain_sip_object_unref(source);
+}
+
 
 static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
 	cain_sip_main_loop_remove_source (ml,ml->control);
@@ -86,26 +102,35 @@ void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *
 		cain_sip_fatal("Source is already linked somewhere else.");
 		return;
 	}
+	cain_sip_object_ref(source);
 	if (source->timeout>0){
 		source->expire_ms=cain_sip_time_ms()+source->timeout;
 	}
-		
-	ml->sources=(cain_sip_source_t*)cain_sip_list_append_link((cain_sip_list_t*)ml->sources,(cain_sip_list_t*)source);
+	ml->sources=cain_sip_list_append_link(ml->sources,&source->node);
 	ml->nsources++;
 }
 
-void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source){
-	ml->sources=(cain_sip_source_t*)cain_sip_list_remove_link((cain_sip_list_t*)ml->sources,(cain_sip_list_t*)source);
-	ml->nsources--;
-	if (source->on_remove)
-		source->on_remove(source);
-}
 
 unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
 	cain_sip_source_t * s=cain_sip_timeout_source_new(func,data,timeout_value_ms);
-	s->on_remove=cain_sip_source_destroy;
+	s->on_remove=(cain_sip_source_remove_callback_t)cain_sip_object_unref;
 	cain_sip_main_loop_add_source(ml,s);
 	return s->id;
+}
+
+static int match_source_id(const void *s, const void *pid){
+	if ( ((cain_sip_source_t*)s)->id==(unsigned long)pid){
+		return 0;
+	}
+	return -1;
+}
+
+void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id){
+	cain_sip_list_t *elem=cain_sip_list_find_custom(ml->sources,match_source_id,(const void*)id);
+	if (elem!=NULL){
+		cain_sip_source_t *s=(cain_sip_source_t*)elem->data;
+		s->cancelled=TRUE;
+	}
 }
 
 /*
@@ -137,26 +162,31 @@ static unsigned int cain_sip_poll_to_event(short events){
 void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 	struct pollfd *pfd=(struct pollfd*)alloca(ml->nsources*sizeof(struct pollfd));
 	int i=0;
-	cain_sip_source_t *s,*next;
+	cain_sip_source_t *s;
+	cain_sip_list_t *elem,*next;
 	uint64_t min_time_ms=(uint64_t)-1;
 	int duration=-1;
 	int ret;
 	uint64_t cur;
 	
 	/*prepare the pollfd table */
-	for(s=ml->sources;s!=NULL;s=(cain_sip_source_t*)s->node.next){
-		if (s->fd!=-1){
-			pfd[i].fd=s->fd;
-			pfd[i].events=cain_sip_event_to_poll (s->events);
-			pfd[i].revents=0;
-			s->index=i;
-			++i;
-		}
-		if (s->timeout>0){
-			if (min_time_ms>s->expire_ms){
-				min_time_ms=s->expire_ms;
+	for(elem=ml->sources;elem!=NULL;elem=next){
+		next=elem->next;
+		s=(cain_sip_source_t*)elem->data;
+		if (!s->cancelled){
+			if (s->fd!=-1){
+				pfd[i].fd=s->fd;
+				pfd[i].events=cain_sip_event_to_poll (s->events);
+				pfd[i].revents=0;
+				s->index=i;
+				++i;
 			}
-		}
+			if (s->timeout>0){
+				if (min_time_ms>s->expire_ms){
+					min_time_ms=s->expire_ms;
+				}
+			}
+		}else cain_sip_main_loop_remove_source (ml,s);
 	}
 	
 	if (min_time_ms!=(uint64_t)-1 ){
@@ -176,25 +206,28 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 	}
 	cur=cain_sip_time_ms();
 	/* examine poll results*/
-	for(s=ml->sources;s!=NULL;s=next){
+	for(elem=ml->sources;elem!=NULL;elem=next){
 		unsigned revents=0;
-		next=(cain_sip_source_t*)s->node.next;
-		
-		if (s->fd!=-1){
-			if (pfd[s->index].revents!=0){
-				revents=cain_sip_poll_to_event(pfd[s->index].revents);		
+		s=(cain_sip_source_t*)elem->data;
+		next=elem->next;
+
+		if (!s->cancelled){
+			if (s->fd!=-1){
+				if (pfd[s->index].revents!=0){
+					revents=cain_sip_poll_to_event(pfd[s->index].revents);		
+				}
 			}
-		}
-		if (revents!=0 || (s->timeout>0 && cur>=s->expire_ms)){
-			ret=s->notify(s->data,revents);
-			if (ret==0){
-				/*this source needs to be removed*/
-				cain_sip_main_loop_remove_source(ml,s);
-			}else if (revents==0){
-				/*timeout needs to be started again */
-				s->expire_ms+=s->timeout;
+			if (revents!=0 || (s->timeout>0 && cur>=s->expire_ms)){
+				ret=s->notify(s->data,revents);
+				if (ret==0){
+					/*this source needs to be removed*/
+					cain_sip_main_loop_remove_source(ml,s);
+				}else if (revents==0){
+					/*timeout needs to be started again */
+					s->expire_ms+=s->timeout;
+				}
 			}
-		}
+		}else cain_sip_main_loop_remove_source(ml,s);
 	}
 }
 

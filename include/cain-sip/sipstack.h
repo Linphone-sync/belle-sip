@@ -20,12 +20,21 @@
 #ifndef cain_sip_stack_h
 #define cain_sip_stack_h
 
+struct cain_sip_hop{
+	const char *host;
+	const char *transport;
+	int port;
+};
+
+typedef struct cain_sip_hop cain_sip_hop_t;
 
 CAIN_SIP_BEGIN_DECLS
 
 cain_sip_stack_t * cain_sip_stack_new(const char *properties);
 
 cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport);
+
+void cain_sip_stack_delete_listening_point(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
 cain_sip_provider_t *cain_sip_stack_create_provider(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 

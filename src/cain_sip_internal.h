@@ -62,6 +62,7 @@ struct _cain_sip_list {
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 
 struct cain_sip_source{
+	cain_sip_object_t base;
 	cain_sip_list_t node;
 	unsigned long id;
 	int fd;
@@ -72,6 +73,7 @@ struct cain_sip_source{
 	int index; /* index in pollfd table */
 	cain_sip_source_func_t notify;
 	cain_sip_source_remove_callback_t on_remove;
+	int cancelled;
 };
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
@@ -94,6 +96,8 @@ char * cain_sip_strdup(const char *s);
 	
 cain_sip_list_t *cain_sip_list_new(void *data);
 cain_sip_list_t*  cain_sip_list_append_link(cain_sip_list_t* elem,cain_sip_list_t *new_elem);
+cain_sip_list_t *cain_sip_list_find_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
+cain_sip_list_t *cain_sip_list_remove_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 #define cain_sip_list_next(elem) ((elem)->next)
 /***************/
@@ -354,7 +358,45 @@ typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
 
 cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
 cain_sip_channel_t *cain_sip_listening_point_find_output_channel(cain_sip_listening_point_t *ip, const struct addrinfo *dest); 
+cain_sip_source_t *cain_sip_channel_create_source(cain_sip_channel_t *, unsigned int events, int timeout, cain_sip_source_func_t callback, void *data);
 
+/*
+ cain_sip_stack_t
+*/
+struct cain_sip_stack{
+	cain_sip_object_t base;
+	cain_sip_main_loop_t *ml;
+	cain_sip_list_t *lp;/*list of listening points*/
+};
+
+void cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req, cain_sip_hop_t *hop);
+
+
+/*
+ cain_sip_provider_t
+*/
+cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
+
+typedef struct listener_ctx{
+	cain_sip_listener_t *listener;
+	void *data;
+}listener_ctx_t;
+
+#define CAIN_SIP_PROVIDER_INVOKE_LISTENERS(provider,callback,event) \
+{ \
+	cain_sip_list_t *_elem; \
+	for(_elem=(provider)->listeners;_elem!=NULL;_elem=_elem->next){ \
+		listener_ctx_t *_lctx=(listener_ctx_t*)_elem->data; \
+		_lctx->##callback(_lctx->data,event); \
+	} \
+}
+
+/*
+ cain_sip_transaction_t
+*/
+
+cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
+cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
 
 #ifdef __cplusplus
 }
@@ -362,5 +404,8 @@ cain_sip_channel_t *cain_sip_listening_point_find_output_channel(cain_sip_listen
 
 /*include private headers */
 #include "cain_sip_resolver.h"
+#include "sender_task.h"
+
+#define CAIN_SIP_SOCKET_TIMEOUT 30000
 
 #endif

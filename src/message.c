@@ -15,18 +15,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef CAIN_SIP_MESSAGE_H
-#define CAIN_SIP_MESSAGE_H
 
-typedef struct cain_sip_message cain_sip_message_t;
-typedef struct cain_sip_request cain_sip_request_t;
-typedef struct cain_sip_response cain_sip_response_t;
+#include "cain_sip_internal.h"
 
-#define CAIN_SIP_MESSAGE(obj)			CAIN_SIP_CAST(obj,cain_sip_message_t)
-#define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)
-#define CAIN_SIP_RESPONSE(obj)		CAIN_SIP_CAST(obj,cain_sip_response_t)
 
-char *cain_sip_message_to_string(cain_sip_message_t *msg);
-
-#endif
-
+char *cain_sip_message_to_string(cain_sip_message_t *msg){
+	return NULL;
+}

@@ -271,6 +271,14 @@ cain_sip_list_t* cain_sip_list_find_custom(cain_sip_list_t* list, cain_sip_compa
 	return NULL;
 }
 
+cain_sip_list_t *cain_sip_list_remove_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data){
+	cain_sip_list_t *elem=cain_sip_list_find_custom(list,compare_func,user_data);
+	if (elem!=NULL){
+		list=cain_sip_list_remove_link(list,elem);
+	}
+	return list;
+}
+
 void * cain_sip_list_nth_data(const cain_sip_list_t* list, int index){
 	int i;
 	for(i=0;list!=NULL;list=list->next,++i){

@@ -18,10 +18,6 @@
 
 #include "cain_sip_internal.h"
 
-struct cain_sip_stack{
-	cain_sip_main_loop_t *ml;
-	cain_sip_list_t *lp;/*list of listening points*/
-};
 
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 	cain_sip_object_unref(stack->ml);
@@ -48,8 +44,18 @@ cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack
 	return lp;
 }
 
+void cain_sip_stack_delete_listening_point(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){
+	s->lp=cain_sip_list_remove(s->lp,lp);
+	cain_sip_object_unref(lp);
+}
+
 cain_sip_provider_t *cain_sip_stack_create_provider(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){
-	return NULL;
+	cain_sip_provider_t *p=cain_sip_provider_new(s,lp);
+	return p;
+}
+
+void cain_sip_stack_delete_provider(cain_sip_stack_t *s, cain_sip_provider_t *p){
+	cain_sip_object_unref(p);
 }
 
 void cain_sip_stack_main(cain_sip_stack_t *stack){
@@ -58,4 +64,9 @@ void cain_sip_stack_main(cain_sip_stack_t *stack){
 
 void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds){
 	cain_sip_main_loop_sleep (stack->ml,milliseconds);
+}
+
+void cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req, cain_sip_hop_t *hop){
+	hop->transport="UDP";
+	/*should find top most route or request uri */
 }

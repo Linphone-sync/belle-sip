@@ -44,15 +44,19 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sip_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_server_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t),
-	CAIN_SIP_TYPE_ID(cain_sip_transport_t),
+	CAIN_SIP_TYPE_ID(cain_sip_dialog_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_address_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_contact_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_from_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_to_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_via_t),
 	CAIN_SIP_TYPE_ID(cain_sip_uri_t),
+	CAIN_SIP_TYPE_ID(cain_sip_message_t),
+	CAIN_SIP_TYPE_ID(cain_sip_request_t),
+	CAIN_SIP_TYPE_ID(cain_sip_response_t),
 	CAIN_SIP_TYPE_ID(cain_sip_object_t),
 	CAIN_SIP_TYPE_ID(cain_sip_parameters_t),
+	CAIN_SIP_TYPE_ID(cain_sip_sender_task_t),
 	cain_sip_type_id_end
 }cain_sip_type_id_t;
 
@@ -99,6 +103,8 @@ CAIN_SIP_END_DECLS
 typedef struct cain_sip_listening_point cain_sip_listening_point_t;
 typedef struct cain_sip_stack cain_sip_stack_t;
 typedef struct cain_sip_provider cain_sip_provider_t;
+typedef struct cain_sip_listener cain_sip_listener_t;
+typedef struct cain_sip_dialog cain_sip_dialog_t;
 
 #include "cain-sip/list.h"
 #include "cain-sip/mainloop.h"
@@ -107,8 +113,11 @@ typedef struct cain_sip_provider cain_sip_provider_t;
 #include "cain-sip/parameters.h"
 #include "cain-sip/message.h"
 #include "cain-sip/transaction.h"
+#include "cain-sip/dialog.h"
 #include "cain-sip/sipstack.h"
 #include "cain-sip/listeningpoint.h"
+#include "cain-sip/provider.h"
+#include "cain-sip/listener.h"
 
 #undef TRUE
 #define TRUE 1

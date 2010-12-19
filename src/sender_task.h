@@ -15,18 +15,34 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef CAIN_SIP_MESSAGE_H
-#define CAIN_SIP_MESSAGE_H
 
-typedef struct cain_sip_message cain_sip_message_t;
-typedef struct cain_sip_request cain_sip_request_t;
-typedef struct cain_sip_response cain_sip_response_t;
+#ifndef sender_task_h
+#define sender_task_h
 
-#define CAIN_SIP_MESSAGE(obj)			CAIN_SIP_CAST(obj,cain_sip_message_t)
-#define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)
-#define CAIN_SIP_RESPONSE(obj)		CAIN_SIP_CAST(obj,cain_sip_response_t)
+typedef void (*cain_sip_sender_task_callback_t)(void *data, int retcode);
 
-char *cain_sip_message_to_string(cain_sip_message_t *msg);
+struct cain_sip_sender_task{
+	cain_sip_object_t base;
+	cain_sip_provider_t *provider;
+	cain_sip_request_t *request;
+	cain_sip_source_t *source;
+	cain_sip_channel_t *channel;
+	cain_sip_hop_t hop;
+	struct addrinfo *dest;
+	unsigned long resolver_id;
+	char *buf;
+	cain_sip_sender_task_callback_t cb;
+	void *cb_data;
+};
+
+typedef struct cain_sip_sender_task cain_sip_sender_task_t;
+
+
+
+cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider, cain_sip_request_t *req, cain_sip_sender_task_callback_t cb, void *data);
+
+void cain_sip_sender_task_send(cain_sip_sender_task_t *task);
+
 
 #endif
 

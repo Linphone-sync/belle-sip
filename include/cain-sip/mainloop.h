@@ -42,8 +42,6 @@ CAIN_SIP_BEGIN_DECLS
 
 void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
 
-void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
-
 /**
  * Creates a mainloop.
 **/
@@ -67,6 +65,10 @@ unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_
 **/
 cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
 
+
+cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
+
+unsigned long cain_sip_source_get_id(cain_sip_source_t *s);
 
 /**
  * Executes the main loop forever (or until cain_sip_main_loop_quit() is called)

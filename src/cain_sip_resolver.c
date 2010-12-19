@@ -76,14 +76,36 @@ static void *cain_sip_resolver_thread(void *ptr){
 }
 
 unsigned long cain_sip_resolve(const char *name, int port, unsigned int hints, cain_sip_resolver_callback_t cb , void *data, cain_sip_main_loop_t *ml){
-	cain_sip_resolver_context_t *ctx=cain_sip_resolver_context_new();
-	ctx->cb_data=data;
-	ctx->cb=cb;
-	ctx->name=cain_sip_strdup(name);
-	ctx->port=port;
-	ctx->hints=hints;
-	cain_sip_main_loop_add_source(ml,(cain_sip_source_t*)ctx);
-	pthread_create(&ctx->thread,NULL,cain_sip_resolver_thread,ctx);
-	return ctx->source.id;
+	struct addrinfo *res=cain_sip_ip_address_to_addrinfo (name, port);
+	if (res==NULL){
+		/*then perform asynchronous DNS query */
+		cain_sip_resolver_context_t *ctx=cain_sip_resolver_context_new();
+		ctx->cb_data=data;
+		ctx->cb=cb;
+		ctx->name=cain_sip_strdup(name);
+		ctx->port=port;
+		ctx->hints=hints;
+		cain_sip_main_loop_add_source(ml,(cain_sip_source_t*)ctx);
+		pthread_create(&ctx->thread,NULL,cain_sip_resolver_thread,ctx);
+		return ctx->source.id;
+	}else{
+		cb(data,name,res);
+		return 0;
+	}
 }
 
+struct addrinfo * cain_sip_ip_address_to_addrinfo(const char *ipaddress, int port){
+	struct addrinfo *res=NULL;
+	struct addrinfo hints={0};
+	char serv[10];
+	int err;
+
+	snprintf(serv,sizeof(serv),"%i",port);
+	hints.ai_family=AF_UNSPEC;
+	hints.ai_flags=AI_NUMERICSERV|AI_NUMERICHOST;
+	err=getaddrinfo(ipaddress,serv,&hints,&res);
+	if (err!=0){
+		return NULL;
+	}
+	return res;
+}
