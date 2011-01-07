@@ -19,12 +19,14 @@
 #ifndef sender_task_h
 #define sender_task_h
 
-typedef void (*cain_sip_sender_task_callback_t)(void *data, int retcode);
+struct cain_sip_sender_task;
+
+typedef void (*cain_sip_sender_task_callback_t)(struct cain_sip_sender_task* , void *data, int retcode);
 
 struct cain_sip_sender_task{
 	cain_sip_object_t base;
 	cain_sip_provider_t *provider;
-	cain_sip_request_t *request;
+	cain_sip_message_t *message;
 	cain_sip_source_t *source;
 	cain_sip_channel_t *channel;
 	cain_sip_hop_t hop;
@@ -39,7 +41,7 @@ typedef struct cain_sip_sender_task cain_sip_sender_task_t;
 
 
 
-cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider, cain_sip_request_t *req, cain_sip_sender_task_callback_t cb, void *data);
+cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider, cain_sip_message_t *msg, cain_sip_sender_task_callback_t cb, void *data);
 
 void cain_sip_sender_task_send(cain_sip_sender_task_t *task);
 

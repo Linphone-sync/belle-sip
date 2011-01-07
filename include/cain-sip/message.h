@@ -26,6 +26,12 @@ typedef struct cain_sip_response cain_sip_response_t;
 #define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)
 #define CAIN_SIP_RESPONSE(obj)		CAIN_SIP_CAST(obj,cain_sip_response_t)
 
+int cain_sip_message_is_request(cain_sip_message_t *msg);
+
+int cain_sip_message_is_response(cain_sip_message_t *msg);
+
+cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, const char *header_name);
+
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
 
 #endif

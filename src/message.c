@@ -18,6 +18,17 @@
 
 #include "cain_sip_internal.h"
 
+int cain_sip_message_is_request(cain_sip_message_t *msg){
+	return 0;
+}
+
+int cain_sip_message_is_response(cain_sip_message_t *msg){
+	return 0;
+}
+
+cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, const char *header_name){
+	return NULL;
+}
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg){
 	return NULL;
