@@ -149,41 +149,65 @@ cain_sip_header_via_t* cain_sip_header_via_new();
 
 cain_sip_header_via_t* cain_sip_header_via_parse (const char* via) ;
 const char*	cain_sip_header_via_get_branch(cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_transport(cain_sip_header_via_t* via);
 const char*	cain_sip_header_via_get_host(cain_sip_header_via_t* via);
-/*
-String	getMAddr()
-          Returns the value of the maddr parameter, or null if this is not set.
- int	getPort()
-          Returns the port part of this ViaHeader.
- String	getProtocol()
-          Returns the value of the protocol used.
- String	getReceived()
-          Gets the received paramater of the ViaHeader.
- int	getRPort()
-          Returns the rport part of this ViaHeader.
- String	getTransport()
-          Returns the value of the transport parameter.
- int	getTTL()
-          Returns the value of the ttl parameter, or -1 if this is not set.
- void	setBranch(String branch)
-          Sets the branch parameter of the ViaHeader to the newly supplied branch value.
- void	setHost(String host)
-          Set the host part of this ViaHeader to the newly supplied host parameter.
- void	setMAddr(String mAddr)
-          Sets the value of the maddr parameter of this ViaHeader.
- void	setPort(int port)
-          Set the port part of this ViaHeader to the newly supplied port parameter.
- void	setProtocol(String protocol)
-          Sets the value of the protocol parameter.
- void	setReceived(String received)
-          Sets the received parameter of ViaHeader.
- void	setRPort()
-          Set the rport part of this ViaHeader.
- void	setTransport(String transport)
-          Sets the value of the transport.
- void	setTTL(int ttl)
-*/
+int cain_sip_header_via_get_port(cain_sip_header_via_t* via);
+
+const char*	cain_sip_header_via_get_maddr(cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_protocol(cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_received(cain_sip_header_via_t* via);
+int cain_sip_header_via_get_rport(cain_sip_header_via_t* via);
+int	cain_sip_header_via_get_ttl(cain_sip_header_via_t* via);
+
+void cain_sip_header_via_set_branch(cain_sip_header_via_t* via,const char* branch);
+void cain_sip_header_via_set_host(cain_sip_header_via_t* via, const char* host);
+int cain_sip_header_via_set_port(cain_sip_header_via_t* via,int port);
+void cain_sip_header_via_set_maddr(cain_sip_header_via_t* via, const char* maddr);
+void cain_sip_header_via_set_protocol(cain_sip_header_via_t* via, const char* protocol);
+void cain_sip_header_via_set_received(cain_sip_header_via_t* via, const char* received);
+int cain_sip_header_via_set_rport(cain_sip_header_via_t* via,int rport);
+void cain_sip_header_via_set_transport(cain_sip_header_via_t* via,const char* transport);
+int cain_sip_header_via_set_ttl(cain_sip_header_via_t* via, int ttl);
 #define CAIN_SIP_HEADER_VIA(t) CAIN_SIP_CAST(t,cain_sip_header_via_t)
 
+/******************************
+ * Call id object inherent from object
+ *
+ ******************************/
+typedef struct _cain_sip_header_callid cain_sip_header_callid_t;
 
+cain_sip_header_callid_t* cain_sip_header_callid_new();
+
+cain_sip_header_callid_t* cain_sip_header_callid_parse (const char* callid) ;
+const char*	cain_sip_header_callid_get_callid(cain_sip_header_callid_t* callid);
+void cain_sip_header_callid_set_callid(cain_sip_header_callid_t* via,const char* callid);
+#define CAIN_SIP_HEADER_CALLID(t) CAIN_SIP_CAST(t,cain_sip_header_callid_t)
+/******************************
+ * cseq object inherent from object
+ *
+ ******************************/
+typedef struct _cain_sip_header_cseq cain_sip_header_cseq_t;
+
+cain_sip_header_cseq_t* cain_sip_header_cseq_new();
+
+cain_sip_header_cseq_t* cain_sip_header_cseq_parse (const char* cseq) ;
+const char*	cain_sip_header_cseq_get_method(cain_sip_header_cseq_t* cseq);
+void cain_sip_header_cseq_set_method(cain_sip_header_cseq_t* cseq,const char* method);
+unsigned int	cain_sip_header_cseq_get_seq_number(cain_sip_header_cseq_t* cseq);
+void cain_sip_header_cseq_set_seq_number(cain_sip_header_cseq_t* cseq,unsigned int seq_number);
+#define CAIN_SIP_HEADER_CSEQ(t) CAIN_SIP_CAST(t,cain_sip_header_cseq_t)
+/******************************
+ * content type object inherent from parameters
+ *
+ ******************************/
+typedef struct _cain_sip_header_content_type cain_sip_header_content_type_t;
+
+cain_sip_header_content_type_t* cain_sip_header_content_type_new();
+
+cain_sip_header_content_type_t* cain_sip_header_content_type_parse (const char* content_type) ;
+const char*	cain_sip_header_content_type_get_type(cain_sip_header_content_type_t* content_type);
+void cain_sip_header_content_type_set_type(cain_sip_header_content_type_t* content_type,const char* type);
+const char*	cain_sip_header_content_type_get_subtype(cain_sip_header_content_type_t* content_type);
+void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* content_type,const char* sub_type);
+#define CAIN_SIP_HEADER_CONTENT_TYPE(t) CAIN_SIP_CAST(t,cain_sip_header_content_type_t)
 #endif /* HEADERS_H_ */

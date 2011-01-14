@@ -87,6 +87,7 @@ GET_SET_BOOL(cain_sip_header_contact,wildcard,is);
 
 int cain_sip_header_contact_set_expires(cain_sip_header_contact_t* contact, int expires) {
 	if (expires < 0 ) {
+		 cain_sip_error("bad expires value [%i] for contact",expires);
 		return -1;
 	}
 	_cain_sip_header_contact_set_expires(contact,expires);
@@ -94,6 +95,7 @@ int cain_sip_header_contact_set_expires(cain_sip_header_contact_t* contact, int 
  }
 int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float qValue) {
 	 if (qValue != -1 && qValue < 0 && qValue >1) {
+		 cain_sip_error("bad q value [%f] for contact",qValue);
 		 return -1;
 	 }
 	 _cain_sip_header_contact_set_q(contact,qValue);
@@ -133,21 +135,120 @@ static void cain_sip_header_to_destroy(cain_sip_header_to_t* to) {
 CAIN_SIP_NEW(header_to,header_address)
 CAIN_SIP_PARSE(header_to)
 GET_SET_STRING_PARAM(cain_sip_header_to,tag);
+
 /**************************
-* Viq header object inherent from header_address
+* Viq header object inherent from parameters
 ****************************
 */
 struct _cain_sip_header_via  {
-	cain_sip_header_address_t address;
+	cain_sip_parameters_t params_list;
+	const char* protocol;
+	const char* transport;
+	const char* host;
+	int port;
 };
 
-static void cain_sip_header_via_destroy(cain_sip_header_via_t* to) {
-	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(to));
+static void cain_sip_header_via_destroy(cain_sip_header_via_t* via) {
+	cain_sip_parameters_destroy(CAIN_SIP_PARAMETERS(via));
+	if (via->host) cain_sip_free((void*)via->host);
+	if (via->protocol) cain_sip_free((void*)via->protocol);
 }
 
 CAIN_SIP_NEW(header_via,header_address)
 CAIN_SIP_PARSE(header_via)
+GET_SET_STRING(cain_sip_header_via,protocol);
+GET_SET_STRING(cain_sip_header_via,transport);
+GET_SET_STRING(cain_sip_header_via,host);
+GET_SET_INT_PRIVATE(cain_sip_header_via,port,int,_);
 
+GET_SET_STRING_PARAM(cain_sip_header_via,branch);
+GET_SET_STRING_PARAM(cain_sip_header_via,maddr);
+GET_SET_STRING_PARAM(cain_sip_header_via,received);
 
+GET_SET_INT_PARAM_PRIVATE(cain_sip_header_via,rport,int,_)
+GET_SET_INT_PARAM_PRIVATE(cain_sip_header_via,ttl,int,_)
+int cain_sip_header_via_set_rport (cain_sip_header_via_t* obj,int  value) {
+	if (value ==-1 || (value>0 && value<65536)) {
+		_cain_sip_header_via_set_rport(obj,value);
+		return 0;
+	} else {
+		cain_sip_error("bad rport value [%i] for via",value);
+		return -1;
+	}
+}
+int cain_sip_header_via_set_ttl (cain_sip_header_via_t* obj,int  value) {
+	if (value ==-1 || (value>0 && value<=255)) {
+		_cain_sip_header_via_set_ttl(obj,value);
+		return 0;
+	} else {
+		cain_sip_error("bad ttl value [%i] for via",value);
+		return -1;
+	}
+}
+int cain_sip_header_via_set_port (cain_sip_header_via_t* obj,int  value) {
+	if (value ==-1 || (value>0 && value<65536)) {
+		_cain_sip_header_via_set_port(obj,value);
+		return 0;
+	} else {
+		cain_sip_error("bad port value [%i] for via",value);
+		return -1;
+	}
+}
+/**************************
+* callid header object inherent from object
+****************************
+*/
+struct _cain_sip_header_callid  {
+	cain_sip_object_t base;
+	const char* callid;
+};
 
+static void cain_sip_header_callid_destroy(cain_sip_header_callid_t* callid) {
+	cain_sip_object_destroy(CAIN_SIP_OBJECT(callid));
+	if (callid->callid) cain_sip_free((void*)callid->callid);
 
+}
+
+CAIN_SIP_NEW(header_callid,object)
+CAIN_SIP_PARSE(header_callid)
+GET_SET_STRING(cain_sip_header_callid,callid);
+/**************************
+* cseq header object inherent from object
+****************************
+*/
+struct _cain_sip_header_cseq  {
+	cain_sip_object_t base;
+	const char* method;
+	unsigned int seq_number;
+};
+
+static void cain_sip_header_cseq_destroy(cain_sip_header_cseq_t* cseq) {
+	cain_sip_object_destroy(CAIN_SIP_OBJECT(cseq));
+	if (cseq->method) cain_sip_free((void*)cseq->method);
+
+}
+
+CAIN_SIP_NEW(header_cseq,object)
+CAIN_SIP_PARSE(header_cseq)
+GET_SET_STRING(cain_sip_header_cseq,method);
+GET_SET_INT(cain_sip_header_cseq,seq_number,unsigned int)
+/**************************
+* content type header object inherent from parameters
+****************************
+*/
+struct _cain_sip_header_content_type  {
+	cain_sip_parameters_t params_list;
+	const char* type;
+	const char* subtype;
+};
+
+static void cain_sip_header_content_type_destroy(cain_sip_header_content_type_t* content_type) {
+	cain_sip_parameters_destroy(CAIN_SIP_PARAMETERS(content_type));
+	if (content_type->type) cain_sip_free((void*)content_type->type);
+	if (content_type->subtype) cain_sip_free((void*)content_type->subtype);
+}
+
+CAIN_SIP_NEW(header_content_type,parameters)
+CAIN_SIP_PARSE(header_content_type)
+GET_SET_STRING(cain_sip_header_content_type,type);
+GET_SET_STRING(cain_sip_header_content_type,subtype);

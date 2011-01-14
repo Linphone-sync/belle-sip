@@ -260,6 +260,10 @@ uint64_t cain_sip_time_ms(void);
 	}\
 	void set_prefix##object_type##_set_##func_name (object_type##_t* obj,type  value) {\
 		char l_str_value[16];\
+		if (value == -1) { \
+			cain_sip_parameters_remove_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
+			return;\
+		}\
 		snprintf(l_str_value,16,FORMAT_(type),value);\
 		cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(obj),#attribute,(const char*)l_str_value);\
 	}
@@ -338,6 +342,7 @@ struct _cain_sip_parameters {
 };
 
 void cain_sip_parameters_init(cain_sip_parameters_t *obj);
+void cain_sip_parameters_destroy(cain_sip_parameters_t* params);
 
 #ifdef __cplusplus
 }

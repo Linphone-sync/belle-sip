@@ -36,6 +36,9 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sip_uri_t),
 	CAIN_SIP_TYPE_ID(cain_sip_object_t),
 	CAIN_SIP_TYPE_ID(cain_sip_parameters_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_callid_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_cseq_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_content_type_t),
 	cain_sip_type_id_end
 }cain_sip_type_id_t;
 
