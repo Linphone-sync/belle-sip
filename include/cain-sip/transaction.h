@@ -33,6 +33,7 @@ typedef enum cain_sip_transaction_state{
 	CAIN_SIP_TRANSACTION_TERMINATED
 }cain_sip_transaction_state_t;
 
+CAIN_SIP_BEGIN_DECLS
 
 void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t);
 void cain_sip_transaction_set_application_data(cain_sip_transaction_t *t, void *data);
@@ -52,11 +53,7 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);
 #define CAIN_SIP_CLIENT_TRANSACTION(t) CAIN_SIP_CAST(t,cain_sip_client_transaction_t)
 
 
-/*to be moved out when cain_sip_provider_t is implemented:*/
-
-cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_request_t *req);
-
-cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_request_t *req);
+CAIN_SIP_END_DECLS
 
 #endif
 

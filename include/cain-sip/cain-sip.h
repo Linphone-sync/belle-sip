@@ -20,25 +20,46 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+#define CAIN_SIP_BEGIN_DECLS		extern "C"{
+#define CAIN_SIP_END_DECLS		}
+#else
+#define CAIN_SIP_BEGIN_DECLS
+#define CAIN_SIP_END_DECLS
+#endif
+
 #define CAIN_SIP_TYPE_ID(_type) _type##_id
 
 typedef enum cain_sip_type_id{
 	cain_sip_type_id_first=1,
+	CAIN_SIP_TYPE_ID(cain_sip_stack_t),
+	CAIN_SIP_TYPE_ID(cain_sip_listening_point_t),
+	CAIN_SIP_TYPE_ID(cain_sip_datagram_listening_point_t),
+	CAIN_SIP_TYPE_ID(cain_sip_udp_listening_point_t),
+	CAIN_SIP_TYPE_ID(cain_sip_channel_t),
+	CAIN_SIP_TYPE_ID(cain_sip_udp_channel_t),
+	CAIN_SIP_TYPE_ID(cain_sip_provider_t),
+	CAIN_SIP_TYPE_ID(cain_sip_main_loop_t),
+	CAIN_SIP_TYPE_ID(cain_sip_source_t),
 	CAIN_SIP_TYPE_ID(cain_sip_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_server_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t),
-	CAIN_SIP_TYPE_ID(cain_sip_transport_t),
+	CAIN_SIP_TYPE_ID(cain_sip_dialog_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_address_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_contact_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_from_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_to_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_via_t),
 	CAIN_SIP_TYPE_ID(cain_sip_uri_t),
+	CAIN_SIP_TYPE_ID(cain_sip_message_t),
+	CAIN_SIP_TYPE_ID(cain_sip_request_t),
+	CAIN_SIP_TYPE_ID(cain_sip_response_t),
 	CAIN_SIP_TYPE_ID(cain_sip_object_t),
 	CAIN_SIP_TYPE_ID(cain_sip_parameters_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_callid_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_cseq_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_content_type_t),
+	CAIN_SIP_TYPE_ID(cain_sip_sender_task_t),
 	cain_sip_type_id_end
 }cain_sip_type_id_t;
 
@@ -52,32 +73,41 @@ typedef enum cain_sip_type_id{
 
 typedef struct _cain_sip_object cain_sip_object_t;
 
+CAIN_SIP_BEGIN_DECLS
+
 int cain_sip_object_is_unowed(const cain_sip_object_t *obj);
 
 /**
  * Increments reference counter, which prevents the object from being destroyed.
  * If the object is initially unowed, this acquires the first reference.
 **/
-#define cain_sip_object_ref(obj) _cain_sip_object_ref((cain_sip_object_t*)obj)
-cain_sip_object_t * _cain_sip_object_ref(cain_sip_object_t *obj);
+cain_sip_object_t * cain_sip_object_ref(void *obj);
 
 /**
  * Decrements the reference counter. When it drops to zero, the object is destroyed.
 **/
-#define cain_sip_object_unref(obj) _cain_sip_object_unref((cain_sip_object_t*)obj)
-void _cain_sip_object_unref(cain_sip_object_t *obj);
+void cain_sip_object_unref(void *obj);
 
 /**
  * Destroy the object: this function is intended for unowed object, that is objects
  * that were created with a 0 reference count.
 **/
-#define cain_sip_object_destroy(obj) _cain_sip_object_destroy((cain_sip_object_t*)obj)
-void _cain_sip_object_destroy(cain_sip_object_t *obj);
+void cain_sip_object_destroy(void *obj);
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
 
-#define CAIN_SIP_CAST(obj,_type) (_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__)
+CAIN_SIP_END_DECLS
+
+#define CAIN_SIP_CAST(obj,_type) 		((_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__))
 #define CAIN_SIP_OBJECT(obj) CAIN_SIP_CAST(obj,cain_sip_object_t)
+
+
+
+typedef struct cain_sip_listening_point cain_sip_listening_point_t;
+typedef struct cain_sip_stack cain_sip_stack_t;
+typedef struct cain_sip_provider cain_sip_provider_t;
+typedef struct cain_sip_listener cain_sip_listener_t;
+typedef struct cain_sip_dialog cain_sip_dialog_t;
 
 #include "cain-sip/list.h"
 #include "cain-sip/mainloop.h"
@@ -86,6 +116,12 @@ void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const 
 #include "cain-sip/parameters.h"
 #include "cain-sip/message.h"
 #include "cain-sip/transaction.h"
+#include "cain-sip/dialog.h"
+#include "cain-sip/sipstack.h"
+#include "cain-sip/listeningpoint.h"
+#include "cain-sip/provider.h"
+#include "cain-sip/listener.h"
+
 #undef TRUE
 #define TRUE 1
 

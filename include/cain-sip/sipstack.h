@@ -15,24 +15,34 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef CAIN_SIP_MESSAGE_H
-#define CAIN_SIP_MESSAGE_H
 
-typedef struct cain_sip_message cain_sip_message_t;
-typedef struct cain_sip_request cain_sip_request_t;
-typedef struct cain_sip_response cain_sip_response_t;
 
-#define CAIN_SIP_MESSAGE(obj)			CAIN_SIP_CAST(obj,cain_sip_message_t)
-#define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)
-#define CAIN_SIP_RESPONSE(obj)		CAIN_SIP_CAST(obj,cain_sip_response_t)
+#ifndef cain_sip_stack_h
+#define cain_sip_stack_h
 
-int cain_sip_message_is_request(cain_sip_message_t *msg);
+struct cain_sip_hop{
+	const char *host;
+	const char *transport;
+	int port;
+};
 
-int cain_sip_message_is_response(cain_sip_message_t *msg);
+typedef struct cain_sip_hop cain_sip_hop_t;
 
-cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, const char *header_name);
+CAIN_SIP_BEGIN_DECLS
 
-char *cain_sip_message_to_string(cain_sip_message_t *msg);
+cain_sip_stack_t * cain_sip_stack_new(const char *properties);
+
+cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport);
+
+void cain_sip_stack_delete_listening_point(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
+
+cain_sip_provider_t *cain_sip_stack_create_provider(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
+
+void cain_sip_stack_main(cain_sip_stack_t *stack);
+
+void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
+
+CAIN_SIP_END_DECLS
 
 #endif
 
