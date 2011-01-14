@@ -252,3 +252,32 @@ CAIN_SIP_NEW(header_content_type,parameters)
 CAIN_SIP_PARSE(header_content_type)
 GET_SET_STRING(cain_sip_header_content_type,type);
 GET_SET_STRING(cain_sip_header_content_type,subtype);
+/**************************
+* Route header object inherent from header_address
+****************************
+*/
+struct _cain_sip_header_route  {
+	cain_sip_header_address_t address;
+};
+
+static void cain_sip_header_route_destroy(cain_sip_header_route_t* route) {
+	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(route));
+}
+
+CAIN_SIP_NEW(header_route,header_address)
+CAIN_SIP_PARSE(header_route)
+/**************************
+* Record route header object inherent from header_address
+****************************
+*/
+struct _cain_sip_header_record_route  {
+	cain_sip_header_address_t address;
+};
+
+static void cain_sip_header_record_route_destroy(cain_sip_header_record_route_t* record_route) {
+	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(record_route));
+}
+
+CAIN_SIP_NEW(header_record_route,header_address)
+CAIN_SIP_PARSE(header_record_route)
+

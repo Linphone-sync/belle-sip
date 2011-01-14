@@ -210,4 +210,25 @@ void cain_sip_header_content_type_set_type(cain_sip_header_content_type_t* conte
 const char*	cain_sip_header_content_type_get_subtype(cain_sip_header_content_type_t* content_type);
 void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* content_type,const char* sub_type);
 #define CAIN_SIP_HEADER_CONTENT_TYPE(t) CAIN_SIP_CAST(t,cain_sip_header_content_type_t)
+/******************************
+ * Route header object inherent from header_address
+ *
+ ******************************/
+ typedef struct _cain_sip_header_route cain_sip_header_route_t;
+
+ cain_sip_header_route_t* cain_sip_header_route_new();
+ cain_sip_header_route_t* cain_sip_header_route_parse (const char* route) ;
+
+#define CAIN_SIP_HEADER_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_route_t)
+/******************************
+ * Record route header object inherent from header_address
+ *
+ ******************************/
+ typedef struct _cain_sip_header_record_route cain_sip_header_record_route_t;
+
+ cain_sip_header_record_route_t* cain_sip_header_record_route_new();
+ cain_sip_header_record_route_t* cain_sip_header_record_route_parse (const char* route) ;
+
+ #define CAIN_SIP_HEADER_RECORD_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_record_route_t)
+
 #endif /* HEADERS_H_ */
