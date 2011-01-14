@@ -57,7 +57,7 @@ const char *cain_sip_dialog_get_remote_tag(cain_sip_dialog_t *dialog);
 
 const cain_sip_header_address_t *cain_sip_dialog_get_remote_target(cain_sip_dialog_t *dialog);
 
-const cain_sip_list_t cain_sip_dialog_get_route_set(cain_sip_dialog_t *dialog);
+const cain_sip_list_t* cain_sip_dialog_get_route_set(cain_sip_dialog_t *dialog);
 
 cain_sip_dialog_state_t cain_sip_dialog_get_state(cain_sip_dialog_t *dialog);
 
