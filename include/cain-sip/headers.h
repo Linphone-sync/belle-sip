@@ -174,14 +174,14 @@ int cain_sip_header_via_set_ttl(cain_sip_header_via_t* via, int ttl);
  * Call id object inherent from object
  *
  ******************************/
-typedef struct _cain_sip_header_callid cain_sip_header_callid_t;
+typedef struct _cain_sip_header_call_id cain_sip_header_call_id_t;
 
-cain_sip_header_callid_t* cain_sip_header_callid_new();
+cain_sip_header_call_id_t* cain_sip_header_call_id_new();
 
-cain_sip_header_callid_t* cain_sip_header_callid_parse (const char* callid) ;
-const char*	cain_sip_header_callid_get_callid(cain_sip_header_callid_t* callid);
-void cain_sip_header_callid_set_callid(cain_sip_header_callid_t* via,const char* callid);
-#define CAIN_SIP_HEADER_CALLID(t) CAIN_SIP_CAST(t,cain_sip_header_callid_t)
+cain_sip_header_call_id_t* cain_sip_header_call_id_parse (const char* call_id) ;
+const char*	cain_sip_header_call_id_get_call_id(cain_sip_header_call_id_t* call_id);
+void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* via,const char* call_id);
+#define CAIN_SIP_HEADER_CALL_ID(t) CAIN_SIP_CAST(t,cain_sip_header_call_id_t)
 /******************************
  * cseq object inherent from object
  *
@@ -229,6 +229,18 @@ void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* co
  cain_sip_header_record_route_t* cain_sip_header_record_route_new();
  cain_sip_header_record_route_t* cain_sip_header_record_route_parse (const char* route) ;
 
- #define CAIN_SIP_HEADER_RECORD_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_record_route_t)
+#define CAIN_SIP_HEADER_RECORD_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_record_route_t)
+/******************************
+ * Content length inherent from object
+ *
+ ******************************/
+typedef struct _cain_sip_header_content_length cain_sip_header_content_length_t;
+
+cain_sip_header_content_length_t* cain_sip_header_content_length_new();
+
+cain_sip_header_content_length_t* cain_sip_header_content_length_parse (const char* content_length) ;
+unsigned int cain_sip_header_content_length_get_content_length(cain_sip_header_content_length_t* content_length);
+void cain_sip_header_content_length_set_content_length(cain_sip_header_content_length_t* content_length,unsigned int length);
+#define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
 
 #endif /* HEADERS_H_ */

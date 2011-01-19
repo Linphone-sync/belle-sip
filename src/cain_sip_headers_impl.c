@@ -195,23 +195,23 @@ int cain_sip_header_via_set_port (cain_sip_header_via_t* obj,int  value) {
 	}
 }
 /**************************
-* callid header object inherent from object
+* call_id header object inherent from object
 ****************************
 */
-struct _cain_sip_header_callid  {
+struct _cain_sip_header_call_id  {
 	cain_sip_object_t base;
-	const char* callid;
+	const char* call_id;
 };
 
-static void cain_sip_header_callid_destroy(cain_sip_header_callid_t* callid) {
-	cain_sip_object_destroy(CAIN_SIP_OBJECT(callid));
-	if (callid->callid) cain_sip_free((void*)callid->callid);
+static void cain_sip_header_call_id_destroy(cain_sip_header_call_id_t* call_id) {
+	cain_sip_object_destroy(CAIN_SIP_OBJECT(call_id));
+	if (call_id->call_id) cain_sip_free((void*)call_id->call_id);
 
 }
 
-CAIN_SIP_NEW(header_callid,object)
-CAIN_SIP_PARSE(header_callid)
-GET_SET_STRING(cain_sip_header_callid,callid);
+CAIN_SIP_NEW(header_call_id,object)
+CAIN_SIP_PARSE(header_call_id)
+GET_SET_STRING(cain_sip_header_call_id,call_id);
 /**************************
 * cseq header object inherent from object
 ****************************
@@ -280,4 +280,19 @@ static void cain_sip_header_record_route_destroy(cain_sip_header_record_route_t*
 
 CAIN_SIP_NEW(header_record_route,header_address)
 CAIN_SIP_PARSE(header_record_route)
+/**************************
+* content length header object inherent from object
+****************************
+*/
+struct _cain_sip_header_content_length  {
+	cain_sip_object_t base;
+	unsigned int content_length;
+};
 
+static void cain_sip_header_content_length_destroy(cain_sip_header_content_length_t* content_length) {
+	cain_sip_object_destroy(CAIN_SIP_OBJECT(content_length));
+
+}
+CAIN_SIP_NEW(header_content_length,object)
+CAIN_SIP_PARSE(header_content_length)
+GET_SET_INT(cain_sip_header_content_length,content_length,unsigned int)

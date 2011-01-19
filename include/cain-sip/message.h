@@ -18,15 +18,26 @@
 #ifndef CAIN_SIP_MESSAGE_H
 #define CAIN_SIP_MESSAGE_H
 
-typedef struct cain_sip_message cain_sip_message_t;
-typedef struct cain_sip_request cain_sip_request_t;
-typedef struct cain_sip_response cain_sip_response_t;
+typedef struct _cain_sip_message cain_sip_message_t;
+typedef struct _cain_sip_request cain_sip_request_t;
+typedef struct _cain_sip_response cain_sip_response_t;
 
 #define CAIN_SIP_MESSAGE(obj)			CAIN_SIP_CAST(obj,cain_sip_message_t)
 #define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)
 #define CAIN_SIP_RESPONSE(obj)		CAIN_SIP_CAST(obj,cain_sip_response_t)
 
 int cain_sip_message_is_request(cain_sip_message_t *msg);
+cain_sip_request_t* cain_sip_request_new();
+cain_sip_request_t* cain_sip_request_parse(const char* raw);
+
+
+
+
+
+cain_sip_uri_t* cain_sip_request_get_uri(cain_sip_request_t* request);
+void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri);
+const char* cain_sip_request_get_method(cain_sip_request_t* request);
+void cain_sip_request_set_method(cain_sip_request_t* request,const char* method);
 
 int cain_sip_message_is_response(cain_sip_message_t *msg);
 
