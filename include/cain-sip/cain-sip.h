@@ -90,6 +90,14 @@ cain_sip_object_t * cain_sip_object_ref(void *obj);
  * Decrements the reference counter. When it drops to zero, the object is destroyed.
 **/
 void cain_sip_object_unref(void *obj);
+/**
+ * Set object name.
+**/
+void cain_sip_object_set_name(cain_sip_object_t *obj,const char* name);
+/**
+ * Get object name.
+**/
+const char* cain_sip_object_get_name(cain_sip_object_t *obj);
 
 /**
  * Destroy the object: this function is intended for unowed object, that is objects

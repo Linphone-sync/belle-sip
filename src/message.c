@@ -18,27 +18,35 @@
 #include "cain_sip_messageParser.h"
 #include "cain_sip_messageLexer.h"
 #include "cain_sip_internal.h"
-typedef struct _header_container {
+typedef struct _headers_container {
 	const char* name;
 	cain_sip_list_t* header_list;
-} header_container_t;
-/*
-static header_container_t* cain_sip_message_header_container_new(const char* name) {
-	header_container_t* header_container = cain_sip_new0(header_container_t);
-	header_container->name= cain_sip_strdup(name);
+} headers_container_t;
+
+static headers_container_t* cain_sip_message_headers_container_new(const char* name) {
+	headers_container_t* headers_container = cain_sip_new0(headers_container_t);
+	headers_container->name= cain_sip_strdup(name);
 }
-*/
+
 struct _cain_sip_message {
 	cain_sip_object_t base;
 	cain_sip_list_t* header_list;
 	cain_sip_list_t* headernames_list;
 };
 
-
+static int cain_sip_headers_container_comp_func(const headers_container_t *a, const char*b) {
+	return strcmp(a->name,b);
+}
 static void cain_sip_message_init(cain_sip_message_t *message){
 	cain_sip_object_init_type(message,cain_sip_message_t);
 }
 
+headers_container_t* cain_sip_headers_container_get(cain_sip_message_t* message,const char* header_name) {
+	cain_sip_list_t *  result = cain_sip_list_find_custom(	message->header_list
+															, (cain_sip_compare_func)cain_sip_headers_container_comp_func
+															, header_name);
+	return result?(headers_container_t*)(result->data):NULL;
+}
 void cain_sip_message_add_header(cain_sip_message_t *message,cain_sip_header_t* header) {
 
 }

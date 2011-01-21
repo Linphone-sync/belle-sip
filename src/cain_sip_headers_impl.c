@@ -77,7 +77,7 @@ void cain_sip_header_contact_destroy(cain_sip_header_contact_t* contact) {
 	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(contact));
 }
 
-CAIN_SIP_NEW(header_contact,header_address)
+CAIN_SIP_NEW_WITH_NAME(header_contact,header_address,"Contact")
 CAIN_SIP_PARSE(header_contact)
 
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,expires,int,_)
@@ -116,7 +116,7 @@ static void cain_sip_header_from_destroy(cain_sip_header_from_t* from) {
 	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(from));
 }
 
-CAIN_SIP_NEW(header_from,header_address)
+CAIN_SIP_NEW_WITH_NAME(header_from,header_address,"From")
 CAIN_SIP_PARSE(header_from)
 GET_SET_STRING_PARAM(cain_sip_header_from,tag);
 
@@ -132,7 +132,7 @@ static void cain_sip_header_to_destroy(cain_sip_header_to_t* to) {
 	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(to));
 }
 
-CAIN_SIP_NEW(header_to,header_address)
+CAIN_SIP_NEW_WITH_NAME(header_to,header_address,"To")
 CAIN_SIP_PARSE(header_to)
 GET_SET_STRING_PARAM(cain_sip_header_to,tag);
 
@@ -154,7 +154,7 @@ static void cain_sip_header_via_destroy(cain_sip_header_via_t* via) {
 	if (via->protocol) cain_sip_free((void*)via->protocol);
 }
 
-CAIN_SIP_NEW(header_via,header_address)
+CAIN_SIP_NEW_WITH_NAME(header_via,header_address,"Via")
 CAIN_SIP_PARSE(header_via)
 GET_SET_STRING(cain_sip_header_via,protocol);
 GET_SET_STRING(cain_sip_header_via,transport);
@@ -209,7 +209,7 @@ static void cain_sip_header_call_id_destroy(cain_sip_header_call_id_t* call_id) 
 
 }
 
-CAIN_SIP_NEW(header_call_id,object)
+CAIN_SIP_NEW_WITH_NAME(header_call_id,object,"Call-ID")
 CAIN_SIP_PARSE(header_call_id)
 GET_SET_STRING(cain_sip_header_call_id,call_id);
 /**************************
@@ -228,7 +228,7 @@ static void cain_sip_header_cseq_destroy(cain_sip_header_cseq_t* cseq) {
 
 }
 
-CAIN_SIP_NEW(header_cseq,object)
+CAIN_SIP_NEW_WITH_NAME(header_cseq,object,"Cseq")
 CAIN_SIP_PARSE(header_cseq)
 GET_SET_STRING(cain_sip_header_cseq,method);
 GET_SET_INT(cain_sip_header_cseq,seq_number,unsigned int)
@@ -248,7 +248,7 @@ static void cain_sip_header_content_type_destroy(cain_sip_header_content_type_t*
 	if (content_type->subtype) cain_sip_free((void*)content_type->subtype);
 }
 
-CAIN_SIP_NEW(header_content_type,parameters)
+CAIN_SIP_NEW_WITH_NAME(header_content_type,parameters,"Content-Type")
 CAIN_SIP_PARSE(header_content_type)
 GET_SET_STRING(cain_sip_header_content_type,type);
 GET_SET_STRING(cain_sip_header_content_type,subtype);
@@ -264,7 +264,7 @@ static void cain_sip_header_route_destroy(cain_sip_header_route_t* route) {
 	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(route));
 }
 
-CAIN_SIP_NEW(header_route,header_address)
+CAIN_SIP_NEW_WITH_NAME(header_route,header_address,"Route")
 CAIN_SIP_PARSE(header_route)
 /**************************
 * Record route header object inherent from header_address
@@ -278,7 +278,7 @@ static void cain_sip_header_record_route_destroy(cain_sip_header_record_route_t*
 	cain_sip_header_address_destroy(CAIN_SIP_HEADER_ADDRESS(record_route));
 }
 
-CAIN_SIP_NEW(header_record_route,header_address)
+CAIN_SIP_NEW_WITH_NAME(header_record_route,header_address,"Record-Route")
 CAIN_SIP_PARSE(header_record_route)
 /**************************
 * content length header object inherent from object
@@ -293,6 +293,6 @@ static void cain_sip_header_content_length_destroy(cain_sip_header_content_lengt
 	cain_sip_object_destroy(CAIN_SIP_OBJECT(content_length));
 
 }
-CAIN_SIP_NEW(header_content_length,object)
+CAIN_SIP_NEW_WITH_NAME(header_content_length,object,"Content-Length")
 CAIN_SIP_PARSE(header_content_length)
 GET_SET_INT(cain_sip_header_content_length,content_length,unsigned int)

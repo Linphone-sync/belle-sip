@@ -36,6 +36,7 @@ struct _cain_sip_object{
 	int ref;
 	void *vptr;
 	cain_sip_object_destroy_t destroy;
+	const char* name;
 };
 
 cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_type_id_t id, void *vptr, cain_sip_object_destroy_t destroy_func, int initially_unowed);
@@ -315,15 +316,15 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	return l_parsed_object;\
 }
 
-#define CAIN_SIP_NEW(object_type,super_type) \
-cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
-	cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t, (cain_sip_object_destroy_t)cain_sip_##object_type##_destroy);\
-	cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
-	return l_object;\
-}
+#define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_WITH_NAME(object_type,super_type,NULL)
 
-
-
+#define CAIN_SIP_NEW_WITH_NAME(object_type,super_type,name) \
+		cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
+		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t, (cain_sip_object_destroy_t)cain_sip_##object_type##_destroy);\
+		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
+		cain_sip_object_set_name(CAIN_SIP_OBJECT(l_object),name);\
+		return l_object;\
+	}
 typedef struct cain_sip_param_pair_t {
 	int ref;
 	char* name;

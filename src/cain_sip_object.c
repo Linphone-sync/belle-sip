@@ -85,4 +85,11 @@ void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const 
 void cain_sip_object_init(cain_sip_object_t *obj) {
 	cain_sip_object_init_type(obj,cain_sip_object_t);
 }
-
+void cain_sip_object_set_name(cain_sip_object_t* object,const char* name) {
+	if (name==NULL) return;
+	if (object->name) cain_sip_free((void*)object->name);
+	object->name=cain_sip_strdup(name);
+}
+const char* cain_sip_object_get_name(cain_sip_object_t* object) {
+	return object->name;
+}
