@@ -40,8 +40,8 @@ struct cain_sip_dialog_terminated_event{
 
 struct cain_sip_io_error_event{
 	cain_sip_provider_t *source;
-	char *transport;
-	char *host;
+	const char *transport;
+	const char *host;
 	int port;
 };
 

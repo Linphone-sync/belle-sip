@@ -38,6 +38,9 @@ typedef int (*cain_sip_source_func_t)(void *user_data, unsigned int events);
 
 typedef struct cain_sip_main_loop cain_sip_main_loop_t;
 
+#define CAIN_SIP_CONTINUE	TRUE
+#define CAIN_SIP_STOP			FALSE
+
 CAIN_SIP_BEGIN_DECLS
 
 void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);

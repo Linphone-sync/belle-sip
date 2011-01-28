@@ -375,14 +375,24 @@ struct cain_sip_stack{
 	cain_sip_object_t base;
 	cain_sip_main_loop_t *ml;
 	cain_sip_list_t *lp;/*list of listening points*/
+	cain_sip_timer_config_t timer_config;
 };
 
 void cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req, cain_sip_hop_t *hop);
 
+const cain_sip_timer_config_t *cain_sip_stack_get_timer_config(const cain_sip_stack_t *stack);
 
 /*
  cain_sip_provider_t
 */
+
+struct cain_sip_provider{
+	cain_sip_object_t base;
+	cain_sip_stack_t *stack;
+	cain_sip_list_t *lps; /*listening points*/
+	cain_sip_list_t *listeners;
+};
+
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
 typedef struct listener_ctx{
@@ -395,7 +405,7 @@ typedef struct listener_ctx{
 	cain_sip_list_t *_elem; \
 	for(_elem=(provider)->listeners;_elem!=NULL;_elem=_elem->next){ \
 		listener_ctx_t *_lctx=(listener_ctx_t*)_elem->data; \
-		_lctx->##callback(_lctx->data,event); \
+		_lctx->listener->callback(_lctx->data,(event)); \
 	} \
 }
 

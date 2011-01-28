@@ -26,12 +26,6 @@ static int listener_ctx_compare(const void *c1, const void *c2){
 	return !(lc1->listener==lc2->listener && lc1->data==lc2->data);
 }
 
-struct cain_sip_provider{
-	cain_sip_object_t base;
-	cain_sip_stack_t *stack;
-	cain_sip_list_t *lps; /*listening points*/
-	cain_sip_list_t *listeners;
-};
 
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_for_each (p->listeners,cain_sip_free);

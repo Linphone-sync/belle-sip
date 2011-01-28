@@ -28,6 +28,15 @@ struct cain_sip_hop{
 
 typedef struct cain_sip_hop cain_sip_hop_t;
 
+struct cain_sip_timer_config{
+	int T1;
+	int T2;
+	int T3;
+	int T4;
+};
+
+typedef struct cain_sip_timer_config cain_sip_timer_config_t;
+
 CAIN_SIP_BEGIN_DECLS
 
 cain_sip_stack_t * cain_sip_stack_new(const char *properties);
