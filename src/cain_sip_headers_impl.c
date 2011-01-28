@@ -27,6 +27,21 @@
 #include "cain_sip_messageLexer.h"
 #include "cain_sip_internal.h"
 
+/************************
+ * header
+ ***********************/
+struct _cain_sip_header {
+	cain_sip_object_t base;
+	const char* name;
+};
+GET_SET_STRING(cain_sip_header,name);
+void cain_sip_header_init(cain_sip_header_t *header) {
+	cain_sip_object_init_type(header,cain_sip_header_t);
+	cain_sip_object_init((cain_sip_object_t*)header); /*super*/
+}
+static void cain_sip_header_destroy(cain_sip_header_t *header){
+	if (header->name) cain_sip_free((void*)header->name);
+}
 
 /************************
  * header_address
