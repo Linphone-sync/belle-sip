@@ -226,4 +226,10 @@ cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *
 }
 
 
+int cain_sip_listening_point_get_well_known_port(const char *transport){
+	if (strcasecmp(transport,"UDP")==0 || strcasecmp(transport,"TCP")==0 ) return 5060;
+	if (strcasecmp(transport,"DTLS")==0 || strcasecmp(transport,"TLS")==0 ) return 5061;
+	cain_sip_error("No well known port for transport %s", transport);
+	return -1;
+}
 

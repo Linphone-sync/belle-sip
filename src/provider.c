@@ -96,9 +96,8 @@ static void sender_task_cb(cain_sip_sender_task_t *t, void *data, int retcode){
 }
 
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
-	cain_sip_hop_t hop;
 	cain_sip_sender_task_t *task;
-	cain_sip_stack_get_next_hop (p->stack,req,&hop);
+
 	task=cain_sip_sender_task_new(p, CAIN_SIP_MESSAGE(req), sender_task_cb, NULL);
 	cain_sip_sender_task_send(task);
 }
@@ -106,8 +105,6 @@ void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
 	cain_sip_sender_task_t *task;
 
-	/* fill the hop with the destination of the response */
-	/*cain_sip_stack_get_next_hop (p->stack,req,&hop);*/
 	task=cain_sip_sender_task_new(p, CAIN_SIP_MESSAGE(resp), sender_task_cb, NULL);
 	cain_sip_sender_task_send(task);
 }

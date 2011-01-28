@@ -365,6 +365,8 @@ typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
 cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
 cain_sip_channel_t *cain_sip_listening_point_find_output_channel(cain_sip_listening_point_t *ip, const struct addrinfo *dest); 
 cain_sip_source_t *cain_sip_channel_create_source(cain_sip_channel_t *, unsigned int events, int timeout, cain_sip_source_func_t callback, void *data);
+int cain_sip_listening_point_get_well_known_port(const char *transport);
+
 
 /*
  cain_sip_stack_t
@@ -403,6 +405,11 @@ typedef struct listener_ctx{
 
 cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
+
+/*
+ cain_sip_response_t
+*/
+void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop);
 
 #ifdef __cplusplus
 }

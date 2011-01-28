@@ -152,6 +152,7 @@ const char*	cain_sip_header_via_get_branch(cain_sip_header_via_t* via);
 const char*	cain_sip_header_via_get_transport(cain_sip_header_via_t* via);
 const char*	cain_sip_header_via_get_host(cain_sip_header_via_t* via);
 int cain_sip_header_via_get_port(cain_sip_header_via_t* via);
+int cain_sip_header_via_get_listening_port(cain_sip_header_via_t *via);
 
 const char*	cain_sip_header_via_get_maddr(cain_sip_header_via_t* via);
 const char*	cain_sip_header_via_get_protocol(cain_sip_header_via_t* via);

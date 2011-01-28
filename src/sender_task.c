@@ -111,14 +111,9 @@ void cain_sip_sender_task_send(cain_sip_sender_task_t *t){
 		cain_sip_stack_get_next_hop(stack,CAIN_SIP_REQUEST(t->message),&t->hop);
 		t->resolver_id=cain_sip_resolve(t->hop.host,t->hop.port,0,sender_task_res_done,t,stack->ml);
 	}else{
-		/*fill the hop structure from the last via */
-		//cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header_last(t->message,"via"));
-		t->hop.host=NULL; /*TODO cain_sip_header_via_get_host(via);*/
-		t->hop.transport=NULL; /*TODO*/
-		t->hop.port=0; /*TODO*/
+		cain_sip_response_get_return_hop(CAIN_SIP_RESPONSE(t->message),&t->hop);
 		sender_task_find_channel_and_send(t);
 	}
-	
 }
 
 

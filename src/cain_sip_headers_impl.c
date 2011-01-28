@@ -167,6 +167,7 @@ GET_SET_STRING_PARAM(cain_sip_header_via,received);
 
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_via,rport,int,_)
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_via,ttl,int,_)
+
 int cain_sip_header_via_set_rport (cain_sip_header_via_t* obj,int  value) {
 	if (value ==-1 || (value>0 && value<65536)) {
 		_cain_sip_header_via_set_rport(obj,value);
@@ -194,6 +195,13 @@ int cain_sip_header_via_set_port (cain_sip_header_via_t* obj,int  value) {
 		return -1;
 	}
 }
+
+int cain_sip_header_via_get_listening_port(cain_sip_header_via_t *via){
+	int ret=cain_sip_header_via_get_port(via);
+	if (ret==-1) ret=cain_sip_listening_point_get_well_known_port(via->protocol);
+	return ret;
+}
+
 /**************************
 * call_id header object inherent from object
 ****************************

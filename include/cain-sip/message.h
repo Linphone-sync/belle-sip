@@ -26,6 +26,9 @@ typedef struct _cain_sip_response cain_sip_response_t;
 #define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)
 #define CAIN_SIP_RESPONSE(obj)		CAIN_SIP_CAST(obj,cain_sip_response_t)
 
+
+CAIN_SIP_BEGIN_DECLS
+
 int cain_sip_message_is_request(cain_sip_message_t *msg);
 cain_sip_request_t* cain_sip_request_new();
 cain_sip_request_t* cain_sip_request_parse(const char* raw);
@@ -41,9 +44,13 @@ void cain_sip_request_set_method(cain_sip_request_t* request,const char* method)
 
 int cain_sip_message_is_response(cain_sip_message_t *msg);
 
+cain_sip_header_t *cain_sip_message_get_header_first(cain_sip_message_t *msg, const char *header_name);
+
 cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, const char *header_name);
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
+
+CAIN_SIP_END_DECLS
 
 #endif
 
