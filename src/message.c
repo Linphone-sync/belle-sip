@@ -26,6 +26,7 @@ typedef struct _headers_container {
 static headers_container_t* cain_sip_message_headers_container_new(const char* name) {
 	headers_container_t* headers_container = cain_sip_new0(headers_container_t);
 	headers_container->name= cain_sip_strdup(name);
+	return  NULL; /*FIXME*/
 }
 
 struct _cain_sip_message {
@@ -33,6 +34,8 @@ struct _cain_sip_message {
 	cain_sip_list_t* header_list;
 	cain_sip_list_t* headernames_list;
 };
+
+CAIN_SIP_PARSE(message)
 
 static int cain_sip_headers_container_comp_func(const headers_container_t *a, const char*b) {
 	return strcmp(a->name,b);
@@ -48,7 +51,18 @@ headers_container_t* cain_sip_headers_container_get(cain_sip_message_t* message,
 	return result?(headers_container_t*)(result->data):NULL;
 }
 void cain_sip_message_add_header(cain_sip_message_t *message,cain_sip_header_t* header) {
+	// first check if already exist
+	headers_container_t* headers_container = cain_sip_headers_container_get(message,cain_sip_header_get_name(header));
+	if (headers_container == NULL) {
+		headers_container = cain_sip_message_headers_container_new(cain_sip_header_get_name(header));
+		cain_sip_list_append(message->header_list,headers_container);
+	}
+	cain_sip_list_append(headers_container->header_list,header);
 
+}
+const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,const char* header_name) {
+	headers_container_t* headers_container = cain_sip_headers_container_get(message,header_name);
+	return headers_container ? headers_container->header_list:NULL;
 }
 struct _cain_sip_request {
 	cain_sip_message_t message;
@@ -74,8 +88,22 @@ int cain_sip_message_is_response(cain_sip_message_t *msg){
 	return 0;
 }
 
-cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, const char *header_name){
+cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const char *header_name){
+	const cain_sip_list_t *l=cain_sip_message_get_headers(msg,header_name);
+	if (l!=NULL)
+		return (cain_sip_header_t*)l->data;
 	return NULL;
+}
+
+void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
+	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
+	hop->transport=cain_sip_header_via_get_protocol(via);
+	hop->host=cain_sip_header_via_get_received(via);
+	if (hop->host==NULL)
+		hop->host=cain_sip_header_via_get_host(via);
+	hop->port=cain_sip_header_via_get_rport(via);
+	if (hop->port==-1)
+		hop->port=cain_sip_header_via_get_listening_port(via);
 }
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg){

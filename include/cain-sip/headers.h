@@ -21,6 +21,8 @@
 
 #include "cain-sip/uri.h"
 
+
+
 /***************************************************************************************
  * header address
  *
@@ -44,7 +46,7 @@ void cain_sip_header_address_set_uri(cain_sip_header_address_t* address, cain_si
 /**
  *
  */
-const char* cain_sip_header_address_get_displayname(cain_sip_header_address_t* address);
+const char* cain_sip_header_address_get_displayname(const cain_sip_header_address_t* address);
 /**
  *
  */
@@ -60,6 +62,10 @@ void cain_sip_header_address_set_displayname(cain_sip_header_address_t* address,
  **************************************************************************************/
 
 typedef struct _cain_sip_header cain_sip_header_t;
+
+const char *cain_sip_header_get_name(const cain_sip_header_t *h);
+
+#define CAIN_SIP_HEADER(h)	CAIN_SIP_CAST(h,cain_sip_header_t)
 
 /***********************
  * Contact header object
@@ -77,17 +83,17 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 *@returns value of the expires parameter measured in delta-seconds, O implies removal of Registration specified in Contact Header.
 *
 */
- int	cain_sip_header_contact_get_expires(cain_sip_header_contact_t* contact);
+ int	cain_sip_header_contact_get_expires(const cain_sip_header_contact_t* contact);
 /**
  * Returns the value of the q-value parameter of this ContactHeader. The q-value parameter indicates the relative preference amongst a set of locations. q-values are decimal numbers from 0 to 1, with higher values indicating higher preference.
  * @return the q-value parameter of this ContactHeader, -1 if the q-value is not set.
  */
- float	cain_sip_header_contact_get_qvalue(cain_sip_header_contact_t* contact);
+ float	cain_sip_header_contact_get_qvalue(const cain_sip_header_contact_t* contact);
  /**
   * Returns a boolean value that indicates if the contact header has the format of Contact: *.
   * @return true if this is a wildcard address, false otherwise.
   */
- unsigned int cain_sip_header_contact_is_wildcard(cain_sip_header_contact_t* contact);
+ unsigned int cain_sip_header_contact_is_wildcard(const cain_sip_header_contact_t* contact);
  /**
  *
  */
@@ -118,7 +124,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 
  void cain_sip_header_from_set_tag(cain_sip_header_from_t* from, const char* tag);
 
- const char* cain_sip_header_from_get_tag(cain_sip_header_from_t* from);
+ const char* cain_sip_header_from_get_tag(const cain_sip_header_from_t* from);
 
 #define CAIN_SIP_HEADER_FROM(t) CAIN_SIP_CAST(t,cain_sip_header_from_t)
  /******************************
@@ -130,12 +136,12 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
  cain_sip_header_to_t* cain_sip_header_to_new();
 
 
- cain_sip_header_to_t* cain_sip_header_to_parse (const char* to) ;
+ cain_sip_header_to_t* cain_sip_header_to_parse(const char* to) ;
 
 
  void cain_sip_header_to_set_tag(cain_sip_header_to_t* from, const char* tag);
 
- const char* cain_sip_header_to_get_tag(cain_sip_header_to_t* from);
+ const char* cain_sip_header_to_get_tag(const cain_sip_header_to_t* from);
 
 #define CAIN_SIP_HEADER_TO(t) CAIN_SIP_CAST(t,cain_sip_header_to_t)
 
@@ -148,17 +154,17 @@ typedef struct _cain_sip_header_via cain_sip_header_via_t;
 cain_sip_header_via_t* cain_sip_header_via_new();
 
 cain_sip_header_via_t* cain_sip_header_via_parse (const char* via) ;
-const char*	cain_sip_header_via_get_branch(cain_sip_header_via_t* via);
-const char*	cain_sip_header_via_get_transport(cain_sip_header_via_t* via);
-const char*	cain_sip_header_via_get_host(cain_sip_header_via_t* via);
-int cain_sip_header_via_get_port(cain_sip_header_via_t* via);
-int cain_sip_header_via_get_listening_port(cain_sip_header_via_t *via);
+const char*	cain_sip_header_via_get_branch(const cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_transport(const cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_host(const cain_sip_header_via_t* via);
+int cain_sip_header_via_get_port(const cain_sip_header_via_t* via);
+int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via);
 
-const char*	cain_sip_header_via_get_maddr(cain_sip_header_via_t* via);
-const char*	cain_sip_header_via_get_protocol(cain_sip_header_via_t* via);
-const char*	cain_sip_header_via_get_received(cain_sip_header_via_t* via);
-int cain_sip_header_via_get_rport(cain_sip_header_via_t* via);
-int	cain_sip_header_via_get_ttl(cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_maddr(const cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_protocol(const cain_sip_header_via_t* via);
+const char*	cain_sip_header_via_get_received(const cain_sip_header_via_t* via);
+int cain_sip_header_via_get_rport(const cain_sip_header_via_t* via);
+int	cain_sip_header_via_get_ttl(const cain_sip_header_via_t* via);
 
 void cain_sip_header_via_set_branch(cain_sip_header_via_t* via,const char* branch);
 void cain_sip_header_via_set_host(cain_sip_header_via_t* via, const char* host);
@@ -180,7 +186,7 @@ typedef struct _cain_sip_header_call_id cain_sip_header_call_id_t;
 cain_sip_header_call_id_t* cain_sip_header_call_id_new();
 
 cain_sip_header_call_id_t* cain_sip_header_call_id_parse (const char* call_id) ;
-const char*	cain_sip_header_call_id_get_call_id(cain_sip_header_call_id_t* call_id);
+const char*	cain_sip_header_call_id_get_call_id(const cain_sip_header_call_id_t* call_id);
 void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* via,const char* call_id);
 #define CAIN_SIP_HEADER_CALL_ID(t) CAIN_SIP_CAST(t,cain_sip_header_call_id_t)
 /******************************
@@ -192,9 +198,9 @@ typedef struct _cain_sip_header_cseq cain_sip_header_cseq_t;
 cain_sip_header_cseq_t* cain_sip_header_cseq_new();
 
 cain_sip_header_cseq_t* cain_sip_header_cseq_parse (const char* cseq) ;
-const char*	cain_sip_header_cseq_get_method(cain_sip_header_cseq_t* cseq);
+const char*	cain_sip_header_cseq_get_method(const cain_sip_header_cseq_t* cseq);
 void cain_sip_header_cseq_set_method(cain_sip_header_cseq_t* cseq,const char* method);
-unsigned int	cain_sip_header_cseq_get_seq_number(cain_sip_header_cseq_t* cseq);
+unsigned int	cain_sip_header_cseq_get_seq_number(const cain_sip_header_cseq_t* cseq);
 void cain_sip_header_cseq_set_seq_number(cain_sip_header_cseq_t* cseq,unsigned int seq_number);
 #define CAIN_SIP_HEADER_CSEQ(t) CAIN_SIP_CAST(t,cain_sip_header_cseq_t)
 /******************************
@@ -206,9 +212,9 @@ typedef struct _cain_sip_header_content_type cain_sip_header_content_type_t;
 cain_sip_header_content_type_t* cain_sip_header_content_type_new();
 
 cain_sip_header_content_type_t* cain_sip_header_content_type_parse (const char* content_type) ;
-const char*	cain_sip_header_content_type_get_type(cain_sip_header_content_type_t* content_type);
+const char*	cain_sip_header_content_type_get_type(const cain_sip_header_content_type_t* content_type);
 void cain_sip_header_content_type_set_type(cain_sip_header_content_type_t* content_type,const char* type);
-const char*	cain_sip_header_content_type_get_subtype(cain_sip_header_content_type_t* content_type);
+const char*	cain_sip_header_content_type_get_subtype(const cain_sip_header_content_type_t* content_type);
 void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* content_type,const char* sub_type);
 #define CAIN_SIP_HEADER_CONTENT_TYPE(t) CAIN_SIP_CAST(t,cain_sip_header_content_type_t)
 /******************************
@@ -240,7 +246,7 @@ typedef struct _cain_sip_header_content_length cain_sip_header_content_length_t;
 cain_sip_header_content_length_t* cain_sip_header_content_length_new();
 
 cain_sip_header_content_length_t* cain_sip_header_content_length_parse (const char* content_length) ;
-unsigned int cain_sip_header_content_length_get_content_length(cain_sip_header_content_length_t* content_length);
+unsigned int cain_sip_header_content_length_get_content_length(const cain_sip_header_content_length_t* content_length);
 void cain_sip_header_content_length_set_content_length(cain_sip_header_content_length_t* content_length,unsigned int length);
 #define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
 

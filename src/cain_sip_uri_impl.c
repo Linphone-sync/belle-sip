@@ -76,14 +76,14 @@ char*	cain_sip_uri_to_string(cain_sip_uri_t* uri)  {
 }
 
 
-const char*	cain_sip_uri_get_header(cain_sip_uri_t* uri,const char* name) {
+const char*	cain_sip_uri_get_header(const cain_sip_uri_t* uri,const char* name) {
 	return cain_sip_parameters_get_parameter(uri->header_list,name);
 }
 void	cain_sip_uri_set_header(cain_sip_uri_t* uri,const char* name,const char* value) {
 	cain_sip_parameters_set_parameter(uri->header_list,name,value);
 }
 
-const cain_sip_list_t*	cain_sip_uri_get_header_names(cain_sip_uri_t* uri) {
+const cain_sip_list_t*	cain_sip_uri_get_header_names(const cain_sip_uri_t* uri) {
 	return cain_sip_parameters_get_parameter_names(uri->header_list);
 }
 

@@ -27,6 +27,23 @@
 #include "cain_sip_messageLexer.h"
 #include "cain_sip_internal.h"
 
+/************************
+ * header
+ ***********************/
+struct _cain_sip_header {
+	cain_sip_object_t base;
+	char* name;
+};
+GET_SET_STRING(cain_sip_header,name);
+
+void cain_sip_header_init(cain_sip_header_t *header) {
+	cain_sip_object_init_type(header,cain_sip_header_t);
+	cain_sip_object_init((cain_sip_object_t*)header); /*super*/
+}
+
+static void cain_sip_header_destroy(cain_sip_header_t *header){
+	if (header->name) cain_sip_free((void*)header->name);
+}
 
 /************************
  * header_address
@@ -44,6 +61,7 @@ static void cain_sip_header_address_init(cain_sip_header_address_t* object){
 static void cain_sip_header_address_destroy(cain_sip_header_address_t* contact) {
 	if (contact->displayname) cain_sip_free((void*)(contact->displayname));
 	if (contact->uri) cain_sip_object_unref(CAIN_SIP_OBJECT(contact->uri));
+	cain_sip_header_destroy((cain_sip_header_t*)contact);
 }
 
 CAIN_SIP_NEW(header_address,object)
@@ -101,7 +119,7 @@ int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float
 	 _cain_sip_header_contact_set_q(contact,qValue);
 	 return 0;
 }
-float	cain_sip_header_contact_get_qvalue(cain_sip_header_contact_t* contact) {
+float	cain_sip_header_contact_get_qvalue(const cain_sip_header_contact_t* contact) {
 	return cain_sip_header_contact_get_q(contact);
 }
 /**************************
@@ -186,6 +204,7 @@ int cain_sip_header_via_set_ttl (cain_sip_header_via_t* obj,int  value) {
 		return -1;
 	}
 }
+
 int cain_sip_header_via_set_port (cain_sip_header_via_t* obj,int  value) {
 	if (value ==-1 || (value>0 && value<65536)) {
 		_cain_sip_header_via_set_port(obj,value);
@@ -196,7 +215,7 @@ int cain_sip_header_via_set_port (cain_sip_header_via_t* obj,int  value) {
 	}
 }
 
-int cain_sip_header_via_get_listening_port(cain_sip_header_via_t *via){
+int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via){
 	int ret=cain_sip_header_via_get_port(via);
 	if (ret==-1) ret=cain_sip_listening_point_get_well_known_port(via->protocol);
 	return ret;
