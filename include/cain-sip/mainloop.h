@@ -68,6 +68,7 @@ unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_
 **/
 cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
 
+void cain_sip_source_set_timeout(cain_sip_source_t *s, unsigned int value_ms);
 
 cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
 

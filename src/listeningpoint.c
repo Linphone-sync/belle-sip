@@ -29,12 +29,7 @@
  Channels: udp
 */
 
-struct cain_sip_channel{
-	cain_sip_object_t base;
-	cain_sip_listening_point_t *lp; /* the listening point this channel belongs */
-	struct addrinfo peer;
-	struct sockaddr_storage peer_addr;
-};
+
 
 typedef struct cain_sip_channel_vptr{
 	int (*channel_send)(cain_sip_channel_t *obj, const void *buf, size_t buflen);

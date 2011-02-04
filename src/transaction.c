@@ -23,16 +23,22 @@ struct cain_sip_transaction{
 	cain_sip_object_t base;
 	cain_sip_provider_t *provider; /*the provider that created this transaction */
 	cain_sip_request_t *request;
+	cain_sip_response_t *prov_response;
+	cain_sip_response_t *final_response;
 	char *branch_id;
 	cain_sip_transaction_state_t state;
 	cain_sip_sender_task_t *stask;
+	uint64_t start_time;
+	int is_reliable;
 	void *appdata;
 };
 
 
-static unsigned long transaction_add_timeout(cain_sip_transaction_t *t, cain_sip_source_func_t func, unsigned int time_ms){
+static cain_sip_source_t * transaction_create_timer(cain_sip_transaction_t *t, cain_sip_source_func_t func, unsigned int time_ms){
 	cain_sip_stack_t *stack=cain_sip_provider_get_sip_stack(t->provider);
-	return cain_sip_main_loop_add_timeout (stack->ml,func,t,time_ms);
+	cain_sip_source_t *s=cain_sip_timeout_source_new (func,t,time_ms);
+	cain_sip_main_loop_add_source(stack->ml,s);
+	return s;
 }
 
 /*
@@ -51,6 +57,8 @@ static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_provid
 
 static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->request) cain_sip_object_unref(t->request);
+	if (t->prov_response) cain_sip_object_unref(t->prov_response);
+	if (t->final_response) cain_sip_object_unref(t->final_response);
 	if (t->stask) cain_sip_object_unref(t->stask);
 }
 
@@ -105,10 +113,11 @@ cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provide
 
 struct cain_sip_client_transaction{
 	cain_sip_transaction_t base;
-	unsigned long timer_id;
-	uint64_t start_time;
-	uint64_t time_F;
-	uint64_t time_E;
+	cain_sip_source_t *timer;
+	int interval;
+	uint64_t timer_F;
+	uint64_t timer_E;
+	uint64_t timer_K;
 };
 
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t){
@@ -116,6 +125,19 @@ cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_t
 }
 
 static int on_client_transaction_timer(void *data, unsigned int revents){
+	cain_sip_client_transaction_t *t=(cain_sip_client_transaction_t*)data;
+	const cain_sip_timer_config_t *tc=cain_sip_stack_get_timer_config (cain_sip_provider_get_sip_stack (t->base.provider));
+	
+	if (t->base.state==CAIN_SIP_TRANSACTION_TRYING){
+		cain_sip_sender_task_send(t->base.stask);
+		t->interval=MIN(t->interval*2,tc->T2);
+		cain_sip_source_set_timeout(t->timer,t->interval);
+	}
+	
+	if (cain_sip_time_ms()>=t->timer_F){
+		cain_sip_transaction_terminate((cain_sip_transaction_t*)t);
+		return CAIN_SIP_STOP;
+	}
 	return CAIN_SIP_CONTINUE;
 }
 
@@ -123,8 +145,16 @@ static void client_transaction_cb(cain_sip_sender_task_t *task, void *data, int 
 	cain_sip_client_transaction_t *t=(cain_sip_client_transaction_t*)data;
 	const cain_sip_timer_config_t *tc=cain_sip_stack_get_timer_config (cain_sip_provider_get_sip_stack (t->base.provider));
 	if (retcode==0){
+		t->base.is_reliable=cain_sip_sender_task_is_reliable(task);
 		t->base.state=CAIN_SIP_TRANSACTION_TRYING;
-		t->timer_id=transaction_add_timeout(&t->base,on_client_transaction_timer,tc->T1);
+		t->base.start_time=cain_sip_time_ms();
+		t->timer_F=t->base.start_time+(tc->T1*64);
+		if (!t->base.is_reliable){
+			t->interval=tc->T1;
+			t->timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1);
+		}else{
+			t->timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1*64);
+		}
 	}else{
 		cain_sip_transaction_terminated_event_t ev;
 		ev.source=t->base.provider;
@@ -138,6 +168,36 @@ static void client_transaction_cb(cain_sip_sender_task_t *task, void *data, int 
 void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 	t->base.stask=cain_sip_sender_task_new(t->base.provider,CAIN_SIP_MESSAGE(t->base.request),client_transaction_cb,t);
 	cain_sip_sender_task_send(t->base.stask);
+}
+
+/*called by the transport layer when a response is received */
+void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
+	int code=cain_sip_response_get_status_code(resp);
+	
+	if (code>=100 && code<200){
+		switch(t->base.state){
+			case CAIN_SIP_TRANSACTION_TRYING:
+			case CAIN_SIP_TRANSACTION_PROCEEDING:
+				t->base.state=CAIN_SIP_TRANSACTION_PROCEEDING;
+				if (t->base.prov_response!=NULL){
+					cain_sip_object_unref(t->base.prov_response);
+				}
+				t->base.prov_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
+			break;
+			default:
+				cain_sip_warning("Unexpected provisional response while transaction in state %i",t->base.state);
+		}
+	}else if (code>=200){
+		switch(t->base.state){
+			case CAIN_SIP_TRANSACTION_TRYING:
+			case CAIN_SIP_TRANSACTION_PROCEEDING:
+				t->base.state=CAIN_SIP_TRANSACTION_COMPLETED;
+				t->base.final_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
+			break;
+			default:
+				cain_sip_warning("Unexpected final response while transaction in state %i",t->base.state);
+		}
+	}
 }
 
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){

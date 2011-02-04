@@ -122,4 +122,7 @@ void cain_sip_sender_task_send(cain_sip_sender_task_t *t){
 	}
 }
 
-
+int cain_sip_sender_task_is_reliable(cain_sip_sender_task_t *task){
+	if (task->channel==NULL) cain_sip_fatal("The transport isn't known yet");
+	return cain_sip_listening_point_is_reliable(task->channel->lp);
+}

@@ -58,6 +58,8 @@ void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_header_t* hea
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
 
+int cain_sip_response_get_status_code(const cain_sip_response_t *response);
+
 CAIN_SIP_END_DECLS
 
 #endif

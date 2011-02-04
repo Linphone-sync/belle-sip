@@ -356,6 +356,17 @@ struct _cain_sip_parameters {
 void cain_sip_parameters_init(cain_sip_parameters_t *obj);
 void cain_sip_parameters_destroy(cain_sip_parameters_t* params);
 
+/*
+ * Listening points and channels
+*/
+
+struct cain_sip_channel{
+	cain_sip_object_t base;
+	cain_sip_listening_point_t *lp; /* the listening point this channel belongs */
+	struct addrinfo peer;
+	struct sockaddr_storage peer_addr;
+};
+
 typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
 
 #define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
@@ -415,6 +426,7 @@ typedef struct listener_ctx{
 
 cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
+void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp);
 
 /*
  cain_sip_response_t

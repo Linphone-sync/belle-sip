@@ -100,6 +100,11 @@ cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const ch
 	return NULL;
 }
 
+
+char *cain_sip_message_to_string(cain_sip_message_t *msg){
+	return NULL;
+}
+
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
 	hop->transport=cain_sip_header_via_get_protocol(via);
@@ -111,6 +116,7 @@ void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *
 		hop->port=cain_sip_header_via_get_listening_port(via);
 }
 
-char *cain_sip_message_to_string(cain_sip_message_t *msg){
-	return NULL;
+int cain_sip_response_get_status_code(const cain_sip_response_t *response){
+	return 0;
 }
+
