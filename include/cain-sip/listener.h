@@ -56,7 +56,7 @@ struct cain_sip_response_event{
 	cain_sip_provider_t *source;
 	cain_sip_client_transaction_t *client_transaction;
 	cain_sip_dialog_t *dialog;
-	cain_sip_request_t *response;
+	cain_sip_response_t *response;
 };
 
 struct cain_sip_timeout_event{

@@ -82,9 +82,15 @@ cain_sip_uri_t * cain_sip_request_get_uri(cain_sip_request_t *request){
 	return NULL;
 }
 
+const char * cain_sip_request_get_method(const cain_sip_request_t *req){
+	return NULL;
+}
+
 void cain_sip_request_set_method(cain_sip_request_t* request,const char* method) {
 
 }
+
+
 int cain_sip_message_is_request(cain_sip_message_t *msg){
 	return 0;
 }

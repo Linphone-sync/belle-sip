@@ -74,7 +74,8 @@ struct cain_sip_source{
 	int index; /* index in pollfd table */
 	cain_sip_source_func_t notify;
 	cain_sip_source_remove_callback_t on_remove;
-	int cancelled;
+	int cancelled:1;
+	int expired:1;
 };
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);

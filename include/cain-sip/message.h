@@ -42,7 +42,7 @@ cain_sip_request_t* cain_sip_request_parse(const char* raw);
 
 cain_sip_uri_t* cain_sip_request_get_uri(cain_sip_request_t* request);
 void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri);
-const char* cain_sip_request_get_method(cain_sip_request_t* request);
+const char* cain_sip_request_get_method(const cain_sip_request_t* request);
 void cain_sip_request_set_method(cain_sip_request_t* request,const char* method);
 
 int cain_sip_message_is_response(cain_sip_message_t *msg);
