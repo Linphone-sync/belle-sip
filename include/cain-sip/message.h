@@ -49,7 +49,7 @@ cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, con
  * @param msg
  * @param header to add, must be one of header type
  */
-void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_object_t* header);
+void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_header_t* header);
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
 

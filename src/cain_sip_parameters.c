@@ -18,20 +18,21 @@
 #include "cain-sip/cain-sip.h"
 #include "cain-sip/parameters.h"
 #include "cain_sip_internal.h"
-
+#include "cain-sip/headers.h"
 
 void cain_sip_parameters_destroy(cain_sip_parameters_t* params) {
 	if (params->param_list) cain_sip_list_free (params->param_list);
 	if (params->paramnames_list) cain_sip_list_free (params->paramnames_list);
+	cain_sip_header_destroy(CAIN_SIP_HEADER(params));
 }
 void cain_sip_parameters_init(cain_sip_parameters_t *obj) {
 	cain_sip_object_init_type(obj,cain_sip_parameters_t);
-	cain_sip_object_init((cain_sip_object_t*)obj);
+	cain_sip_header_init((cain_sip_header_t*)obj);
 }
 
 cain_sip_parameters_t* cain_sip_parameters_new() {
 	cain_sip_parameters_t* l_object = (cain_sip_parameters_t*)cain_sip_object_new(cain_sip_parameters_t,(cain_sip_object_destroy_t)cain_sip_parameters_destroy);
-	cain_sip_object_init((cain_sip_object_t*)l_object);
+	cain_sip_header_init((cain_sip_header_t*)l_object);
 	return l_object;
 }
 
