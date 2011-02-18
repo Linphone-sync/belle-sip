@@ -42,7 +42,7 @@ cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_trans
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t);
 cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t);
 
-void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t);
+void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp);
 
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t);
 void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);

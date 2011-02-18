@@ -19,21 +19,6 @@
 #include "cain_sip_internal.h"
 #include "sender_task.h"
 
-struct cain_sip_transaction{
-	cain_sip_object_t base;
-	cain_sip_provider_t *provider; /*the provider that created this transaction */
-	cain_sip_request_t *request;
-	cain_sip_response_t *prov_response;
-	cain_sip_response_t *final_response;
-	char *branch_id;
-	cain_sip_transaction_state_t state;
-	cain_sip_sender_task_t *stask;
-	uint64_t start_time;
-	int is_reliable:1;
-	int is_server:1;
-	int is_invite:1;
-	void *appdata;
-};
 
 
 static cain_sip_source_t * transaction_create_timer(cain_sip_transaction_t *t, cain_sip_source_func_t func, unsigned int time_ms){
@@ -43,12 +28,13 @@ static cain_sip_source_t * transaction_create_timer(cain_sip_transaction_t *t, c
 	return s;
 }
 
-/*
-static void transaction_remove_timeout(cain_sip_transaction_t *t, unsigned long id){
+
+static void transaction_delete_timer(cain_sip_transaction_t *t, cain_sip_source_t *s){
 	cain_sip_stack_t *stack=cain_sip_provider_get_sip_stack(t->provider);
-	cain_sip_main_loop_cancel_source (stack->ml,id);
+	cain_sip_main_loop_cancel_source (stack->ml,s->id);
+	cain_sip_object_unref(s);
 }
-*/
+
 
 static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_provider_t *prov, cain_sip_request_t *req){
 	cain_sip_object_init_type(t,cain_sip_transaction_t);
@@ -81,11 +67,12 @@ cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_trans
 }
 
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
-	cain_sip_transaction_terminated_event_t ev;
-	ev.source=t->provider;
-	ev.transaction=(cain_sip_transaction_t*)t;
-	ev.is_server_transaction=t->is_server;
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->provider,process_transaction_terminated,&ev);
+	t->state=CAIN_SIP_TRANSACTION_TERMINATED;
+	if (t->timer){
+		transaction_delete_timer(t,t->timer);
+		t->timer=NULL;
+	}
+	cain_sip_provider_set_transaction_terminated(t->provider,t);
 }
 
 cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t){
@@ -93,14 +80,31 @@ cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t){
 }
 
 /*
- Server transaction
+ *
+ *
+ *	Server transaction
+ *
+ *
 */
 
 struct cain_sip_server_transaction{
 	cain_sip_transaction_t base;
 };
 
-void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t){
+static void server_transaction_send_cb(cain_sip_sender_task_t *st, void *data, int retcode){
+	cain_sip_server_transaction_t *t=(cain_sip_server_transaction_t *)data;
+	if (retcode==0){
+	}else{
+		/*the provider is notified of the error by the sender_task, we just need to terminate the transaction*/
+		cain_sip_transaction_terminate(&t->base);
+	}
+}
+
+void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
+	if (t->base.stask==NULL){
+		t->base.stask=cain_sip_sender_task_new(t->base.provider,server_transaction_send_cb,t);
+	}
+	cain_sip_sender_task_send(t->base.stask,CAIN_SIP_MESSAGE(resp));
 }
 
 static void server_transaction_destroy(cain_sip_server_transaction_t *t){
@@ -114,13 +118,15 @@ cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provide
 }
 
 /*
- Client transaction
+ *
+ *
+ *	Client transaction
+ *
+ *
 */
 
 struct cain_sip_client_transaction{
 	cain_sip_transaction_t base;
-	cain_sip_source_t *timer;
-	int interval;
 	uint64_t timer_F;
 	uint64_t timer_E;
 	uint64_t timer_K;
@@ -136,20 +142,20 @@ static int on_client_transaction_timer(void *data, unsigned int revents){
 
 	switch(t->base.state){
 		case CAIN_SIP_TRANSACTION_TRYING: /*NON INVITE*/
-			cain_sip_sender_task_send(t->base.stask);
-			t->interval=MIN(t->interval*2,tc->T2);
-			cain_sip_source_set_timeout(t->timer,t->interval);
+			cain_sip_sender_task_send(t->base.stask,NULL);
+			t->base.interval=MIN(t->base.interval*2,tc->T2);
+			cain_sip_source_set_timeout(t->base.timer,t->base.interval);
 		break;
 		case CAIN_SIP_TRANSACTION_CALLING: /*INVITES*/
-			cain_sip_sender_task_send(t->base.stask);
-			t->interval=t->interval*2;
-			cain_sip_source_set_timeout(t->timer,t->interval);
+			cain_sip_sender_task_send(t->base.stask,NULL);
+			t->base.interval=t->base.interval*2;
+			cain_sip_source_set_timeout(t->base.timer,t->base.interval);
 		break;
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			if (!t->base.is_invite){
-				cain_sip_sender_task_send(t->base.stask);
-				t->interval=tc->T2;
-				cain_sip_source_set_timeout(t->timer,t->interval);
+				cain_sip_sender_task_send(t->base.stask,NULL);
+				t->base.interval=tc->T2;
+				cain_sip_source_set_timeout(t->base.timer,t->base.interval);
 			}
 		break;
 		case CAIN_SIP_TRANSACTION_COMPLETED:
@@ -185,10 +191,10 @@ static void client_transaction_cb(cain_sip_sender_task_t *task, void *data, int 
 		t->base.start_time=cain_sip_time_ms();
 		t->timer_F=t->base.start_time+(tc->T1*64);
 		if (!t->base.is_reliable){
-			t->interval=tc->T1;
-			t->timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1);
+			t->base.interval=tc->T1;
+			t->base.timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1);
 		}else{
-			t->timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1*64);
+			t->base.timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1*64);
 		}
 	}else{
 		/* transport layer error*/
@@ -198,8 +204,8 @@ static void client_transaction_cb(cain_sip_sender_task_t *task, void *data, int 
 
 
 void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
-	t->base.stask=cain_sip_sender_task_new(t->base.provider,CAIN_SIP_MESSAGE(t->base.request),client_transaction_cb,t);
-	cain_sip_sender_task_send(t->base.stask);
+	t->base.stask=cain_sip_sender_task_new(t->base.provider,client_transaction_cb,t);
+	cain_sip_sender_task_send(t->base.stask,CAIN_SIP_MESSAGE(t->base.request));
 }
 
 static void notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
@@ -220,7 +226,7 @@ static void handle_invite_response(cain_sip_client_transaction_t *t, cain_sip_re
 			case CAIN_SIP_TRANSACTION_CALLING:
 				if (!t->base.is_reliable){
 					/* we must stop retransmissions, then program the timer B/F only*/
-					cain_sip_source_set_timeout(t->timer,t->timer_F-cain_sip_time_ms());
+					cain_sip_source_set_timeout(t->base.timer,t->timer_F-cain_sip_time_ms());
 				}
 				t->base.state=CAIN_SIP_TRANSACTION_PROCEEDING;
 			case CAIN_SIP_TRANSACTION_PROCEEDING:
@@ -241,7 +247,7 @@ static void handle_invite_response(cain_sip_client_transaction_t *t, cain_sip_re
 				t->base.final_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
 				notify_response(t,resp);
 				/*start timer D */
-				cain_sip_source_set_timeout(t->timer,32000);
+				cain_sip_source_set_timeout(t->base.timer,32000);
 			break;
 			default:
 				cain_sip_warning("Unexpected final response while transaction in state %i",t->base.state);
@@ -250,6 +256,7 @@ static void handle_invite_response(cain_sip_client_transaction_t *t, cain_sip_re
 		switch(t->base.state){
 			case CAIN_SIP_TRANSACTION_CALLING:
 			case CAIN_SIP_TRANSACTION_PROCEEDING:
+				notify_response(t,resp);
 				cain_sip_transaction_terminate(&t->base);
 			break;
 			default:
@@ -267,7 +274,7 @@ static void handle_non_invite_response(cain_sip_client_transaction_t *t, cain_si
 			case CAIN_SIP_TRANSACTION_CALLING:
 				if (!t->base.is_reliable){
 					/* we must stop retransmissions, then program the timer B/F only*/
-					cain_sip_source_set_timeout(t->timer,t->timer_F-cain_sip_time_ms());
+					cain_sip_source_set_timeout(t->base.timer,t->timer_F-cain_sip_time_ms());
 				}
 			case CAIN_SIP_TRANSACTION_TRYING:
 			case CAIN_SIP_TRANSACTION_PROCEEDING:
@@ -288,7 +295,7 @@ static void handle_non_invite_response(cain_sip_client_transaction_t *t, cain_si
 				t->base.state=CAIN_SIP_TRANSACTION_COMPLETED;
 				t->base.final_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
 				notify_response(t,resp);
-				cain_sip_source_set_timeout(t->timer,tc->T4);
+				cain_sip_source_set_timeout(t->base.timer,tc->T4);
 			break;
 			default:
 				cain_sip_warning("Unexpected final response while transaction in state %i",t->base.state);

@@ -29,10 +29,10 @@ static void cain_sip_sender_task_uninit(cain_sip_sender_task_t *t){
 	if (t->resolver_id>0) cain_sip_main_loop_cancel_source (stack->ml,t->resolver_id);
 }
 
-cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider, cain_sip_message_t *msg, cain_sip_sender_task_callback_t cb, void *data){
+cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider,  cain_sip_sender_task_callback_t cb, void *data){
 	cain_sip_sender_task_t *t=cain_sip_object_new(cain_sip_sender_task_t,cain_sip_sender_task_uninit);
 	t->provider=provider;
-	t->message=(cain_sip_message_t*)cain_sip_object_ref(msg);
+	t->message=NULL;
 	t->cb=cb;
 	t->cb_data=data;
 	return t;
@@ -60,6 +60,8 @@ static int retry_send(cain_sip_sender_task_t *t, unsigned int revents){
 
 static void sender_task_send(cain_sip_sender_task_t *t){
 	int err;
+	if (t->buf==NULL)
+		t->buf=cain_sip_message_to_string(t->message);
 	err=do_send(t);
 	if (err==-EWOULDBLOCK){
 		cain_sip_stack_t *stack=cain_sip_provider_get_sip_stack(t->provider);
@@ -81,7 +83,7 @@ static void sender_task_find_channel_and_send(cain_sip_sender_task_t *t){
 		cain_sip_channel_t *chan=cain_sip_listening_point_find_output_channel (lp,t->dest);
 		if (chan==NULL) goto error;
 		t->channel=(cain_sip_channel_t*)cain_sip_object_ref(chan);
-		t->buf=cain_sip_message_to_string(t->message);
+		
 		sender_task_send(t);
 	}
 	return;
@@ -106,12 +108,22 @@ static void sender_task_res_done(void *data, const char *name, struct addrinfo *
 	}
 }
 
-void cain_sip_sender_task_send(cain_sip_sender_task_t *t){
+void cain_sip_sender_task_send(cain_sip_sender_task_t *t, cain_sip_message_t *msg){
 	cain_sip_stack_t *stack=cain_sip_provider_get_sip_stack(t->provider);
 
-	if (t->buf!=NULL){
-		/*retransmission, everything already done*/
+	if (t->message!=NULL && t->message!=msg && msg!=NULL){
+		cain_sip_object_unref(t->message);
+		t->message=NULL;
+		cain_sip_free(t->buf);
+		t->buf=NULL;
+	}
+	if (t->message==NULL){
+	    t->message=(cain_sip_message_t*)cain_sip_object_ref(msg);
+	}
+	if (t->channel){
+		/*retransmission or new response to be sent, everything already done for setting up the transport*/
 		sender_task_send(t);
+		return;
 	}
 	if (cain_sip_message_is_request(t->message)){
 		cain_sip_stack_get_next_hop(stack,CAIN_SIP_REQUEST(t->message),&t->hop);

@@ -82,6 +82,8 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 
 #define cain_list_next(elem) ((elem)->next)
 
+/* include private headers */
+#include "sender_task.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -406,6 +408,7 @@ struct cain_sip_provider{
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
+void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t);
 
 typedef struct listener_ctx{
 	cain_sip_listener_t *listener;
@@ -424,6 +427,25 @@ typedef struct listener_ctx{
 /*
  cain_sip_transaction_t
 */
+
+struct cain_sip_transaction{
+	cain_sip_object_t base;
+	cain_sip_provider_t *provider; /*the provider that created this transaction */
+	cain_sip_request_t *request;
+	cain_sip_response_t *prov_response;
+	cain_sip_response_t *final_response;
+	char *branch_id;
+	cain_sip_transaction_state_t state;
+	cain_sip_sender_task_t *stask;
+	uint64_t start_time;
+	cain_sip_source_t *timer;
+	int interval;
+	int is_reliable:1;
+	int is_server:1;
+	int is_invite:1;
+	void *appdata;
+};
+
 
 cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);

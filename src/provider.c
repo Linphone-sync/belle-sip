@@ -92,14 +92,24 @@ static void sender_task_cb(cain_sip_sender_task_t *t, void *data, int retcode){
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
 	cain_sip_sender_task_t *task;
 
-	task=cain_sip_sender_task_new(p, CAIN_SIP_MESSAGE(req), sender_task_cb, NULL);
-	cain_sip_sender_task_send(task);
+	task=cain_sip_sender_task_new(p,  sender_task_cb, NULL);
+	cain_sip_sender_task_send(task,CAIN_SIP_MESSAGE(req));
 }
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
 	cain_sip_sender_task_t *task;
 
-	task=cain_sip_sender_task_new(p, CAIN_SIP_MESSAGE(resp), sender_task_cb, NULL);
-	cain_sip_sender_task_send(task);
+	task=cain_sip_sender_task_new(p,  sender_task_cb, NULL);
+	cain_sip_sender_task_send(task,CAIN_SIP_MESSAGE(resp));
+}
+
+/*private provider API*/
+
+void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t){
+	cain_sip_transaction_terminated_event_t ev;
+	ev.source=p;
+	ev.transaction=t;
+	ev.is_server_transaction=t->is_server;
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(p,process_transaction_terminated,&ev);
 }
 

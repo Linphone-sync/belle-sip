@@ -41,9 +41,9 @@ typedef struct cain_sip_sender_task cain_sip_sender_task_t;
 
 
 
-cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider, cain_sip_message_t *msg, cain_sip_sender_task_callback_t cb, void *data);
+cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider, cain_sip_sender_task_callback_t cb, void *data);
 
-void cain_sip_sender_task_send(cain_sip_sender_task_t *task);
+void cain_sip_sender_task_send(cain_sip_sender_task_t *task, cain_sip_message_t *msg);
 
 /*you can only call that after send has been called once */
 int cain_sip_sender_task_is_reliable(cain_sip_sender_task_t *task);
