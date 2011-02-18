@@ -348,10 +348,16 @@ void cain_sip_param_pair_unref(cain_sip_param_pair_t* obj);
 
 void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value);
 
+/*calss header*/
+struct _cain_sip_header {
+	cain_sip_object_t base;
+	const char* name;
+};
+void cain_sip_header_destroy(cain_sip_header_t *header);
+void cain_sip_header_init(cain_sip_header_t* obj);
 /*class parameters*/
 struct _cain_sip_parameters {
-	cain_sip_object_t base;
-
+	cain_sip_header_t base;
 	cain_sip_list_t* param_list;
 	cain_sip_list_t* paramnames_list;
 };

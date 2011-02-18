@@ -62,11 +62,11 @@ void cain_sip_header_address_set_displayname(cain_sip_header_address_t* address,
  **************************************************************************************/
 
 typedef struct _cain_sip_header cain_sip_header_t;
+const char* cain_sip_header_get_name (const cain_sip_header_t* obj);
+void cain_sip_header_set_name (cain_sip_header_t* obj,const char* value);
 
-const char *cain_sip_header_get_name(const cain_sip_header_t *h);
 
-#define CAIN_SIP_HEADER(h)	CAIN_SIP_CAST(h,cain_sip_header_t)
-
+#define CAIN_SIP_HEADER(t) CAIN_SIP_CAST(t,cain_sip_header_t)
 /***********************
  * Contact header object
  ************************/

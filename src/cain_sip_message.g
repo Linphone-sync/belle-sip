@@ -47,7 +47,7 @@ request_line
 	    CRLF ;
 
 sip_version   
-	:	  'SIP/' DIGIT '.' DIGIT;
+	:	word;// 'SIP/' DIGIT '.' DIGIT;
 
 message_header [cain_sip_message_t* message] 
 

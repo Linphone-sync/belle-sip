@@ -42,6 +42,7 @@ static int cain_sip_headers_container_comp_func(const headers_container_t *a, co
 }
 static void cain_sip_message_init(cain_sip_message_t *message){
 	cain_sip_object_init_type(message,cain_sip_message_t);
+	cain_sip_object_init((cain_sip_object_t*)message);
 }
 
 headers_container_t* cain_sip_headers_container_get(cain_sip_message_t* message,const char* header_name) {
@@ -66,13 +67,15 @@ const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,
 }
 struct _cain_sip_request {
 	cain_sip_message_t message;
+	const char* method;
 };
 
 static void cain_sip_request_destroy(cain_sip_request_t* request) {
-
+	if (request->method) cain_sip_free((void*)(request->method));
 }
 CAIN_SIP_NEW(request,message)
 CAIN_SIP_PARSE(request)
+GET_SET_STRING(cain_sip_request,method);
 
 void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri) {
 
@@ -81,15 +84,6 @@ void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri) {
 cain_sip_uri_t * cain_sip_request_get_uri(cain_sip_request_t *request){
 	return NULL;
 }
-
-const char * cain_sip_request_get_method(const cain_sip_request_t *req){
-	return NULL;
-}
-
-void cain_sip_request_set_method(cain_sip_request_t* request,const char* method) {
-
-}
-
 
 int cain_sip_message_is_request(cain_sip_message_t *msg){
 	return 0;
