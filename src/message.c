@@ -81,6 +81,10 @@ void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri) {
 
 }
 
+cain_sip_uri_t * cain_sip_request_get_uri(cain_sip_request_t *request){
+	return NULL;
+}
+
 int cain_sip_message_is_request(cain_sip_message_t *msg){
 	return 0;
 }
@@ -89,10 +93,30 @@ int cain_sip_message_is_response(cain_sip_message_t *msg){
 	return 0;
 }
 
-cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, const char *header_name){
+cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const char *header_name){
+	const cain_sip_list_t *l=cain_sip_message_get_headers(msg,header_name);
+	if (l!=NULL)
+		return (cain_sip_header_t*)l->data;
 	return NULL;
 }
+
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg){
 	return NULL;
 }
+
+void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
+	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
+	hop->transport=cain_sip_header_via_get_protocol(via);
+	hop->host=cain_sip_header_via_get_received(via);
+	if (hop->host==NULL)
+		hop->host=cain_sip_header_via_get_host(via);
+	hop->port=cain_sip_header_via_get_rport(via);
+	if (hop->port==-1)
+		hop->port=cain_sip_header_via_get_listening_port(via);
+}
+
+int cain_sip_response_get_status_code(const cain_sip_response_t *response){
+	return 0;
+}
+

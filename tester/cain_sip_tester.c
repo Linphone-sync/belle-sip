@@ -20,6 +20,7 @@
 
 extern int cain_sip_uri_test_suite ();
 extern int cain_sip_headers_test_suite ();
+extern int cain_sip_message_test_suite ();
 
 
 int main (int argc, char *argv[]) {

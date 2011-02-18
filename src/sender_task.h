@@ -45,6 +45,9 @@ cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider,
 
 void cain_sip_sender_task_send(cain_sip_sender_task_t *task);
 
+/*you can only call that after send has been called once */
+int cain_sip_sender_task_is_reliable(cain_sip_sender_task_t *task);
+
 
 #endif
 

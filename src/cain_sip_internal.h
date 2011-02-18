@@ -74,7 +74,8 @@ struct cain_sip_source{
 	int index; /* index in pollfd table */
 	cain_sip_source_func_t notify;
 	cain_sip_source_remove_callback_t on_remove;
-	int cancelled;
+	int cancelled:1;
+	int expired:1;
 };
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
@@ -218,7 +219,7 @@ uint64_t cain_sip_time_ms(void);
 
 /*parameters accessors*/
 #define GET_SET_STRING(object_type,attribute) \
-	const char* object_type##_get_##attribute (object_type##_t* obj) {\
+	const char* object_type##_get_##attribute (const object_type##_t* obj) {\
 		return obj->attribute;\
 	}\
 	void object_type##_set_##attribute (object_type##_t* obj,const char* value) {\
@@ -228,7 +229,7 @@ uint64_t cain_sip_time_ms(void);
 	}
 #define GET_SET_STRING_PARAM(object_type,attribute) GET_SET_STRING_PARAM2(object_type,attribute,attribute)
 #define GET_SET_STRING_PARAM2(object_type,attribute,func_name) \
-	const char* object_type##_get_##func_name (object_type##_t* obj) {\
+	const char* object_type##_get_##func_name (const object_type##_t* obj) {\
 	const char* l_value = cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
 	if (l_value == NULL) { \
 		cain_sip_warning("cannot find parameters [%s]",#attribute);\
@@ -244,7 +245,7 @@ uint64_t cain_sip_time_ms(void);
 #define GET_SET_INT(object_type,attribute,type) GET_SET_INT_PRIVATE(object_type,attribute,type,)
 
 #define GET_SET_INT_PRIVATE(object_type,attribute,type,set_prefix) \
-	type  object_type##_get_##attribute (object_type##_t* obj) {\
+	type  object_type##_get_##attribute (const object_type##_t* obj) {\
 		return obj->attribute;\
 	}\
 	void set_prefix##object_type##_set_##attribute (object_type##_t* obj,type  value) {\
@@ -262,7 +263,7 @@ uint64_t cain_sip_time_ms(void);
 
 #define GET_SET_INT_PARAM_PRIVATE(object_type,attribute,type,set_prefix) GET_SET_INT_PARAM_PRIVATE2(object_type,attribute,type,set_prefix,attribute)
 #define GET_SET_INT_PARAM_PRIVATE2(object_type,attribute,type,set_prefix,func_name) \
-	type  object_type##_get_##func_name (object_type##_t* obj) {\
+	type  object_type##_get_##func_name (const object_type##_t* obj) {\
 		const char* l_value = cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
 		if (l_value == NULL) { \
 			cain_sip_error("cannot find parameters [%s]",#attribute);\
@@ -281,14 +282,14 @@ uint64_t cain_sip_time_ms(void);
 	}
 
 #define GET_SET_BOOL(object_type,attribute,getter) \
-	unsigned int object_type##_##getter##_##attribute (object_type##_t* obj) {\
+	unsigned int object_type##_##getter##_##attribute (const object_type##_t* obj) {\
 		return obj->attribute;\
 	}\
 	void object_type##_set_##attribute (object_type##_t* obj,unsigned int value) {\
 		obj->attribute=value;\
 	}
 #define GET_SET_BOOL_PARAM2(object_type,attribute,getter,func_name) \
-	unsigned int object_type##_##getter##_##func_name (object_type##_t* obj) {\
+	unsigned int object_type##_##getter##_##func_name (const object_type##_t* obj) {\
 		return cain_sip_parameters_is_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
 	}\
 	void object_type##_set_##func_name (object_type##_t* obj,unsigned int value) {\
@@ -362,6 +363,17 @@ struct _cain_sip_parameters {
 void cain_sip_parameters_init(cain_sip_parameters_t *obj);
 void cain_sip_parameters_destroy(cain_sip_parameters_t* params);
 
+/*
+ * Listening points and channels
+*/
+
+struct cain_sip_channel{
+	cain_sip_object_t base;
+	cain_sip_listening_point_t *lp; /* the listening point this channel belongs */
+	struct addrinfo peer;
+	struct sockaddr_storage peer_addr;
+};
+
 typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
 
 #define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
@@ -371,6 +383,8 @@ typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
 cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
 cain_sip_channel_t *cain_sip_listening_point_find_output_channel(cain_sip_listening_point_t *ip, const struct addrinfo *dest); 
 cain_sip_source_t *cain_sip_channel_create_source(cain_sip_channel_t *, unsigned int events, int timeout, cain_sip_source_func_t callback, void *data);
+int cain_sip_listening_point_get_well_known_port(const char *transport);
+
 
 /*
  cain_sip_stack_t
@@ -379,14 +393,24 @@ struct cain_sip_stack{
 	cain_sip_object_t base;
 	cain_sip_main_loop_t *ml;
 	cain_sip_list_t *lp;/*list of listening points*/
+	cain_sip_timer_config_t timer_config;
 };
 
 void cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req, cain_sip_hop_t *hop);
 
+const cain_sip_timer_config_t *cain_sip_stack_get_timer_config(const cain_sip_stack_t *stack);
 
 /*
  cain_sip_provider_t
 */
+
+struct cain_sip_provider{
+	cain_sip_object_t base;
+	cain_sip_stack_t *stack;
+	cain_sip_list_t *lps; /*listening points*/
+	cain_sip_list_t *listeners;
+};
+
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
 typedef struct listener_ctx{
@@ -399,7 +423,7 @@ typedef struct listener_ctx{
 	cain_sip_list_t *_elem; \
 	for(_elem=(provider)->listeners;_elem!=NULL;_elem=_elem->next){ \
 		listener_ctx_t *_lctx=(listener_ctx_t*)_elem->data; \
-		_lctx->##callback(_lctx->data,event); \
+		_lctx->listener->callback(_lctx->data,(event)); \
 	} \
 }
 
@@ -409,6 +433,12 @@ typedef struct listener_ctx{
 
 cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
+void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp);
+
+/*
+ cain_sip_response_t
+*/
+void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop);
 
 #ifdef __cplusplus
 }

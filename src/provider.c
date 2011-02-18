@@ -26,12 +26,6 @@ static int listener_ctx_compare(const void *c1, const void *c2){
 	return !(lc1->listener==lc2->listener && lc1->data==lc2->data);
 }
 
-struct cain_sip_provider{
-	cain_sip_object_t base;
-	cain_sip_stack_t *stack;
-	cain_sip_list_t *lps; /*listening points*/
-	cain_sip_list_t *listeners;
-};
 
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_for_each (p->listeners,cain_sip_free);
@@ -96,9 +90,8 @@ static void sender_task_cb(cain_sip_sender_task_t *t, void *data, int retcode){
 }
 
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
-	cain_sip_hop_t hop;
 	cain_sip_sender_task_t *task;
-	cain_sip_stack_get_next_hop (p->stack,req,&hop);
+
 	task=cain_sip_sender_task_new(p, CAIN_SIP_MESSAGE(req), sender_task_cb, NULL);
 	cain_sip_sender_task_send(task);
 }
@@ -106,8 +99,6 @@ void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
 	cain_sip_sender_task_t *task;
 
-	/* fill the hop with the destination of the response */
-	/*cain_sip_stack_get_next_hop (p->stack,req,&hop);*/
 	task=cain_sip_sender_task_new(p, CAIN_SIP_MESSAGE(resp), sender_task_cb, NULL);
 	cain_sip_sender_task_send(task);
 }

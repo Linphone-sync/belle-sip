@@ -26,7 +26,11 @@ typedef struct _cain_sip_response cain_sip_response_t;
 #define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)
 #define CAIN_SIP_RESPONSE(obj)		CAIN_SIP_CAST(obj,cain_sip_response_t)
 
+CAIN_SIP_BEGIN_DECLS
+
 cain_sip_message_t* cain_sip_message_parse(const char* raw);
+
+
 int cain_sip_message_is_request(cain_sip_message_t *msg);
 cain_sip_request_t* cain_sip_request_new();
 cain_sip_request_t* cain_sip_request_parse(const char* raw);
@@ -38,12 +42,13 @@ cain_sip_request_t* cain_sip_request_parse(const char* raw);
 
 cain_sip_uri_t* cain_sip_request_get_uri(cain_sip_request_t* request);
 void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri);
-const char* cain_sip_request_get_method(cain_sip_request_t* request);
+const char* cain_sip_request_get_method(const cain_sip_request_t* request);
 void cain_sip_request_set_method(cain_sip_request_t* request,const char* method);
 
 int cain_sip_message_is_response(cain_sip_message_t *msg);
 
-cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, const char *header_name);
+cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const char *header_name);
+
 /**
  * add an header to this message
  * @param msg
@@ -52,6 +57,10 @@ cain_sip_header_t *cain_sip_message_get_header_last(cain_sip_message_t *msg, con
 void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_header_t* header);
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
+
+int cain_sip_response_get_status_code(const cain_sip_response_t *response);
+
+CAIN_SIP_END_DECLS
 
 #endif
 

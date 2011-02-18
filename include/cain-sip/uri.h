@@ -37,68 +37,72 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 	 *	Returns the value of the named header, or null if it is not set.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_header(cain_sip_uri_t* uri,const char* name);
+	 const char*	cain_sip_uri_get_header(const cain_sip_uri_t* uri,const char* name);
 			/**
 			 * Returns an Iterator over the const char*names of all headers present in this SipURI.
 			 *
 			 */
-	 const cain_sip_list_t*	cain_sip_uri_get_header_names(cain_sip_uri_t* uri) ;
+	 const cain_sip_list_t*	cain_sip_uri_get_header_names(const cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Returns the host part of this SipURI.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_host(cain_sip_uri_t* uri) ;
+	 const char*	cain_sip_uri_get_host(const cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Returns the value of the maddr parameter, or null if this is not set.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_maddr_param(cain_sip_uri_t* uri) ;
+	 const char*	cain_sip_uri_get_maddr_param(const cain_sip_uri_t* uri) ;
 	/**
 	 *	          Returns the value of the method parameter, or null if this is not set.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_method_param(cain_sip_uri_t* uri) ;
+	const char*	cain_sip_uri_get_method_param(const cain_sip_uri_t* uri) ;
 	/**
 	 *	          Returns the port part of this SipURI.
 	 *
 	 */
-	 unsigned int	cain_sip_uri_get_port(cain_sip_uri_t* uri) ;
+	unsigned int	cain_sip_uri_get_port(const cain_sip_uri_t* uri) ;
+	/**
+ 	 * Returns the port of the uri, if not specified in the uri returns the well known port according to the transport.
+ 	**/
+	int cain_sip_uri_get_listening_port(const cain_sip_uri_t *uri);
 	/**
 	 * 	          Returns the value of the "transport" parameter, or null if this is not set.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_transport_param(cain_sip_uri_t* uri) ;
+	 const char*	cain_sip_uri_get_transport_param(const cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Returns the value of the "ttl" parameter, or -1 if this is not set.
 	 *
 	 */
-	 int	cain_sip_uri_get_ttl_param(cain_sip_uri_t* uri) ;
+	 int	cain_sip_uri_get_ttl_param(const cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Returns the user part of this SipURI.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_user(cain_sip_uri_t* uri) ;
+	 const char*	cain_sip_uri_get_user(const cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Returns the value of the userParam, or null if this is not set.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_user_param(cain_sip_uri_t* uri) ;
+	 const char*	cain_sip_uri_get_user_param(const cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Gets user password of SipURI, or null if it is not set.
 	 *
 	 */
-	 const char*	cain_sip_uri_get_user_password(cain_sip_uri_t* uri) ;
+	 const char*	cain_sip_uri_get_user_password(const cain_sip_uri_t* uri) ;
 	/**
 	 *	          Returns whether the the lr parameter is set.
 	 *
 	 */
-	 unsigned int	cain_sip_uri_has_lr_param(cain_sip_uri_t* uri) ;
+	 unsigned int	cain_sip_uri_has_lr_param(const cain_sip_uri_t* uri) ;
 	/**
 	 *
 	 * 	          Returns true if this SipURI is secure i.e. if this SipURI represents a sips URI.
 	 *
 	 */
-	 unsigned int	cain_sip_uri_is_secure(cain_sip_uri_t* uri) ;
+	 unsigned int	cain_sip_uri_is_secure(const cain_sip_uri_t* uri) ;
 	/**
 	 * 	          Removes the port part of this SipURI.
 	 *

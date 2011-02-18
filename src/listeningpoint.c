@@ -29,11 +29,7 @@
  Channels: udp
 */
 
-struct cain_sip_channel{
-	cain_sip_object_t base;
-	struct addrinfo peer;
-	struct sockaddr_storage peer_addr;
-};
+
 
 typedef struct cain_sip_channel_vptr{
 	int (*channel_send)(cain_sip_channel_t *obj, const void *buf, size_t buflen);
@@ -41,8 +37,9 @@ typedef struct cain_sip_channel_vptr{
 	cain_sip_source_t *(*create_source)(cain_sip_channel_t *obj, unsigned int events, unsigned int timeout, cain_sip_source_func_t callback, void *data);
 }cain_sip_channel_vptr_t;
 
-static void cain_sip_channel_init(cain_sip_channel_t *obj){
+static void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_listening_point_t *lp){
 	cain_sip_object_init_type(obj,cain_sip_channel_t);
+	obj->lp=lp;
 	obj->peer.ai_addr=(struct sockaddr*)&obj->peer_addr;
 }
 
@@ -137,9 +134,9 @@ static int create_udp_socket(const char *addr, int port){
 	return sock;
 }
 
-cain_sip_udp_channel_t *cain_sip_udp_channel_new(int sock, const struct addrinfo *dest){
+cain_sip_udp_channel_t *cain_sip_udp_channel_new(cain_sip_listening_point_t *lp, int sock, const struct addrinfo *dest){
 	cain_sip_udp_channel_t *obj=cain_sip_object_new_with_vptr(cain_sip_udp_channel_t,&udp_channel_vptr,udp_channel_uninit);
-	cain_sip_channel_init((cain_sip_channel_t*)obj);
+	cain_sip_channel_init((cain_sip_channel_t*)obj,lp);
 	obj->sock=sock;
 	memcpy(obj->base.peer.ai_addr,dest->ai_addr,dest->ai_addrlen);
 	obj->base.peer.ai_addrlen=dest->ai_addrlen;
@@ -156,6 +153,7 @@ struct cain_sip_listening_point{
 	char *transport;
 	char *addr;
 	int port;
+	int is_reliable;
 };
 
 typedef struct cain_sip_listening_point_vptr{
@@ -187,6 +185,18 @@ const char *cain_sip_listening_point_get_transport(const cain_sip_listening_poin
 	return lp->transport;
 }
 
+
+int cain_sip_listening_point_is_reliable(const cain_sip_listening_point_t *lp){
+	return lp->is_reliable;
+}
+
+int cain_sip_listening_point_get_well_known_port(const char *transport){
+	if (strcasecmp(transport,"UDP")==0 || strcasecmp(transport,"TCP")==0 ) return 5060;
+	if (strcasecmp(transport,"DTLS")==0 || strcasecmp(transport,"TLS")==0 ) return 5061;
+	cain_sip_error("No well known port for transport %s", transport);
+	return -1;
+}
+
 cain_sip_channel_t *cain_sip_listening_point_find_output_channel (cain_sip_listening_point_t *lp,const struct addrinfo *dest){
 	return ((cain_sip_listening_point_vptr_t*)lp->base.vptr)->find_output_channel(lp,dest);
 }
@@ -200,7 +210,7 @@ struct cain_sip_udp_listening_point{
 
 static cain_sip_channel_t *udp_listening_point_find_output_channel(cain_sip_listening_point_t* obj,const struct addrinfo *dest){
 	cain_sip_udp_listening_point_t *lp=(cain_sip_udp_listening_point_t*)obj;
-	cain_sip_udp_channel_t * chan=cain_sip_udp_channel_new (lp->sock,dest);
+	cain_sip_udp_channel_t * chan=cain_sip_udp_channel_new (obj,lp->sock,dest);
 	return CAIN_SIP_CHANNEL(chan);
 }
 
@@ -222,8 +232,8 @@ cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *
 		cain_sip_object_unref(s);
 		return NULL;
 	}
+	lp->base.is_reliable=FALSE;
 	return CAIN_SIP_LISTENING_POINT(lp);
 }
-
 
 

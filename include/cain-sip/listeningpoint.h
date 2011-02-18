@@ -34,7 +34,7 @@ typedef struct cain_sip_channel cain_sip_channel_t;
 CAIN_SIP_BEGIN_DECLS
 
 /**
-* cain_sip_transport_t is an object representing a single communication channel (=unix socket), 
+* cain_sip_transport_t is an object representing a single communication channel (=unix socket or file descriptor), 
 * unlike the cain_sip_listening_point_t that can owns several channels for TCP or TLS (incoming server child sockets or 
 * outgoing client sockets).
 **/
@@ -52,7 +52,7 @@ const char *cain_sip_listening_point_get_ip_address(const cain_sip_listening_poi
 int cain_sip_listening_point_get_port(const cain_sip_listening_point_t *lp);
 const char *cain_sip_listening_point_get_transport(const cain_sip_listening_point_t *ip);
 const char *cain_sip_listening_point_get_ip_address(const  cain_sip_listening_point_t *ip);
-
+int cain_sip_listening_point_is_reliable(const cain_sip_listening_point_t *lp);
 
 
 CAIN_SIP_END_DECLS
