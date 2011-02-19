@@ -56,10 +56,14 @@ void cain_sip_uri_destroy(cain_sip_uri_t* uri) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(uri->header_list));
 }
 
+
 CAIN_SIP_PARSE(uri);
 
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_object_t,cain_sip_uri_destroy,NULL);
+
+
 cain_sip_uri_t* cain_sip_uri_new () {
-	cain_sip_uri_t* l_object = (cain_sip_uri_t*)cain_sip_object_new(cain_sip_uri_t,(cain_sip_object_destroy_t)cain_sip_uri_destroy);
+	cain_sip_uri_t* l_object = (cain_sip_uri_t*)cain_sip_object_new(cain_sip_uri_t);
 	cain_sip_parameters_init((cain_sip_parameters_t*)l_object); /*super*/
 	l_object->header_list = cain_sip_parameters_new();
 	return l_object;

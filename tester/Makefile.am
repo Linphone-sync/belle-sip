@@ -2,7 +2,11 @@ if BUILD_TESTS
 
 noinst_PROGRAMS=cain_sip_tester cast_test
 
-cain_sip_tester_SOURCES=cain_sip_tester.c cain_sip_uri_tester.c cain_sip_headers_tester.c
+cain_sip_tester_SOURCES=	cain_sip_tester.c \
+											cain_sip_uri_tester.c \
+											cain_sip_headers_tester.c \
+											cain_sip_message_tester.c
+
 cast_test_SOURCES=cast_test.c
 
 INCLUDES=-I$(top_srcdir)/include

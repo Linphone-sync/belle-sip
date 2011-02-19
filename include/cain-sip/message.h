@@ -60,6 +60,9 @@ char *cain_sip_message_to_string(cain_sip_message_t *msg);
 
 int cain_sip_response_get_status_code(const cain_sip_response_t *response);
 
+cain_sip_response_t *cain_sip_response_new(void);
+cain_sip_response_t *cain_sip_response_new_from_request(cain_sip_request_t *req);
+
 CAIN_SIP_END_DECLS
 
 #endif

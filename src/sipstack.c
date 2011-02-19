@@ -25,8 +25,10 @@ static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 	cain_sip_list_free(stack->lp);
 }
 
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_stack_t,cain_sip_object_t,cain_sip_stack_destroy,NULL);
+
 cain_sip_stack_t * cain_sip_stack_new(const char *properties){
-	cain_sip_stack_t *stack=cain_sip_object_new(cain_sip_stack_t,cain_sip_stack_destroy);
+	cain_sip_stack_t *stack=cain_sip_object_new(cain_sip_stack_t);
 	stack->ml=cain_sip_main_loop_new ();
 	stack->timer_config.T1=500;
 	stack->timer_config.T2=4000;

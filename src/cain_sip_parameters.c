@@ -20,21 +20,19 @@
 #include "cain_sip_internal.h"
 #include "cain-sip/headers.h"
 
-void cain_sip_parameters_destroy(cain_sip_parameters_t* params) {
-	if (params->param_list) cain_sip_list_free (params->param_list);
-	if (params->paramnames_list) cain_sip_list_free (params->paramnames_list);
-	cain_sip_header_destroy(CAIN_SIP_HEADER(params));
-}
-void cain_sip_parameters_init(cain_sip_parameters_t *obj) {
-	cain_sip_object_init_type(obj,cain_sip_parameters_t);
-	cain_sip_header_init((cain_sip_header_t*)obj);
+void cain_sip_parameters_init(cain_sip_parameters_t *obj){
 }
 
-cain_sip_parameters_t* cain_sip_parameters_new() {
-	cain_sip_parameters_t* l_object = (cain_sip_parameters_t*)cain_sip_object_new(cain_sip_parameters_t,(cain_sip_object_destroy_t)cain_sip_parameters_destroy);
-	cain_sip_header_init((cain_sip_header_t*)l_object);
-	return l_object;
+static void cain_sip_parameters_destroy(cain_sip_parameters_t* params) {
+	if (params->param_list) cain_sip_list_free (params->param_list);
+	if (params->paramnames_list) cain_sip_list_free (params->paramnames_list);
 }
+
+static void cain_sip_parameters_clone(cain_sip_parameters_t *params, const cain_sip_parameters_t *orig){
+	cain_sip_fatal("not implemented");
+}
+
+CAIN_SIP_NEW(parameters,header)
 
 const char*	cain_sip_parameters_get_parameter(cain_sip_parameters_t* params,const char* name) {
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->param_list, (cain_sip_compare_func)cain_sip_param_pair_comp_func, name);

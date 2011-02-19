@@ -30,29 +30,70 @@
 #include "cain-sip/cain-sip.h"
 
 typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
+typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_object_t *orig);
 
-struct _cain_sip_object{
-	uint8_t type_ids[8]; /*table of cain_sip_type_id_t for all inheritance chain*/
-	int ref;
-	void *vptr;
+struct _cain_sip_object_vptr{
+	cain_sip_type_id_t id;
+	struct _cain_sip_object_vptr *parent;
+	void *interfaces;	/*unused for the moment*/
 	cain_sip_object_destroy_t destroy;
-	const char* name;
+	cain_sip_object_clone_t clone;
 };
 
-cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_type_id_t id, void *vptr, cain_sip_object_destroy_t destroy_func, int initially_unowed);
-void _cain_sip_object_init_type(cain_sip_object_t *obj, cain_sip_type_id_t id);
-void cain_sip_object_init(cain_sip_object_t *obj);
+typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
+
+extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
+
+#define CAIN_SIP_OBJECT_VPTR_NAME(object_type)	object_type##_vptr
+
+#define CAIN_SIP_DECLARE_VPTR(object_type) \
+	extern cain_sip_object_vptr_t CAIN_SIP_OBJECT_VPTR_NAME(object_type);
+
+#define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR_BEGIN(vptr_type,object_type, parent_type, destroy, clone) \
+	vptr_type object_type##_vptr={ {\
+		CAIN_SIP_TYPE_ID(object_type), \
+		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
+		NULL, \
+		(cain_sip_object_destroy_t)destroy,	\
+		(cain_sip_object_clone_t)clone	},
+
+#define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR_END };
+
+#define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone) \
+		cain_sip_object_vptr_t object_type##_vptr={ \
+		CAIN_SIP_TYPE_ID(object_type), \
+		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
+		NULL, \
+		(cain_sip_object_destroy_t)destroy,	\
+		(cain_sip_object_clone_t)clone	\
+		}
 
 
-#define cain_sip_object_new(_type,destroy) (_type*)_cain_sip_object_new(sizeof(_type),CAIN_SIP_TYPE_ID(_type),NULL,(cain_sip_object_destroy_t)destroy,0)
-#define cain_sip_object_new_unowed(_type,destroy) (_type*)_cain_sip_object_new(sizeof(_type),CAIN_SIP_TYPE_ID(_type),NULL,(cain_sip_object_destroy_t)destroy,1)
-#define cain_sip_object_init_type(obj, _type) _cain_sip_object_init_type((cain_sip_object_t*)obj, CAIN_SIP_TYPE_ID(_type))
 
-#define cain_sip_object_new_with_vptr(_type,vptr,destroy) (_type*)_cain_sip_object_new(sizeof(_type),CAIN_SIP_TYPE_ID(_type),vptr,(cain_sip_object_destroy_t)destroy,0)
-#define cain_sip_object_new_unowed_with_vptr(_type,vptr,destroy) (_type*)_cain_sip_object_new(sizeof(_type),CAIN_SIP_TYPE_ID(_type),vptr,(cain_sip_object_destroy_t)destroy,1)
+
+struct _cain_sip_object{
+	cain_sip_object_vptr_t *vptr;
+	size_t size;
+	int ref;
+	char* name;
+};
+
+cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed);
+
+
+#define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),0)
+#define cain_sip_object_new_unowed(_type,destroy)(_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),1)
 
 #define CAIN_SIP_OBJECT_VPTR(obj,vptr_type) ((vptr_type*)(((cain_sip_object_t*)obj)->vptr))
-		
+#define cain_sip_object_init(obj)		/*nothing*/
+
+
+/*list of all vptrs (classes) used in cain-sip*/
+CAIN_SIP_DECLARE_VPTR(cain_sip_object_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_uri_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_parameters_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_contact_t);
 
 struct _cain_sip_list {
 	struct _cain_sip_list *next;
@@ -322,8 +363,9 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 #define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_WITH_NAME(object_type,super_type,NULL)
 
 #define CAIN_SIP_NEW_WITH_NAME(object_type,super_type,name) \
+		CAIN_SIP_INSTANCIATE_VPTR(cain_sip_##object_type##_t,cain_sip_##super_type##_t , cain_sip_##object_type##_destroy, cain_sip_##object_type##_clone); \
 		cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
-		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t, (cain_sip_object_destroy_t)cain_sip_##object_type##_destroy);\
+		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
 		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
 		cain_sip_object_set_name(CAIN_SIP_OBJECT(l_object),name);\
 		return l_object;\
@@ -353,7 +395,7 @@ struct _cain_sip_header {
 	cain_sip_object_t base;
 	const char* name;
 };
-void cain_sip_header_destroy(cain_sip_header_t *header);
+
 void cain_sip_header_init(cain_sip_header_t* obj);
 /*class parameters*/
 struct _cain_sip_parameters {
@@ -363,7 +405,6 @@ struct _cain_sip_parameters {
 };
 
 void cain_sip_parameters_init(cain_sip_parameters_t *obj);
-void cain_sip_parameters_destroy(cain_sip_parameters_t* params);
 
 /*
  * Listening points and channels

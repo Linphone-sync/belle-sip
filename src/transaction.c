@@ -35,9 +35,7 @@ static void transaction_delete_timer(cain_sip_transaction_t *t, cain_sip_source_
 	cain_sip_object_unref(s);
 }
 
-
 static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_provider_t *prov, cain_sip_request_t *req){
-	cain_sip_object_init_type(t,cain_sip_transaction_t);
 	if (req) cain_sip_object_ref(req);
 	t->request=req;
 	t->provider=prov;
@@ -49,6 +47,8 @@ static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->final_response) cain_sip_object_unref(t->final_response);
 	if (t->stask) cain_sip_object_unref(t->stask);
 }
+
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_transaction_t,cain_sip_object_t,transaction_destroy,NULL);
 
 void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t){
 	return t->appdata;
@@ -108,11 +108,12 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 }
 
 static void server_transaction_destroy(cain_sip_server_transaction_t *t){
-	transaction_destroy((cain_sip_transaction_t*)t);
 }
 
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_server_transaction_t,cain_sip_transaction_t,server_transaction_destroy,NULL);
+
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req){
-	cain_sip_server_transaction_t *t=cain_sip_object_new(cain_sip_server_transaction_t,(cain_sip_object_destroy_t)server_transaction_destroy);
+	cain_sip_server_transaction_t *t=cain_sip_object_new(cain_sip_server_transaction_t);
 	cain_sip_transaction_init((cain_sip_transaction_t*)t,prov,req);
 	return t;
 }
@@ -310,14 +311,14 @@ void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, 
 }
 
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
-	transaction_destroy((cain_sip_transaction_t*)t);
 }
 
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_client_transaction_t, cain_sip_transaction_t,client_transaction_destroy,NULL);
 
 cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
-	cain_sip_client_transaction_t *t=cain_sip_object_new(cain_sip_client_transaction_t,(cain_sip_object_destroy_t)client_transaction_destroy);
+	cain_sip_client_transaction_t *t=cain_sip_object_new(cain_sip_client_transaction_t);
 	cain_sip_transaction_init((cain_sip_transaction_t*)t,prov,req);
-	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0)
+	if (req && strcmp(cain_sip_request_get_method(req),"INVITE")==0)
 		t->base.is_invite=TRUE;
 	return t;
 }

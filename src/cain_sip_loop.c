@@ -42,8 +42,10 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 	s->notify=func;
 }
 
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_source_t,cain_sip_object_t,cain_sip_source_destroy,NULL);
+
 cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
-	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t, cain_sip_source_destroy);
+	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t);
 	cain_sip_fd_source_init(s,func,data,fd,events,timeout_value_ms);
 	return s;
 }
@@ -87,8 +89,10 @@ static int main_loop_done(void *data, unsigned int events){
 	return TRUE;
 }
 
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_main_loop_t,cain_sip_object_t,cain_sip_main_loop_destroy,NULL);
+
 cain_sip_main_loop_t *cain_sip_main_loop_new(void){
-	cain_sip_main_loop_t*m=cain_sip_object_new(cain_sip_main_loop_t, cain_sip_main_loop_destroy);
+	cain_sip_main_loop_t*m=cain_sip_object_new(cain_sip_main_loop_t);
 	if (pipe(m->control_fds)==-1){
 		cain_sip_fatal("Could not create control pipe.");
 	}

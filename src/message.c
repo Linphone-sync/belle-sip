@@ -18,8 +18,10 @@
 #include "cain_sip_messageParser.h"
 #include "cain_sip_messageLexer.h"
 #include "cain_sip_internal.h"
+
+
 typedef struct _headers_container {
-	const char* name;
+	char* name;
 	cain_sip_list_t* header_list;
 } headers_container_t;
 
@@ -29,20 +31,31 @@ static headers_container_t* cain_sip_message_headers_container_new(const char* n
 	return  NULL; /*FIXME*/
 }
 
+static void cain_sip_headers_container_delete(headers_container_t *obj){
+	cain_sip_free(obj->name);
+	cain_sip_free(obj);
+}
+
 struct _cain_sip_message {
 	cain_sip_object_t base;
 	cain_sip_list_t* header_list;
-	cain_sip_list_t* headernames_list;
 };
+
+static void cain_sip_message_destroy(cain_sip_message_t *msg){
+	cain_sip_list_for_each (msg->header_list,(void (*)(void*))cain_sip_headers_container_delete);
+	cain_sip_list_free(msg->header_list);
+}
+
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,NULL);
 
 CAIN_SIP_PARSE(message)
 
 static int cain_sip_headers_container_comp_func(const headers_container_t *a, const char*b) {
 	return strcmp(a->name,b);
 }
+
 static void cain_sip_message_init(cain_sip_message_t *message){
-	cain_sip_object_init_type(message,cain_sip_message_t);
-	cain_sip_object_init((cain_sip_object_t*)message);
+	
 }
 
 headers_container_t* cain_sip_headers_container_get(cain_sip_message_t* message,const char* header_name) {
@@ -73,6 +86,11 @@ struct _cain_sip_request {
 static void cain_sip_request_destroy(cain_sip_request_t* request) {
 	if (request->method) cain_sip_free((void*)(request->method));
 }
+
+static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_request_t *orig){
+		if (orig->method) request->method=cain_sip_strdup(orig->method);
+}
+
 CAIN_SIP_NEW(request,message)
 CAIN_SIP_PARSE(request)
 GET_SET_STRING(cain_sip_request,method);

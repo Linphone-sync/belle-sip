@@ -29,8 +29,10 @@ static void cain_sip_sender_task_uninit(cain_sip_sender_task_t *t){
 	if (t->resolver_id>0) cain_sip_main_loop_cancel_source (stack->ml,t->resolver_id);
 }
 
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_sender_task_t,cain_sip_object_t,cain_sip_sender_task_uninit,NULL);
+
 cain_sip_sender_task_t * cain_sip_sender_task_new(cain_sip_provider_t *provider,  cain_sip_sender_task_callback_t cb, void *data){
-	cain_sip_sender_task_t *t=cain_sip_object_new(cain_sip_sender_task_t,cain_sip_sender_task_uninit);
+	cain_sip_sender_task_t *t=cain_sip_object_new(cain_sip_sender_task_t);
 	t->provider=provider;
 	t->message=NULL;
 	t->cb=cb;

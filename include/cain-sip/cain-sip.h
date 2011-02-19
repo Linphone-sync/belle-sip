@@ -100,11 +100,13 @@ void cain_sip_object_set_name(cain_sip_object_t *obj,const char* name);
 **/
 const char* cain_sip_object_get_name(cain_sip_object_t *obj);
 
+cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj);
+
 /**
- * Destroy the object: this function is intended for unowed object, that is objects
- * that were created with a 0 reference count.
+ * Delete the object: this function is intended for unowed object, that is objects
+ * that were created with a 0 reference count. For all others, use cain_sip_object_unref().
 **/
-void cain_sip_object_destroy(void *obj);
+void cain_sip_object_delete(void *obj);
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
 

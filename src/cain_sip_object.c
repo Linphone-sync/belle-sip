@@ -18,29 +18,21 @@
 
 #include "cain_sip_internal.h"
 
-static uint8_t *find_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
-	int i;
-	for(i=0;i<sizeof(obj->type_ids);++i){
-		if (obj->type_ids[i]==(uint8_t)id)
-			return &obj->type_ids[i];
+static int has_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
+	cain_sip_object_vptr_t *vptr=obj->vptr;
+	
+	while(vptr!=NULL){
+		if (vptr->id==id) return TRUE;
+		vptr=vptr->parent;
 	}
-	return NULL;
+	return FALSE;
 }
 
-void _cain_sip_object_init_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
-	uint8_t * t=find_type(obj,id);
-	if (t!=NULL) cain_sip_fatal("This object already inherits type %i",id);
-	t=find_type(obj,0);
-	if (t==NULL) cain_sip_fatal("This object has too much inheritance !");
-	*t=id;
-}
-
-cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_type_id_t id, void *vptr, cain_sip_object_destroy_t destroy_func, int initially_unowed){
+cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed){
 	cain_sip_object_t *obj=(cain_sip_object_t *)cain_sip_malloc0(objsize);
-	obj->type_ids[0]=id;
 	obj->ref=initially_unowed ? 0 : 1;
 	obj->vptr=vptr;
-	obj->destroy=destroy_func;
+	obj->size=objsize;
 	return obj;
 }
 
@@ -57,39 +49,82 @@ void cain_sip_object_unref(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
 	if (obj->ref==0){
 		cain_sip_warning("Destroying unowed object");
-		cain_sip_object_destroy(obj);
+		cain_sip_object_delete(obj);
 		return;
 	}
 	obj->ref--;
 	if (obj->ref==0){
-		cain_sip_object_destroy(obj);
+		cain_sip_object_delete(obj);
 	}
 }
 
-void cain_sip_object_destroy(void *ptr){
+static void _cain_sip_object_uninit(cain_sip_object_t *obj){
+	if (obj->name)
+		cain_sip_free(obj->name);
+}
+
+static void _cain_sip_object_clone(cain_sip_object_t *obj, const cain_sip_object_t *orig){
+	if (orig->name!=NULL) obj->name=cain_sip_strdup(obj->name);
+}
+
+cain_sip_object_vptr_t cain_sip_object_t_vptr={
+	CAIN_SIP_TYPE_ID(cain_sip_object_t),
+	NULL, /*no parent, it's god*/
+	NULL,
+	_cain_sip_object_uninit,
+	_cain_sip_object_clone
+};
+
+void cain_sip_object_delete(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
+	cain_sip_object_vptr_t *vptr;
 	if (obj->ref!=0){
 		cain_sip_error("Destroying referenced object !");
-		if (obj->destroy) obj->destroy(obj);
+		vptr=obj->vptr;
+		while(vptr!=NULL){
+			if (vptr->destroy) vptr->destroy(obj);
+			vptr=vptr->parent;
+		}
 		cain_sip_free(obj);
 	}
 }
 
+cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
+	cain_sip_object_t *newobj;
+	cain_sip_object_vptr_t *vptr;
+	
+	newobj=cain_sip_malloc0(obj->size);
+	newobj->ref=1;
+	newobj->vptr=obj->vptr;
+	
+	vptr=obj->vptr;
+	while(vptr!=NULL){
+		if (vptr->clone==NULL){
+			cain_sip_fatal("Object of type %i cannot be cloned, it does not provide a clone() implementation.",vptr->id);
+			return NULL;
+		}else vptr->clone(newobj,obj);
+	}
+	return newobj;
+}
+
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno){
-	if (find_type(obj,id)==NULL){
+	if (has_type(obj,id)==0){
 		cain_sip_fatal("Bad cast to %s at %s:%i",castname,file,fileno);
 		return NULL;
 	}
 	return obj;
 }
-void cain_sip_object_init(cain_sip_object_t *obj) {
-	cain_sip_object_init_type(obj,cain_sip_object_t);
-}
+
+
 void cain_sip_object_set_name(cain_sip_object_t* object,const char* name) {
-	if (name==NULL) return;
-	if (object->name) cain_sip_free((void*)object->name);
-	object->name=cain_sip_strdup(name);
+	if (object->name) {
+		cain_sip_free(object->name);
+		object->name=NULL;
+	}
+	if (name)
+		object->name=cain_sip_strdup(name);
 }
+
 const char* cain_sip_object_get_name(cain_sip_object_t* object) {
 	return object->name;
 }
