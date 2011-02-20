@@ -49,6 +49,8 @@ int cain_sip_message_is_response(cain_sip_message_t *msg);
 
 cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const char *header_name);
 
+const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,const char* header_name);
+
 /**
  * add an header to this message
  * @param msg
@@ -56,12 +58,15 @@ cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const ch
  */
 void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_header_t* header);
 
+void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_list_t *header_list);
+
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
 
 int cain_sip_response_get_status_code(const cain_sip_response_t *response);
 
 cain_sip_response_t *cain_sip_response_new(void);
-cain_sip_response_t *cain_sip_response_new_from_request(cain_sip_request_t *req);
+
+cain_sip_response_t *cain_sip_response_new_from_request(cain_sip_request_t *req, int status_code);
 
 CAIN_SIP_END_DECLS
 
