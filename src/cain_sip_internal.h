@@ -357,17 +357,18 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	tokens ->free(tokens);\
 	lex    ->free(lex);\
 	input  ->close(input);\
+	if (l_parsed_object == NULL) cain_sip_error(#object_type" parser error for [%s]",value);\
 	return l_parsed_object;\
 }
 
-#define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_WITH_NAME(object_type,super_type,NULL)
+#define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_HEADER(object_type,super_type,NULL)
 
-#define CAIN_SIP_NEW_WITH_NAME(object_type,super_type,name) \
+#define CAIN_SIP_NEW_HEADER(object_type,super_type,name) \
 		CAIN_SIP_INSTANCIATE_VPTR(cain_sip_##object_type##_t,cain_sip_##super_type##_t , cain_sip_##object_type##_destroy, cain_sip_##object_type##_clone); \
 		cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
 		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
 		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
-		cain_sip_object_set_name(CAIN_SIP_OBJECT(l_object),name);\
+		if (name) cain_sip_header_set_name(CAIN_SIP_HEADER(l_object),name);\
 		return l_object;\
 	}
 typedef struct cain_sip_param_pair_t {

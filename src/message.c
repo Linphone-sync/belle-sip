@@ -28,7 +28,7 @@ typedef struct _headers_container {
 static headers_container_t* cain_sip_message_headers_container_new(const char* name) {
 	headers_container_t* headers_container = cain_sip_new0(headers_container_t);
 	headers_container->name= cain_sip_strdup(name);
-	return  NULL; /*FIXME*/
+	return  headers_container;
 }
 
 static void cain_sip_headers_container_delete(headers_container_t *obj){
@@ -70,14 +70,14 @@ headers_container_t * get_or_create_container(cain_sip_message_t *message, const
 	headers_container_t* headers_container = cain_sip_headers_container_get(message,header_name);
 	if (headers_container == NULL) {
 		headers_container = cain_sip_message_headers_container_new(header_name);
-		cain_sip_list_append(message->header_list,headers_container);
+		message->header_list=cain_sip_list_append(message->header_list,headers_container);
 	}
 	return headers_container;
 }
 
 void cain_sip_message_add_header(cain_sip_message_t *message,cain_sip_header_t* header) {
 	headers_container_t *headers_container=get_or_create_container(message,cain_sip_header_get_name(header));
-	cain_sip_list_append(headers_container->header_list,cain_sip_object_ref(header));
+	headers_container->header_list=cain_sip_list_append(headers_container->header_list,cain_sip_object_ref(header));
 }
 
 void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_list_t *header_list){
@@ -89,7 +89,7 @@ void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_li
 			cain_sip_fatal("Bad use of cain_sip_message_add_headers(): all headers of the list must be of the same type.");
 			return ;
 		}
-		cain_sip_list_append(headers_container->header_list,cain_sip_object_ref(h));
+		headers_container->header_list=cain_sip_list_append(headers_container->header_list,cain_sip_object_ref(h));
 	}
 }
 
@@ -101,6 +101,7 @@ const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,
 struct _cain_sip_request {
 	cain_sip_message_t message;
 	const char* method;
+	cain_sip_uri_t* uri;
 };
 
 static void cain_sip_request_destroy(cain_sip_request_t* request) {
@@ -116,11 +117,14 @@ CAIN_SIP_PARSE(request)
 GET_SET_STRING(cain_sip_request,method);
 
 void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri) {
-
+	if (request->uri) {
+		cain_sip_object_unref(request->uri);
+	}
+	request->uri=CAIN_SIP_URI(cain_sip_object_ref(uri));
 }
 
 cain_sip_uri_t * cain_sip_request_get_uri(cain_sip_request_t *request){
-	return NULL;
+	return request->uri;
 }
 
 int cain_sip_message_is_request(cain_sip_message_t *msg){

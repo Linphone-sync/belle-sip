@@ -250,4 +250,17 @@ unsigned int cain_sip_header_content_length_get_content_length(const cain_sip_he
 void cain_sip_header_content_length_set_content_length(cain_sip_header_content_length_t* content_length,unsigned int length);
 #define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
 
+/******************************
+ * Extension header hinerite from header
+ *
+ ******************************/
+typedef struct _cain_sip_header_extension cain_sip_header_extension_t;
+
+cain_sip_header_extension_t* cain_sip_header_extension_new();
+
+cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* extension) ;
+const char* cain_sip_header_extension_length_get_value(const cain_sip_header_extension_t* extension);
+void cain_sip_header_extension_length_set_value(cain_sip_header_extension_t* extension,const char* value);
+#define CAIN_SIP_HEADER_EXTENSION(t) CAIN_SIP_CAST(t,cain_sip_header_extension_t)
+
 #endif /* HEADERS_H_ */

@@ -59,7 +59,7 @@ void cain_sip_uri_destroy(cain_sip_uri_t* uri) {
 
 CAIN_SIP_PARSE(uri);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_object_t,cain_sip_uri_destroy,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_parameters_t,cain_sip_uri_destroy,NULL);
 
 
 cain_sip_uri_t* cain_sip_uri_new () {

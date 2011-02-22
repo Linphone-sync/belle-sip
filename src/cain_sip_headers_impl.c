@@ -98,7 +98,7 @@ void cain_sip_header_contact_destroy(cain_sip_header_contact_t* contact) {
 void cain_sip_header_contact_clone(cain_sip_header_contact_t *contact, const cain_sip_header_contact_t *orig){
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_contact,header_address,"Contact")
+CAIN_SIP_NEW_HEADER(header_contact,header_address,"Contact")
 CAIN_SIP_PARSE(header_contact)
 
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,expires,int,_)
@@ -140,7 +140,7 @@ static void cain_sip_header_from_clone(cain_sip_header_from_t* from, const cain_
 }
 
 
-CAIN_SIP_NEW_WITH_NAME(header_from,header_address,"From")
+CAIN_SIP_NEW_HEADER(header_from,header_address,"From")
 CAIN_SIP_PARSE(header_from)
 GET_SET_STRING_PARAM(cain_sip_header_from,tag);
 
@@ -158,7 +158,7 @@ static void cain_sip_header_to_destroy(cain_sip_header_to_t* to) {
 void cain_sip_header_to_clone(cain_sip_header_to_t *contact, const cain_sip_header_to_t *orig){
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_to,header_address,"To")
+CAIN_SIP_NEW_HEADER(header_to,header_address,"To")
 CAIN_SIP_PARSE(header_to)
 GET_SET_STRING_PARAM(cain_sip_header_to,tag);
 
@@ -182,7 +182,7 @@ static void cain_sip_header_via_destroy(cain_sip_header_via_t* via) {
 static void cain_sip_header_via_clone(cain_sip_header_via_t* via, const cain_sip_header_via_t*orig){
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_via,header_address,"Via")
+CAIN_SIP_NEW_HEADER(header_via,header_address,"Via")
 CAIN_SIP_PARSE(header_via)
 GET_SET_STRING(cain_sip_header_via,protocol);
 GET_SET_STRING(cain_sip_header_via,transport);
@@ -236,7 +236,7 @@ int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via){
 ****************************
 */
 struct _cain_sip_header_call_id  {
-	cain_sip_object_t base;
+	cain_sip_header_t header;
 	const char* call_id;
 };
 
@@ -247,7 +247,7 @@ static void cain_sip_header_call_id_destroy(cain_sip_header_call_id_t* call_id) 
 static void cain_sip_header_call_id_clone(cain_sip_header_call_id_t* call_id,const cain_sip_header_call_id_t *orig){
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_call_id,header,"Call-ID")
+CAIN_SIP_NEW_HEADER(header_call_id,header,"Call-ID")
 CAIN_SIP_PARSE(header_call_id)
 GET_SET_STRING(cain_sip_header_call_id,call_id);
 /**************************
@@ -255,7 +255,7 @@ GET_SET_STRING(cain_sip_header_call_id,call_id);
 ****************************
 */
 struct _cain_sip_header_cseq  {
-	cain_sip_object_t base;
+	cain_sip_header_t header;
 	const char* method;
 	unsigned int seq_number;
 };
@@ -268,7 +268,7 @@ static void cain_sip_header_cseq_clone(cain_sip_header_cseq_t* cseq, const cain_
 	if (cseq->method) cain_sip_free((void*)cseq->method);
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_cseq,header,"Cseq")
+CAIN_SIP_NEW_HEADER(header_cseq,header,"CSeq")
 CAIN_SIP_PARSE(header_cseq)
 GET_SET_STRING(cain_sip_header_cseq,method);
 GET_SET_INT(cain_sip_header_cseq,seq_number,unsigned int)
@@ -290,7 +290,7 @@ static void cain_sip_header_content_type_destroy(cain_sip_header_content_type_t*
 static void cain_sip_header_content_type_clone(cain_sip_header_content_type_t* content_type, const cain_sip_header_content_type_t* orig){
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_content_type,parameters,"Content-Type")
+CAIN_SIP_NEW_HEADER(header_content_type,parameters,"Content-Type")
 CAIN_SIP_PARSE(header_content_type)
 GET_SET_STRING(cain_sip_header_content_type,type);
 GET_SET_STRING(cain_sip_header_content_type,subtype);
@@ -308,7 +308,7 @@ static void cain_sip_header_route_destroy(cain_sip_header_route_t* route) {
 static void cain_sip_header_route_clone(cain_sip_header_route_t* route, const cain_sip_header_route_t* orig) {
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_route,header_address,"Route")
+CAIN_SIP_NEW_HEADER(header_route,header_address,"Route")
 CAIN_SIP_PARSE(header_route)
 /**************************
 * Record route header object inherent from header_address
@@ -325,14 +325,14 @@ static void cain_sip_header_record_route_clone(cain_sip_header_record_route_t* r
                                 const cain_sip_header_record_route_t* orig               ) {
 }
 
-CAIN_SIP_NEW_WITH_NAME(header_record_route,header_address,"Record-Route")
+CAIN_SIP_NEW_HEADER(header_record_route,header_address,"Record-Route")
 CAIN_SIP_PARSE(header_record_route)
 /**************************
 * content length header object inherent from object
 ****************************
 */
 struct _cain_sip_header_content_length  {
-	cain_sip_object_t base;
+	cain_sip_header_t header;
 	unsigned int content_length;
 };
 
@@ -344,6 +344,49 @@ static void cain_sip_header_content_length_clone(cain_sip_header_content_length_
 }
 
 
-CAIN_SIP_NEW_WITH_NAME(header_content_length,header,"Content-Length")
+CAIN_SIP_NEW_HEADER(header_content_length,header,"Content-Length")
 CAIN_SIP_PARSE(header_content_length)
 GET_SET_INT(cain_sip_header_content_length,content_length,unsigned int)
+/******************************
+ * Extension header hinerite from header
+ *
+ ******************************/
+struct _cain_sip_header_extension  {
+	cain_sip_header_t header;
+	const char* value;
+};
+
+static void cain_sip_header_extension_destroy(cain_sip_header_extension_t* extension) {
+	if (extension->value) cain_sip_free((void*)extension->value);
+}
+
+static void cain_sip_header_extension_clone(cain_sip_header_extension_t* extension, const cain_sip_header_extension_t* orig){
+}
+
+CAIN_SIP_NEW_HEADER(header_extension,header,NULL)
+
+/**
+ * special case for this header. I don't know why
+ */
+cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* value) {
+	pANTLR3_INPUT_STREAM           input;
+	pcain_sip_messageLexer               lex;
+	pANTLR3_COMMON_TOKEN_STREAM    tokens;
+	pcain_sip_messageParser              parser;
+	input  = antlr3NewAsciiStringCopyStream	(
+			(pANTLR3_UINT8)value,
+			(ANTLR3_UINT32)strlen(value),
+			((void *)0));
+	lex    = cain_sip_messageLexerNew                (input);
+	tokens = antlr3CommonTokenStreamSourceNew  (1025, lex->pLexer->rec->state->tokSource);
+	parser = cain_sip_messageParserNew               (tokens);
+	cain_sip_messageParser_header_extension_return l_parsed_object = parser->header_extension(parser,FALSE);
+	parser ->free(parser);
+	tokens ->free(tokens);
+	lex    ->free(lex);
+	input  ->close(input);
+	if (l_parsed_object.ret == NULL) cain_sip_error("Parser error for [%s]",value);\
+	return CAIN_SIP_HEADER_EXTENSION(l_parsed_object.ret);
+}
+GET_SET_STRING(cain_sip_header_extension,value);
+

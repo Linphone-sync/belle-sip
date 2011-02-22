@@ -43,11 +43,11 @@ void test_simple_header_contact(void) {
 
 void test_complex_header_contact(void) {
 
-	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact: \"jéremis\" <sip:titi.com>;expires=3600;q=0.7");
+	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact: \"jéremis\" <sip:sip.linphone.org>;expires=3600;q=0.7");
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri((cain_sip_header_address_t*)L_contact);
 
 	CU_ASSERT_PTR_NOT_NULL(L_uri);
-	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "titi.com");
+	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "sip.linphone.org");
 
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_address_get_displayname((cain_sip_header_address_t*)L_contact), "jéremis");
 
@@ -118,6 +118,15 @@ void test_header_content_type(void) {
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_subtype(L_content_type),"html");
 	CU_ASSERT_STRING_EQUAL(cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(L_content_type),"charset"),"ISO-8859-4");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
+
+	L_content_type = cain_sip_header_content_type_parse("Content-Type: application/sdp");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_type(L_content_type),"application");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_subtype(L_content_type),"sdp");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
+
+	L_content_type = cain_sip_header_content_type_parse("Content-Type: application/pkcs7-mime; smime-type=enveloped-data; \r\n name=smime.p7m");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
+
 }
 void test_header_record_route(void) {
 
