@@ -27,7 +27,9 @@ static int has_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
 	}
 	return FALSE;
 }
-
+unsigned int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id) {
+	return has_type(obj,id);
+}
 cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed){
 	cain_sip_object_t *obj=(cain_sip_object_t *)cain_sip_malloc0(objsize);
 	obj->ref=initially_unowed ? 0 : 1;

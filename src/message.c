@@ -50,6 +50,26 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_
 
 CAIN_SIP_PARSE(message)
 
+cain_sip_message_t* cain_sip_message_parse_raw (const char* buff, size_t buff_length,size_t* message_length ) { \
+	pANTLR3_INPUT_STREAM           input;
+	pcain_sip_messageLexer               lex;
+	pANTLR3_COMMON_TOKEN_STREAM    tokens;
+	pcain_sip_messageParser              parser;
+	input  = antlr3NewAsciiStringCopyStream	(
+			(pANTLR3_UINT8)buff,
+			(ANTLR3_UINT32)buff_length,
+			((void *)0));
+	lex    = cain_sip_messageLexerNew                (input);
+	tokens = antlr3CommonTokenStreamSourceNew  (1025, lex->pLexer->rec->state->tokSource);
+	parser = cain_sip_messageParserNew               (tokens);
+	cain_sip_message_t* l_parsed_object = parser->message_raw(parser,message_length);
+	parser ->free(parser);
+	tokens ->free(tokens);
+	lex    ->free(lex);
+	input  ->close(input);
+	return l_parsed_object;
+}
+
 static int cain_sip_headers_container_comp_func(const headers_container_t *a, const char*b) {
 	return strcasecmp(a->name,b);
 }
@@ -128,11 +148,11 @@ cain_sip_uri_t * cain_sip_request_get_uri(cain_sip_request_t *request){
 }
 
 int cain_sip_message_is_request(cain_sip_message_t *msg){
-	return 0;
+	return CAIN_SIP_IS_INSTANCE_OF(CAIN_SIP_OBJECT(msg),cain_sip_request_t);
 }
 
 int cain_sip_message_is_response(cain_sip_message_t *msg){
-	return 0;
+	return CAIN_SIP_IS_INSTANCE_OF(CAIN_SIP_OBJECT(msg),cain_sip_response_t);
 }
 
 cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const char *header_name){
@@ -235,6 +255,9 @@ static void cain_sip_response_clone(cain_sip_response_t *resp, const cain_sip_re
 }
 
 CAIN_SIP_NEW(response,message);
+CAIN_SIP_PARSE(response)
+GET_SET_STRING(cain_sip_response,reason_phrase);
+GET_SET_INT(cain_sip_response,status_code,int)
 
 static void cain_sip_response_init_default(cain_sip_response_t *resp, int status_code, const char *phrase){
 	resp->status_code=status_code;
@@ -257,9 +280,7 @@ cain_sip_response_t *cain_sip_response_new_from_request(cain_sip_request_t *req,
 	return resp;
 }
 
-int cain_sip_response_get_status_code(const cain_sip_response_t *response){
-	return response->status_code;
-}
+
 
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
