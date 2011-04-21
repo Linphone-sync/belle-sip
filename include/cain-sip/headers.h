@@ -251,7 +251,40 @@ void cain_sip_header_content_length_set_content_length(cain_sip_header_content_l
 #define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
 
 /******************************
- * Extension header hinerite from header
+ * authorization header inherit from header
+ *
+ ******************************/
+typedef struct _cain_sip_header_authorization cain_sip_header_authorization_t;
+
+cain_sip_header_authorization_t* cain_sip_header_authorization_authorization();
+cain_sip_header_authorization_t* cain_sip_header_authorization_parse(const char* authorization);
+const char*	cain_sip_header_authorization_get_algorithm(const cain_sip_header_authorization_t* authorization );
+const char*	cain_sip_header_authorization_get_cnonce(const cain_sip_header_authorization_t* authorization );
+const char* cain_sip_header_authorization_get_nonce(const cain_sip_header_authorization_t* authorization);
+int	cain_sip_header_authorization_get_nonce_count(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_opaque(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_qop(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_realm(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_response(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_scheme(const cain_sip_header_authorization_t* authorization);
+cain_sip_uri_t* cain_sip_header_authorization_get_uri(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_username(const cain_sip_header_authorization_t* authorization);
+void cain_sip_header_authorization_set_algorithm(cain_sip_header_authorization_t* authorization, const char* algorithm);
+void cain_sip_header_authorization_set_cnonce(cain_sip_header_authorization_t* authorization, const char* cNonce);
+void cain_sip_header_authorization_set_nonce(cain_sip_header_authorization_t* authorization, const char* nonce);
+void cain_sip_header_authorization_set_nonce_count(cain_sip_header_authorization_t* authorization, int nonceCount);
+void cain_sip_header_authorization_set_opaque(cain_sip_header_authorization_t* authorization, const char* opaque);
+void cain_sip_header_authorization_set_qop(cain_sip_header_authorization_t* authorization, const char* qop);
+void cain_sip_header_authorization_set_realm(cain_sip_header_authorization_t* authorization, const char* realm);
+void cain_sip_header_authorization_set_response(cain_sip_header_authorization_t* authorization, const char* response);
+void cain_sip_header_authorization_set_scheme(cain_sip_header_authorization_t* authorization, const char* scheme);
+void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* authorization, cain_sip_uri_t* uri);
+void cain_sip_header_authorization_set_username(cain_sip_header_authorization_t* authorization, const char* username);
+
+#define CAIN_SIP_HEADER_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_authorization_t)
+
+/******************************
+ * Extension header inherit from header
  *
  ******************************/
 typedef struct _cain_sip_header_extension cain_sip_header_extension_t;
@@ -259,8 +292,8 @@ typedef struct _cain_sip_header_extension cain_sip_header_extension_t;
 cain_sip_header_extension_t* cain_sip_header_extension_new();
 
 cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* extension) ;
-const char* cain_sip_header_extension_length_get_value(const cain_sip_header_extension_t* extension);
-void cain_sip_header_extension_length_set_value(cain_sip_header_extension_t* extension,const char* value);
+const char* cain_sip_header_extension_get_value(const cain_sip_header_extension_t* extension);
+void cain_sip_header_extension_set_value(cain_sip_header_extension_t* extension,const char* value);
 #define CAIN_SIP_HEADER_EXTENSION(t) CAIN_SIP_CAST(t,cain_sip_header_extension_t)
 
 #endif /* HEADERS_H_ */

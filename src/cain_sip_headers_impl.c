@@ -70,9 +70,7 @@ GET_SET_STRING(cain_sip_header_address,displayname);
 
 void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value) {
 		if (address->displayname != NULL) cain_sip_free((void*)(address->displayname));
-		size_t value_size = strlen(value);
-		address->displayname=cain_sip_malloc0(value_size-2+1);
-		strncpy((char*)(address->displayname),value+1,value_size-2);
+		address->displayname=_cain_sip_str_dup_and_unquote_string(value);
 }
 cain_sip_uri_t* cain_sip_header_address_get_uri(cain_sip_header_address_t* address) {
 	return address->uri;
@@ -389,4 +387,27 @@ cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* value)
 	return CAIN_SIP_HEADER_EXTENSION(l_parsed_object.ret);
 }
 GET_SET_STRING(cain_sip_header_extension,value);
+/**************************
+* content length header object inherent from object
+****************************
+*/
+struct _cain_sip_header_authorization  {
+	cain_sip_header_t header;
+	const char* username;
+
+};
+
+
+static void cain_sip_header_authorization_destroy(cain_sip_header_authorization_t* authorization) {
+	if (authorization->username) cain_sip_free((void*)authorization->username);
+}
+
+static void cain_sip_header_authorization_clone(cain_sip_header_authorization_t* authorization,
+                                                 const cain_sip_header_authorization_t *orig ) {
+}
+
+
+CAIN_SIP_NEW_HEADER(header_authorization,header,"Authorization")
+CAIN_SIP_PARSE(header_authorization)
+GET_SET_STRING(cain_sip_header_authorization,username);
 

@@ -504,6 +504,9 @@ void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, 
 */
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop);
 
+#define IS_TOKEN(token) (strcmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token))))->chars) == 0)
+char* _cain_sip_str_dup_and_unquote_string(char* quoted_string);
+
 #ifdef __cplusplus
 }
 #endif
