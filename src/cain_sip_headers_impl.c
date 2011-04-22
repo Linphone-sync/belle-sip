@@ -394,20 +394,51 @@ GET_SET_STRING(cain_sip_header_extension,value);
 struct _cain_sip_header_authorization  {
 	cain_sip_header_t header;
 	const char* username;
+	const char* realm;
+	const char* nonce;
+	cain_sip_uri_t* uri;
+	const char* dresponse;
+	const char* algorithm;
+
 
 };
 
 
 static void cain_sip_header_authorization_destroy(cain_sip_header_authorization_t* authorization) {
 	if (authorization->username) cain_sip_free((void*)authorization->username);
+	if (authorization->realm) cain_sip_free((void*)authorization->realm);
+	if (authorization->nonce) cain_sip_free((void*)authorization->nonce);
+	if (authorization->uri) {
+			cain_sip_object_unref(CAIN_SIP_OBJECT(authorization->uri));
+	}
+	if (authorization->algorithm) cain_sip_free((void*)authorization->algorithm);
 }
 
 static void cain_sip_header_authorization_clone(cain_sip_header_authorization_t* authorization,
                                                  const cain_sip_header_authorization_t *orig ) {
 }
 
+cain_sip_uri_t* cain_sip_header_authorization_get_uri(const cain_sip_header_authorization_t* authorization) {
+	return authorization->uri;
+}
 
+void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* authorization, cain_sip_uri_t* uri) {
+	if (authorization->uri) {
+		cain_sip_object_unref(CAIN_SIP_OBJECT(authorization->uri));
+	}
+	authorization->uri=uri;
+	if (authorization->uri) cain_sip_object_ref(authorization->uri);
+}
 CAIN_SIP_NEW_HEADER(header_authorization,header,"Authorization")
 CAIN_SIP_PARSE(header_authorization)
 GET_SET_STRING(cain_sip_header_authorization,username);
-
+GET_SET_STRING(cain_sip_header_authorization,realm);
+GET_SET_STRING(cain_sip_header_authorization,nonce);
+GET_SET_STRING(cain_sip_header_authorization,dresponse);
+const char*	cain_sip_header_authorization_get_response(const cain_sip_header_authorization_t* authorization) {
+	return cain_sip_header_authorization_get_dresponse(authorization);
+}
+void cain_sip_header_authorization_set_response(cain_sip_header_authorization_t* authorization, const char* response) {
+	cain_sip_header_authorization_set_dresponse(authorization,response);
+}
+GET_SET_STRING(cain_sip_header_authorization,algorithm);

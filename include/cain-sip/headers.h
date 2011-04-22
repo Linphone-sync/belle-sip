@@ -256,7 +256,7 @@ void cain_sip_header_content_length_set_content_length(cain_sip_header_content_l
  ******************************/
 typedef struct _cain_sip_header_authorization cain_sip_header_authorization_t;
 
-cain_sip_header_authorization_t* cain_sip_header_authorization_authorization();
+cain_sip_header_authorization_t* cain_sip_header_authorization_new();
 cain_sip_header_authorization_t* cain_sip_header_authorization_parse(const char* authorization);
 const char*	cain_sip_header_authorization_get_algorithm(const cain_sip_header_authorization_t* authorization );
 const char*	cain_sip_header_authorization_get_cnonce(const cain_sip_header_authorization_t* authorization );

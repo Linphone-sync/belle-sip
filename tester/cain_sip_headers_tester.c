@@ -164,6 +164,10 @@ void test_header_authorization(void) {
 	cain_sip_header_authorization_t* L_authorization = cain_sip_header_authorization_parse(l_raw_header);
 	CU_ASSERT_PTR_NOT_NULL(L_authorization);
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_username(L_authorization), "0033482532176");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_realm(L_authorization), "sip.ovh.net");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_nonce(L_authorization), "1bcdcb194b30df5f43973d4c69bdf54f");
+	CU_ASSERT_PTR_NOT_NULL(cain_sip_header_authorization_get_uri(L_authorization));
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_response(L_authorization), "eb36c8d5c8642c1c5f44ec3404613c81");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_authorization));
 }
 
