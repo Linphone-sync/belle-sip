@@ -251,7 +251,7 @@ void cain_sip_header_content_length_set_content_length(cain_sip_header_content_l
 #define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
 
 /******************************
- * authorization header inherit from header
+ * authorization header inherit from parameters
  *
  ******************************/
 typedef struct _cain_sip_header_authorization cain_sip_header_authorization_t;
@@ -283,7 +283,16 @@ void cain_sip_header_authorization_set_username(cain_sip_header_authorization_t*
 
 #define CAIN_SIP_HEADER_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_authorization_t)
 
+/*******************************
+ * proxy_authorization inherit from Authorization
+ */
+typedef struct _cain_sip_header_proxy_authorization cain_sip_header_proxy_authorization_t;
+cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_new();
+cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_parse(const char* proxy_authorization);
+#define CAIN_SIP_HEADER_PROXY_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_proxy_authorization_t)
+
 /******************************
+ *
  * Extension header inherit from header
  *
  ******************************/
@@ -295,5 +304,6 @@ cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* extens
 const char* cain_sip_header_extension_get_value(const cain_sip_header_extension_t* extension);
 void cain_sip_header_extension_set_value(cain_sip_header_extension_t* extension,const char* value);
 #define CAIN_SIP_HEADER_EXTENSION(t) CAIN_SIP_CAST(t,cain_sip_header_extension_t)
+
 
 #endif /* HEADERS_H_ */
