@@ -391,17 +391,31 @@ GET_SET_STRING(cain_sip_header_extension,value);
 *Authorization header object inherent from parameters
 ****************************
 */
+#define AUTH_BASE \
+	cain_sip_parameters_t params_list; \
+	const char* scheme; \
+	const char* realm; \
+	const char* nonce; \
+	const char* algorithm; \
+	const char* opaque; \
+	const char* qop; \
+
+#define AUTH_BASE_DESTROY(obj) \
+	if (obj->scheme) cain_sip_free((void*)obj->scheme);\
+	if (obj->realm) cain_sip_free((void*)obj->realm);\
+	if (obj->nonce) cain_sip_free((void*)obj->nonce);\
+	if (obj->algorithm) cain_sip_free((void*)obj->algorithm);\
+	if (obj->opaque) cain_sip_free((void*)obj->opaque);\
+	if (obj->qop) cain_sip_free((void*)obj->qop);\
+
+
+
 struct _cain_sip_header_authorization  {
-	cain_sip_parameters_t params_list;
+	AUTH_BASE
 	const char* username;
-	const char* realm;
-	const char* nonce;
 	cain_sip_uri_t* uri;
-	const char* dresponse;
-	const char* algorithm;
+	const char* response;
 	const char* cnonce;
-	const char* opaque;
-	const char* message_qop;
 	int nonce_count;
 
 };
@@ -409,15 +423,11 @@ struct _cain_sip_header_authorization  {
 
 static void cain_sip_header_authorization_destroy(cain_sip_header_authorization_t* authorization) {
 	if (authorization->username) cain_sip_free((void*)authorization->username);
-	if (authorization->realm) cain_sip_free((void*)authorization->realm);
-	if (authorization->nonce) cain_sip_free((void*)authorization->nonce);
 	if (authorization->uri) {
 			cain_sip_object_unref(CAIN_SIP_OBJECT(authorization->uri));
 	}
-	if (authorization->algorithm) cain_sip_free((void*)authorization->algorithm);
 	if (authorization->cnonce) cain_sip_free((void*)authorization->cnonce);
-	if (authorization->opaque) cain_sip_free((void*)authorization->opaque);
-	if (authorization->message_qop) cain_sip_free((void*)authorization->message_qop);
+	AUTH_BASE_DESTROY(authorization)
 }
 
 static void cain_sip_header_authorization_clone(cain_sip_header_authorization_t* authorization,
@@ -439,26 +449,15 @@ void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* auth
 }
 CAIN_SIP_NEW_HEADER(header_authorization,parameters,"Authorization")
 CAIN_SIP_PARSE(header_authorization)
+GET_SET_STRING(cain_sip_header_authorization,scheme);
 GET_SET_STRING(cain_sip_header_authorization,username);
 GET_SET_STRING(cain_sip_header_authorization,realm);
 GET_SET_STRING(cain_sip_header_authorization,nonce);
-GET_SET_STRING(cain_sip_header_authorization,dresponse);
-const char*	cain_sip_header_authorization_get_response(const cain_sip_header_authorization_t* authorization) {
-	return cain_sip_header_authorization_get_dresponse(authorization);
-}
-void cain_sip_header_authorization_set_response(cain_sip_header_authorization_t* authorization, const char* response) {
-	cain_sip_header_authorization_set_dresponse(authorization,response);
-}
+GET_SET_STRING(cain_sip_header_authorization,response);
 GET_SET_STRING(cain_sip_header_authorization,algorithm);
 GET_SET_STRING(cain_sip_header_authorization,cnonce);
 GET_SET_STRING(cain_sip_header_authorization,opaque);
-GET_SET_STRING(cain_sip_header_authorization,message_qop);
-const char*	cain_sip_header_authorization_get_qop(const cain_sip_header_authorization_t* authorization) {
-	return cain_sip_header_authorization_get_message_qop(authorization);
-}
-void cain_sip_header_authorization_set_qop(cain_sip_header_authorization_t* authorization, const char* qop) {
-	cain_sip_header_authorization_set_message_qop(authorization,qop);
-}
+GET_SET_STRING(cain_sip_header_authorization,qop);
 GET_SET_INT(cain_sip_header_authorization,nonce_count,int)
 
 /**************************
@@ -478,3 +477,30 @@ static void cain_sip_header_proxy_authorization_clone(cain_sip_header_proxy_auth
 }
 CAIN_SIP_NEW_HEADER(header_proxy_authorization,header_authorization,"Proxy-Authorization")
 CAIN_SIP_PARSE(header_proxy_authorization)
+/**************************
+*WWW-Authorization header object inherent from parameters
+****************************
+*/
+struct _cain_sip_header_www_authenticate  {
+	AUTH_BASE
+	const char* domain;
+	unsigned int stale;
+};
+
+
+static void cain_sip_header_www_authenticate_destroy(cain_sip_header_www_authenticate_t* www_authenticate) {
+}
+
+static void cain_sip_header_www_authenticate_clone(cain_sip_header_www_authenticate_t* www_authenticate,
+                                                 const cain_sip_header_www_authenticate_t *orig ) {
+}
+CAIN_SIP_NEW_HEADER(header_www_authenticate,parameters,"WWW-Authenticdate")
+CAIN_SIP_PARSE(header_www_authenticate)
+GET_SET_STRING(cain_sip_header_www_authenticate,scheme);
+GET_SET_STRING(cain_sip_header_www_authenticate,realm);
+GET_SET_STRING(cain_sip_header_www_authenticate,nonce);
+GET_SET_STRING(cain_sip_header_www_authenticate,algorithm);
+GET_SET_STRING(cain_sip_header_www_authenticate,opaque);
+GET_SET_STRING(cain_sip_header_www_authenticate,qop);
+GET_SET_STRING(cain_sip_header_www_authenticate,domain)
+GET_SET_BOOL(cain_sip_header_www_authenticate,stale,is)
