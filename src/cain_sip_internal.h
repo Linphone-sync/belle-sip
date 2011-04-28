@@ -394,8 +394,12 @@ void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* a
 /*calss header*/
 struct _cain_sip_header {
 	cain_sip_object_t base;
+	cain_sip_header_t* next;
 	const char* name;
 };
+
+void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next);
+cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* headers);
 
 void cain_sip_header_init(cain_sip_header_t* obj);
 /*class parameters*/

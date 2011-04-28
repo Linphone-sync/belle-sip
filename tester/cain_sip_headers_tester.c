@@ -18,6 +18,7 @@
 
 
 #include "cain-sip/cain-sip.h"
+#include "cain_sip_internal.h"
 #include <stdio.h>
 #include "CUnit/Basic.h"
 
@@ -43,7 +44,7 @@ void test_simple_header_contact(void) {
 
 void test_complex_header_contact(void) {
 
-	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact: \"jéremis\" <sip:sip.linphone.org>;expires=3600;q=0.7");
+	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact: \"jéremis\" <sip:sip.linphone.org>;expires=3600;q=0.7, sip:titi.com");
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri((cain_sip_header_address_t*)L_contact);
 
 	CU_ASSERT_PTR_NOT_NULL(L_uri);
@@ -54,6 +55,11 @@ void test_complex_header_contact(void) {
 	CU_ASSERT_EQUAL(cain_sip_header_contact_get_expires(L_contact),3600);
 	float l_qvalue = cain_sip_header_contact_get_qvalue(L_contact);
 	CU_ASSERT_EQUAL(l_qvalue,0.7);
+
+	cain_sip_header_t* l_next = cain_sip_header_get_next(CAIN_SIP_HEADER(L_contact));
+	cain_sip_header_contact_t* L_next_contact = CAIN_SIP_HEADER_CONTACT(l_next);
+	CU_ASSERT_PTR_NOT_NULL(L_next_contact);
+	CU_ASSERT_PTR_NOT_NULL( cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_contact)));
 
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_contact));
 
@@ -97,6 +103,15 @@ void test_header_via(void) {
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_via_get_received(L_via),"192.169.0.4");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_via_get_branch(L_via),"z9hG4bK368560724");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_via));
+
+	L_via = cain_sip_header_via_parse("Via: SIP/2.0/UDP 192.168.0.19:5062;rport;received=192.169.0.4;branch=z9hG4bK368560724, SIP/2.0/UDP 192.168.0.19:5062");
+
+	cain_sip_header_t* l_next = cain_sip_header_get_next(CAIN_SIP_HEADER(L_via));
+	cain_sip_header_via_t* L_next_via = CAIN_SIP_HEADER_VIA(l_next);
+	CU_ASSERT_PTR_NOT_NULL(L_next_via);
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_via_get_host(L_next_via),"192.168.0.19");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_via));
+
 }
 void test_header_call_id(void) {
 
@@ -136,6 +151,13 @@ void test_header_record_route(void) {
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "212.27.52.5");
 	CU_ASSERT_STRING_EQUAL(cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(L_record_route),"charset"),"ISO-8859-4");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_record_route));
+
+	L_record_route = cain_sip_header_record_route_parse("Record-Route: <sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4, <sip:212.27.52.5:5060;transport=udp;lr>");
+	cain_sip_header_t* l_next = cain_sip_header_get_next(CAIN_SIP_HEADER(L_record_route));
+	cain_sip_header_record_route_t* L_next_route = CAIN_SIP_HEADER_RECORD_ROUTE(l_next);
+	CU_ASSERT_PTR_NOT_NULL(L_next_route);
+	CU_ASSERT_PTR_NOT_NULL( cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_next_route)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_record_route));
 }
 void test_header_route(void) {
 
@@ -144,6 +166,13 @@ void test_header_route(void) {
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
 	CU_ASSERT_EQUAL(cain_sip_uri_get_port(L_uri), 5060);
 	CU_ASSERT_STRING_EQUAL(cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(L_route),"charset"),"ISO-8859-4");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_route));
+
+	L_route = cain_sip_header_route_parse("Route: <sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4, <sip:titi.com>");
+	cain_sip_header_t* l_next = cain_sip_header_get_next(CAIN_SIP_HEADER(L_route));
+	cain_sip_header_route_t* L_next_route = CAIN_SIP_HEADER_ROUTE(l_next);
+	CU_ASSERT_PTR_NOT_NULL(L_next_route);
+	CU_ASSERT_PTR_NOT_NULL( cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_next_route)));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_route));
 }
 void test_header_content_length(void) {

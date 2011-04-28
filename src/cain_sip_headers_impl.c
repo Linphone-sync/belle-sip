@@ -39,6 +39,15 @@ void cain_sip_header_init(cain_sip_header_t *header) {
 
 static void cain_sip_header_destroy(cain_sip_header_t *header){
 	if (header->name) cain_sip_free((void*)header->name);
+	if (header->next) cain_sip_object_unref(CAIN_SIP_OBJECT(header->next));
+}
+void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next) {
+	if (header->next) cain_sip_object_unref(CAIN_SIP_OBJECT(header));
+	header->next = next;
+	cain_sip_object_ref(CAIN_SIP_OBJECT(next));
+}
+cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* header) {
+	return header->next;
 }
 
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_header_t,cain_sip_object_t,cain_sip_header_destroy,NULL);
@@ -494,7 +503,7 @@ static void cain_sip_header_www_authenticate_destroy(cain_sip_header_www_authent
 static void cain_sip_header_www_authenticate_clone(cain_sip_header_www_authenticate_t* www_authenticate,
                                                  const cain_sip_header_www_authenticate_t *orig ) {
 }
-CAIN_SIP_NEW_HEADER(header_www_authenticate,parameters,"WWW-Authenticdate")
+CAIN_SIP_NEW_HEADER(header_www_authenticate,parameters,"WWW-Authenticate")
 CAIN_SIP_PARSE(header_www_authenticate)
 GET_SET_STRING(cain_sip_header_www_authenticate,scheme);
 GET_SET_STRING(cain_sip_header_www_authenticate,realm);
