@@ -174,6 +174,8 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 	 */
 	 char*	cain_sip_uri_to_string(cain_sip_uri_t* uri) ;
 
+	 int cain_sip_uri_marshal(cain_sip_uri_t* uri, char* buff,unsigned int offset,unsigned int buff_size);
+
 	#define CAIN_SIP_URI(obj) CAIN_SIP_CAST(obj,cain_sip_uri_t)
 
 #endif  /*CAIN_SIP_URI_H_*/

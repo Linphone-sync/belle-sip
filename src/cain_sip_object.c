@@ -74,7 +74,8 @@ cain_sip_object_vptr_t cain_sip_object_t_vptr={
 	NULL, /*no parent, it's god*/
 	NULL,
 	_cain_sip_object_uninit,
-	_cain_sip_object_clone
+	_cain_sip_object_clone,
+	NULL
 };
 
 void cain_sip_object_delete(void *ptr){
@@ -105,6 +106,7 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 			cain_sip_fatal("Object of type %i cannot be cloned, it does not provide a clone() implementation.",vptr->id);
 			return NULL;
 		}else vptr->clone(newobj,obj);
+		vptr=vptr->parent;
 	}
 	return newobj;
 }
@@ -129,4 +131,23 @@ void cain_sip_object_set_name(cain_sip_object_t* object,const char* name) {
 
 const char* cain_sip_object_get_name(cain_sip_object_t* object) {
 	return object->name;
+}
+
+int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size) {
+	cain_sip_object_vptr_t *vptr=obj->vptr;
+	while (vptr != NULL) {
+		if (vptr->marshal != NULL) {
+			return vptr->marshal(obj,buff,offset,buff_size);
+		} else {
+			vptr=vptr->parent;
+		}
+	}
+	return -1; /*no implementation found*/
+}
+char* cain_sip_object_to_string(cain_sip_object_t* obj) {
+	char buff[2048]; /*to be optimized*/
+	int size = cain_sip_object_marshal(obj,buff,0,sizeof(buff));
+	buff[size]='\0';
+	return strdup(buff);
+
 }

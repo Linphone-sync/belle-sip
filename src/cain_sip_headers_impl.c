@@ -50,7 +50,15 @@ cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* header) {
 	return header->next;
 }
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_header_t,cain_sip_object_t,cain_sip_header_destroy,NULL);
+int cain_sip_header_marshal(cain_sip_header_t* header, char* buff,unsigned int offset,unsigned int buff_size) {
+	if (header->name) {
+		return snprintf(buff+offset,buff_size-offset,"%s:",header->name);
+	} else {
+		cain_sip_warning("no header name found");
+		return 0;
+	}
+}
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_header_t,cain_sip_object_t,cain_sip_header_destroy,NULL,cain_sip_header_marshal);
 
 
 /************************
@@ -72,6 +80,24 @@ static void cain_sip_header_address_destroy(cain_sip_header_address_t* contact) 
 }
 
 static void cain_sip_header_address_clone(cain_sip_header_address_t *addr){
+}
+int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buff,unsigned int offset,unsigned int buff_size) {
+	/*1 display name*/
+	unsigned int current_offset=offset;
+	if (header->displayname) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"\"%s\" ",header->displayname);;
+	}
+	if (header->uri) {
+		if (header->displayname || cain_sip_parameters_get_parameter_names(&header->base) !=NULL) {
+			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","<");
+		}
+		current_offset+=cain_sip_uri_marshal(header->uri,buff,current_offset,buff_size);
+		if (header->displayname || cain_sip_parameters_get_parameter_names(&header->base) !=NULL) {
+			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",">");
+		}
+	}
+	current_offset+=cain_sip_parameters_marshal(&header->base,buff,current_offset,buff_size);
+	return current_offset-offset;
 }
 
 CAIN_SIP_NEW(header_address,parameters)
@@ -104,7 +130,16 @@ void cain_sip_header_contact_destroy(cain_sip_header_contact_t* contact) {
 
 void cain_sip_header_contact_clone(cain_sip_header_contact_t *contact, const cain_sip_header_contact_t *orig){
 }
-
+int cain_sip_header_contact_marshal(cain_sip_header_contact_t* contact, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(contact), buff,offset, buff_size);
+	if (contact->wildcard) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","*");
+	} else {
+		current_offset+=cain_sip_header_address_marshal(&contact->address, buff,current_offset, buff_size);
+	}
+	return current_offset-offset;
+}
 CAIN_SIP_NEW_HEADER(header_contact,header_address,"Contact")
 CAIN_SIP_PARSE(header_contact)
 
@@ -136,6 +171,11 @@ float	cain_sip_header_contact_get_qvalue(const cain_sip_header_contact_t* contac
 * From header object inherent from header_address
 ****************************
 */
+#define CAIN_SIP_FROM_LIKE_MARSHAL(header) \
+		unsigned int current_offset=offset; \
+		current_offset+=cain_sip_##header_marshal(CAIN_SIP_HEADER(header), buff,current_offset, buff_size);\
+		current_offset+=cain_sip_header_address_marshal(&header->address, buff,current_offset, buff_size); \
+		return current_offset-offset;
 struct _cain_sip_header_from  {
 	cain_sip_header_address_t address;
 };
@@ -145,7 +185,9 @@ static void cain_sip_header_from_destroy(cain_sip_header_from_t* from) {
 
 static void cain_sip_header_from_clone(cain_sip_header_from_t* from, const cain_sip_header_from_t* cloned) {
 }
-
+int cain_sip_header_from_marshal(cain_sip_header_from_t* from, char* buff,unsigned int offset,unsigned int buff_size) {
+	CAIN_SIP_FROM_LIKE_MARSHAL(from);
+}
 
 CAIN_SIP_NEW_HEADER(header_from,header_address,"From")
 CAIN_SIP_PARSE(header_from)
@@ -163,6 +205,9 @@ static void cain_sip_header_to_destroy(cain_sip_header_to_t* to) {
 }
 
 void cain_sip_header_to_clone(cain_sip_header_to_t *contact, const cain_sip_header_to_t *orig){
+}
+int cain_sip_header_to_marshal(cain_sip_header_to_t* to, char* buff,unsigned int offset,unsigned int buff_size) {
+	CAIN_SIP_FROM_LIKE_MARSHAL(to)
 }
 
 CAIN_SIP_NEW_HEADER(header_to,header_address,"To")
@@ -187,6 +232,17 @@ static void cain_sip_header_via_destroy(cain_sip_header_via_t* via) {
 }
 
 static void cain_sip_header_via_clone(cain_sip_header_via_t* via, const cain_sip_header_via_t*orig){
+}
+int cain_sip_header_via_marshal(cain_sip_header_via_t* via, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(via), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s/%s",via->protocol,via->transport);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset," %s",via->host);
+	if (via->port > 0) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,":%i",via->port);
+	}
+	current_offset+=cain_sip_parameters_marshal(&via->params_list, buff,current_offset, buff_size);
+	return current_offset-offset;
 }
 
 CAIN_SIP_NEW_HEADER(header_via,header_address,"Via")
@@ -253,6 +309,12 @@ static void cain_sip_header_call_id_destroy(cain_sip_header_call_id_t* call_id) 
 
 static void cain_sip_header_call_id_clone(cain_sip_header_call_id_t* call_id,const cain_sip_header_call_id_t *orig){
 }
+int cain_sip_header_call_id_marshal(cain_sip_header_call_id_t* call_id, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(call_id), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",call_id->call_id);
+	return current_offset-offset;
+}
 
 CAIN_SIP_NEW_HEADER(header_call_id,header,"Call-ID")
 CAIN_SIP_PARSE(header_call_id)
@@ -274,7 +336,12 @@ static void cain_sip_header_cseq_destroy(cain_sip_header_cseq_t* cseq) {
 static void cain_sip_header_cseq_clone(cain_sip_header_cseq_t* cseq, const cain_sip_header_cseq_t *orig) {
 	if (cseq->method) cain_sip_free((void*)cseq->method);
 }
-
+int cain_sip_header_cseq_marshal(cain_sip_header_cseq_t* cseq, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(cseq), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i %s",cseq->seq_number,cseq->method);
+	return current_offset-offset;
+}
 CAIN_SIP_NEW_HEADER(header_cseq,header,"CSeq")
 CAIN_SIP_PARSE(header_cseq)
 GET_SET_STRING(cain_sip_header_cseq,method);
@@ -296,7 +363,13 @@ static void cain_sip_header_content_type_destroy(cain_sip_header_content_type_t*
 
 static void cain_sip_header_content_type_clone(cain_sip_header_content_type_t* content_type, const cain_sip_header_content_type_t* orig){
 }
-
+int cain_sip_header_content_type_marshal(cain_sip_header_content_type_t* content_type, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(content_type), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s/%s",content_type->type, content_type->subtype);
+	current_offset+=cain_sip_parameters_marshal(&content_type->params_list, buff,current_offset, buff_size);
+	return current_offset-offset;
+}
 CAIN_SIP_NEW_HEADER(header_content_type,parameters,"Content-Type")
 CAIN_SIP_PARSE(header_content_type)
 GET_SET_STRING(cain_sip_header_content_type,type);
@@ -314,7 +387,9 @@ static void cain_sip_header_route_destroy(cain_sip_header_route_t* route) {
 
 static void cain_sip_header_route_clone(cain_sip_header_route_t* route, const cain_sip_header_route_t* orig) {
 }
-
+int cain_sip_header_route_marshal(cain_sip_header_route_t* route, char* buff,unsigned int offset,unsigned int buff_size) {
+	CAIN_SIP_FROM_LIKE_MARSHAL(route)
+}
 CAIN_SIP_NEW_HEADER(header_route,header_address,"Route")
 CAIN_SIP_PARSE(header_route)
 /**************************
@@ -331,7 +406,9 @@ static void cain_sip_header_record_route_destroy(cain_sip_header_record_route_t*
 static void cain_sip_header_record_route_clone(cain_sip_header_record_route_t* record_route,
                                 const cain_sip_header_record_route_t* orig               ) {
 }
-
+int cain_sip_header_record_route_marshal(cain_sip_header_record_route_t* record_route, char* buff,unsigned int offset,unsigned int buff_size) {
+	CAIN_SIP_FROM_LIKE_MARSHAL(record_route)
+}
 CAIN_SIP_NEW_HEADER(header_record_route,header_address,"Record-Route")
 CAIN_SIP_PARSE(header_record_route)
 /**************************
@@ -350,7 +427,12 @@ static void cain_sip_header_content_length_clone(cain_sip_header_content_length_
                                                  const cain_sip_header_content_length_t *orig ) {
 }
 
-
+int cain_sip_header_content_length_marshal(cain_sip_header_content_length_t* content_length, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(content_length), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i",content_length->content_length);
+	return current_offset-offset;
+}
 CAIN_SIP_NEW_HEADER(header_content_length,header,"Content-Length")
 CAIN_SIP_PARSE(header_content_length)
 GET_SET_INT(cain_sip_header_content_length,content_length,unsigned int)
@@ -369,7 +451,13 @@ static void cain_sip_header_extension_destroy(cain_sip_header_extension_t* exten
 
 static void cain_sip_header_extension_clone(cain_sip_header_extension_t* extension, const cain_sip_header_extension_t* orig){
 }
+int cain_sip_header_extension_marshal(cain_sip_header_extension_t* extension, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(extension), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",extension->value);
+	return current_offset-offset;
 
+}
 CAIN_SIP_NEW_HEADER(header_extension,header,NULL)
 
 /**
@@ -416,10 +504,48 @@ GET_SET_STRING(cain_sip_header_extension,value);
 	if (obj->algorithm) cain_sip_free((void*)obj->algorithm);\
 	if (obj->opaque) cain_sip_free((void*)obj->opaque);\
 	if (obj->qop) cain_sip_free((void*)obj->qop);\
+	/*if (obj->params_list) FIXME free list*/
+
+
+#define AUTH_BASE_MARSHAL(header) \
+	unsigned int current_offset=offset;\
+	char* border=" ";\
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(header), buff,current_offset, buff_size);\
+	const cain_sip_list_t* list=cain_sip_parameters_get_parameters(&header->params_list);\
+	if (header->scheme) { \
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset," %s",header->scheme);\
+		} else { \
+			cain_sip_error("missing mandatory scheme"); \
+		} \
+	for(;list!=NULL;list=list->next){\
+		cain_sip_param_pair_t* container = list->data;\
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s%s=%s",border, container->name,container->value);\
+		border=", ";\
+	}\
+	if (header->realm) {\
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%srealm=\"%s\"",border,header->realm);\
+		border=", ";\
+		}\
+	if (header->nonce) {\
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%snonce=\"%s\"",border,header->nonce);\
+		border=", ";\
+		}\
+	if (header->algorithm) {\
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%salgorithm=%s",border,header->algorithm);\
+		border=", ";\
+		}\
+	if (header->opaque) {\
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%sopaque=\"%s\"",border,header->opaque);\
+		border=", ";\
+		}\
+	if (header->qop) {\
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%sqop=%s",border,header->qop);\
+		border=", ";\
+		}
 
 
 
-struct _cain_sip_header_authorization  {
+	struct _cain_sip_header_authorization  {
 	AUTH_BASE
 	const char* username;
 	cain_sip_uri_t* uri;
@@ -456,6 +582,35 @@ void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* auth
 	authorization->uri=uri;
 	if (authorization->uri) cain_sip_object_ref(authorization->uri);
 }
+int cain_sip_header_authorization_marshal(cain_sip_header_authorization_t* authorization, char* buff,unsigned int offset,unsigned int buff_size) {
+	AUTH_BASE_MARSHAL(authorization)
+	if (authorization->username) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%susername=\"%s\"",border,authorization->username);\
+		border=", ";
+		}
+	if (authorization->uri) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s uri=\"",border);
+		border=", ";
+		current_offset+=cain_sip_uri_marshal(authorization->uri,buff,current_offset,buff_size);
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","\"");
+		}
+	if (authorization->algorithm) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%salgorithm=%s",border,authorization->algorithm);
+		border=", ";
+		}
+	if (authorization->response) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%sresponse=\"%s\"",border,authorization->response);
+		border=", ";
+		}
+	if (authorization->cnonce) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%scnonce=\"%s\"",border,authorization->cnonce);
+		border=", ";
+		}
+	if (authorization->nonce_count>0) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%snc=\"%08i\"",border,authorization->nonce_count);
+		}
+	return current_offset-offset;
+}
 CAIN_SIP_NEW_HEADER(header_authorization,parameters,"Authorization")
 CAIN_SIP_PARSE(header_authorization)
 GET_SET_STRING(cain_sip_header_authorization,scheme);
@@ -484,6 +639,9 @@ static void cain_sip_header_proxy_authorization_destroy(cain_sip_header_proxy_au
 static void cain_sip_header_proxy_authorization_clone(cain_sip_header_proxy_authorization_t* proxy_authorization,
                                                  const cain_sip_header_proxy_authorization_t *orig ) {
 }
+int cain_sip_header_proxy_authorization_marshal(cain_sip_header_proxy_authorization_t* proxy_authorization, char* buff,unsigned int offset,unsigned int buff_size) {
+	return cain_sip_header_authorization_marshal(&proxy_authorization->authorization,buff,offset,buff_size);
+}
 CAIN_SIP_NEW_HEADER(header_proxy_authorization,header_authorization,"Proxy-Authorization")
 CAIN_SIP_PARSE(header_proxy_authorization)
 /**************************
@@ -498,12 +656,26 @@ struct _cain_sip_header_www_authenticate  {
 
 
 static void cain_sip_header_www_authenticate_destroy(cain_sip_header_www_authenticate_t* www_authenticate) {
+	if (www_authenticate->domain) cain_sip_free((void*)www_authenticate->domain);
 }
-
+void cain_sip_header_www_authenticate_init(cain_sip_header_www_authenticate_t* www_authenticate) {
+	www_authenticate->stale=-1;
+}
 static void cain_sip_header_www_authenticate_clone(cain_sip_header_www_authenticate_t* www_authenticate,
                                                  const cain_sip_header_www_authenticate_t *orig ) {
 }
-CAIN_SIP_NEW_HEADER(header_www_authenticate,parameters,"WWW-Authenticate")
+int cain_sip_header_www_authenticate_marshal(cain_sip_header_www_authenticate_t* www_authenticate, char* buff,unsigned int offset,unsigned int buff_size) {
+	AUTH_BASE_MARSHAL(www_authenticate)
+	if (www_authenticate->domain) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%sdomain=\"%s\"",border,www_authenticate->domain);\
+		border=", ";
+		}
+	if (www_authenticate->stale>=0) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%sstale=\"%s",border,www_authenticate->stale?"true":"false");
+		}
+	return current_offset-offset;
+}
+CAIN_SIP_NEW_HEADER_INIT(header_www_authenticate,parameters,"WWW-Authenticate",header_www_authenticate)
 CAIN_SIP_PARSE(header_www_authenticate)
 GET_SET_STRING(cain_sip_header_www_authenticate,scheme);
 GET_SET_STRING(cain_sip_header_www_authenticate,realm);

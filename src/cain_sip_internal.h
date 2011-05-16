@@ -31,6 +31,7 @@
 
 typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
 typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_object_t *orig);
+typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
 struct _cain_sip_object_vptr{
 	cain_sip_type_id_t id;
@@ -38,6 +39,8 @@ struct _cain_sip_object_vptr{
 	void *interfaces;	/*unused for the moment*/
 	cain_sip_object_destroy_t destroy;
 	cain_sip_object_clone_t clone;
+	cain_sip_object_marshal_t marshal;
+
 };
 
 typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
@@ -59,13 +62,14 @@ extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
 
 #define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR_END };
 
-#define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone) \
+#define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone,marshal) \
 		cain_sip_object_vptr_t object_type##_vptr={ \
 		CAIN_SIP_TYPE_ID(object_type), \
 		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
 		NULL, \
 		(cain_sip_object_destroy_t)destroy,	\
-		(cain_sip_object_clone_t)clone	\
+		(cain_sip_object_clone_t)clone,	\
+		(cain_sip_object_marshal_t)marshal\
 		}
 
 
@@ -362,12 +366,17 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 }
 
 #define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_HEADER(object_type,super_type,NULL)
-
-#define CAIN_SIP_NEW_HEADER(object_type,super_type,name) \
-		CAIN_SIP_INSTANCIATE_VPTR(cain_sip_##object_type##_t,cain_sip_##super_type##_t , cain_sip_##object_type##_destroy, cain_sip_##object_type##_clone); \
+#define CAIN_SIP_NEW_HEADER(object_type,super_type,name) CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,header)
+#define CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,init_type) \
+		CAIN_SIP_INSTANCIATE_VPTR(	cain_sip_##object_type##_t\
+									, cain_sip_##super_type##_t\
+									, cain_sip_##object_type##_destroy\
+									, cain_sip_##object_type##_clone\
+									, cain_sip_##object_type##_marshal); \
 		cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
 		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
 		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
+		cain_sip_##init_type##_init((cain_sip_##init_type##_t*) l_object); \
 		if (name) cain_sip_header_set_name(CAIN_SIP_HEADER(l_object),name);\
 		return l_object;\
 	}

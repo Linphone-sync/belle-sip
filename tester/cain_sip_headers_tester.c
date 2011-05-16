@@ -34,6 +34,11 @@ int clean_suite1(void) {
 void test_simple_header_contact(void) {
 
 	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact:sip:titi.com");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_contact));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_contact));
+	L_contact = cain_sip_header_contact_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri((cain_sip_header_address_t*)L_contact);
 
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
@@ -45,6 +50,8 @@ void test_simple_header_contact(void) {
 void test_complex_header_contact(void) {
 
 	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact: \"jéremis\" <sip:sip.linphone.org>;expires=3600;q=0.7, sip:titi.com");
+
+
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri((cain_sip_header_address_t*)L_contact);
 
 	CU_ASSERT_PTR_NOT_NULL(L_uri);
@@ -64,6 +71,10 @@ void test_complex_header_contact(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_contact));
 
 	L_contact = cain_sip_header_contact_parse("Contact: toto <sip:titi.com>;expires=3600; q=0.7");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_contact));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_contact));
+	L_contact = cain_sip_header_contact_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_address_get_displayname((cain_sip_header_address_t*)L_contact), "toto");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_contact));
@@ -73,6 +84,11 @@ void test_complex_header_contact(void) {
 void test_simple_header_from(void) {
 
 	cain_sip_header_from_t* L_from = cain_sip_header_from_parse("From:<sip:titi.com;transport=tcp>;tag=dlfjklcn6545614XX");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_from));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_from));
+	L_from = cain_sip_header_from_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_from));
 
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
@@ -84,6 +100,11 @@ void test_simple_header_from(void) {
 void test_simple_header_to(void) {
 
 	cain_sip_header_to_t* L_to = cain_sip_header_to_parse("To : < sip:titi.com;transport=tcp> ; tag = dlfjklcn6545614XX");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_to));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_to));
+	L_to = cain_sip_header_to_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_to));
 
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
@@ -94,6 +115,11 @@ void test_simple_header_to(void) {
 void test_header_via(void) {
 
 	cain_sip_header_via_t* L_via = cain_sip_header_via_parse("Via: SIP/2.0/UDP 192.168.0.19:5062;rport;received=192.169.0.4;branch=z9hG4bK368560724");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_via));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_via));
+	L_via = cain_sip_header_via_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_via_get_protocol(L_via), "SIP/2.0");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_via_get_transport(L_via), "UDP");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_via_get_host(L_via), "192.168.0.19");
@@ -116,12 +142,22 @@ void test_header_via(void) {
 void test_header_call_id(void) {
 
 	cain_sip_header_call_id_t* L_call_id = cain_sip_header_call_id_parse("Call-ID: 1665237789@titi.com");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_call_id));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_call_id));
+	L_call_id = cain_sip_header_call_id_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_call_id_get_call_id(L_call_id), "1665237789@titi.com");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_call_id));
 }
 void test_header_cseq(void) {
 
 	cain_sip_header_cseq_t* L_cseq = cain_sip_header_cseq_parse("CSeq: 21 INVITE");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_cseq));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_cseq));
+	L_cseq = cain_sip_header_cseq_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	CU_ASSERT_EQUAL(cain_sip_header_cseq_get_seq_number(L_cseq),21);
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_cseq_get_method(L_cseq),"INVITE");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_cseq));
@@ -129,23 +165,40 @@ void test_header_cseq(void) {
 void test_header_content_type(void) {
 
 	cain_sip_header_content_type_t* L_content_type = cain_sip_header_content_type_parse("Content-Type: text/html; charset=ISO-8859-4");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_content_type));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
+	L_content_type = cain_sip_header_content_type_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_type(L_content_type),"text");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_subtype(L_content_type),"html");
 	CU_ASSERT_STRING_EQUAL(cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(L_content_type),"charset"),"ISO-8859-4");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
 
 	L_content_type = cain_sip_header_content_type_parse("Content-Type: application/sdp");
+	l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_content_type));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
+	L_content_type = cain_sip_header_content_type_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_type(L_content_type),"application");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_subtype(L_content_type),"sdp");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
 
 	L_content_type = cain_sip_header_content_type_parse("Content-Type: application/pkcs7-mime; smime-type=enveloped-data; \r\n name=smime.p7m");
+	l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_content_type));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
+	L_content_type = cain_sip_header_content_type_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
 
 }
 void test_header_record_route(void) {
 
 	cain_sip_header_record_route_t* L_record_route = cain_sip_header_record_route_parse("Record-Route: <sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_record_route));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_record_route));
+	L_record_route = cain_sip_header_record_route_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_record_route));
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "212.27.52.5");
@@ -162,6 +215,10 @@ void test_header_record_route(void) {
 void test_header_route(void) {
 
 	cain_sip_header_route_t* L_route = cain_sip_header_route_parse("Route: <sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_route));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_route));
+	L_route = cain_sip_header_route_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_route));
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
 	CU_ASSERT_EQUAL(cain_sip_uri_get_port(L_uri), 5060);
@@ -178,20 +235,34 @@ void test_header_route(void) {
 void test_header_content_length(void) {
 
 	cain_sip_header_content_length_t* L_content_length = cain_sip_header_content_length_parse("Content-Length: 3495");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_content_length));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_length));
+	L_content_length = cain_sip_header_content_length_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 	CU_ASSERT_EQUAL(cain_sip_header_content_length_get_content_length(L_content_length), 3495);
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_length));
 }
 void test_header_extention(void) {
 	cain_sip_header_extension_t* L_extension = cain_sip_header_extension_parse("toto: titi");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_extension));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_extension));
+	L_extension = cain_sip_header_extension_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_extension_get_value(L_extension), "titi");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_extension));
 }
 void test_header_authorization(void) {
-	const char* l_raw_header = "Authorization: Digest username=\"0033482532176\", "\
+	const char* l_header = "Authorization: Digest username=\"0033482532176\", "\
 			"realm=\"sip.ovh.net\", nonce=\"1bcdcb194b30df5f43973d4c69bdf54f\", uri=\"sip:sip.ovh.net\", response=\"eb36c8d5c8642c1c5f44ec3404613c81\","\
 			"algorithm=MD5, opaque=\"1bc7f9097684320\","
 			"\r\n qop=auth, nc=00000001,cnonce=\"0a4f113b\", blabla=\"toto\"";
-	cain_sip_header_authorization_t* L_authorization = cain_sip_header_authorization_parse(l_raw_header);
+	cain_sip_header_authorization_t* L_authorization = cain_sip_header_authorization_parse(l_header);
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_authorization));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_authorization));
+	L_authorization = cain_sip_header_authorization_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
 	CU_ASSERT_PTR_NOT_NULL(L_authorization);
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_scheme(L_authorization), "Digest");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_username(L_authorization), "0033482532176");
@@ -208,10 +279,14 @@ void test_header_authorization(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_authorization));
 }
 void test_header_proxy_authorization(void) {
-	const char* l_raw_header = "Proxy-Authorization: Digest username=\"Alice\""
+	const char* l_header = "Proxy-Authorization: Digest username=\"Alice\""
 			", realm=\"atlanta.com\", nonce=\"c60f3082ee1212b402a21831ae\""
 			", response=\"245f23415f11432b3434341c022\"";
-	cain_sip_header_proxy_authorization_t* L_authorization = cain_sip_header_proxy_authorization_parse(l_raw_header);
+	cain_sip_header_proxy_authorization_t* L_authorization = cain_sip_header_proxy_authorization_parse(l_header);
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_authorization));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_authorization));
+	L_authorization = cain_sip_header_proxy_authorization_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 	CU_ASSERT_PTR_NOT_NULL(L_authorization);
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_username(CAIN_SIP_HEADER_AUTHORIZATION(L_authorization)), "Alice");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_realm(CAIN_SIP_HEADER_AUTHORIZATION(L_authorization)), "atlanta.com");
@@ -220,10 +295,14 @@ void test_header_proxy_authorization(void) {
 
 }
 void test_header_www_authenticate(void) {
-	const char* l_raw_header = "WWW-Authenticate: Digest "
+	const char* l_header = "WWW-Authenticate: Digest "
 			"algorithm=MD5, realm=\"atlanta.com\", opaque=\"1bc7f9097684320\","
 			" qop=\"auth\", nonce=\"c60f3082ee1212b402a21831ae\", stale=true, domain=\"sip:boxesbybob.com\"";
-	cain_sip_header_www_authenticate_t* L_authorization = cain_sip_header_www_authenticate_parse(l_raw_header);
+	cain_sip_header_www_authenticate_t* L_authorization = cain_sip_header_www_authenticate_parse(l_header);
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_authorization));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_authorization));
+	L_authorization = cain_sip_header_www_authenticate_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
 	CU_ASSERT_PTR_NOT_NULL(L_authorization);
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_www_authenticate_get_realm(L_authorization), "atlanta.com");
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_www_authenticate_get_domain(L_authorization), "sip:boxesbybob.com");

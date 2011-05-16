@@ -46,7 +46,7 @@ static void cain_sip_message_destroy(cain_sip_message_t *msg){
 	cain_sip_list_free(msg->header_list);
 }
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,NULL,NULL);
 
 CAIN_SIP_PARSE(message)
 
@@ -131,7 +131,9 @@ static void cain_sip_request_destroy(cain_sip_request_t* request) {
 static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_request_t *orig){
 		if (orig->method) request->method=cain_sip_strdup(orig->method);
 }
+int cain_sip_request_marshal(cain_sip_request_t* request, char* buff,unsigned int offset,unsigned int buff_size) {
 
+}
 CAIN_SIP_NEW(request,message)
 CAIN_SIP_PARSE(request)
 GET_SET_STRING(cain_sip_request,method);
@@ -253,7 +255,9 @@ static void cain_sip_response_clone(cain_sip_response_t *resp, const cain_sip_re
 	if (orig->sip_version) resp->sip_version=cain_sip_strdup(orig->sip_version);
 	if (orig->reason_phrase) resp->reason_phrase=cain_sip_strdup(orig->reason_phrase);
 }
-
+int cain_sip_response_marshal(cain_sip_response_t *resp, char* buff,unsigned int offset,unsigned int buff_size) {
+	return 0;
+}
 CAIN_SIP_NEW(response,message);
 CAIN_SIP_PARSE(response)
 GET_SET_STRING(cain_sip_response,reason_phrase);

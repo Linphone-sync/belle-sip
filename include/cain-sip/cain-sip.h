@@ -114,6 +114,8 @@ void cain_sip_object_delete(void *obj);
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
 
+char* cain_sip_object_to_string(cain_sip_object_t* obj);
+
 unsigned int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
 CAIN_SIP_END_DECLS
 

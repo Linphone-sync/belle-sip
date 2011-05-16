@@ -64,7 +64,7 @@ void cain_sip_header_address_set_displayname(cain_sip_header_address_t* address,
 typedef struct _cain_sip_header cain_sip_header_t;
 const char* cain_sip_header_get_name (const cain_sip_header_t* obj);
 void cain_sip_header_set_name (cain_sip_header_t* obj,const char* value);
-
+int cain_sip_header_marshal(cain_sip_header_t* header, char* buff, unsigned int offset,unsigned int buff_size);
 
 #define CAIN_SIP_HEADER(t) CAIN_SIP_CAST(t,cain_sip_header_t)
 /***********************
