@@ -83,7 +83,7 @@ struct _cain_sip_object{
 };
 
 cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed);
-
+int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
 #define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),0)
 #define cain_sip_object_new_unowed(_type,destroy)(_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),1)
@@ -517,7 +517,9 @@ void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, 
 */
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop);
 
-#define IS_TOKEN(token) (strcmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token))))->chars) == 0)
+#define IS_TOKEN(token) \
+		(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars ?\
+		strcmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars)) == 0:0)
 char* _cain_sip_str_dup_and_unquote_string(char* quoted_string);
 
 #ifdef __cplusplus

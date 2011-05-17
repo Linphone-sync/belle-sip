@@ -70,6 +70,10 @@ static void testRegisterMessage(void) {
 							", uri=\"sip:linphone.net\", response=\"eed376ff7c963441255ec66594e470e7\", algorithm=MD5, cnonce=\"0a4f113b\", qop=auth, nc=00000001\r\n"\
 							"Content-Length: 0\r\n\r\n";
 	cain_sip_message_t* message = cain_sip_message_parse(raw_message);
+	char* encoded_message = cain_sip_object_to_string(CAIN_SIP_OBJECT(message));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(message));
+	message = cain_sip_message_parse(encoded_message);
+
 	cain_sip_request_t* request = CAIN_SIP_REQUEST(message);
 	CU_ASSERT_STRING_EQUAL(cain_sip_request_get_method(request),"REGISTER");
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Expires"));
@@ -95,6 +99,9 @@ static void testInviteMessage(void) {
 							"User-Agent: X-Lite 4 release 4.0 stamp 58832\r\n"\
 							"Content-Length: 230\r\n\r\n";
 	cain_sip_message_t* message = cain_sip_message_parse(raw_message);
+	char* encoded_message = cain_sip_object_to_string(CAIN_SIP_OBJECT(message));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(message));
+	message = cain_sip_message_parse(encoded_message);
 	cain_sip_request_t* request = CAIN_SIP_REQUEST(message);
 	CU_ASSERT_STRING_EQUAL(cain_sip_request_get_method(request),"INVITE");
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Contact"));
@@ -112,6 +119,9 @@ static void test401Response(void) {
 								"WWW-Authenticate: Digest realm=\"sip.ovh.net\",nonce=\"24212965507cde726e8bc37e04686459\",opaque=\"241b9fb347752f2\",stale=false,algorithm=MD5\r\n"
 								"Content-Length: 0\r\n\r\n";
 	cain_sip_message_t* message = cain_sip_message_parse(raw_message);
+	char* encoded_message = cain_sip_object_to_string(CAIN_SIP_OBJECT(message));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(message));
+	message = cain_sip_message_parse(encoded_message);
 	cain_sip_response_t* response = CAIN_SIP_RESPONSE(message);
 	CU_ASSERT_EQUAL(cain_sip_response_get_status_code(response),401);
 	CU_ASSERT_STRING_EQUAL(cain_sip_response_get_reason_phrase(response),"Unauthorized");
