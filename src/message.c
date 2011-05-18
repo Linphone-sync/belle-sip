@@ -50,7 +50,10 @@ static void cain_sip_message_destroy(cain_sip_message_t *msg){
 
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,NULL,NULL);
 
-CAIN_SIP_PARSE(message)
+cain_sip_message_t* cain_sip_message_parse (const char* value) {
+	size_t message_length;
+	return cain_sip_message_parse_raw(value,strlen(value),&message_length);
+}
 
 cain_sip_message_t* cain_sip_message_parse_raw (const char* buff, size_t buff_length,size_t* message_length ) { \
 	pANTLR3_INPUT_STREAM           input;
@@ -65,6 +68,13 @@ cain_sip_message_t* cain_sip_message_parse_raw (const char* buff, size_t buff_le
 	tokens = antlr3CommonTokenStreamSourceNew  (1025, lex->pLexer->rec->state->tokSource);
 	parser = cain_sip_messageParserNew               (tokens);
 	cain_sip_message_t* l_parsed_object = parser->message_raw(parser,message_length);
+	if (*message_length < buff_length) {
+		/*there is a body*/
+		l_parsed_object->body_length=buff_length-*message_length;
+		l_parsed_object->body = cain_sip_malloc(l_parsed_object->body_length+1);
+		memcpy(l_parsed_object->body,buff+*message_length,l_parsed_object->body_length);
+		l_parsed_object->body[l_parsed_object->body_length]='\0';
+	}
 	parser ->free(parser);
 	tokens ->free(tokens);
 	lex    ->free(lex);
@@ -180,6 +190,9 @@ int cain_sip_request_marshal(cain_sip_request_t* request, char* buff,unsigned in
 	current_offset+=cain_sip_uri_marshal(cain_sip_request_get_uri(request),buff,current_offset,buff_size);
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset," %s","SIP/2.0\r\n");
 	current_offset+=cain_sip_headers_marshal(CAIN_SIP_MESSAGE(request),buff,current_offset,buff_size);
+	if (CAIN_SIP_MESSAGE(request)->body) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset, "%s",CAIN_SIP_MESSAGE(request)->body);
+	}
 	return current_offset-offset;
 }
 CAIN_SIP_NEW(request,message)
@@ -216,11 +229,16 @@ cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const ch
 char *cain_sip_message_to_string(cain_sip_message_t *msg){
 	return cain_sip_object_to_string(CAIN_SIP_OBJECT(msg));
 }
-char* cain_sip_get_body(cain_sip_message_t *msg,unsigned int* size) {
-	return 0;
+const char* cain_sip_message_get_body(cain_sip_message_t *msg) {
+	return msg->body;
 }
-void cain_sip_set_body(cain_sip_message_t *msg,char* bodyy,unsigned int size) {
-
+void cain_sip_message_set_body(cain_sip_message_t *msg,char* body,unsigned int size) {
+	if (msg->body) {
+		cain_sip_free((void*)body);
+	}
+	msg->body = cain_sip_malloc(size+1);
+	memcpy(msg->body,body,size);
+	msg->body[size]='\0';
 }
 struct _cain_sip_response{
 	cain_sip_message_t base;
@@ -316,6 +334,9 @@ int cain_sip_response_marshal(cain_sip_response_t *resp, char* buff,unsigned int
 								,cain_sip_response_get_status_code(resp)
 								,cain_sip_response_get_reason_phrase(resp));
 	current_offset+=cain_sip_headers_marshal(CAIN_SIP_MESSAGE(resp),buff,current_offset,buff_size);
+	if (CAIN_SIP_MESSAGE(resp)->body) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset, "%s",CAIN_SIP_MESSAGE(resp)->body);
+	}
 	return current_offset-offset;
 }
 CAIN_SIP_NEW(response,message);

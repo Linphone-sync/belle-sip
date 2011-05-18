@@ -147,6 +147,8 @@ static void testRegisterRaw(void) {
 	cain_sip_request_t* request = CAIN_SIP_REQUEST(message);
 	CU_ASSERT_STRING_EQUAL(cain_sip_request_get_method(request),"REGISTER");
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_request_get_uri(request));
+	CU_ASSERT_STRING_EQUAL(cain_sip_message_get_body(request),"123456789");
+
 }
 static void testOptionMessage(void) {
 	const char* raw_message = "REGISTER sip:192.168.0.20 SIP/2.0\r\n"\
