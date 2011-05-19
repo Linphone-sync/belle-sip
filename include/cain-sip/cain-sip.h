@@ -68,6 +68,23 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sip_header_authorization_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_www_authenticate_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_proxy_authorization_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_attribute_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_bandwidth_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_connection_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_email_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_info_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_key_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_media_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_media_description_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_origin_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_phone_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_repeate_time_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_session_description_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_session_name_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_time_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_time_description_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_uri_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_version_t),
 	cain_sip_type_id_end
 }cain_sip_type_id_t;
 
