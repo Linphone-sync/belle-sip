@@ -1,5 +1,5 @@
 /*
-	cain-sip - SIP (RFC3261) library.
+	cain-sdp - SIP (RFC4566) library.
     Copyright (C) 2010  Belledonne Communications SARL
 
     This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 #ifndef CAIN_SDP_H_
 #define CAIN_SDP_H_
 #include "cain-sip.h"
-#define CAIN_SIP_CAST(t) CAIN_SDP_CAST(t)
+#define CAIN_SDP_CAST(t) CAIN_SIP_CAST(t)
 
 /***************************************************************************************
  * Attribute
@@ -58,7 +58,7 @@ const char* cain_sdp_connection_get_address_type(const cain_sdp_connection_t* co
 const char* cain_sdp_connection_get_network_type(const cain_sdp_connection_t* connection);
 void cain_sdp_connection_set_address(cain_sdp_connection_t* connection, const char* addr);
 void cain_sdp_connection_set_address_type(cain_sdp_connection_t* connection, const char* type);
-void cain_sdp_connection_set_set_network_type(cain_sdp_connection_t* connection, const char* type);
+void cain_sdp_connection_set_network_type(cain_sdp_connection_t* connection, const char* type);
 #define CAIN_SDP_CONNECTION(t) CAIN_SDP_CAST(t,cain_sdp_connection_t);
 /***************************************************************************************
  * Email

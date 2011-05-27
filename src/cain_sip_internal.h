@@ -522,9 +522,51 @@ void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *
 		strcmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars)) == 0:0)
 char* _cain_sip_str_dup_and_unquote_string(char* quoted_string);
 
+/*********************************************************
+ * SDP
+ */
+#define CAIN_SDP_PARSE(object_type) \
+cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) { \
+	pANTLR3_INPUT_STREAM           input; \
+	pcain_sdpLexer               lex; \
+	pANTLR3_COMMON_TOKEN_STREAM    tokens; \
+	pcain_sdpParser              parser; \
+	input  = antlr3NewAsciiStringCopyStream	(\
+			(pANTLR3_UINT8)value,\
+			(ANTLR3_UINT32)strlen(value),\
+			NULL);\
+	lex    = cain_sdpLexerNew                (input);\
+	tokens = antlr3CommonTokenStreamSourceNew  (ANTLR3_SIZE_HINT, TOKENSOURCE(lex));\
+	parser = cain_sdpParserNew               (tokens);\
+	cain_sdp_##object_type##_t* l_parsed_object = parser->object_type(parser).ret;\
+	parser ->free(parser);\
+	tokens ->free(tokens);\
+	lex    ->free(lex);\
+	input  ->close(input);\
+	if (l_parsed_object == NULL) cain_sip_error(#object_type" parser error for [%s]",value);\
+	return l_parsed_object;\
+}
+#define CAIN_SDP_NEW(object_type,super_type) \
+		CAIN_SIP_INSTANCIATE_VPTR(	cain_sdp_##object_type##_t\
+									, super_type##_t\
+									, cain_sdp_##object_type##_destroy\
+									, cain_sdp_##object_type##_clone\
+									, cain_sdp_##object_type##_marshal); \
+		cain_sdp_##object_type##_t* cain_sdp_##object_type##_new () { \
+		cain_sdp_##object_type##_t* l_object = cain_sip_object_new(cain_sdp_##object_type##_t);\
+		super_type##_init((super_type##_t*)l_object); \
+		return l_object;\
+	}
+
+
+
+
+
+
 #ifdef __cplusplus
 }
 #endif
+
 
 /*include private headers */
 #include "cain_sip_resolver.h"
