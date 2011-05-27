@@ -31,9 +31,23 @@ static void cain_sip_parameters_destroy(cain_sip_parameters_t* params) {
 static void cain_sip_parameters_clone(cain_sip_parameters_t *params, const cain_sip_parameters_t *orig){
 	cain_sip_fatal("not implemented");
 }
-
+int cain_sip_parameters_marshal(cain_sip_parameters_t* params, char* buff,unsigned int offset,unsigned int buff_size) {
+	cain_sip_list_t* list=params->param_list;
+	unsigned int curent_offset=offset;
+	for(;list!=NULL;list=list->next){
+		cain_sip_param_pair_t* container = (cain_sip_param_pair_t* )(list->data);
+		if (container->value) {
+			curent_offset+=snprintf(buff+curent_offset,buff_size-curent_offset,";%s=%s",container->name,container->value);
+		} else {
+			curent_offset+=snprintf(buff+curent_offset,buff_size-curent_offset,";%s",container->name);
+		}
+	}
+	return curent_offset-offset;
+}
 CAIN_SIP_NEW(parameters,header)
-
+const cain_sip_list_t *	cain_sip_parameters_get_parameters(cain_sip_parameters_t* obj) {
+	return obj->param_list;
+}
 const char*	cain_sip_parameters_get_parameter(cain_sip_parameters_t* params,const char* name) {
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->param_list, (cain_sip_compare_func)cain_sip_param_pair_comp_func, name);
 	if (lResult) {

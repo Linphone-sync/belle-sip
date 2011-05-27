@@ -56,10 +56,39 @@ void cain_sip_uri_destroy(cain_sip_uri_t* uri) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(uri->header_list));
 }
 
+int cain_sip_uri_marshal(cain_sip_uri_t* uri, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	const cain_sip_list_t* list=cain_sip_parameters_get_parameters(uri->header_list);
 
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s:",uri->secure?"sips":"sip");
+	if (uri->user) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s@",uri->user);
+	}
+	if (uri->host) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",uri->host);
+	} else {
+		cain_sip_warning("no host found in this uri");
+	}
+	if (uri->port>0) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,":%i",uri->port);
+	}
+	current_offset+=cain_sip_parameters_marshal(&uri->params,buff,current_offset,buff_size);
+
+	for(;list!=NULL;list=list->next){
+		cain_sip_param_pair_t* container = list->data;
+		if (list == cain_sip_parameters_get_parameters(uri->header_list)) {
+			//first case
+			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"?%s=%s",container->name,container->value);
+		} else {
+			//subsequent headers
+			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"&%s=%s",container->name,container->value);
+		}
+	}
+	return current_offset-offset;
+}
 CAIN_SIP_PARSE(uri);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_object_t,cain_sip_uri_destroy,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_parameters_t,cain_sip_uri_destroy,NULL,cain_sip_uri_marshal);
 
 
 cain_sip_uri_t* cain_sip_uri_new () {

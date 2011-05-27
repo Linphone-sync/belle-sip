@@ -64,7 +64,7 @@ void cain_sip_header_address_set_displayname(cain_sip_header_address_t* address,
 typedef struct _cain_sip_header cain_sip_header_t;
 const char* cain_sip_header_get_name (const cain_sip_header_t* obj);
 void cain_sip_header_set_name (cain_sip_header_t* obj,const char* value);
-
+int cain_sip_header_marshal(cain_sip_header_t* header, char* buff, unsigned int offset,unsigned int buff_size);
 
 #define CAIN_SIP_HEADER(t) CAIN_SIP_CAST(t,cain_sip_header_t)
 /***********************
@@ -249,5 +249,87 @@ cain_sip_header_content_length_t* cain_sip_header_content_length_parse (const ch
 unsigned int cain_sip_header_content_length_get_content_length(const cain_sip_header_content_length_t* content_length);
 void cain_sip_header_content_length_set_content_length(cain_sip_header_content_length_t* content_length,unsigned int length);
 #define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
+
+/******************************
+ * authorization header inherit from parameters
+ *
+ ******************************/
+typedef struct _cain_sip_header_authorization cain_sip_header_authorization_t;
+
+cain_sip_header_authorization_t* cain_sip_header_authorization_new();
+cain_sip_header_authorization_t* cain_sip_header_authorization_parse(const char* authorization);
+const char*	cain_sip_header_authorization_get_algorithm(const cain_sip_header_authorization_t* authorization );
+const char*	cain_sip_header_authorization_get_cnonce(const cain_sip_header_authorization_t* authorization );
+const char* cain_sip_header_authorization_get_nonce(const cain_sip_header_authorization_t* authorization);
+int	cain_sip_header_authorization_get_nonce_count(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_opaque(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_qop(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_realm(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_response(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_scheme(const cain_sip_header_authorization_t* authorization);
+cain_sip_uri_t* cain_sip_header_authorization_get_uri(const cain_sip_header_authorization_t* authorization);
+const char*	cain_sip_header_authorization_get_username(const cain_sip_header_authorization_t* authorization);
+void cain_sip_header_authorization_set_algorithm(cain_sip_header_authorization_t* authorization, const char* algorithm);
+void cain_sip_header_authorization_set_cnonce(cain_sip_header_authorization_t* authorization, const char* cNonce);
+void cain_sip_header_authorization_set_nonce(cain_sip_header_authorization_t* authorization, const char* nonce);
+void cain_sip_header_authorization_set_nonce_count(cain_sip_header_authorization_t* authorization, int nonceCount);
+void cain_sip_header_authorization_set_opaque(cain_sip_header_authorization_t* authorization, const char* opaque);
+void cain_sip_header_authorization_set_qop(cain_sip_header_authorization_t* authorization, const char* qop);
+void cain_sip_header_authorization_set_realm(cain_sip_header_authorization_t* authorization, const char* realm);
+void cain_sip_header_authorization_set_response(cain_sip_header_authorization_t* authorization, const char* response);
+void cain_sip_header_authorization_set_scheme(cain_sip_header_authorization_t* authorization, const char* scheme);
+void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* authorization, cain_sip_uri_t* uri);
+void cain_sip_header_authorization_set_username(cain_sip_header_authorization_t* authorization, const char* username);
+
+#define CAIN_SIP_HEADER_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_authorization_t)
+
+/*******************************
+ * proxy_authorization inherit from Authorization
+ */
+typedef struct _cain_sip_header_proxy_authorization cain_sip_header_proxy_authorization_t;
+cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_new();
+cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_parse(const char* proxy_authorization);
+#define CAIN_SIP_HEADER_PROXY_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_proxy_authorization_t)
+
+/*******************************
+ * www_authenticate inherit from parameters
+ */
+typedef struct _cain_sip_header_www_authenticate cain_sip_header_www_authenticate_t;
+cain_sip_header_www_authenticate_t* cain_sip_header_www_authenticate_new();
+cain_sip_header_www_authenticate_t* cain_sip_header_www_authenticate_parse(const char* www_authenticate);
+const char*	cain_sip_header_www_authenticate_get_algorithm(const cain_sip_header_www_authenticate_t* www_authenticate );
+const char* cain_sip_header_www_authenticate_get_nonce(const cain_sip_header_www_authenticate_t* www_authenticate);
+const char*	cain_sip_header_www_authenticate_get_opaque(const cain_sip_header_www_authenticate_t* www_authenticate);
+const char*	cain_sip_header_www_authenticate_get_qop(const cain_sip_header_www_authenticate_t* www_authetication);
+const char*	cain_sip_header_www_authenticate_get_realm(const cain_sip_header_www_authenticate_t* www_authenticate);
+const char*	cain_sip_header_www_authenticate_get_scheme(const cain_sip_header_www_authenticate_t* www_authenticate);
+const char*	cain_sip_header_www_authenticate_get_domain(const cain_sip_header_www_authenticate_t* www_authenticate);
+unsigned int cain_sip_header_www_authenticate_is_stale(const cain_sip_header_www_authenticate_t* www_authenticate);
+void cain_sip_header_www_authenticate_set_algorithm(cain_sip_header_www_authenticate_t* www_authenticate, const char* algorithm);
+void cain_sip_header_www_authenticate_set_nonce(cain_sip_header_www_authenticate_t* www_authenticate, const char* nonce);
+void cain_sip_header_www_authenticate_set_opaque(cain_sip_header_www_authenticate_t* www_authenticate, const char* opaque);
+void cain_sip_header_www_authenticate_set_qop(cain_sip_header_www_authenticate_t* www_authentication, const char* qop);
+void cain_sip_header_www_authenticate_set_realm(cain_sip_header_www_authenticate_t* www_authenticate, const char* realm);
+void cain_sip_header_www_authenticate_set_scheme(cain_sip_header_www_authenticate_t* www_authenticate, const char* scheme);
+void cain_sip_header_www_authenticate_set_domain(cain_sip_header_www_authenticate_t* www_authenticate,const char* domain);
+void cain_sip_header_www_authenticate_set_stale(cain_sip_header_www_authenticate_t* www_authenticate, unsigned int enable);
+
+#define CAIN_SIP_HEADER_WWW_AUTHENTICATE(t) CAIN_SIP_CAST(t,cain_sip_header_www_authenticate_t)
+
+
+/******************************
+ *
+ * Extension header inherit from header
+ *
+ ******************************/
+typedef struct _cain_sip_header_extension cain_sip_header_extension_t;
+
+cain_sip_header_extension_t* cain_sip_header_extension_new();
+
+cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* extension) ;
+const char* cain_sip_header_extension_get_value(const cain_sip_header_extension_t* extension);
+void cain_sip_header_extension_set_value(cain_sip_header_extension_t* extension,const char* value);
+#define CAIN_SIP_HEADER_EXTENSION(t) CAIN_SIP_CAST(t,cain_sip_header_extension_t)
+
 
 #endif /* HEADERS_H_ */

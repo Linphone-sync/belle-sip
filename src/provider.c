@@ -33,7 +33,7 @@ static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_free(p->lps);
 }
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provider_uninit,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provider_uninit,NULL,NULL);
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){
 	cain_sip_provider_t *p=cain_sip_object_new(cain_sip_provider_t);

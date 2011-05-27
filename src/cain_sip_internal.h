@@ -31,6 +31,7 @@
 
 typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
 typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_object_t *orig);
+typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
 struct _cain_sip_object_vptr{
 	cain_sip_type_id_t id;
@@ -38,6 +39,8 @@ struct _cain_sip_object_vptr{
 	void *interfaces;	/*unused for the moment*/
 	cain_sip_object_destroy_t destroy;
 	cain_sip_object_clone_t clone;
+	cain_sip_object_marshal_t marshal;
+
 };
 
 typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
@@ -59,13 +62,14 @@ extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
 
 #define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR_END };
 
-#define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone) \
+#define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone,marshal) \
 		cain_sip_object_vptr_t object_type##_vptr={ \
 		CAIN_SIP_TYPE_ID(object_type), \
 		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
 		NULL, \
 		(cain_sip_object_destroy_t)destroy,	\
-		(cain_sip_object_clone_t)clone	\
+		(cain_sip_object_clone_t)clone,	\
+		(cain_sip_object_marshal_t)marshal\
 		}
 
 
@@ -79,7 +83,7 @@ struct _cain_sip_object{
 };
 
 cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed);
-
+int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
 #define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),0)
 #define cain_sip_object_new_unowed(_type,destroy)(_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),1)
@@ -357,17 +361,23 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	tokens ->free(tokens);\
 	lex    ->free(lex);\
 	input  ->close(input);\
+	if (l_parsed_object == NULL) cain_sip_error(#object_type" parser error for [%s]",value);\
 	return l_parsed_object;\
 }
 
-#define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_WITH_NAME(object_type,super_type,NULL)
-
-#define CAIN_SIP_NEW_WITH_NAME(object_type,super_type,name) \
-		CAIN_SIP_INSTANCIATE_VPTR(cain_sip_##object_type##_t,cain_sip_##super_type##_t , cain_sip_##object_type##_destroy, cain_sip_##object_type##_clone); \
+#define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_HEADER(object_type,super_type,NULL)
+#define CAIN_SIP_NEW_HEADER(object_type,super_type,name) CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,header)
+#define CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,init_type) \
+		CAIN_SIP_INSTANCIATE_VPTR(	cain_sip_##object_type##_t\
+									, cain_sip_##super_type##_t\
+									, cain_sip_##object_type##_destroy\
+									, cain_sip_##object_type##_clone\
+									, cain_sip_##object_type##_marshal); \
 		cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
 		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
 		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
-		cain_sip_object_set_name(CAIN_SIP_OBJECT(l_object),name);\
+		cain_sip_##init_type##_init((cain_sip_##init_type##_t*) l_object); \
+		if (name) cain_sip_header_set_name(CAIN_SIP_HEADER(l_object),name);\
 		return l_object;\
 	}
 typedef struct cain_sip_param_pair_t {
@@ -393,8 +403,12 @@ void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* a
 /*calss header*/
 struct _cain_sip_header {
 	cain_sip_object_t base;
+	cain_sip_header_t* next;
 	const char* name;
 };
+
+void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next);
+cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* headers);
 
 void cain_sip_header_init(cain_sip_header_t* obj);
 /*class parameters*/
@@ -502,6 +516,11 @@ void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, 
  cain_sip_response_t
 */
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop);
+
+#define IS_TOKEN(token) \
+		(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars ?\
+		strcmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars)) == 0:0)
+char* _cain_sip_str_dup_and_unquote_string(char* quoted_string);
 
 #ifdef __cplusplus
 }

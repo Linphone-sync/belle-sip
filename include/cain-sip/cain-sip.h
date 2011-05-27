@@ -64,6 +64,27 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sip_header_record_route_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_content_length_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_extension_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_authorization_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_www_authenticate_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_proxy_authorization_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_attribute_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_bandwidth_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_connection_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_email_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_info_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_key_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_media_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_media_description_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_origin_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_phone_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_repeate_time_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_session_description_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_session_name_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_time_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_time_description_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_uri_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_version_t),
 	cain_sip_type_id_end
 }cain_sip_type_id_t;
 
@@ -110,11 +131,14 @@ void cain_sip_object_delete(void *obj);
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
 
+char* cain_sip_object_to_string(cain_sip_object_t* obj);
+
+unsigned int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
 CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_CAST(obj,_type) 		((_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__))
 #define CAIN_SIP_OBJECT(obj) CAIN_SIP_CAST(obj,cain_sip_object_t)
-
+#define CAIN_SIP_IS_INSTANCE_OF(obj,_type) cain_sip_object_is_instance_of(obj,_type##_id)
 
 
 typedef struct cain_sip_listening_point cain_sip_listening_point_t;

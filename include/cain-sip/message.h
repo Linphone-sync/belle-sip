@@ -29,7 +29,14 @@ typedef struct _cain_sip_response cain_sip_response_t;
 CAIN_SIP_BEGIN_DECLS
 
 cain_sip_message_t* cain_sip_message_parse(const char* raw);
-
+/**
+ * Parse sip message from a raw buffer
+ * @param [in] buff buffer to be parsed
+ * @param [in] buff_length size of the buffer to be parsed
+ * @param [out] message_length number of bytes read
+ * @return parsed message
+ */
+cain_sip_message_t* cain_sip_message_parse_raw (const char* buff, size_t buff_length,size_t* message_length );
 
 int cain_sip_message_is_request(cain_sip_message_t *msg);
 cain_sip_request_t* cain_sip_request_new();
@@ -61,8 +68,15 @@ void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_header_t* hea
 void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_list_t *header_list);
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
+const char* cain_sip_message_get_body(cain_sip_message_t *msg);
+void cain_sip_message_set_body(cain_sip_message_t *msg,char* body,unsigned int size);
 
 int cain_sip_response_get_status_code(const cain_sip_response_t *response);
+void cain_sip_response_set_status_code(cain_sip_response_t *response,int status);
+
+const char* cain_sip_response_get_reason_phrase(const cain_sip_response_t *response);
+void cain_sip_response_set_reason_phrase(cain_sip_response_t *response,const char* reason_phrase);
+
 
 cain_sip_response_t *cain_sip_response_new(void);
 

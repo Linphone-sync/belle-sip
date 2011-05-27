@@ -39,7 +39,11 @@ void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* obj,const char* na
 
 const cain_sip_list_t *	cain_sip_parameters_get_parameter_names(cain_sip_parameters_t* obj);
 
+const cain_sip_list_t *	cain_sip_parameters_get_parameters(cain_sip_parameters_t* obj);
+
 void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* obj,const char* name);
+
+int cain_sip_parameters_marshal(cain_sip_parameters_t* obj, char* buff,unsigned int offset,unsigned int buff_size);
 
 #define CAIN_SIP_PARAMETERS(obj) CAIN_SIP_CAST(obj,cain_sip_parameters_t)
 

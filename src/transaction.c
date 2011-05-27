@@ -48,7 +48,7 @@ static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->stask) cain_sip_object_unref(t->stask);
 }
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_transaction_t,cain_sip_object_t,transaction_destroy,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_transaction_t,cain_sip_object_t,transaction_destroy,NULL,NULL);
 
 void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t){
 	return t->appdata;
@@ -141,7 +141,7 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 static void server_transaction_destroy(cain_sip_server_transaction_t *t){
 }
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_server_transaction_t,cain_sip_transaction_t,server_transaction_destroy,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_server_transaction_t,cain_sip_transaction_t,server_transaction_destroy,NULL,NULL);
 
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req){
 	cain_sip_server_transaction_t *t=cain_sip_object_new(cain_sip_server_transaction_t);
@@ -346,7 +346,7 @@ void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, 
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
 }
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_client_transaction_t, cain_sip_transaction_t,client_transaction_destroy,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_client_transaction_t, cain_sip_transaction_t,client_transaction_destroy,NULL,NULL);
 
 cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
 	cain_sip_client_transaction_t *t=cain_sip_object_new(cain_sip_client_transaction_t);
