@@ -52,7 +52,7 @@ cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* header) {
 
 int cain_sip_header_marshal(cain_sip_header_t* header, char* buff,unsigned int offset,unsigned int buff_size) {
 	if (header->name) {
-		return snprintf(buff+offset,buff_size-offset,"%s:",header->name);
+		return snprintf(buff+offset,buff_size-offset,"%s: ",header->name);
 	} else {
 		cain_sip_warning("no header name found");
 		return 0;
@@ -79,8 +79,11 @@ static void cain_sip_header_address_destroy(cain_sip_header_address_t* contact) 
 	if (contact->uri) cain_sip_object_unref(CAIN_SIP_OBJECT(contact->uri));
 }
 
-static void cain_sip_header_address_clone(cain_sip_header_address_t *addr){
+static void cain_sip_header_address_clone(cain_sip_header_address_t *addr, const cain_sip_header_address_t *orig){
+	addr->displayname=cain_sip_strdup(orig->displayname);
+	addr->uri=(cain_sip_uri_t*)cain_sip_object_clone(CAIN_SIP_OBJECT(orig->uri));
 }
+
 int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buff,unsigned int offset,unsigned int buff_size) {
 	/*1 display name*/
 	unsigned int current_offset=offset;
@@ -112,7 +115,7 @@ cain_sip_uri_t* cain_sip_header_address_get_uri(cain_sip_header_address_t* addre
 }
 
 void cain_sip_header_address_set_uri(cain_sip_header_address_t* address, cain_sip_uri_t* uri) {
-	address->uri=uri;
+	address->uri=(cain_sip_uri_t*)cain_sip_object_ref(uri);
 }
 
 
@@ -176,6 +179,7 @@ float	cain_sip_header_contact_get_qvalue(const cain_sip_header_contact_t* contac
 		current_offset+=cain_sip_##header_marshal(CAIN_SIP_HEADER(header), buff,current_offset, buff_size);\
 		current_offset+=cain_sip_header_address_marshal(&header->address, buff,current_offset, buff_size); \
 		return current_offset-offset;
+
 struct _cain_sip_header_from  {
 	cain_sip_header_address_t address;
 };
@@ -187,6 +191,14 @@ static void cain_sip_header_from_clone(cain_sip_header_from_t* from, const cain_
 }
 int cain_sip_header_from_marshal(cain_sip_header_from_t* from, char* buff,unsigned int offset,unsigned int buff_size) {
 	CAIN_SIP_FROM_LIKE_MARSHAL(from);
+}
+
+cain_sip_header_from_t* cain_sip_header_from_create(const char *address, const char *tag){
+	char *tmp=cain_sip_strdup_printf("From: %s",address);
+	cain_sip_header_from_t *from=cain_sip_header_from_parse(tmp);
+	if (tag) cain_sip_header_from_set_tag(from,tag);
+	cain_sip_free(tmp);
+	return from;
 }
 
 CAIN_SIP_NEW_HEADER(header_from,header_address,"From")
@@ -214,6 +226,14 @@ CAIN_SIP_NEW_HEADER(header_to,header_address,"To")
 CAIN_SIP_PARSE(header_to)
 GET_SET_STRING_PARAM(cain_sip_header_to,tag);
 
+cain_sip_header_to_t* cain_sip_header_to_create(const char *address, const char *tag){
+	char *tmp=cain_sip_strdup_printf("To: %s",address);
+	cain_sip_header_to_t *to=cain_sip_header_to_parse(tmp);
+	if (tag) cain_sip_header_to_set_tag(to,tag);
+	cain_sip_free(tmp);
+	return to;
+}
+
 /**************************
 * Via header object inherits from parameters
 ****************************
@@ -233,6 +253,7 @@ static void cain_sip_header_via_destroy(cain_sip_header_via_t* via) {
 
 static void cain_sip_header_via_clone(cain_sip_header_via_t* via, const cain_sip_header_via_t*orig){
 }
+
 int cain_sip_header_via_marshal(cain_sip_header_via_t* via, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(via), buff,current_offset, buff_size);
@@ -243,6 +264,16 @@ int cain_sip_header_via_marshal(cain_sip_header_via_t* via, char* buff,unsigned 
 	}
 	current_offset+=cain_sip_parameters_marshal(&via->params_list, buff,current_offset, buff_size);
 	return current_offset-offset;
+}
+
+cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, const char *transport, const char *branch){
+	cain_sip_header_via_t *via=cain_sip_header_via_new();
+	via->host=cain_sip_strdup(host);
+	via->port=port;
+	via->transport=cain_sip_strdup(transport);
+	via->protocol=cain_sip_strdup("SIP/2.0");
+	cain_sip_header_via_set_branch(via,branch);
+	return via;
 }
 
 CAIN_SIP_NEW_HEADER(header_via,header_address,"Via")
@@ -325,22 +356,29 @@ GET_SET_STRING(cain_sip_header_call_id,call_id);
 */
 struct _cain_sip_header_cseq  {
 	cain_sip_header_t header;
-	const char* method;
+	char* method;
 	unsigned int seq_number;
 };
 
 static void cain_sip_header_cseq_destroy(cain_sip_header_cseq_t* cseq) {
-	if (cseq->method) cain_sip_free((void*)cseq->method);
+	if (cseq->method) cain_sip_free(cseq->method);
 }
 
 static void cain_sip_header_cseq_clone(cain_sip_header_cseq_t* cseq, const cain_sip_header_cseq_t *orig) {
-	if (cseq->method) cain_sip_free((void*)cseq->method);
+	if (cseq->method) cain_sip_free(cseq->method);
+	cseq->method=cain_sip_strdup(orig->method);
 }
 int cain_sip_header_cseq_marshal(cain_sip_header_cseq_t* cseq, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(cseq), buff,current_offset, buff_size);
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i %s",cseq->seq_number,cseq->method);
 	return current_offset-offset;
+}
+cain_sip_header_cseq_t * cain_sip_header_cseq_create(unsigned int number, const char *method){
+	cain_sip_header_cseq_t *cseq=cain_sip_header_cseq_new();
+	cseq->method=cain_sip_strdup(method);
+	cseq->seq_number=number;
+	return cseq;
 }
 CAIN_SIP_NEW_HEADER(header_cseq,header,"CSeq")
 CAIN_SIP_PARSE(header_cseq)

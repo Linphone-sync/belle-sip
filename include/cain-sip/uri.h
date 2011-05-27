@@ -25,14 +25,7 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 	 *
 	 */
 	cain_sip_uri_t* cain_sip_uri_parse (const char* uri) ;
-	/**
-	 *
-	 */
-	cain_sip_uri_t* cain_sip_uri_ref (cain_sip_uri_t* address) ;
-	/**
-	 *
-	 */
-	void cain_sip_uri_unref (cain_sip_uri_t* address) ;
+	
 	/**
 	 *	Returns the value of the named header, or null if it is not set.
 	 *

@@ -112,9 +112,11 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 }
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno){
-	if (has_type(obj,id)==0){
-		cain_sip_fatal("Bad cast to %s at %s:%i",castname,file,fileno);
-		return NULL;
+	if (obj!=NULL){
+		if (has_type(obj,id)==0){
+			cain_sip_fatal("Bad cast to %s at %s:%i",castname,file,fileno);
+			return NULL;
+		}
 	}
 	return obj;
 }

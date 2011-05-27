@@ -344,6 +344,27 @@ CAIN_SIP_PARSE(response)
 GET_SET_STRING(cain_sip_response,reason_phrase);
 GET_SET_INT(cain_sip_response,status_code,int)
 
+cain_sip_request_t* cain_sip_request_create(cain_sip_uri_t *requri, const char* method,
+                                         cain_sip_header_call_id_t *callid,
+                                         cain_sip_header_cseq_t * cseq,
+                                         cain_sip_header_from_t *from,
+                                         cain_sip_header_to_t *to,
+                                         cain_sip_header_via_t *via,
+                                         int max_forward /*FIXME*/)
+{
+	cain_sip_request_t *ret=cain_sip_request_new();
+
+	cain_sip_request_set_uri(ret,requri);
+	cain_sip_request_set_method(ret,method);
+	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(via));
+	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(from));
+	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(to));
+	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(cseq));
+	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(callid));
+	
+	return ret;
+}
+
 static void cain_sip_response_init_default(cain_sip_response_t *resp, int status_code, const char *phrase){
 	resp->status_code=status_code;
 	resp->sip_version=cain_sip_strdup("SIP/2.0");

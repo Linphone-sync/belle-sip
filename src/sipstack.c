@@ -67,6 +67,10 @@ void cain_sip_stack_delete_provider(cain_sip_stack_t *s, cain_sip_provider_t *p)
 	cain_sip_object_unref(p);
 }
 
+cain_sip_main_loop_t * cain_sip_stack_get_main_loop(cain_sip_stack_t *stack){
+	return stack->ml;
+}
+
 void cain_sip_stack_main(cain_sip_stack_t *stack){
 	cain_sip_main_loop_run(stack->ml);
 }
@@ -88,3 +92,18 @@ void cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *re
 	hop->host=cain_sip_uri_get_host(uri);
 	hop->port=cain_sip_uri_get_listening_port(uri);
 }
+
+unsigned int cain_sip_random(void){
+#ifdef __linux
+	static int fd=-1;
+	if (fd==-1) fd=open("/dev/urandom",O_RDONLY);
+	if (fd!=-1){
+		unsigned int tmp;
+		if (read(fd,&tmp,4)!=4){
+			cain_sip_error("Reading /dev/urandom failed.");
+		}else return tmp;
+	}else cain_sip_error("Could not open /dev/urandom");
+#endif
+	return (unsigned int) random();
+}
+

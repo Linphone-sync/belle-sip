@@ -26,6 +26,12 @@
 #include <errno.h>
 #include <unistd.h>
 
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
 /* include all public headers*/
 #include "cain-sip/cain-sip.h"
 
@@ -86,7 +92,7 @@ cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t 
 int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
 #define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),0)
-#define cain_sip_object_new_unowed(_type,destroy)(_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),1)
+#define cain_sip_object_new_unowed(_type)(_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),1)
 
 #define CAIN_SIP_OBJECT_VPTR(obj,vptr_type) ((vptr_type*)(((cain_sip_object_t*)obj)->vptr))
 #define cain_sip_object_init(obj)		/*nothing*/
@@ -260,6 +266,11 @@ char * cain_sip_concat (const char *str, ...);
 
 uint64_t cain_sip_time_ms(void);
 
+unsigned int cain_sip_random(void);
+
+char *cain_sip_strdup_printf(const char *fmt,...);
+
+
 /*parameters accessors*/
 #define GET_SET_STRING(object_type,attribute) \
 	const char* object_type##_get_##attribute (const object_type##_t* obj) {\
@@ -370,7 +381,7 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 									, cain_sip_##object_type##_clone\
 									, cain_sip_##object_type##_marshal); \
 		cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
-		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
+		cain_sip_##object_type##_t* l_object = cain_sip_object_new_unowed(cain_sip_##object_type##_t);\
 		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
 		cain_sip_##init_type##_init((cain_sip_##init_type##_t*) l_object); \
 		if (name) cain_sip_header_set_name(CAIN_SIP_HEADER(l_object),name);\

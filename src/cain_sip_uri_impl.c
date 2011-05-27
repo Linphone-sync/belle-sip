@@ -56,6 +56,14 @@ void cain_sip_uri_destroy(cain_sip_uri_t* uri) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(uri->header_list));
 }
 
+void cain_sip_uri_clone(cain_sip_uri_t* uri, const cain_sip_uri_t *orig){
+	uri->secure=orig->secure;
+	uri->user=cain_sip_strdup(orig->user);
+	uri->host=cain_sip_strdup(orig->host);
+	uri->port=orig->port;
+	uri->header_list=(cain_sip_parameters_t*)cain_sip_object_clone(CAIN_SIP_OBJECT(orig->header_list));
+}
+
 int cain_sip_uri_marshal(cain_sip_uri_t* uri, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	const cain_sip_list_t* list=cain_sip_parameters_get_parameters(uri->header_list);
@@ -88,7 +96,7 @@ int cain_sip_uri_marshal(cain_sip_uri_t* uri, char* buff,unsigned int offset,uns
 }
 CAIN_SIP_PARSE(uri);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_parameters_t,cain_sip_uri_destroy,NULL,cain_sip_uri_marshal);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_parameters_t,cain_sip_uri_destroy,cain_sip_uri_clone,cain_sip_uri_marshal);
 
 
 cain_sip_uri_t* cain_sip_uri_new () {

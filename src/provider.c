@@ -37,6 +37,7 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provide
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){
 	cain_sip_provider_t *p=cain_sip_object_new(cain_sip_provider_t);
+	p->stack=s;
 	cain_sip_provider_add_listening_point(p,lp);
 	return p;
 }
@@ -70,6 +71,14 @@ void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listene
 void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l, void *user_ctx){
 	listener_ctx_t ctx={l,user_ctx};
 	p->listeners=cain_sip_list_remove_custom(p->listeners,listener_ctx_compare,&ctx);
+}
+
+cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov){
+	cain_sip_header_call_id_t *cid=cain_sip_header_call_id_new();
+	char tmp[32];
+	snprintf(tmp,sizeof(tmp),"%u",cain_sip_random());
+	cain_sip_header_call_id_set_call_id(cid,tmp);
+	return cid;
 }
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *p, cain_sip_request_t *req){

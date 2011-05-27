@@ -118,6 +118,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 
  cain_sip_header_from_t* cain_sip_header_from_new();
 
+ cain_sip_header_from_t* cain_sip_header_from_create(const char *address, const char *tag);
 
  cain_sip_header_from_t* cain_sip_header_from_parse (const char* from) ;
 
@@ -135,9 +136,9 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 
  cain_sip_header_to_t* cain_sip_header_to_new();
 
-
  cain_sip_header_to_t* cain_sip_header_to_parse(const char* to) ;
 
+ cain_sip_header_to_t* cain_sip_header_to_create(const char *address, const char *tag);
 
  void cain_sip_header_to_set_tag(cain_sip_header_to_t* from, const char* tag);
 
@@ -152,7 +153,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 typedef struct _cain_sip_header_via cain_sip_header_via_t;
 
 cain_sip_header_via_t* cain_sip_header_via_new();
-
+cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, const char *transport, const char *branch);
 cain_sip_header_via_t* cain_sip_header_via_parse (const char* via) ;
 const char*	cain_sip_header_via_get_branch(const cain_sip_header_via_t* via);
 const char*	cain_sip_header_via_get_transport(const cain_sip_header_via_t* via);
@@ -196,7 +197,7 @@ void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* via,const ch
 typedef struct _cain_sip_header_cseq cain_sip_header_cseq_t;
 
 cain_sip_header_cseq_t* cain_sip_header_cseq_new();
-
+cain_sip_header_cseq_t* cain_sip_header_cseq_create(unsigned int number, const char *method);
 cain_sip_header_cseq_t* cain_sip_header_cseq_parse (const char* cseq) ;
 const char*	cain_sip_header_cseq_get_method(const cain_sip_header_cseq_t* cseq);
 void cain_sip_header_cseq_set_method(cain_sip_header_cseq_t* cseq,const char* method);

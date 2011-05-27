@@ -1,6 +1,6 @@
 if BUILD_TESTS
 
-noinst_PROGRAMS=cain_sip_tester cast_test
+noinst_PROGRAMS=cain_sip_tester cast_test basic_test
 
 cain_sip_tester_SOURCES=	cain_sip_tester.c \
 											cain_sip_uri_tester.c \
@@ -8,6 +8,8 @@ cain_sip_tester_SOURCES=	cain_sip_tester.c \
 											cain_sip_message_tester.c
 
 cast_test_SOURCES=cast_test.c
+
+basic_test_SOURCES=basic_test.c
 
 INCLUDES=-I$(top_srcdir)/include -I$(top_srcdir)/src
 

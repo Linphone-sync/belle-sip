@@ -47,6 +47,8 @@ void cain_sip_stack_delete_listening_point(cain_sip_stack_t *s, cain_sip_listeni
 
 cain_sip_provider_t *cain_sip_stack_create_provider(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
+cain_sip_main_loop_t* cain_sip_stack_get_main_loop(cain_sip_stack_t *stack);
+
 void cain_sip_stack_main(cain_sip_stack_t *stack);
 
 void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
