@@ -99,7 +99,12 @@ message_header [cain_sip_message_t* message]
 //                |  header_via  {cain_sip_message_add_header(message,CAIN_SIP_HEADER($header_via.ret));}/*
 //                |  warning
 //                |  www_authenticate*/
-                  header_extension[TRUE] {cain_sip_message_add_header(message,CAIN_SIP_HEADER($header_extension.ret));} 
+                  header_extension[TRUE] {
+                    cain_sip_header_t* lheader = CAIN_SIP_HEADER($header_extension.ret);
+                    do {
+                      cain_sip_message_add_header(message,lheader);
+                      }
+                    while(lheader=cain_sip_header_get_next(lheader) != NULL); } 
                 ) CRLF 
                ;
 
@@ -538,9 +543,14 @@ tag_param
 /*
 in_reply_to  
 	:	  'In-Reply-To' HCOLON callid (COMMA callid);
-
-max_forwards  :  'Max-Forwards' HCOLON DIGIT+;
-
+*/
+header_max_forwards  returns [cain_sip_header_max_forwards_t* ret]   
+scope { cain_sip_header_max_forwards_t* current; }
+@init { $header_max_forwards::current = cain_sip_header_max_forwards_new();$ret = $header_max_forwards::current; } 
+  :   {IS_TOKEN(Max-Forwards)}? token /*'Max-Forwards'*/ hcolon 
+    max_forwards {cain_sip_header_max_forwards_set_max_forwards($header_max_forwards::current,atoi((const char*)$max_forwards.text->chars));};
+max_forwards:DIGIT+;
+/*
 mime_version  
 	:	  'MIME-Version' HCOLON DIGIT+ '.' DIGIT+;
 
@@ -840,6 +850,8 @@ header_extension[ANTLR3_BOOLEAN check_for_known_header]  returns [cain_sip_heade
                      $ret = CAIN_SIP_HEADER(cain_sip_header_proxy_authorization_parse((const char*)$header_extension.text->chars));
                     } else if (check_for_known_header && strcmp("WWW-Authenticate",(const char*)$header_name.text->chars) == 0) {
                      $ret = CAIN_SIP_HEADER(cain_sip_header_www_authenticate_parse((const char*)$header_extension.text->chars));
+                    } else if (check_for_known_header && strcmp("Max-Forwards",(const char*)$header_name.text->chars) == 0) {
+                     $ret = CAIN_SIP_HEADER(cain_sip_header_max_forwards_parse((const char*)$header_extension.text->chars));
                     }else {
                       $ret =  CAIN_SIP_HEADER(cain_sip_header_extension_new());
                       cain_sip_header_extension_set_value((cain_sip_header_extension_t*)$ret,(const char*)$header_value.text->chars);

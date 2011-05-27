@@ -68,6 +68,7 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sip_header_authorization_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_www_authenticate_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_proxy_authorization_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_max_forwards_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_attribute_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_bandwidth_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_connection_t),

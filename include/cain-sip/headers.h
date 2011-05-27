@@ -331,6 +331,20 @@ cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* extens
 const char* cain_sip_header_extension_get_value(const cain_sip_header_extension_t* extension);
 void cain_sip_header_extension_set_value(cain_sip_header_extension_t* extension,const char* value);
 #define CAIN_SIP_HEADER_EXTENSION(t) CAIN_SIP_CAST(t,cain_sip_header_extension_t)
+/******************************
+ *
+ * Max forward inherit from header
+ *
+ ******************************/
+typedef struct _cain_sip_header_max_forwards cain_sip_header_max_forwards_t;
+
+cain_sip_header_max_forwards_t* cain_sip_header_max_forwards_new();
+
+cain_sip_header_max_forwards_t* cain_sip_header_max_forwards_parse (const char* max_forwards) ;
+int cain_sip_header_max_forwards_get_max_forwards(const cain_sip_header_max_forwards_t* max_forwards);
+void cain_sip_header_max_forwards_set_max_forwards(cain_sip_header_max_forwards_t* max_forwards,int value);
+int cain_sip_header_max_forwards_decrement_max_forwards(cain_sip_header_max_forwards_t* max_forwards);
+#define CAIN_SIP_HEADER_MAX_FORWARDS(t) CAIN_SIP_CAST(t,cain_sip_header_max_forwards_t)
 
 
 #endif /* HEADERS_H_ */
