@@ -37,23 +37,23 @@ static void check_uri_and_headers(cain_sip_message_t* message) {
 		CAIN_SIP_HEADER_MAX_FORWARDS(cain_sip_message_get_header(message,"Max-Forwards"));
 	}
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"From"));
-	CAIN_SIP_HEADER_FROM(cain_sip_message_get_header(message,"From"));
+	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_FROM(cain_sip_message_get_header(message,"From")));
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"To"));
-	CAIN_SIP_HEADER_TO(cain_sip_message_get_header(message,"To"));
+	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_TO(cain_sip_message_get_header(message,"To")));
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"CSeq"));
-	CAIN_SIP_HEADER_CSEQ(cain_sip_message_get_header(message,"CSeq"));
+	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_CSEQ(cain_sip_message_get_header(message,"CSeq")));
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Via"));
-	CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(message,"Via"));
+	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(message,"Via")));
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Call-ID"));
-	CAIN_SIP_HEADER_CALL_ID(cain_sip_message_get_header(message,"Call-ID"));
+	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_CALL_ID(cain_sip_message_get_header(message,"Call-ID")));
 
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Content-Length"));
-	CAIN_SIP_HEADER_CONTENT_LENGTH(cain_sip_message_get_header(message,"Content-Length"));
+	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_CONTENT_LENGTH(cain_sip_message_get_header(message,"Content-Length")));
 
 
 
@@ -152,9 +152,10 @@ static void testRegisterRaw(void) {
 	cain_sip_request_t* request = CAIN_SIP_REQUEST(message);
 	CU_ASSERT_STRING_EQUAL(cain_sip_request_get_method(request),"REGISTER");
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_request_get_uri(request));
-	CU_ASSERT_STRING_EQUAL(cain_sip_message_get_body(request),"123456789");
+	CU_ASSERT_STRING_EQUAL(cain_sip_message_get_body(message),"123456789");
 
 }
+
 static void testOptionMessage(void) {
 	const char* raw_message = "REGISTER sip:192.168.0.20 SIP/2.0\r\n"\
 							"Via: SIP/2.0/UDP 192.168.1.8:5062;rport;branch=z9hG4bK1439638806\r\n"\
@@ -193,6 +194,10 @@ int cain_sip_message_test_suite () {
 	   if (NULL == CU_add_test(pSuite, "test of invite message", testInviteMessage)) {
 	      return CU_get_error();
 	   }
+       if (NULL == CU_add_test(pSuite, "test of options message", testOptionMessage)) {
+	      return CU_get_error();
+	   }
+	
 	   if (NULL == CU_add_test(pSuite, "test of register raw message", testRegisterRaw)) {
 	      return CU_get_error();
 	   }

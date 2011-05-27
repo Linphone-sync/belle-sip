@@ -9,7 +9,7 @@ cain_sip_tester_SOURCES=	cain_sip_tester.c \
 
 cast_test_SOURCES=cast_test.c
 
-INCLUDES=-I$(top_srcdir)/include
+INCLUDES=-I$(top_srcdir)/include -I$(top_srcdir)/src
 
 LDADD=$(top_builddir)/src/libcainsip.la -lcunit
 

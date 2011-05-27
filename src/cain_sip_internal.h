@@ -134,11 +134,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 extern "C"{
 #endif
 
-void *cain_sip_malloc(size_t size);
-void *cain_sip_malloc0(size_t size);
-void *cain_sip_realloc(void *ptr, size_t size);
-void cain_sip_free(void *ptr);
-char * cain_sip_strdup(const char *s);
+
 
 #define cain_sip_new(type) (type*)cain_sip_malloc(sizeof(type))
 #define cain_sip_new0(type) (type*)cain_sip_malloc0(sizeof(type))
@@ -520,7 +516,7 @@ void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *
 #define IS_TOKEN(token) \
 		(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars ?\
 		strcmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars)) == 0:0)
-char* _cain_sip_str_dup_and_unquote_string(char* quoted_string);
+char* _cain_sip_str_dup_and_unquote_string(const char* quoted_string);
 
 /*********************************************************
  * SDP

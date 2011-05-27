@@ -135,6 +135,13 @@ void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const 
 char* cain_sip_object_to_string(cain_sip_object_t* obj);
 
 unsigned int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
+
+void *cain_sip_malloc(size_t size);
+void *cain_sip_malloc0(size_t size);
+void *cain_sip_realloc(void *ptr, size_t size);
+void cain_sip_free(void *ptr);
+char * cain_sip_strdup(const char *s);
+
 CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_CAST(obj,_type) 		((_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__))
