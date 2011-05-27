@@ -1,8 +1,8 @@
 ANTLR=antlr3
 
 grammar_files= \
-						$(srcdir)/cain_sip_uri.g \
 						$(srcdir)/cain_sip_message.g
+						$(srcdir)/cain_sdp.g
 
 generated_src= \
 	cain_sip_uriParser.c cain_sip_uriParser.h \
