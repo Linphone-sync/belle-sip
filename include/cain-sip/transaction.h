@@ -25,6 +25,7 @@ typedef struct cain_sip_server_transaction cain_sip_server_transaction_t;
 typedef struct cain_sip_client_transaction cain_sip_client_transaction_t;
 
 typedef enum cain_sip_transaction_state{
+	CAIN_SIP_TRANSACTION_INIT,
 	CAIN_SIP_TRANSACTION_CALLING,
 	CAIN_SIP_TRANSACTION_COMPLETED,
 	CAIN_SIP_TRANSACTION_CONFIRMED,

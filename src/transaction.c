@@ -94,17 +94,48 @@ struct cain_sip_server_transaction{
 static void server_transaction_send_cb(cain_sip_sender_task_t *st, void *data, int retcode){
 	cain_sip_server_transaction_t *t=(cain_sip_server_transaction_t *)data;
 	if (retcode==0){
+		t->base.is_reliable=cain_sip_sender_task_is_reliable(st);
 	}else{
 		/*the provider is notified of the error by the sender_task, we just need to terminate the transaction*/
 		cain_sip_transaction_terminate(&t->base);
 	}
 }
 
-void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
+static void server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
 	if (t->base.stask==NULL){
 		t->base.stask=cain_sip_sender_task_new(t->base.provider,server_transaction_send_cb,t);
 	}
+	
 	cain_sip_sender_task_send(t->base.stask,CAIN_SIP_MESSAGE(resp));
+}
+
+/* called when a request retransmission is received for that transaction:*/
+void cain_sip_server_transaction_retransmit(cain_sip_server_transaction_t *t){
+	if (t->base.final_response!=NULL){
+		server_transaction_send_response (t,t->base.final_response);
+	}else if (t->base.prov_response!=NULL){
+		server_transaction_send_response (t,t->base.prov_response);
+	}
+}
+
+void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
+	int status_code=cain_sip_response_get_status_code(resp);
+
+	server_transaction_send_response(t,resp);
+	
+	if (status_code<200){
+		if (t->base.prov_response!=NULL){
+			cain_sip_object_unref(t->base.prov_response);
+		}
+		t->base.prov_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
+		t->base.state=CAIN_SIP_TRANSACTION_PROCEEDING;
+	}else if (status_code<300){
+		t->base.state=CAIN_SIP_TRANSACTION_TERMINATED;
+		cain_sip_transaction_terminate((cain_sip_transaction_t*)t);
+	}else{
+		t->base.state=CAIN_SIP_TRANSACTION_COMPLETED;
+	}
+	
 }
 
 static void server_transaction_destroy(cain_sip_server_transaction_t *t){
@@ -183,19 +214,21 @@ static void client_transaction_cb(cain_sip_sender_task_t *task, void *data, int 
 	cain_sip_client_transaction_t *t=(cain_sip_client_transaction_t*)data;
 	const cain_sip_timer_config_t *tc=cain_sip_stack_get_timer_config (cain_sip_provider_get_sip_stack (t->base.provider));
 	if (retcode==0){
-		t->base.is_reliable=cain_sip_sender_task_is_reliable(task);
-		if (t->base.is_invite){
-			t->base.state=CAIN_SIP_TRANSACTION_CALLING;
-		}else{
-			t->base.state=CAIN_SIP_TRANSACTION_TRYING;
-		}
-		t->base.start_time=cain_sip_time_ms();
-		t->timer_F=t->base.start_time+(tc->T1*64);
-		if (!t->base.is_reliable){
-			t->base.interval=tc->T1;
-			t->base.timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1);
-		}else{
-			t->base.timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1*64);
+		if (t->base.state==CAIN_SIP_TRANSACTION_INIT){
+			t->base.is_reliable=cain_sip_sender_task_is_reliable(task);
+			if (t->base.is_invite){
+				t->base.state=CAIN_SIP_TRANSACTION_CALLING;
+			}else{
+				t->base.state=CAIN_SIP_TRANSACTION_TRYING;
+			}
+			t->base.start_time=cain_sip_time_ms();
+			t->timer_F=t->base.start_time+(tc->T1*64);
+			if (!t->base.is_reliable){
+				t->base.interval=tc->T1;
+				t->base.timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1);
+			}else{
+				t->base.timer=transaction_create_timer(&t->base,on_client_transaction_timer,tc->T1*64);
+			}
 		}
 	}else{
 		/* transport layer error*/
