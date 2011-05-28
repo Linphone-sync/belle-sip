@@ -104,7 +104,7 @@ message_header [cain_sip_message_t* message]
                     do {
                       cain_sip_message_add_header(message,lheader);
                       }
-                    while(lheader=cain_sip_header_get_next(lheader) != NULL); } 
+                    while((lheader=cain_sip_header_get_next(lheader)) != NULL); } 
                 ) CRLF 
                ;
 

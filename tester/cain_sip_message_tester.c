@@ -34,7 +34,7 @@ static void check_uri_and_headers(cain_sip_message_t* message) {
 		CU_ASSERT_PTR_NOT_NULL(cain_sip_request_get_uri(CAIN_SIP_REQUEST(message)));
 
 		CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Max-Forwards"));
-		CAIN_SIP_HEADER_MAX_FORWARDS(cain_sip_message_get_header(message,"Max-Forwards"));
+		CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_MAX_FORWARDS(cain_sip_message_get_header(message,"Max-Forwards")));
 	}
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"From"));
 	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_FROM(cain_sip_message_get_header(message,"From")));

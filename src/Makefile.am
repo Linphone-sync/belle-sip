@@ -1,14 +1,16 @@
 ANTLR=antlr3
 
 grammar_files= \
-						$(srcdir)/cain_sip_message.g
+						$(srcdir)/cain_sip_message.g \
 						$(srcdir)/cain_sdp.g
 
 generated_src= \
 	cain_sip_uriParser.c cain_sip_uriParser.h \
 	cain_sip_uriLexer.c cain_sip_uriLexer.h \
 	cain_sip_messageParser.c cain_sip_messageParser.h \
-	cain_sip_messageLexer.c cain_sip_messageLexer.h
+	cain_sip_messageLexer.c cain_sip_messageLexer.h \
+	cain_sdpParser.c cain_sdpParser.h \
+	cain_sdpLexer.c cain_sdpLexer.h
 
 $(builddir)/generated_src_stamp : $(grammar_files)
 	$(ANTLR) -make -fo $(builddir) $(grammar_files)
@@ -36,6 +38,7 @@ libcainsip_la_SOURCES=clock_gettime.h \
 									cain_sip_loop.c \
 									cain_sip_resolver.c cain_sip_resolver.h \
 									cain_sip_parameters.c \
+									cain_sdp_impl.c \
 									transaction.c \
 									listeningpoint.c \
 									sipstack.c \

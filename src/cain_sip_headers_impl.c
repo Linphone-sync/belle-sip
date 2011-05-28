@@ -42,9 +42,7 @@ static void cain_sip_header_destroy(cain_sip_header_t *header){
 	if (header->next) cain_sip_object_unref(CAIN_SIP_OBJECT(header->next));
 }
 void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next) {
-	if (header->next) cain_sip_object_unref(CAIN_SIP_OBJECT(header));
 	header->next = next;
-	cain_sip_object_ref(CAIN_SIP_OBJECT(next));
 }
 cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* header) {
 	return header->next;
