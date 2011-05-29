@@ -31,8 +31,9 @@ void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 	if (ctx->ai){
 		freeaddrinfo(ctx->ai);
 	}
-	cain_sip_free(ctx);
 }
+
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t, cain_sip_resolver_context_destroy, NULL, NULL);
 
 static int resolver_callback(cain_sip_resolver_context_t *ctx){
 	ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
@@ -41,7 +42,7 @@ static int resolver_callback(cain_sip_resolver_context_t *ctx){
 }
 
 cain_sip_resolver_context_t *cain_sip_resolver_context_new(){
-	cain_sip_resolver_context_t *ctx=cain_sip_new0(cain_sip_resolver_context_t);
+	cain_sip_resolver_context_t *ctx=cain_sip_object_new(cain_sip_resolver_context_t);
 	if (pipe(ctx->ctlpipe)==-1){
 		cain_sip_fatal("pipe() failed: %s",strerror(errno));
 	}

@@ -30,6 +30,9 @@
 
 #define CAIN_SIP_TYPE_ID(_type) _type##_id
 
+/**
+ * This enum declares all object types used in cain-sip (see cain_sip_object_t)
+**/
 typedef enum cain_sip_type_id{
 	cain_sip_type_id_first=1,
 	CAIN_SIP_TYPE_ID(cain_sip_stack_t),
@@ -41,6 +44,7 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sip_provider_t),
 	CAIN_SIP_TYPE_ID(cain_sip_main_loop_t),
 	CAIN_SIP_TYPE_ID(cain_sip_source_t),
+	CAIN_SIP_TYPE_ID(cain_sip_resolver_context_t),
 	CAIN_SIP_TYPE_ID(cain_sip_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_server_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t),

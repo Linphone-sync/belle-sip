@@ -70,7 +70,7 @@ void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listene
 
 void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l, void *user_ctx){
 	listener_ctx_t ctx={l,user_ctx};
-	p->listeners=cain_sip_list_remove_custom(p->listeners,listener_ctx_compare,&ctx);
+	p->listeners=cain_sip_list_delete_custom(p->listeners,listener_ctx_compare,&ctx);
 }
 
 cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov){

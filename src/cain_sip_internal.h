@@ -104,6 +104,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_uri_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_parameters_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_contact_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_source_t);
 
 struct _cain_sip_list {
 	struct _cain_sip_list *next;
@@ -125,8 +126,8 @@ struct cain_sip_source{
 	int index; /* index in pollfd table */
 	cain_sip_source_func_t notify;
 	cain_sip_source_remove_callback_t on_remove;
-	int cancelled:1;
-	int expired:1;
+	unsigned char cancelled;
+	unsigned char expired;
 };
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
@@ -149,6 +150,7 @@ cain_sip_list_t *cain_sip_list_new(void *data);
 cain_sip_list_t*  cain_sip_list_append_link(cain_sip_list_t* elem,cain_sip_list_t *new_elem);
 cain_sip_list_t *cain_sip_list_find_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t *cain_sip_list_remove_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
+cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 #define cain_sip_list_next(elem) ((elem)->next)
 /***************/

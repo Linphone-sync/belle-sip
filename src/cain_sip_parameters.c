@@ -65,13 +65,13 @@ void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* params,const char*
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->paramnames_list, (cain_sip_compare_func)strcmp, name);
 	/* first remove from header names list*/
 	if (lResult) {
-		cain_sip_list_remove_link(params->paramnames_list,lResult);
+		params->paramnames_list=cain_sip_list_delete_link(params->paramnames_list,lResult);
 	}
 	/* next from header list*/
 	lResult = cain_sip_list_find_custom(params->param_list, (cain_sip_compare_func)cain_sip_param_pair_comp_func, name);
 	if (lResult) {
 		cain_sip_param_pair_destroy(lResult->data);
-		cain_sip_list_remove_link(params->param_list,lResult);
+		params->param_list=cain_sip_list_delete_link(params->param_list,lResult);
 	}
 	/* 2 insert*/
 	cain_sip_param_pair_t* lNewpair = cain_sip_param_pair_new(name,value);
@@ -87,7 +87,7 @@ void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* params,const ch
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->paramnames_list, (cain_sip_compare_func)strcmp, name);
 	/* first remove from header names list*/
 	if (lResult) {
-		cain_sip_list_remove_link(params->paramnames_list,lResult);
+		params->paramnames_list=cain_sip_list_delete_link(params->paramnames_list,lResult);
 	} else {
 		cain_sip_warning("cannot remove param \%s because not present",name);
 	}
