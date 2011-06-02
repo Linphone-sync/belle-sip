@@ -41,9 +41,9 @@ void cain_sdp_attribute_set_value(cain_sdp_attribute_t* attribute, const char* v
 typedef struct _cain_sdp_bandwidth cain_sdp_bandwidth_t;
 cain_sdp_bandwidth_t* cain_sdp_bandwidth_new();
 cain_sdp_bandwidth_t* cain_sdp_bandwidth_parse (const char* bandwidth);
-const char* cain_sdp_bandwidth_get_value(const cain_sdp_bandwidth_t* attribute);
+int cain_sdp_bandwidth_get_value(const cain_sdp_bandwidth_t* attribute);
 const char* cain_sdp_bandwidth_get_type(const cain_sdp_bandwidth_t* attribute);
-void cain_sdp_bandwidth_set_value(cain_sdp_bandwidth_t* attribute, const char* value);
+void cain_sdp_bandwidth_set_value(cain_sdp_bandwidth_t* attribute, int value);
 void cain_sdp_bandwidth_set_type(cain_sdp_bandwidth_t* attribute, const char* type);
 #define CAIN_SDP_BANDWITH(t) CAIN_SDP_CAST(t,cain_sdp_bandwidth_t);
 /***************************************************************************************
@@ -84,15 +84,15 @@ void cain_sdp_info_set_value(cain_sdp_info_t* info, const char* value);
  * Key
  *
  **************************************************************************************/
-typedef struct _cain_sdp_key cain_sdp_key_t;
-cain_sdp_key_t* cain_sdp_key_new();
-cain_sdp_key_t* cain_sdp_key_parse (const char* key);
-const char* cain_sdp_key_get_key(const cain_sdp_key_t* key);
-const char* cain_sdp_key_get_method(const cain_sdp_key_t* key);
-unsigned int cain_sdp_key_as_key(const cain_sdp_key_t* key);
-void cain_sdp_key_set_key(cain_sdp_key_t* key, const char* keyvalue);
-void cain_sdp_key_set_method(cain_sdp_key_t* key, const char* method);
-#define CAIN_SDP_KEY(t) CAIN_SDP_CAST(t,cain_sdp_key_t);
+//typedef struct _cain_sdp_key cain_sdp_key_t;
+//cain_sdp_key_t* cain_sdp_key_new();
+//cain_sdp_key_t* cain_sdp_key_parse (const char* key);
+//const char* cain_sdp_key_get_key(const cain_sdp_key_t* key);
+//const char* cain_sdp_key_get_method(const cain_sdp_key_t* key);
+//unsigned int cain_sdp_key_as_key(const cain_sdp_key_t* key);
+//void cain_sdp_key_set_key(cain_sdp_key_t* key, const char* keyvalue);
+//void cain_sdp_key_set_method(cain_sdp_key_t* key, const char* method);
+//#define CAIN_SDP_KEY(t) CAIN_SDP_CAST(t,cain_sdp_key_t);
 /***************************************************************************************
  * Media
  *
@@ -111,7 +111,7 @@ void cain_sdp_media_set_media_formats(cain_sdp_media_t* media, cain_sip_list_t* 
 void cain_sdp_media_set_media_port(cain_sdp_media_t* media, int port);
 void cain_sdp_media_set_media_type(cain_sdp_media_t* media, const char* mediaType);
 void cain_sdp_media_set_port_count(cain_sdp_media_t* media, int portCount);
-void cain_sdp_media_set_media_protocole(cain_sdp_media_t* media, const char* protocole);
+void cain_sdp_media_set_media_protocol(cain_sdp_media_t* media, const char* protocole);
 #define CAIN_SDP_MEDIA(t) CAIN_SDP_CAST(t,cain_sdp_media_t);
 
 /***************************************************************************************
@@ -128,7 +128,7 @@ int	cain_sdp_media_description_get_bandwidth(const cain_sdp_media_description_t*
 cain_sip_list_t* cain_sdp_media_description_get_bandwidths(const cain_sdp_media_description_t* media_description, unsigned int  create);
 cain_sdp_connection_t*	cain_sdp_media_description_get_connection(const cain_sdp_media_description_t* media_description);
 cain_sdp_info_t* cain_sdp_media_description_get_info(const cain_sdp_media_description_t* media_description);
-cain_sdp_key_t*  cain_sdp_media_description_get_key(const cain_sdp_media_description_t* media_description);
+/*cain_sdp_key_t*  cain_sdp_media_description_get_key(const cain_sdp_media_description_t* media_description);*/
 cain_sdp_media_t* cain_sdp_media_description_get_media(const cain_sdp_media_description_t* media_description);
 cain_sip_list_t* cain_sdp_media_description_get_mime_parameters(const cain_sdp_media_description_t* media_description);
 cain_sip_list_t* cain_sdp_media_description_get_mime_types(const cain_sdp_media_description_t* media_description);
@@ -140,7 +140,7 @@ void cain_sdp_media_description_set_bandwidth(cain_sdp_media_description_t* medi
 void cain_sdp_media_description_set_bandwidths(cain_sdp_media_description_t* media_description, cain_sip_list_t* bandwidths);
 void cain_sdp_media_description_set_connection(cain_sdp_media_description_t* media_description, cain_sdp_connection_t* conn);
 void cain_sdp_media_description_set_info(cain_sdp_media_description_t* media_description,cain_sdp_info_t* i);
-void cain_sdp_media_description_set_key(cain_sdp_media_description_t* media_description,cain_sdp_key_t* key);
+/*void cain_sdp_media_description_set_key(cain_sdp_media_description_t* media_description,cain_sdp_key_t* key);*/
 void cain_sdp_media_description_set_media(cain_sdp_media_description_t* media_description, cain_sdp_media_t* media);
 #define CAIN_SDP_MEDIA_DESCRIPTION(t) CAIN_SDP_CAST(t,cain_sdp_media_description_t);
 /***************************************************************************************
@@ -248,7 +248,7 @@ cain_sip_list_t*	cain_sdp_session_description_get_bandwidths(const cain_sdp_sess
 cain_sdp_connection_t*	cain_sdp_session_description_get_connection(const cain_sdp_session_description_t* session_description);
 cain_sip_list_t* cain_sdp_session_description_get_emails(const cain_sdp_session_description_t* session_description, unsigned int create);
 cain_sdp_info_t* cain_sdp_session_description_get_info(const cain_sdp_session_description_t* session_description);
-cain_sdp_key_t*	cain_sdp_session_description_get_key(const cain_sdp_session_description_t* session_description);
+/*cain_sdp_key_t*	cain_sdp_session_description_get_key(const cain_sdp_session_description_t* session_description);*/
 cain_sdp_info_t* cain_sdp_session_description_get_mediaDescriptions(const cain_sdp_session_description_t* session_description, unsigned int create);
 cain_sdp_origin_t*	cain_sdp_session_description_get_origin(const cain_sdp_session_description_t* session_description);
 cain_sip_list_t* cain_sdp_session_description_get_phones(const cain_sdp_session_description_t* session_description, unsigned int create);
@@ -266,7 +266,7 @@ void cain_sdp_session_description_set_bandwidths(cain_sdp_session_description_t*
 void cain_sdp_session_description_set_connection(cain_sdp_session_description_t* session_description, cain_sdp_connection_t* conn);
 void cain_sdp_session_description_set_emails(cain_sdp_session_description_t* session_description, cain_sip_list_t* emails);
 void cain_sdp_session_description_set_info(cain_sdp_session_description_t* session_description, cain_sdp_info_t* i);
-void cain_sdp_session_description_set_key(cain_sdp_session_description_t* session_description, cain_sdp_key_t* key);
+/*void cain_sdp_session_description_set_key(cain_sdp_session_description_t* session_description, cain_sdp_key_t* key);*/
 void cain_sdp_session_description_set_media_descriptions(cain_sdp_session_description_t* session_description, cain_sip_list_t* mediaDescriptions);
 void cain_sdp_session_description_set_origin(cain_sdp_session_description_t* session_description, cain_sdp_origin_t* origin);
 void cain_sdp_session_description_set_phones(cain_sdp_session_description_t* session_description, cain_sip_list_t* phones);

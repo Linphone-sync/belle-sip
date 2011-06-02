@@ -55,6 +55,33 @@ GET_SET_STRING(cain_sdp_attribute,value);
 unsigned int cain_sdp_attribute_as_value(const cain_sdp_attribute_t* attribute) {
 	return attribute->value!=NULL;
 }
+/***************************************************************************************
+ * Bandwidth
+ *
+ **************************************************************************************/
+struct _cain_sdp_bandwidth {
+	cain_sip_object_t base;
+	const char* type;
+	int value;
+};
+void cain_sdp_bandwidth_destroy(cain_sdp_bandwidth_t* bandwidth) {
+}
+
+void cain_sdp_bandwidth_clone(cain_sdp_bandwidth_t *bandwidth, const cain_sdp_bandwidth_t *orig){
+}
+int cain_sdp_bandwidth_marshal(cain_sdp_bandwidth_t* bandwidth, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=snprintf(	buff+current_offset
+								,buff_size-current_offset
+								,"b=%s:%i"
+								,bandwidth->type,bandwidth->value);
+
+	return current_offset-offset;
+}
+CAIN_SDP_NEW(bandwidth,cain_sip_object)
+CAIN_SDP_PARSE(bandwidth)
+GET_SET_STRING(cain_sdp_bandwidth,type);
+GET_SET_INT(cain_sdp_bandwidth,value,int)
 
 /************************
  * connection
@@ -86,3 +113,84 @@ CAIN_SDP_PARSE(connection)
 GET_SET_STRING(cain_sdp_connection,network_type);
 GET_SET_STRING(cain_sdp_connection,address_type);
 GET_SET_STRING(cain_sdp_connection,address);
+/************************
+ * email
+ ***********************/
+struct _cain_sdp_email {
+	cain_sip_object_t base;
+	const char* value;
+ };
+
+void cain_sdp_email_destroy(cain_sdp_email_t* email) {
+}
+
+void cain_sdp_email_clone(cain_sdp_email_t *email, const cain_sdp_email_t *orig){
+}
+int cain_sdp_email_marshal(cain_sdp_email_t* email, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=snprintf(	buff+current_offset
+								,buff_size-current_offset
+								,"e=%s"
+								,email->value);
+	return current_offset-offset;
+}
+CAIN_SDP_NEW(email,cain_sip_object)
+CAIN_SDP_PARSE(email)
+GET_SET_STRING(cain_sdp_email,value);
+/************************
+ * info
+ ***********************/
+struct _cain_sdp_info {
+	cain_sip_object_t base;
+	const char* value;
+ };
+
+void cain_sdp_info_destroy(cain_sdp_info_t* info) {
+}
+
+void cain_sdp_info_clone(cain_sdp_info_t *info, const cain_sdp_info_t *orig){
+}
+int cain_sdp_info_marshal(cain_sdp_info_t* info, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=snprintf(	buff+current_offset
+								,buff_size-current_offset
+								,"i=%s"
+								,info->value);
+	return current_offset-offset;
+}
+CAIN_SDP_NEW(info,cain_sip_object)
+CAIN_SDP_PARSE(info)
+GET_SET_STRING(cain_sdp_info,value);
+/************************
+ * media
+ ***********************/
+struct _cain_sdp_media {
+	cain_sip_object_t base;
+	const char* value;
+	int media_port;
+	cain_sip_list_t* media_formats;
+	const char* media_type;
+	int port_count;
+	const char* media_protocol;
+ };
+
+void cain_sdp_media_destroy(cain_sdp_media_t* media) {
+}
+
+void cain_sdp_media_clone(cain_sdp_media_t *media, const cain_sdp_media_t *orig){
+}
+int cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=snprintf(	buff+current_offset
+								,buff_size-current_offset
+								,"m=%s"
+								,media->value);
+	return current_offset-offset;
+}
+CAIN_SDP_NEW(media,cain_sip_object)
+CAIN_SDP_PARSE(media)
+GET_SET_STRING(cain_sdp_media,value);
+GET_SET_STRING(cain_sdp_media,media_type);
+GET_SET_STRING(cain_sdp_media,media_protocol);
+GET_SET_INT(cain_sdp_media,media_port,int)
+GET_SET_INT(cain_sdp_media,port_count,int)
