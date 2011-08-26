@@ -18,6 +18,11 @@
 
 #ifndef CAIN_SIP_LIST_H_
 #define CAIN_SIP_LIST_H_
+struct _cain_sip_list {
+	struct _cain_sip_list *next;
+	struct _cain_sip_list *prev;
+	void *data;
+};
 typedef struct _cain_sip_list cain_sip_list_t;
 
 cain_sip_list_t * cain_sip_list_append(cain_sip_list_t * elem, void * data);

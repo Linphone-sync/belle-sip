@@ -106,11 +106,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_parameters_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_contact_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_source_t);
 
-struct _cain_sip_list {
-	struct _cain_sip_list *next;
-	struct _cain_sip_list *prev;
-	void *data;
-};
+
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 
@@ -566,7 +562,18 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 		super_type##_init((super_type##_t*)l_object); \
 		return l_object;\
 	}
-
+#define CAIN_SDP_NEW_WITH_CTR(object_type,super_type) \
+		CAIN_SIP_INSTANCIATE_VPTR(	cain_sdp_##object_type##_t\
+									, super_type##_t\
+									, cain_sdp_##object_type##_destroy\
+									, cain_sdp_##object_type##_clone\
+									, cain_sdp_##object_type##_marshal); \
+		cain_sdp_##object_type##_t* cain_sdp_##object_type##_new () { \
+		cain_sdp_##object_type##_t* l_object = cain_sip_object_new(cain_sdp_##object_type##_t);\
+		super_type##_init((super_type##_t*)l_object); \
+		cain_sdp_##object_type##_init(l_object); \
+		return l_object;\
+	}
 
 
 
