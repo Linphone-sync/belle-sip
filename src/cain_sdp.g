@@ -144,7 +144,7 @@ media_value:               alpha_num+;
 
 fmt:                 DIGIT+ {cain_sdp_media_set_media_formats($media::current
                                                               ,cain_sip_list_append(cain_sdp_media_get_media_formats($media::current)
-                                                              ,(void*)atoi((const char*)$fmt.text->chars)));};
+                                                              ,(void*)(long)atoi((const char*)$fmt.text->chars)));};
                      //;typically an RTP payload type for audio
                      //;and video media
 proto              options { greedy = false; }:        ~(SPACE|CR|LF)*;

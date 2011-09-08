@@ -18,6 +18,35 @@
 
 #include "cain_sip_resolver.h"
 
+
+int cain_sip_addrinfo_to_ip(const struct addrinfo *ai, char *ip, size_t ip_size, int *port){
+	char serv[16];
+	int err=getnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
+	if (err!=0){
+		cain_sip_error("getnameinfo() error: %s",gai_strerror(err));
+		strncpy(ip,"<bug!!>",ip_size);
+	}
+	if (port) *port=atoi(serv);
+	return 0;
+}
+
+struct addrinfo * cain_sip_ip_address_to_addrinfo(const char *ipaddress, int port){
+	struct addrinfo *res=NULL;
+	struct addrinfo hints={0};
+	char serv[10];
+	int err;
+
+	snprintf(serv,sizeof(serv),"%i",port);
+	hints.ai_family=AF_UNSPEC;
+	hints.ai_flags=AI_NUMERICSERV|AI_NUMERICHOST;
+	err=getaddrinfo(ipaddress,serv,&hints,&res);
+	if (err!=0){
+		return NULL;
+	}
+	return res;
+}
+
+
 void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 	if (ctx->thread!=0){
 		if (!ctx->exited){
@@ -58,6 +87,7 @@ static void *cain_sip_resolver_thread(void *ptr){
 	char serv[10];
 	int err;
 
+	cain_sip_message("Resolver thread started.");
 	snprintf(serv,sizeof(serv),"%i",ctx->port);
 	hints.ai_family=(ctx->hints & CAIN_SIP_RESOLVER_HINT_IPV6) ? AF_INET6 : AF_INET;
 	hints.ai_flags=AI_NUMERICSERV;
@@ -65,8 +95,9 @@ static void *cain_sip_resolver_thread(void *ptr){
 	if (err!=0){
 		cain_sip_error("DNS resolution of %s failed: %s",ctx->name,gai_strerror(err));
 	}else{
-		char tmp[64];
-		cain_sip_message("%s has address %s.",ctx->name,inet_ntop(res->ai_family,res->ai_addr,tmp,sizeof(tmp)));
+		char host[64];
+		cain_sip_addrinfo_to_ip(res,host,sizeof(host),NULL);
+		cain_sip_message("%s has address %s.",ctx->name,host);
 		ctx->ai=res;
 	}
 	
@@ -95,18 +126,3 @@ unsigned long cain_sip_resolve(const char *name, int port, unsigned int hints, c
 	}
 }
 
-struct addrinfo * cain_sip_ip_address_to_addrinfo(const char *ipaddress, int port){
-	struct addrinfo *res=NULL;
-	struct addrinfo hints={0};
-	char serv[10];
-	int err;
-
-	snprintf(serv,sizeof(serv),"%i",port);
-	hints.ai_family=AF_UNSPEC;
-	hints.ai_flags=AI_NUMERICSERV|AI_NUMERICHOST;
-	err=getaddrinfo(ipaddress,serv,&hints,&res);
-	if (err!=0){
-		return NULL;
-	}
-	return res;
-}
