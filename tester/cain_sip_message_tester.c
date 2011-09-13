@@ -35,6 +35,9 @@ static void check_uri_and_headers(cain_sip_message_t* message) {
 
 		CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Max-Forwards"));
 		CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_MAX_FORWARDS(cain_sip_message_get_header(message,"Max-Forwards")));
+
+		CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"User-Agent"));
+		CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_USER_AGENT(cain_sip_message_get_header(message,"User-Agent")));
 	}
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"From"));
 	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_FROM(cain_sip_message_get_header(message,"From")));
@@ -54,6 +57,7 @@ static void check_uri_and_headers(cain_sip_message_t* message) {
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Content-Length"));
 	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_CONTENT_LENGTH(cain_sip_message_get_header(message,"Content-Length")));
+
 
 
 
@@ -82,6 +86,7 @@ static void testRegisterMessage(void) {
 	cain_sip_request_t* request = CAIN_SIP_REQUEST(message);
 	CU_ASSERT_STRING_EQUAL(cain_sip_request_get_method(request),"REGISTER");
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Expires"));
+	CU_ASSERT_PTR_NOT_NULL(CAIN_SIP_HEADER_EXPIRES(cain_sip_message_get_header(message,"Expires")));
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Proxy-Authorization"));
 	CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header(message,"Contact"));
 

@@ -329,6 +329,49 @@ void test_header_max_forwards(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_max_forwards));
 
 }
+void test_header_user_agent(void) {
+	const char* l_header = "User-Agent: Linphone/3.4.99.1 (eXosip2/3.3.0)";
+	cain_sip_header_user_agent_t* L_user_agent = cain_sip_header_user_agent_parse(l_header);
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_user_agent));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_user_agent));
+	L_user_agent = cain_sip_header_user_agent_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
+	const char* values[] ={"Linphone/3.4.99.1"
+				,"(eXosip2/3.3.0)"};
+	int i=0;
+	cain_sip_list_t* products = cain_sip_header_user_agent_get_products(L_user_agent);
+
+	for(i=0;i<2;i++){
+		CU_ASSERT_PTR_NOT_NULL(products);
+		CU_ASSERT_STRING_EQUAL((const char *)(products->data),values[i]);
+		products=products->next;
+	}
+
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_user_agent));
+
+}
+void test_header_expires(void) {
+
+	cain_sip_header_expires_t* L_expires = cain_sip_header_expires_parse("Expires: 3600");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_expires));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_expires));
+	L_expires = cain_sip_header_expires_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+	CU_ASSERT_EQUAL(cain_sip_header_expires_get_expires(L_expires), 3600);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_expires));
+}
+void test_header_allow(void) {
+	cain_sip_header_allow_t* L_allow = cain_sip_header_allow_parse("Allow:INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_allow));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_allow));
+	L_allow = cain_sip_header_allow_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_allow_get_method(L_allow), "INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_allow));
+}
+
 int cain_sip_headers_test_suite() {
 	
 	   CU_pSuite pSuite = NULL;
@@ -367,7 +410,7 @@ int cain_sip_headers_test_suite() {
 	   if (NULL == CU_add_test(pSuite, "test of route header", test_header_route)) {
 	      return CU_get_error();
 	   }
-	   if (NULL == CU_add_test(pSuite, "test of content lenth", test_header_content_length)) {
+	   if (NULL == CU_add_test(pSuite, "test of content length", test_header_content_length)) {
 	      return CU_get_error();
 	   }
 	   if (NULL == CU_add_test(pSuite, "test of extension", test_header_extention)) {
@@ -383,7 +426,16 @@ int cain_sip_headers_test_suite() {
 	      return CU_get_error();
 	   }
 	   if (NULL == CU_add_test(pSuite, "test of max forwards", test_header_max_forwards)) {
-	   	      return CU_get_error();
-	   	   }
+	      return CU_get_error();
+	   }
+	   if (NULL == CU_add_test(pSuite, "test of  user agent", test_header_user_agent)) {
+	   	  return CU_get_error();
+	   }
+	   if (NULL == CU_add_test(pSuite, "test of  expires", test_header_expires)) {
+	   	  return CU_get_error();
+	   	}
+	   if (NULL == CU_add_test(pSuite, "test of  allow", test_header_allow)) {
+	   	  return CU_get_error();
+	   	}
 	   return 0;
 }

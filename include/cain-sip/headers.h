@@ -67,6 +67,21 @@ void cain_sip_header_set_name (cain_sip_header_t* obj,const char* value);
 int cain_sip_header_marshal(cain_sip_header_t* header, char* buff, unsigned int offset,unsigned int buff_size);
 
 #define CAIN_SIP_HEADER(t) CAIN_SIP_CAST(t,cain_sip_header_t)
+
+/******************************
+ *
+ * Allow header inherit from header
+ *
+ ******************************/
+typedef struct _cain_sip_header_allow cain_sip_header_allow_t;
+
+cain_sip_header_allow_t* cain_sip_header_allow_new();
+
+cain_sip_header_allow_t* cain_sip_header_allow_parse (const char* allow) ;
+const char* cain_sip_header_allow_get_method(const cain_sip_header_allow_t* allow);
+void cain_sip_header_allow_set_method(cain_sip_header_allow_t* allow,const char* method);
+#define CAIN_SIP_HEADER_ALLOW(t) CAIN_SIP_CAST(t,cain_sip_header_allow_t)
+
 /***********************
  * Contact header object
  ************************/
@@ -219,6 +234,21 @@ const char*	cain_sip_header_content_type_get_subtype(const cain_sip_header_conte
 void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* content_type,const char* sub_type);
 #define CAIN_SIP_HEADER_CONTENT_TYPE(t) CAIN_SIP_CAST(t,cain_sip_header_content_type_t)
 /******************************
+ *
+ * Expires inherit from header
+ *
+ ******************************/
+typedef struct _cain_sip_header_expires cain_sip_header_expires_t;
+
+cain_sip_header_expires_t* cain_sip_header_expires_new();
+
+cain_sip_header_expires_t* cain_sip_header_expires_parse (const char* expires) ;
+int cain_sip_header_expires_get_expires(const cain_sip_header_expires_t* expires);
+void cain_sip_header_expires_set_expires(cain_sip_header_expires_t* expires,int value);
+int cain_sip_header_expires_decrement_expires(cain_sip_header_expires_t* expires);
+#define CAIN_SIP_HEADER_EXPIRES(t) CAIN_SIP_CAST(t,cain_sip_header_expires_t)
+
+/******************************
  * Route header object inherent from header_address
  *
  ******************************/
@@ -238,7 +268,22 @@ void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* co
  cain_sip_header_record_route_t* cain_sip_header_record_route_parse (const char* route) ;
 
 #define CAIN_SIP_HEADER_RECORD_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_record_route_t)
-/******************************
+ /******************************
+  *
+  * user-Agent header inherit from header
+  *
+  ******************************/
+ typedef struct _cain_sip_header_user_agent cain_sip_header_user_agent_t;
+
+ cain_sip_header_user_agent_t* cain_sip_header_user_agent_new();
+
+ cain_sip_header_user_agent_t* cain_sip_header_user_agent_parse (const char* user_agent) ;
+ cain_sip_list_t* cain_sip_header_user_agent_get_products(const cain_sip_header_user_agent_t* user_agent);
+ void cain_sip_header_user_agent_set_products(cain_sip_header_user_agent_t* user_agent,cain_sip_list_t* value);
+ void cain_sip_header_user_agent_add_product(cain_sip_header_user_agent_t* user_agent,const char* product);
+ #define CAIN_SIP_HEADER_USER_AGENT(t) CAIN_SIP_CAST(t,cain_sip_header_user_agent_t)
+
+ /******************************
  * Content length inherent from object
  *
  ******************************/
