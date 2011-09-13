@@ -20,7 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <errno.h>
@@ -149,24 +149,6 @@ cain_sip_list_t *cain_sip_list_remove_custom(cain_sip_list_t *list, cain_sip_com
 cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 #define cain_sip_list_next(elem) ((elem)->next)
-/***************/
-/* logging api */
-/***************/
-
-typedef enum {
-        CAIN_SIP_DEBUG=1,
-        CAIN_SIP_MESSAGE=1<<1,
-        CAIN_SIP_WARNING=1<<2,
-        CAIN_SIP_ERROR=1<<3,
-        CAIN_SIP_FATAL=1<<4,
-        CAIN_SIP_LOGLEV_END=1<<5
-} cain_sip_log_level;
-
-
-typedef void (*cain_sip_log_function_t)(cain_sip_log_level lev, const char *fmt, va_list args);
-
-void cain_sip_set_log_file(FILE *file);
-void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
 extern cain_sip_log_function_t cain_sip_logv_out;
 
@@ -185,7 +167,6 @@ extern unsigned int __cain_sip_log_mask;
 void cain_sip_logv(int level, const char *fmt, va_list args);
 #endif
 
-void cain_sip_set_log_level_mask(int levelmask);
 
 #ifdef CAIN_SIP_DEBUG_MODE
 static inline void cain_sip_debug(const char *fmt,...)
@@ -284,7 +265,7 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 	const char* object_type##_get_##func_name (const object_type##_t* obj) {\
 	const char* l_value = cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
 	if (l_value == NULL) { \
-		cain_sip_warning("cannot find parameters [%s]",#attribute);\
+		/*cain_sip_warning("cannot find parameters [%s]",#attribute);*/\
 		return NULL;\
 	}\
 	return l_value;\

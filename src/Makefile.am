@@ -5,8 +5,6 @@ grammar_files= \
 						$(srcdir)/cain_sdp.g
 
 generated_src= \
-	cain_sip_uriParser.c cain_sip_uriParser.h \
-	cain_sip_uriLexer.c cain_sip_uriLexer.h \
 	cain_sip_messageParser.c cain_sip_messageParser.h \
 	cain_sip_messageLexer.c cain_sip_messageLexer.h \
 	cain_sdpParser.c cain_sdpParser.h \

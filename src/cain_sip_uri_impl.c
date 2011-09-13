@@ -131,7 +131,7 @@ const cain_sip_list_t*	cain_sip_uri_get_header_names(const cain_sip_uri_t* uri) 
 int cain_sip_uri_get_listening_port(const cain_sip_uri_t *uri){
 	int port=cain_sip_uri_get_port(uri);
 	const char *transport=cain_sip_uri_get_transport_param(uri);
-	if (port==-1)
+	if (port==0)
 		port=cain_sip_listening_point_get_well_known_port(transport ? transport : "UDP");
 	return port;
 }

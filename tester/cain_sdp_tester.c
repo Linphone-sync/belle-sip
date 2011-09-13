@@ -106,7 +106,7 @@ static void test_media(void) {
 	int fmt[] ={111,110,3,0,8,101};
 	int i=0;
 	for(;list!=NULL;list=list->next){
-		CU_ASSERT_EQUAL((int)(long)list->data),fmt[i++]);
+		CU_ASSERT_EQUAL(CAIN_SIP_POINTER_TO_INT(list->data),fmt[i++]);
 	}
 
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_media));
@@ -125,7 +125,7 @@ static void test_media_description_base(cain_sdp_media_description_t* media_desc
 	int fmt[] ={99,97,98};
 	int i=0;
 	for(;list!=NULL;list=list->next){
-		CU_ASSERT_EQUAL((int)((long)list->data),fmt[i++]);
+		CU_ASSERT_EQUAL(CAIN_SIP_POINTER_TO_INT(list->data),fmt[i++]);
 	}
 	/*connection*/
 	cain_sdp_connection_t* lConnection = cain_sdp_media_description_get_connection(l_media_description);

@@ -163,6 +163,7 @@ typedef struct cain_sip_provider cain_sip_provider_t;
 typedef struct cain_sip_listener cain_sip_listener_t;
 typedef struct cain_sip_dialog cain_sip_dialog_t;
 
+#include "cain-sip/utils.h"
 #include "cain-sip/list.h"
 #include "cain-sip/mainloop.h"
 #include "cain-sip/uri.h"
@@ -183,4 +184,9 @@ typedef struct cain_sip_dialog cain_sip_dialog_t;
 #undef FALSE
 #define FALSE 0
 
+
+#define CAIN_SIP_POINTER_TO_INT(p)	((int)(long)(p))
+#define CAIN_SIP_INT_TO_POINTER(i)	((void*)(long)(i))
+
 #endif
+
