@@ -36,6 +36,9 @@ void cain_sip_list_for_each2(const cain_sip_list_t * list, void (*func)(void *, 
 cain_sip_list_t * cain_sip_list_remove_link(cain_sip_list_t * list, cain_sip_list_t * elem);
 cain_sip_list_t * cain_sip_list_delete_link(cain_sip_list_t * list, cain_sip_list_t * elem);
 cain_sip_list_t * cain_sip_list_find(cain_sip_list_t * list, void *data);
+cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
+/*frees list elements and associated data, using the supplied function pointer*/
+cain_sip_list_t * cain_sip_list_free_with_data(cain_sip_list_t *list, void (*freefunc)(void*));
 
 typedef  int (*cain_sip_compare_func)(const void *, const void*);
 cain_sip_list_t * cain_sip_list_find_custom(cain_sip_list_t * list, cain_sip_compare_func cmp, const void *user_data);

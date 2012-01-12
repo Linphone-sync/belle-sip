@@ -36,6 +36,6 @@ int main(int argc, char *argv[]){
 	printf("Ok.\n");
 	printf("Casting cain_sip_server_transaction_t to cain_sip_client_transaction_t\n");
 	ct=CAIN_SIP_CLIENT_TRANSACTION(st);
-	printf("Ooops we should have aborted before.\n");
+	printf("Ooops we should have aborted before, t=%p\n",t);
 	return 0;
 }

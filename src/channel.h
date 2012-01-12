@@ -1,0 +1,90 @@
+/*
+	cain-sip - SIP (RFC3261) library.
+    Copyright (C) 2010  Belledonne Communications SARL
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#ifndef CAIN_SIP_CHANNEL_H
+#define CAIN_SIP_CHANNEL_H
+
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#else
+
+#endif
+
+static const int cain_sip_network_buffer_size=64535;
+
+typedef enum cain_sip_channel_state{
+	CAIN_SIP_CHANNEL_INIT,
+	CAIN_SIP_CHANNEL_RES_IN_PROGRESS,
+	CAIN_SIP_CHANNEL_RES_DONE,
+	CAIN_SIP_CHANNEL_CONNECTING,
+	CAIN_SIP_CHANNEL_READY,
+	CAIN_SIP_CHANNEL_ERROR
+}cain_sip_channel_state_t;
+
+/**
+* cain_sip_channel_t is an object representing a single communication channel ( socket or file descriptor), 
+* unlike the cain_sip_listening_point_t that can owns several channels for TCP or TLS (incoming server child sockets or 
+* outgoing client sockets).
+**/
+typedef struct cain_sip_channel cain_sip_channel_t;
+
+struct cain_sip_channel{
+	cain_sip_source_t base;
+	cain_sip_channel_state_t state;
+	cain_sip_provider_t *prov;/*we need the provider to notify connection errors*/
+	char *peer_name;
+	int peer_port;
+	unsigned long resolver_id;
+	struct addrinfo *peer;
+	cain_sip_message_t *msg;
+};
+
+#define CAIN_SIP_CHANNEL(obj)		CAIN_SIP_CAST(obj,cain_sip_channel_t)
+
+cain_sip_channel_t * cain_sip_channel_new_udp_master(cain_sip_provider_t *prov, const char *locname, int locport);
+
+cain_sip_channel_t * cain_sip_channel_new_udp_slave(cain_sip_channel_t *master, const char *peername, int peerport);
+
+cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_provider_t *prov, const char *name, int port);
+
+int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport);
+
+int cain_sip_channel_resolve(cain_sip_channel_t *obj);
+
+int cain_sip_channel_connect(cain_sip_channel_t *obj);
+
+int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen);
+
+int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);
+
+int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *msg);
+
+const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj);
+
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
+	char *transport;
+	int (*connect)(cain_sip_channel_t *obj, const struct sockaddr *, socklen_t socklen);
+	int (*channel_send)(cain_sip_channel_t *obj, const void *buf, size_t buflen);
+	int (*channel_recv)(cain_sip_channel_t *obj, void *buf, size_t buflen);
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_udp_channel_t,cain_sip_channel_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+#endif

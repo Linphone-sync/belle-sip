@@ -93,25 +93,18 @@ cain_sip_stack_t *cain_sip_provider_get_sip_stack(cain_sip_provider_t *p){
 	return p->stack;
 }
 
-static void sender_task_cb(cain_sip_sender_task_t *t, void *data, int retcode){
-	if (retcode!=0){
-		/*would need to notify the application of the failure */
-	}
-	cain_sip_object_unref(t);
+cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name,
+                                                   int port, const char *transport){
+	return NULL;
 }
 
-void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
-	cain_sip_sender_task_t *task;
 
-	task=cain_sip_sender_task_new(p,  sender_task_cb, NULL);
-	cain_sip_sender_task_send(task,CAIN_SIP_MESSAGE(req));
+void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
+	
 }
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
-	cain_sip_sender_task_t *task;
-
-	task=cain_sip_sender_task_new(p,  sender_task_cb, NULL);
-	cain_sip_sender_task_send(task,CAIN_SIP_MESSAGE(resp));
+	
 }
 
 /*private provider API*/

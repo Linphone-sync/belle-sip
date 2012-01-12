@@ -8,12 +8,13 @@ cainsip_HEADERS=\
 				mainloop.h \
 				transaction.h \
 				message.h \
-				transport.h \
 				listeningpoint.h \
 				sipstack.h \
 				provider.h \
 				listener.h \
 				dialog.h \
+				utils.h \
+				cain-sdp.h \
 				cain-sip.h
 
 EXTRA_DIST=$(cainsip_HEADERS)

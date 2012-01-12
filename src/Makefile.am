@@ -41,7 +41,7 @@ libcainsip_la_SOURCES=clock_gettime.h \
 									listeningpoint.c \
 									sipstack.c \
 									provider.c \
-									sender_task.c sender_task.h \
+									channel.c channel.h \
 									message.c
 
 libcainsip_la_CFLAGS=$(STRICT_OPTIONS)

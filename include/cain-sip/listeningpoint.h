@@ -20,34 +20,6 @@
 #ifndef CAIN_SIP_TRANSPORT_H
 #define CAIN_SIP_TRANSPORT_H
 
-#ifndef WIN32
-	#include <sys/types.h>
-	#include <sys/socket.h>
-	#include <netdb.h>
-#else
-#endif
-
-
-typedef struct cain_sip_channel cain_sip_channel_t;
-
-
-CAIN_SIP_BEGIN_DECLS
-
-/**
-* cain_sip_transport_t is an object representing a single communication channel (=unix socket or file descriptor), 
-* unlike the cain_sip_listening_point_t that can owns several channels for TCP or TLS (incoming server child sockets or 
-* outgoing client sockets).
-**/
-
-int cain_sip_channel_send(cain_sip_channel_t *t, const void *buf, size_t buflen);
-
-int cain_sip_channel_recv(cain_sip_channel_t *t, void *buf, size_t buflen);
-
-const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *t);
-
-
-
-
 const char *cain_sip_listening_point_get_ip_address(const cain_sip_listening_point_t *lp);
 int cain_sip_listening_point_get_port(const cain_sip_listening_point_t *lp);
 const char *cain_sip_listening_point_get_transport(const cain_sip_listening_point_t *ip);

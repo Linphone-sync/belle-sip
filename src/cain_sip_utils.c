@@ -208,6 +208,22 @@ cain_sip_list_t*  cain_sip_list_free(cain_sip_list_t* list){
 	return NULL;
 }
 
+cain_sip_list_t * cain_sip_list_free_with_data(cain_sip_list_t *list, void (*freefunc)(void*)){
+	cain_sip_list_t* elem = list;
+	cain_sip_list_t* tmp;
+	if (list==NULL) return NULL;
+	while(elem->next!=NULL) {
+		tmp = elem;
+		elem = elem->next;
+		freefunc(tmp->data);
+		cain_sip_free(tmp);
+	}
+	freefunc(elem->data);
+	cain_sip_free(elem);
+	return NULL;
+}
+
+
 cain_sip_list_t*  cain_sip_list_remove(cain_sip_list_t* first, void *data){
 	cain_sip_list_t* it;
 	it=cain_sip_list_find(first,data);

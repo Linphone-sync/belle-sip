@@ -17,17 +17,16 @@
 */
 
 #include "cain_sip_internal.h"
-#include "sender_task.h"
 
 
-
+#if 0
 static cain_sip_source_t * transaction_create_timer(cain_sip_transaction_t *t, cain_sip_source_func_t func, unsigned int time_ms){
 	cain_sip_stack_t *stack=cain_sip_provider_get_sip_stack(t->provider);
 	cain_sip_source_t *s=cain_sip_timeout_source_new (func,t,time_ms);
 	cain_sip_main_loop_add_source(stack->ml,s);
 	return s;
 }
-
+#endif
 
 static void transaction_delete_timer(cain_sip_transaction_t *t, cain_sip_source_t *s){
 	cain_sip_stack_t *stack=cain_sip_provider_get_sip_stack(t->provider);
@@ -45,7 +44,6 @@ static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->request) cain_sip_object_unref(t->request);
 	if (t->prov_response) cain_sip_object_unref(t->prov_response);
 	if (t->final_response) cain_sip_object_unref(t->final_response);
-	if (t->stask) cain_sip_object_unref(t->stask);
 }
 
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_transaction_t,cain_sip_object_t,transaction_destroy,NULL,NULL);
@@ -91,6 +89,7 @@ struct cain_sip_server_transaction{
 	cain_sip_transaction_t base;
 };
 
+#if 0
 static void server_transaction_send_cb(cain_sip_sender_task_t *st, void *data, int retcode){
 	cain_sip_server_transaction_t *t=(cain_sip_server_transaction_t *)data;
 	if (retcode==0){
@@ -100,13 +99,9 @@ static void server_transaction_send_cb(cain_sip_sender_task_t *st, void *data, i
 		cain_sip_transaction_terminate(&t->base);
 	}
 }
+#endif
 
 static void server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
-	if (t->base.stask==NULL){
-		t->base.stask=cain_sip_sender_task_new(t->base.provider,server_transaction_send_cb,t);
-	}
-	
-	cain_sip_sender_task_send(t->base.stask,CAIN_SIP_MESSAGE(resp));
 }
 
 /* called when a request retransmission is received for that transaction:*/
@@ -167,25 +162,25 @@ struct cain_sip_client_transaction{
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t){
 	return NULL;
 }
-
+#if 0
 static int on_client_transaction_timer(void *data, unsigned int revents){
 	cain_sip_client_transaction_t *t=(cain_sip_client_transaction_t*)data;
 	const cain_sip_timer_config_t *tc=cain_sip_stack_get_timer_config (cain_sip_provider_get_sip_stack (t->base.provider));
 
 	switch(t->base.state){
 		case CAIN_SIP_TRANSACTION_TRYING: /*NON INVITE*/
-			cain_sip_sender_task_send(t->base.stask,NULL);
+			//cain_sip_sender_task_send(t->base.stask,NULL);
 			t->base.interval=MIN(t->base.interval*2,tc->T2);
 			cain_sip_source_set_timeout(t->base.timer,t->base.interval);
 		break;
 		case CAIN_SIP_TRANSACTION_CALLING: /*INVITES*/
-			cain_sip_sender_task_send(t->base.stask,NULL);
+			//cain_sip_sender_task_send(t->base.stask,NULL);
 			t->base.interval=t->base.interval*2;
 			cain_sip_source_set_timeout(t->base.timer,t->base.interval);
 		break;
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			if (!t->base.is_invite){
-				cain_sip_sender_task_send(t->base.stask,NULL);
+				//cain_sip_sender_task_send(t->base.stask,NULL);
 				t->base.interval=tc->T2;
 				cain_sip_source_set_timeout(t->base.timer,t->base.interval);
 			}
@@ -235,11 +230,10 @@ static void client_transaction_cb(cain_sip_sender_task_t *task, void *data, int 
 		cain_sip_transaction_terminate(&t->base);
 	}
 }
-
+#endif
 
 void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
-	t->base.stask=cain_sip_sender_task_new(t->base.provider,client_transaction_cb,t);
-	cain_sip_sender_task_send(t->base.stask,CAIN_SIP_MESSAGE(t->base.request));
+
 }
 
 static void notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){

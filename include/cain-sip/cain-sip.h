@@ -63,7 +63,6 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sip_header_call_id_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_cseq_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_content_type_t),
-	CAIN_SIP_TYPE_ID(cain_sip_sender_task_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_route_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_record_route_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_user_agent_t),

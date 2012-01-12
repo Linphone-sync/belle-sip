@@ -40,13 +40,12 @@ typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_o
 typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
 struct _cain_sip_object_vptr{
-	cain_sip_type_id_t id;
+	cain_sip_type_id_t id; 
 	struct _cain_sip_object_vptr *parent;
 	void *interfaces;	/*unused for the moment*/
 	cain_sip_object_destroy_t destroy;
 	cain_sip_object_clone_t clone;
 	cain_sip_object_marshal_t marshal;
-
 };
 
 typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
@@ -55,24 +54,31 @@ extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
 
 #define CAIN_SIP_OBJECT_VPTR_NAME(object_type)	object_type##_vptr
 
-#define CAIN_SIP_DECLARE_VPTR(object_type) \
-	extern cain_sip_object_vptr_t CAIN_SIP_OBJECT_VPTR_NAME(object_type);
+#define CAIN_SIP_OBJECT_VPTR_TYPE(object_type)	object_type##_vptr_t
 
-#define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR_BEGIN(vptr_type,object_type, parent_type, destroy, clone) \
-	vptr_type object_type##_vptr={ {\
+#define CAIN_SIP_DECLARE_VPTR(object_type) \
+	typedef cain_sip_object_vptr_t CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
+	extern CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type);
+
+#define CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(object_type, parent_type) \
+	typedef struct object_type##_vptr_struct CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
+	struct object_type##_vptr_struct{\
+		CAIN_SIP_OBJECT_VPTR_TYPE(parent_type) base;
+
+#define CAIN_SIP_DECLARE_CUSTOM_VPTR_END };
+
+#define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(object_type) \
+	 CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type)
+
+#define CAIN_SIP_VPTR_INIT(object_type,parent_type) \
 		CAIN_SIP_TYPE_ID(object_type), \
 		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
-		NULL, \
-		(cain_sip_object_destroy_t)destroy,	\
-		(cain_sip_object_clone_t)clone	},
+		NULL
 
-#define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR_END };
 
 #define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone,marshal) \
-		cain_sip_object_vptr_t object_type##_vptr={ \
-		CAIN_SIP_TYPE_ID(object_type), \
-		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
-		NULL, \
+		CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type)={ \
+		CAIN_SIP_VPTR_INIT(object_type,parent_type), \
 		(cain_sip_object_destroy_t)destroy,	\
 		(cain_sip_object_clone_t)clone,	\
 		(cain_sip_object_marshal_t)marshal\
@@ -94,16 +100,69 @@ int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offs
 #define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),0)
 #define cain_sip_object_new_unowed(_type)(_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),1)
 
-#define CAIN_SIP_OBJECT_VPTR(obj,vptr_type) ((vptr_type*)(((cain_sip_object_t*)obj)->vptr))
+#define CAIN_SIP_OBJECT_VPTR(obj,object_type) ((CAIN_SIP_OBJECT_VPTR_TYPE(object_type)*)(((cain_sip_object_t*)obj)->vptr))
 #define cain_sip_object_init(obj)		/*nothing*/
 
 
 /*list of all vptrs (classes) used in cain-sip*/
 CAIN_SIP_DECLARE_VPTR(cain_sip_object_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_uri_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_header_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_parameters_t);
+
+
+CAIN_SIP_DECLARE_VPTR(cain_sip_stack_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_listening_point_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_datagram_listening_point_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_udp_listening_point_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_provider_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_main_loop_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_source_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_resolver_context_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_transaction_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_server_transaction_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_client_transaction_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_dialog_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_address_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_contact_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_from_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_to_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_via_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_uri_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_message_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_request_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_response_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_parameters_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_call_id_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_cseq_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_content_type_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_route_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_record_route_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_user_agent_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_content_length_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_extension_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_authorization_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_www_authenticate_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_proxy_authorization_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_max_forwards_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_expires_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_allow_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_attribute_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_bandwidth_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_connection_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_email_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_info_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_key_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_media_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_media_description_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_origin_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_phone_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_repeate_time_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_session_description_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_session_name_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_time_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_time_description_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_uri_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_version_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_base_description_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_source_t);
 
 
@@ -131,7 +190,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 #define cain_list_next(elem) ((elem)->next)
 
 /* include private headers */
-#include "sender_task.h"
+#include "channel.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -148,6 +207,7 @@ cain_sip_list_t *cain_sip_list_find_custom(cain_sip_list_t *list, cain_sip_compa
 cain_sip_list_t *cain_sip_list_remove_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
+
 #define cain_sip_list_next(elem) ((elem)->next)
 
 extern cain_sip_log_function_t cain_sip_logv_out;
@@ -407,25 +467,18 @@ struct _cain_sip_parameters {
 void cain_sip_parameters_init(cain_sip_parameters_t *obj);
 
 /*
- * Listening points and channels
+ * Listening points
 */
 
-struct cain_sip_channel{
-	cain_sip_object_t base;
-	cain_sip_listening_point_t *lp; /* the listening point this channel belongs */
-	struct addrinfo peer;
-	struct sockaddr_storage peer_addr;
-};
+
 
 typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
 
 #define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
 #define CAIN_SIP_UDP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_udp_listening_point_t)
-#define CAIN_SIP_CHANNEL(obj)		CAIN_SIP_CAST(obj,cain_sip_channel_t)
 
 cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
 cain_sip_channel_t *cain_sip_listening_point_find_output_channel(cain_sip_listening_point_t *ip, const struct addrinfo *dest); 
-cain_sip_source_t *cain_sip_channel_create_source(cain_sip_channel_t *, unsigned int events, int timeout, cain_sip_source_func_t callback, void *data);
 int cain_sip_listening_point_get_well_known_port(const char *transport);
 
 
@@ -456,6 +509,7 @@ struct cain_sip_provider{
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t);
+cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport);
 
 typedef struct listener_ctx{
 	cain_sip_listener_t *listener;
@@ -483,7 +537,6 @@ struct cain_sip_transaction{
 	cain_sip_response_t *final_response;
 	char *branch_id;
 	cain_sip_transaction_state_t state;
-	cain_sip_sender_task_t *stask;
 	uint64_t start_time;
 	cain_sip_source_t *timer;
 	int interval;
@@ -567,7 +620,6 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 
 /*include private headers */
 #include "cain_sip_resolver.h"
-#include "sender_task.h"
 
 #define CAIN_SIP_SOCKET_TIMEOUT 30000
 
