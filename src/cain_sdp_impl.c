@@ -391,9 +391,162 @@ cain_sdp_info_t* cain_sdp_media_description_get_info(const cain_sdp_media_descri
 cain_sdp_media_t* cain_sdp_media_description_get_media(const cain_sdp_media_description_t* media_description) {
 	return media_description->media;
 }
-cain_sip_list_t* cain_sdp_media_description_get_mime_parameters(const cain_sdp_media_description_t* media_description) {
-	cain_sip_error("cain_sdp_media_description_get_mime_parameters: not implemented yet");
+
+struct static_payload {
+	unsigned char number;
+	int channel_count;
+	const char* type;
+	int	rate;
+};
+#define STATIC_PAYLOAD_LIST_LENTH 8
+struct static_payload static_payload_list [STATIC_PAYLOAD_LIST_LENTH] ={
+	{0,1,"PCMU",8000},
+	{3,1,"GSM",8000},
+	{4,1,"G723",8000},
+	{5,1,"DVI4",8000},
+	{6,1,"DVI4",16000},
+	{8,1,"PCMA",8000},
+	{9,1,"G722",8000},
+	{34,-1,"H263",90000}
+};
+static int mime_parameter_fill_from_static(cain_sdp_mime_parameter_t *mime_parameter,int format) {
+	struct static_payload* iterator = static_payload_list;
+	int i;
+	for (i=0;i<STATIC_PAYLOAD_LIST_LENTH;i++) {
+		if (iterator->number == format) {
+			cain_sdp_mime_parameter_set_type(mime_parameter,iterator->type);
+			cain_sdp_mime_parameter_set_rate(mime_parameter,iterator->rate);
+			cain_sdp_mime_parameter_set_channel_count(mime_parameter,iterator->channel_count);
+		} else {
+			iterator++;
+		}
+	}
+	return 0;
+}
+static int mime_parameter_fill_from_rtpmap(cain_sdp_mime_parameter_t *mime_parameter, const char *rtpmap){
+	char *mime=cain_sip_strdup(rtpmap);
+	char *p=strchr(mime,'/');
+	if (p){
+		char *chans;
+		*p='\0';
+		p++;
+		chans=strchr(p,'/');
+		if (chans){
+			*chans='\0';
+			chans++;
+			cain_sdp_mime_parameter_set_channel_count(mime_parameter,atoi(chans));
+		}else cain_sdp_mime_parameter_set_channel_count(mime_parameter,1);
+		cain_sdp_mime_parameter_set_rate(mime_parameter,atoi(p));
+	}
+	cain_sdp_mime_parameter_set_type(mime_parameter,mime);
+	cain_sip_free(mime);
+	return 0;
+}
+/* return the value of attr "field" for payload pt at line pos (field=rtpmap,fmtp...)*/
+static const char *cain_sdp_media_description_a_attr_value_get_with_pt(const cain_sdp_media_description_t* media_description,int pt,const char *field)
+{
+	int tmppt=0,scanned=0;
+	const char *tmp;
+	cain_sdp_attribute_t *attr;
+	cain_sip_list_t* attribute_list;
+	for (	attribute_list =cain_sdp_media_description_get_attributes(media_description)
+						;attribute_list!=NULL
+						;attribute_list=attribute_list->next) {
+
+		attr = CAIN_SDP_ATTRIBUTE(attribute_list->data);
+		if (strcmp(field,cain_sdp_attribute_get_name(attr))==0 && cain_sdp_attribute_get_value(attr)!=NULL){
+			int nb = sscanf(cain_sdp_attribute_get_value(attr),"%i %n",&tmppt,&scanned);
+			/* the return value may depend on how %n is interpreted by the libc: see manpage*/
+			if (nb == 1 || nb==2 ){
+				if (pt==tmppt){
+					tmp=cain_sdp_attribute_get_value(attr)+scanned;
+					if (strlen(tmp)>0)
+						return tmp;
+				}
+			}else cain_sip_warning("sdp has a strange a= line (%s) nb=%i",cain_sdp_attribute_get_value(attr),nb);
+		}
+	}
 	return NULL;
+}
+
+cain_sip_list_t* cain_sdp_media_description_build_mime_parameters(const cain_sdp_media_description_t* media_description) {
+	/*First, get media type*/
+	cain_sdp_media_t* media = cain_sdp_media_description_get_media(media_description);
+	cain_sip_list_t* mime_parameter_list=NULL;
+	cain_sip_list_t* media_formats=NULL;
+	cain_sdp_mime_parameter_t* mime_parameter;
+	const char* rtpmap=NULL;
+	const char* fmtp=NULL;
+	const char* ptime=NULL;
+	const char* max_ptime=NULL;
+	int ptime_as_int=-1;
+	int max_ptime_as_int=-1;
+	if (!media) {
+		cain_sip_error("cain_sdp_media_description_build_mime_parameters: no media");
+		return NULL;
+	}
+	ptime = cain_sdp_media_description_get_attribute(media_description,"ptime");
+	ptime?ptime_as_int=atoi(ptime):-1;
+	max_ptime = cain_sdp_media_description_get_attribute(media_description,"maxptime");
+	max_ptime?max_ptime_as_int=atoi(max_ptime):-1;
+
+	for (media_formats = cain_sdp_media_get_media_formats(media);media_formats!=NULL;media_formats=media_formats->next) {
+		/*create mime parameters with format*/
+		mime_parameter = cain_sdp_mime_parameter_new();
+		cain_sdp_mime_parameter_set_ptime(mime_parameter,ptime_as_int);
+		cain_sdp_mime_parameter_set_max_ptime(mime_parameter,max_ptime_as_int);
+		cain_sdp_mime_parameter_set_media_format(mime_parameter,(int)(long)media_formats->data);
+		mime_parameter_fill_from_static(mime_parameter,cain_sdp_mime_parameter_get_media_format(mime_parameter));
+		/*get rtpmap*/
+		rtpmap = cain_sdp_media_description_a_attr_value_get_with_pt(media_description
+																		,cain_sdp_mime_parameter_get_media_format(mime_parameter)
+																		,"rtpmap");
+		if (rtpmap) {
+			mime_parameter_fill_from_rtpmap(mime_parameter,rtpmap);
+		}
+		fmtp = cain_sdp_media_description_a_attr_value_get_with_pt(media_description
+																		,cain_sdp_mime_parameter_get_media_format(mime_parameter)
+																		,"fmtp");
+		if (fmtp) {
+			cain_sdp_mime_parameter_set_parameters(mime_parameter,fmtp);
+		}
+
+		mime_parameter_list=cain_sip_list_append(mime_parameter_list,mime_parameter);
+	}
+	return mime_parameter_list;
+}
+#define MAX_FMTP_LENGH 64
+
+void cain_sdp_media_description_append_values_from_mime_parameter(cain_sdp_media_description_t* media_description, cain_sdp_mime_parameter_t* mime_parameter) {
+	cain_sdp_media_t* media = cain_sdp_media_description_get_media(media_description);
+	char atribute_value [MAX_FMTP_LENGH];
+	cain_sdp_media_set_media_formats(media,cain_sip_list_append(cain_sdp_media_get_media_formats(media)
+																,(void*)(long)(cain_sdp_mime_parameter_get_media_format(mime_parameter))));
+	if (cain_sdp_mime_parameter_get_media_format(mime_parameter) > 34) {
+		/*dynamic payload*/
+
+		if (cain_sdp_mime_parameter_get_channel_count(mime_parameter)>1) {
+			snprintf(atribute_value,MAX_FMTP_LENGH,"%i %s/%i/%i"
+					,cain_sdp_mime_parameter_get_media_format(mime_parameter)
+					,cain_sdp_mime_parameter_get_type(mime_parameter)
+					,cain_sdp_mime_parameter_get_rate(mime_parameter)
+					,cain_sdp_mime_parameter_get_channel_count(mime_parameter));
+		} else {
+			snprintf(atribute_value,MAX_FMTP_LENGH,"%i %s/%i"
+					,cain_sdp_mime_parameter_get_media_format(mime_parameter)
+					,cain_sdp_mime_parameter_get_type(mime_parameter)
+					,cain_sdp_mime_parameter_get_rate(mime_parameter));
+		}
+		cain_sdp_media_description_set_attribute(media_description,"rtpmap",atribute_value);
+		if (cain_sdp_mime_parameter_get_parameters(mime_parameter)) {
+			snprintf(atribute_value,MAX_FMTP_LENGH,"%i %s"
+					,cain_sdp_mime_parameter_get_media_format(mime_parameter)
+					,cain_sdp_mime_parameter_get_parameters(mime_parameter));
+			cain_sdp_media_description_set_attribute(media_description,"fmtp",atribute_value);
+		}
+
+	}
+
 }
 cain_sip_list_t* cain_sdp_media_description_get_mime_types(const cain_sdp_media_description_t* media_description) {
 	cain_sip_error("cain_sdp_media_description_get_mime_types: not implemented yet");
@@ -809,4 +962,39 @@ CAIN_SDP_NEW(version,cain_sip_object)
 //CAIN_SDP_PARSE(version)
 GET_SET_INT(cain_sdp_version,version,int);
 
+/***************************************************************************************
+ * mime_parameter
+ *
+ **************************************************************************************/
+struct _cain_sdp_mime_parameter {
+	cain_sip_object_t base;
+	int rate;
+	int channel_count;
+	int ptime;
+	int max_ptime;
+	int media_format;
+	const char* type;
+	const char* parameters;
+
+};
+static void cain_sdp_mime_parameter_destroy(cain_sdp_mime_parameter_t *mime_parameter) {
+	if (mime_parameter->type) cain_sip_free((void*)mime_parameter->type);
+	if (mime_parameter->parameters) cain_sip_free((void*)mime_parameter->parameters);
+}
+
+CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_mime_parameter_t,cain_sip_object_t,cain_sdp_mime_parameter_destroy,NULL,NULL);
+
+cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_new() {
+	cain_sdp_mime_parameter_t* l_param = cain_sip_object_new(cain_sdp_mime_parameter_t);
+	l_param->ptime = -1;
+	l_param->max_ptime = -1;
+	return l_param;
+}
+GET_SET_INT(cain_sdp_mime_parameter,rate,int);
+GET_SET_INT(cain_sdp_mime_parameter,channel_count,int);
+GET_SET_INT(cain_sdp_mime_parameter,ptime,int);
+GET_SET_INT(cain_sdp_mime_parameter,max_ptime,int);
+GET_SET_INT(cain_sdp_mime_parameter,media_format,int);
+GET_SET_STRING(cain_sdp_mime_parameter,type);
+GET_SET_STRING(cain_sdp_mime_parameter,parameters);
 

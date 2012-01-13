@@ -19,7 +19,7 @@
 #ifndef CAIN_SDP_H_
 #define CAIN_SDP_H_
 #include "cain-sip.h"
-#define CAIN_SDP_CAST(t) CAIN_SIP_CAST(t)
+#define CAIN_SDP_CAST(obj,t) CAIN_SIP_CAST(obj,t)
 
 /***************************************************************************************
  * Attribute
@@ -113,6 +113,28 @@ void cain_sdp_media_set_protocol(cain_sdp_media_t* media, const char* protocole)
 #define CAIN_SDP_MEDIA(t) CAIN_SDP_CAST(t,cain_sdp_media_t);
 
 /***************************************************************************************
+ * mime_parameter
+ *
+ **************************************************************************************/
+typedef struct _cain_sdp_mime_parameter cain_sdp_mime_parameter_t;
+cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_new();
+int cain_sdp_mime_parameter_get_rate(const cain_sdp_mime_parameter_t* mime_parameter);
+void cain_sdp_mime_parameter_set_rate(cain_sdp_mime_parameter_t* mime_parameter,int rate);
+int cain_sdp_mime_parameter_get_channel_count(const cain_sdp_mime_parameter_t* mime_parameter);
+void cain_sdp_mime_parameter_set_channel_count(cain_sdp_mime_parameter_t* mime_parameter,int count);
+int cain_sdp_mime_parameter_get_ptime(const cain_sdp_mime_parameter_t* mime_parameter);
+void cain_sdp_mime_parameter_set_ptime(cain_sdp_mime_parameter_t* mime_parameter,int ptime);
+int cain_sdp_mime_parameter_get_max_ptime(const cain_sdp_mime_parameter_t* mime_parameter);
+void cain_sdp_mime_parameter_set_max_ptime(cain_sdp_mime_parameter_t* mime_parameter,int max_ptime);
+const char* cain_sdp_mime_parameter_get_type(const cain_sdp_mime_parameter_t* mime_parameter);
+void cain_sdp_mime_parameter_set_type(cain_sdp_mime_parameter_t* mime_parameter,const char* type);
+int cain_sdp_mime_parameter_get_media_format(const cain_sdp_mime_parameter_t* mime_parameter);
+void cain_sdp_mime_parameter_set_media_format(cain_sdp_mime_parameter_t* mime_parameter,int format);
+const char* cain_sdp_mime_parameter_get_parameters(const cain_sdp_mime_parameter_t* mime_parameter);
+void cain_sdp_mime_parameter_set_parameters(cain_sdp_mime_parameter_t* mime_parameter,const char* parameters);
+#define CAIN_SDP_MIME_PARAMETER(t) CAIN_SDP_CAST(t,cain_sdp_mime_parameter_t);
+
+/***************************************************************************************
  * Media Description
  *
  **************************************************************************************/
@@ -128,8 +150,8 @@ cain_sdp_connection_t*	cain_sdp_media_description_get_connection(const cain_sdp_
 cain_sdp_info_t* cain_sdp_media_description_get_info(const cain_sdp_media_description_t* media_description);
 /*cain_sdp_key_t*  cain_sdp_media_description_get_key(const cain_sdp_media_description_t* media_description);*/
 cain_sdp_media_t* cain_sdp_media_description_get_media(const cain_sdp_media_description_t* media_description);
-cain_sip_list_t* cain_sdp_media_description_get_mime_parameters(const cain_sdp_media_description_t* media_description);
-cain_sip_list_t* cain_sdp_media_description_get_mime_types(const cain_sdp_media_description_t* media_description);
+cain_sip_list_t* cain_sdp_media_description_build_mime_parameters(const cain_sdp_media_description_t* media_description);
+/*cain_sip_list_t* cain_sdp_media_description_get_mime_types(const cain_sdp_media_description_t* media_description);*/
 void cain_sdp_media_description_remove_attribute(cain_sdp_media_description_t* media_description,const char* attribute);
 void cain_sdp_media_description_remove_bandwidth(cain_sdp_media_description_t* media_description,const char* bandwidth);
 void cain_sdp_media_description_set_attribute(cain_sdp_media_description_t* media_description, const char* name, const char* value);
@@ -142,19 +164,8 @@ void cain_sdp_media_description_set_connection(cain_sdp_media_description_t* med
 void cain_sdp_media_description_set_info(cain_sdp_media_description_t* media_description,cain_sdp_info_t* i);
 /*void cain_sdp_media_description_set_key(cain_sdp_media_description_t* media_description,cain_sdp_key_t* key);*/
 void cain_sdp_media_description_set_media(cain_sdp_media_description_t* media_description, cain_sdp_media_t* media);
+void cain_sdp_media_description_append_values_from_mime_parameter(cain_sdp_media_description_t* media_description, cain_sdp_mime_parameter_t* mime_parameter);
 #define CAIN_SDP_MEDIA_DESCRIPTION(t) CAIN_SDP_CAST(t,cain_sdp_media_description_t);
-/***************************************************************************************
- * mime_parameter
- *
- **************************************************************************************/
-typedef struct _cain_sdp_mime_parameter cain_sdp_mime_parameter_t;
-cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_new();
-int cain_sdp_mime_get_rate(const cain_sdp_mime_parameter_t* mime_parameter);
-int cain_sdp_mime_get_channnel_count(const cain_sdp_mime_parameter_t* mime_parameter);
-int cain_sdp_mime_get_ptime(const cain_sdp_mime_parameter_t* mime_parameter);
-int cain_sdp_mime_get_max_ptime(const cain_sdp_mime_parameter_t* mime_parameter);
-cain_sip_list_t* cain_sdp_mime_get_parameters(const cain_sdp_mime_parameter_t* mime_parameter);
-
 
 /***************************************************************************************
  * Origin

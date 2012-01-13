@@ -93,6 +93,7 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sdp_uri_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_version_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_base_description_t),
+	CAIN_SIP_TYPE_ID(cain_sdp_mime_parameter_t),
 	cain_sip_type_id_end
 }cain_sip_type_id_t;
 
