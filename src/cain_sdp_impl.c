@@ -260,6 +260,8 @@ int cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_descript
 	}
 	return current_offset-offset;
 }
+
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_base_description_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_base_description_t,cain_sip_object_t,cain_sdp_base_description_destroy,NULL,cain_sdp_base_description_marshal);
 
 static int cain_sdp_base_description_attribute_comp_func(const cain_sdp_attribute_t* a, const char*b) {
@@ -982,6 +984,7 @@ static void cain_sdp_mime_parameter_destroy(cain_sdp_mime_parameter_t *mime_para
 	if (mime_parameter->parameters) cain_sip_free((void*)mime_parameter->parameters);
 }
 
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_mime_parameter_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_mime_parameter_t,cain_sip_object_t,cain_sdp_mime_parameter_destroy,NULL,NULL);
 
 cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_new() {

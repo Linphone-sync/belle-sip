@@ -62,7 +62,8 @@ void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 	}
 }
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t, cain_sip_resolver_context_destroy, NULL, NULL);
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_resolver_context_t);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t,cain_sip_resolver_context_destroy, NULL, NULL);
 
 static int resolver_callback(cain_sip_resolver_context_t *ctx){
 	ctx->cb(ctx->cb_data, ctx->name, ctx->ai);

@@ -55,6 +55,7 @@ static void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *
 }
 #endif
 
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_listening_point_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_listening_point_t,cain_sip_object_t,cain_sip_listening_point_uninit,NULL,NULL);
 
 const char *cain_sip_listening_point_get_ip_address(const cain_sip_listening_point_t *lp){
@@ -101,6 +102,7 @@ static void cain_sip_udp_listening_point_uninit(cain_sip_udp_listening_point_t *
 	cain_sip_object_unref(lp->channel);
 }
 
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_udp_listening_point_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_udp_listening_point_t,cain_sip_listening_point_t,cain_sip_udp_listening_point_uninit,NULL,NULL);
 
 

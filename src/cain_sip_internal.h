@@ -42,7 +42,7 @@ typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff,unsi
 struct _cain_sip_object_vptr{
 	cain_sip_type_id_t id; 
 	struct _cain_sip_object_vptr *parent;
-	void *interfaces;	/*unused for the moment*/
+	cain_sip_interface_id_t **interfaces; /*NULL terminated table of */
 	cain_sip_object_destroy_t destroy;
 	cain_sip_object_clone_t clone;
 	cain_sip_object_marshal_t marshal;
@@ -73,7 +73,7 @@ extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
 #define CAIN_SIP_VPTR_INIT(object_type,parent_type) \
 		CAIN_SIP_TYPE_ID(object_type), \
 		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
-		NULL
+		(cain_sip_interface_id_t**)object_type##interfaces_table
 
 
 #define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone,marshal) \
@@ -84,8 +84,44 @@ extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
 		(cain_sip_object_marshal_t)marshal\
 		}
 
+#define CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name) methods_##interface_name
 
+#define CAIN_SIP_DECLARE_INTERFACE_BEGIN(interface_name) \
+	typedef struct struct##interface_name interface_name;\
+	typedef struct struct_methods_##interface_name CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name);\
+	struct struct_methods_##interface_name {\
+		cain_sip_interface_id_t id;
 
+#define CAIN_SIP_DECLARE_INTERFACE_END };
+
+#define CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(object_type,interface_name) \
+	static CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name)  methods_##object_type##_##interface_name={\
+		CAIN_SIP_INTERFACE_ID(interface_name),
+
+#define CAIN_SIP_IMPLEMENT_INTERFACE_END };
+
+#define CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(object_type)\
+	static cain_sip_type_id_t * object_type##interfaces_table[]={\
+		NULL \
+	}
+
+#define CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(object_type,iface1) \
+	static cain_sip_type_id_t * object_type##interfaces_table[]={\
+		(cain_sip_type_id_t*)&methods_##object_type##_##iface1, \
+		NULL \
+	}
+
+#define CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_2(object_type,iface1,iface2) \
+	static cain_sip_type_id_t * object_type##interfaces_table[]={\
+		(cain_sip_type_id_t*)&methods_##object_type##_##iface1, \
+		(cain_sip_type_id_t*)&methods_##object_type##_##iface2, \
+		NULL \
+	}
+
+/*etc*/
+
+#define CAIN_SIP_INTERFACE_GET_METHODS(obj,interface) \
+	((CAIN_SIP_INTERFACE_METHODS_TYPE(interface)*)cain_sip_object_get_interface_methods((cain_sip_object_t*)obj,CAIN_SIP_INTERFACE_ID(interface)))
 
 struct _cain_sip_object{
 	cain_sip_object_vptr_t *vptr;
@@ -95,7 +131,7 @@ struct _cain_sip_object{
 };
 
 cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed);
-int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
+void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_interface_id_t ifid);
 
 #define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),0)
 #define cain_sip_object_new_unowed(_type)(_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type),1)
@@ -164,6 +200,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sdp_uri_t);
 CAIN_SIP_DECLARE_VPTR(cain_sdp_version_t);
 CAIN_SIP_DECLARE_VPTR(cain_sdp_base_description_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_source_t);
+CAIN_SIP_DECLARE_VPTR(cain_sdp_mime_parameter_t);
 
 
 
@@ -414,6 +451,7 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 #define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_HEADER(object_type,super_type,NULL)
 #define CAIN_SIP_NEW_HEADER(object_type,super_type,name) CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,header)
 #define CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,init_type) \
+		CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_##object_type##_t); \
 		CAIN_SIP_INSTANCIATE_VPTR(	cain_sip_##object_type##_t\
 									, cain_sip_##super_type##_t\
 									, cain_sip_##object_type##_destroy\
@@ -586,6 +624,7 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 	return l_parsed_object;\
 }
 #define CAIN_SDP_NEW(object_type,super_type) \
+		CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_##object_type##_t); \
 		CAIN_SIP_INSTANCIATE_VPTR(	cain_sdp_##object_type##_t\
 									, super_type##_t\
 									, cain_sdp_##object_type##_destroy\
@@ -597,6 +636,7 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 		return l_object;\
 	}
 #define CAIN_SDP_NEW_WITH_CTR(object_type,super_type) \
+		CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_##object_type##_t); \
 		CAIN_SIP_INSTANCIATE_VPTR(	cain_sdp_##object_type##_t\
 									, super_type##_t\
 									, cain_sdp_##object_type##_destroy\

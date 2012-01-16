@@ -27,9 +27,11 @@ static int has_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
 	}
 	return FALSE;
 }
-unsigned int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id) {
+
+int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id) {
 	return has_type(obj,id);
 }
+
 cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed){
 	cain_sip_object_t *obj=(cain_sip_object_t *)cain_sip_malloc0(objsize);
 	obj->ref=initially_unowed ? 0 : 1;
@@ -121,6 +123,36 @@ void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const 
 	return obj;
 }
 
+void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_interface_id_t ifid){
+	if (obj!=NULL){
+		cain_sip_object_vptr_t *vptr;
+		for (vptr=obj->vptr;vptr!=NULL;vptr=vptr->parent){
+			cain_sip_interface_id_t **ifaces=vptr->interfaces;
+			if (ifaces!=NULL){
+				for(;*ifaces!=0;++ifaces){
+					if (**ifaces==ifid){
+						return *ifaces;
+					}
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
+int cain_sip_object_implements(cain_sip_object_t *obj, cain_sip_interface_id_t id){
+	return cain_sip_object_get_interface_methods(obj,id)!=NULL;
+}
+
+void *cain_sip_object_cast_to_interface(cain_sip_object_t *obj, cain_sip_interface_id_t ifid, const char *castname, const char *file, int fileno){
+	if (obj!=NULL){
+		if (cain_sip_object_get_interface_methods(obj,ifid)==0){
+			cain_sip_fatal("Bad cast to interface %s at %s:%i",castname,file,fileno);
+			return NULL;
+		}
+	}
+	return obj;
+}
 
 void cain_sip_object_set_name(cain_sip_object_t* object,const char* name) {
 	if (object->name) {

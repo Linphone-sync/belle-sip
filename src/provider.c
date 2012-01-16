@@ -33,6 +33,15 @@ static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_free(p->lps);
 }
 
+static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
+}
+
+CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(cain_sip_provider_t,cain_sip_channel_listener_t)
+	channel_state_changed
+CAIN_SIP_IMPLEMENT_INTERFACE_END
+
+CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(cain_sip_provider_t,cain_sip_channel_listener_t);
+	
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provider_uninit,NULL,NULL);
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){

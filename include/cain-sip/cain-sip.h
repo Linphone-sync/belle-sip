@@ -98,6 +98,13 @@ typedef enum cain_sip_type_id{
 }cain_sip_type_id_t;
 
 
+#define CAIN_SIP_INTERFACE_ID(_interface) _interface##_id
+
+typedef enum cain_sip_interface_id{
+	cain_sip_interface_id_first=1,
+	CAIN_SIP_INTERFACE_ID(cain_sip_channel_listener_t)
+}cain_sip_interface_id_t;
+
 /**
  * cain_sip_object_t is the base object.
  * It is the base class for all cain sip non trivial objects.
@@ -140,9 +147,15 @@ void cain_sip_object_delete(void *obj);
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
 
+void *cain_sip_object_cast_to_interface(cain_sip_object_t *obj, cain_sip_interface_id_t id, const char *castname, const char *file, int fileno);
+
 char* cain_sip_object_to_string(cain_sip_object_t* obj);
 
-unsigned int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
+int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
+
+int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
+
+int cain_sip_object_implements(cain_sip_object_t *obj, cain_sip_interface_id_t id);
 
 void *cain_sip_malloc(size_t size);
 void *cain_sip_malloc0(size_t size);
@@ -153,8 +166,11 @@ char * cain_sip_strdup(const char *s);
 CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_CAST(obj,_type) 		((_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__))
+#define CAIN_SIP_INTERFACE_CAST(obj,_iface) ((_iface*)cain_sip_object_interface_cast((cain_sip_object_t*)(obj),_iface##_id,#_iface,__FILE__,__LINE__))
+#define CAIN_SIP_IMPLEMENTS(obj,_iface)	cain_sip_object_implements((cain_sip_object_t*)obj,_iface##_id)
+
 #define CAIN_SIP_OBJECT(obj) CAIN_SIP_CAST(obj,cain_sip_object_t)
-#define CAIN_SIP_IS_INSTANCE_OF(obj,_type) cain_sip_object_is_instance_of(obj,_type##_id)
+#define CAIN_SIP_IS_INSTANCE_OF(obj,_type) cain_sip_object_is_instance_of((cain_sip_object_t*)obj,_type##_id)
 
 
 typedef struct cain_sip_listening_point cain_sip_listening_point_t;

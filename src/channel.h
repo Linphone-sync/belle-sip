@@ -25,7 +25,7 @@
 
 #endif
 
-static const int cain_sip_network_buffer_size=64535;
+static const int cain_sip_network_buffer_size=65535;
 
 typedef enum cain_sip_channel_state{
 	CAIN_SIP_CHANNEL_INIT,
@@ -36,6 +36,7 @@ typedef enum cain_sip_channel_state{
 	CAIN_SIP_CHANNEL_ERROR
 }cain_sip_channel_state_t;
 
+
 /**
 * cain_sip_channel_t is an object representing a single communication channel ( socket or file descriptor), 
 * unlike the cain_sip_listening_point_t that can owns several channels for TCP or TLS (incoming server child sockets or 
@@ -43,10 +44,17 @@ typedef enum cain_sip_channel_state{
 **/
 typedef struct cain_sip_channel cain_sip_channel_t;
 
+CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_channel_listener_t)
+void (*on_state_changed)(cain_sip_channel_listener_t *obj, cain_sip_channel_t *, cain_sip_channel_state_t state);
+CAIN_SIP_DECLARE_INTERFACE_END
+
+void cain_sip_channel_listener_on_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *, cain_sip_channel_state_t state);
+
 struct cain_sip_channel{
 	cain_sip_source_t base;
+	cain_sip_stack_t *stack;
 	cain_sip_channel_state_t state;
-	cain_sip_provider_t *prov;/*we need the provider to notify connection errors*/
+	cain_sip_channel_listener_t *listener;
 	char *peer_name;
 	int peer_port;
 	unsigned long resolver_id;
@@ -56,11 +64,13 @@ struct cain_sip_channel{
 
 #define CAIN_SIP_CHANNEL(obj)		CAIN_SIP_CAST(obj,cain_sip_channel_t)
 
-cain_sip_channel_t * cain_sip_channel_new_udp_master(cain_sip_provider_t *prov, const char *locname, int locport);
+cain_sip_channel_t * cain_sip_channel_new_udp_master(cain_sip_stack_t *stack, const char *locname, int locport);
 
 cain_sip_channel_t * cain_sip_channel_new_udp_slave(cain_sip_channel_t *master, const char *peername, int peerport);
 
-cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_provider_t *prov, const char *name, int port);
+cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack, const char *name, int port);
+
+void cain_sip_channel_add_listener(cain_sip_channel_t *chan, cain_sip_channel_listener_t *l);
 
 int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport);
 

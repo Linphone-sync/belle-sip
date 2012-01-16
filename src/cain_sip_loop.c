@@ -42,6 +42,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 	s->notify=func;
 }
 
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_source_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_source_t,cain_sip_object_t,cain_sip_source_destroy,NULL,NULL);
 
 cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
@@ -89,6 +90,8 @@ static int main_loop_done(void *data, unsigned int events){
 	return TRUE;
 }
 
+
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_main_loop_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_main_loop_t,cain_sip_object_t,cain_sip_main_loop_destroy,NULL,NULL);
 
 cain_sip_main_loop_t *cain_sip_main_loop_new(void){

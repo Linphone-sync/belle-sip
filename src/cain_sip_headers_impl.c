@@ -56,6 +56,9 @@ int cain_sip_header_marshal(cain_sip_header_t* header, char* buff,unsigned int o
 		return 0;
 	}
 }
+
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_header_t);
+
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_header_t,cain_sip_object_t,cain_sip_header_destroy,NULL,cain_sip_header_marshal);
 
 
