@@ -36,7 +36,12 @@ GET_SET_STRING(cain_sip_header,name);
 void cain_sip_header_init(cain_sip_header_t *header) {
 
 }
+static void cain_sip_header_clone(cain_sip_header_t *header, const cain_sip_header_t *orig){
 
+	if (cain_sip_header_get_next(orig)) {
+		cain_sip_header_set_next(header,CAIN_SIP_HEADER(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_header_get_next(orig))))) ;
+	}
+}
 static void cain_sip_header_destroy(cain_sip_header_t *header){
 	if (header->name) cain_sip_free((void*)header->name);
 	if (header->next) cain_sip_object_unref(CAIN_SIP_OBJECT(header->next));
@@ -81,8 +86,10 @@ static void cain_sip_header_address_destroy(cain_sip_header_address_t* contact) 
 }
 
 static void cain_sip_header_address_clone(cain_sip_header_address_t *addr, const cain_sip_header_address_t *orig){
-	addr->displayname=cain_sip_strdup(orig->displayname);
-	addr->uri=(cain_sip_uri_t*)cain_sip_object_clone(CAIN_SIP_OBJECT(orig->uri));
+	CLONE_STRING(cain_sip_header_address,displayname,addr,orig)
+	if (cain_sip_header_address_get_uri(orig)) {
+		cain_sip_header_address_set_uri(addr,CAIN_SIP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_header_address_get_uri(orig)))));
+	}
 }
 
 int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buff,unsigned int offset,unsigned int buff_size) {
@@ -111,7 +118,7 @@ void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* a
 		if (address->displayname != NULL) cain_sip_free((void*)(address->displayname));
 		address->displayname=_cain_sip_str_dup_and_unquote_string(value);
 }
-cain_sip_uri_t* cain_sip_header_address_get_uri(cain_sip_header_address_t* address) {
+cain_sip_uri_t* cain_sip_header_address_get_uri(const cain_sip_header_address_t* address) {
 	return address->uri;
 }
 
@@ -128,13 +135,14 @@ struct _cain_sip_header_allow  {
 	cain_sip_header_t header;
 	const char* method;
 };
-
+static void cain_sip_header_allow_clone(cain_sip_header_allow_t *allow, const cain_sip_header_allow_t *orig){
+	CLONE_STRING(cain_sip_header_allow,method,allow,orig)
+}
 static void cain_sip_header_allow_destroy(cain_sip_header_allow_t* allow) {
 	if (allow->method) cain_sip_free((void*)allow->method);
 }
 
-static void cain_sip_header_allow_clone(cain_sip_header_allow_t* allow, const cain_sip_header_allow_t* orig){
-}
+
 int cain_sip_header_allow_marshal(cain_sip_header_allow_t* allow, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(allow), buff,current_offset, buff_size);

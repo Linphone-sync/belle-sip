@@ -37,7 +37,7 @@ cain_sip_header_address_t* cain_sip_header_address_parse (const char* address) ;
 /**
  *
  */
-cain_sip_uri_t* cain_sip_header_address_get_uri(cain_sip_header_address_t* address);
+cain_sip_uri_t* cain_sip_header_address_get_uri(const cain_sip_header_address_t* address);
 /**
  *
  */
