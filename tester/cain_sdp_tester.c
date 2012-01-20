@@ -47,20 +47,26 @@ static int clean_suite_sdp(void) {
 //a=fmtp:98 CIF=1;QCIF=1
 
 static void test_attribute(void) {
+	cain_sdp_attribute_t* lTmp;
 	cain_sdp_attribute_t* lAttribute = cain_sdp_attribute_parse("a=rtpmap:101 telephone-event/8000");
 	char* l_raw_attribute = cain_sip_object_to_string(CAIN_SIP_OBJECT(lAttribute));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lAttribute));
-	lAttribute = cain_sdp_attribute_parse(l_raw_attribute);
+	lTmp = cain_sdp_attribute_parse(l_raw_attribute);
+	lAttribute = CAIN_SDP_ATTRIBUTE(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_attribute_get_name(lAttribute), "rtpmap");
 	CU_ASSERT_STRING_EQUAL(cain_sdp_attribute_get_value(lAttribute), "101 telephone-event/8000");
 	CU_ASSERT_TRUE(cain_sdp_attribute_as_value(lAttribute));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lAttribute));
 }
 static void test_bandwidth(void) {
+	cain_sdp_bandwidth_t* lTmp;
 	cain_sdp_bandwidth_t* l_bandwidth = cain_sdp_bandwidth_parse("b=AS:380");
 	char* l_raw_bandwidth = cain_sip_object_to_string(CAIN_SIP_OBJECT(l_bandwidth));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_bandwidth));
-	l_bandwidth = cain_sdp_bandwidth_parse(l_raw_bandwidth);
+	lTmp = cain_sdp_bandwidth_parse(l_raw_bandwidth);
+	l_bandwidth = CAIN_SDP_BANDWIDTH(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_bandwidth_get_type(l_bandwidth), "AS");
 	CU_ASSERT_EQUAL(cain_sdp_bandwidth_get_value(l_bandwidth),380);
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_bandwidth));

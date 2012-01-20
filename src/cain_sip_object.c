@@ -52,7 +52,7 @@ cain_sip_object_t * cain_sip_object_ref(void *obj){
 void cain_sip_object_unref(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
 	if (obj->ref==0){
-		cain_sip_warning("Destroying unowed object");
+		/*might hide a double unref cain_sip_warning("Destroying unowed object");*/
 		cain_sip_object_delete(obj);
 		return;
 	}

@@ -30,9 +30,13 @@ struct _cain_sdp_attribute {
 	const char* value;
 };
 void cain_sdp_attribute_destroy(cain_sdp_attribute_t* attribute) {
+	if (attribute->name) cain_sip_free((void*)attribute->name);
+	if (attribute->value) cain_sip_free((void*)attribute->value);
 }
 
 void cain_sdp_attribute_clone(cain_sdp_attribute_t *attribute, const cain_sdp_attribute_t *orig){
+	CLONE_STRING(cain_sdp_attribute,name,attribute,orig)
+	CLONE_STRING(cain_sdp_attribute,value,attribute,orig)
 }
 int cain_sdp_attribute_marshal(cain_sdp_attribute_t* attribute, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -65,9 +69,12 @@ struct _cain_sdp_bandwidth {
 	int value;
 };
 void cain_sdp_bandwidth_destroy(cain_sdp_bandwidth_t* bandwidth) {
+	if (bandwidth->type) cain_sip_free((void*)bandwidth->type);
 }
 
 void cain_sdp_bandwidth_clone(cain_sdp_bandwidth_t *bandwidth, const cain_sdp_bandwidth_t *orig){
+	CLONE_STRING(cain_sdp_bandwidth,type,bandwidth,orig)
+	bandwidth->value=orig->value;
 }
 int cain_sdp_bandwidth_marshal(cain_sdp_bandwidth_t* bandwidth, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;

@@ -45,7 +45,7 @@ int cain_sdp_bandwidth_get_value(const cain_sdp_bandwidth_t* attribute);
 const char* cain_sdp_bandwidth_get_type(const cain_sdp_bandwidth_t* attribute);
 void cain_sdp_bandwidth_set_value(cain_sdp_bandwidth_t* attribute, int value);
 void cain_sdp_bandwidth_set_type(cain_sdp_bandwidth_t* attribute, const char* type);
-#define CAIN_SDP_BANDWITH(t) CAIN_SDP_CAST(t,cain_sdp_bandwidth_t);
+#define CAIN_SDP_BANDWIDTH(t) CAIN_SDP_CAST(t,cain_sdp_bandwidth_t);
 /***************************************************************************************
  * Connection
  *

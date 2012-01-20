@@ -32,11 +32,13 @@ int clean_suite1(void) {
 
 
 void test_simple_header_contact(void) {
-
+	cain_sip_header_contact_t* L_tmp;
 	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact:sip:titi.com");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_contact));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_contact));
-	L_contact = cain_sip_header_contact_parse(l_raw_header);
+	L_tmp = cain_sip_header_contact_parse(l_raw_header);
+	L_contact = CAIN_SIP_HEADER_CONTACT(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri((cain_sip_header_address_t*)L_contact);
@@ -48,9 +50,11 @@ void test_simple_header_contact(void) {
 }
 
 void test_complex_header_contact(void) {
+	cain_sip_header_contact_t* L_contact;
+	cain_sip_header_contact_t* L_tmp = cain_sip_header_contact_parse("Contact: \"jéremis\" <sip:sip.linphone.org>;expires=3600;q=0.7, sip:titi.com");
 
-	cain_sip_header_contact_t* L_contact = cain_sip_header_contact_parse("Contact: \"jéremis\" <sip:sip.linphone.org>;expires=3600;q=0.7, sip:titi.com");
-
+	L_contact = CAIN_SIP_HEADER_CONTACT(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri((cain_sip_header_address_t*)L_contact);
 
@@ -82,11 +86,13 @@ void test_complex_header_contact(void) {
 }
 
 void test_simple_header_from(void) {
-
+	cain_sip_header_from_t* L_tmp;
 	cain_sip_header_from_t* L_from = cain_sip_header_from_parse("From:<sip:titi.com;transport=tcp>;tag=dlfjklcn6545614XX");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_from));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_from));
-	L_from = cain_sip_header_from_parse(l_raw_header);
+	L_tmp = cain_sip_header_from_parse(l_raw_header);
+	L_from = CAIN_SIP_HEADER_FROM(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_from));
@@ -113,11 +119,13 @@ void test_simple_header_to(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_to));
 }
 void test_header_via(void) {
-
+	cain_sip_header_via_t* L_tmp;
 	cain_sip_header_via_t* L_via = cain_sip_header_via_parse("Via: SIP/2.0/UDP 192.168.0.19:5062;rport;received=192.169.0.4;branch=z9hG4bK368560724");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_via));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_via));
-	L_via = cain_sip_header_via_parse(l_raw_header);
+	L_tmp = cain_sip_header_via_parse(l_raw_header);
+	L_via = CAIN_SIP_HEADER_VIA(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_via_get_protocol(L_via), "SIP/2.0");
@@ -140,22 +148,26 @@ void test_header_via(void) {
 
 }
 void test_header_call_id(void) {
-
+	cain_sip_header_call_id_t* L_tmp;
 	cain_sip_header_call_id_t* L_call_id = cain_sip_header_call_id_parse("Call-ID: 1665237789@titi.com");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_call_id));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_call_id));
-	L_call_id = cain_sip_header_call_id_parse(l_raw_header);
+	L_tmp= cain_sip_header_call_id_parse(l_raw_header);
+	L_call_id = CAIN_SIP_HEADER_CALL_ID(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_call_id_get_call_id(L_call_id), "1665237789@titi.com");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_call_id));
 }
 void test_header_cseq(void) {
-
+	cain_sip_header_cseq_t* L_tmp;
 	cain_sip_header_cseq_t* L_cseq = cain_sip_header_cseq_parse("CSeq: 21 INVITE");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_cseq));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_cseq));
-	L_cseq = cain_sip_header_cseq_parse(l_raw_header);
+	L_tmp = cain_sip_header_cseq_parse(l_raw_header);
+	L_cseq = CAIN_SIP_HEADER_CSEQ(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_EQUAL(cain_sip_header_cseq_get_seq_number(L_cseq),21);
@@ -163,11 +175,13 @@ void test_header_cseq(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_cseq));
 }
 void test_header_content_type(void) {
-
+	cain_sip_header_content_type_t* L_tmp;
 	cain_sip_header_content_type_t* L_content_type = cain_sip_header_content_type_parse("Content-Type: text/html; charset=ISO-8859-4");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_content_type));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_type));
-	L_content_type = cain_sip_header_content_type_parse(l_raw_header);
+	L_tmp = cain_sip_header_content_type_parse(l_raw_header);
+	L_content_type = CAIN_SIP_HEADER_CONTENT_TYPE(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_content_type_get_type(L_content_type),"text");
@@ -233,20 +247,25 @@ void test_header_route(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_route));
 }
 void test_header_content_length(void) {
-
+	cain_sip_header_content_length_t* L_tmp;
 	cain_sip_header_content_length_t* L_content_length = cain_sip_header_content_length_parse("Content-Length: 3495");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_content_length));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_length));
-	L_content_length = cain_sip_header_content_length_parse(l_raw_header);
+	L_tmp = cain_sip_header_content_length_parse(l_raw_header);
+	L_content_length = CAIN_SIP_HEADER_CONTENT_LENGTH(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 	CU_ASSERT_EQUAL(cain_sip_header_content_length_get_content_length(L_content_length), 3495);
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_content_length));
 }
 void test_header_extention(void) {
+	cain_sip_header_extension_t* L_tmp;
 	cain_sip_header_extension_t* L_extension = cain_sip_header_extension_parse("toto: titi");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_extension));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_extension));
-	L_extension = cain_sip_header_extension_parse(l_raw_header);
+	L_tmp = cain_sip_header_extension_parse(l_raw_header);
+	L_extension = CAIN_SIP_HEADER_EXTENSION(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_extension_get_value(L_extension), "titi");
@@ -257,10 +276,13 @@ void test_header_authorization(void) {
 			"realm=\"sip.ovh.net\", nonce=\"1bcdcb194b30df5f43973d4c69bdf54f\", uri=\"sip:sip.ovh.net\", response=\"eb36c8d5c8642c1c5f44ec3404613c81\","\
 			"algorithm=MD5, opaque=\"1bc7f9097684320\","
 			"\r\n qop=auth, nc=00000001,cnonce=\"0a4f113b\", blabla=\"toto\"";
+	cain_sip_header_authorization_t* L_tmp;
 	cain_sip_header_authorization_t* L_authorization = cain_sip_header_authorization_parse(l_header);
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_authorization));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_authorization));
-	L_authorization = cain_sip_header_authorization_parse(l_raw_header);
+	L_tmp = cain_sip_header_authorization_parse(l_raw_header);
+	L_authorization = CAIN_SIP_HEADER_AUTHORIZATION(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_PTR_NOT_NULL(L_authorization);
@@ -298,10 +320,13 @@ void test_header_www_authenticate(void) {
 	const char* l_header = "WWW-Authenticate: Digest "
 			"algorithm=MD5, realm=\"atlanta.com\", opaque=\"1bc7f9097684320\","
 			" qop=\"auth\", nonce=\"c60f3082ee1212b402a21831ae\", stale=true, domain=\"sip:boxesbybob.com\"";
+	cain_sip_header_www_authenticate_t* L_tmp;
 	cain_sip_header_www_authenticate_t* L_authorization = cain_sip_header_www_authenticate_parse(l_header);
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_authorization));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_authorization));
-	L_authorization = cain_sip_header_www_authenticate_parse(l_raw_header);
+	L_tmp = cain_sip_header_www_authenticate_parse(l_raw_header);
+	L_authorization = CAIN_SIP_HEADER_WWW_AUTHENTICATE(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 	CU_ASSERT_PTR_NOT_NULL(L_authorization);
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_www_authenticate_get_realm(L_authorization), "atlanta.com");
@@ -317,11 +342,15 @@ void test_header_www_authenticate(void) {
 }
 void test_header_max_forwards(void) {
 	const char* l_header = "Max-Forwards: 6";
+	cain_sip_header_max_forwards_t* L_tmp;
 	cain_sip_header_max_forwards_t* L_max_forwards = cain_sip_header_max_forwards_parse(l_header);
 	cain_sip_header_max_forwards_decrement_max_forwards(L_max_forwards);
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_max_forwards));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_max_forwards));
-	L_max_forwards = cain_sip_header_max_forwards_parse(l_raw_header);
+	L_tmp = cain_sip_header_max_forwards_parse(l_raw_header);
+	L_max_forwards = CAIN_SIP_HEADER_MAX_FORWARDS(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
+
 	cain_sip_free(l_raw_header);
 	CU_ASSERT_PTR_NOT_NULL(L_max_forwards);
 	CU_ASSERT_EQUAL(cain_sip_header_max_forwards_get_max_forwards(L_max_forwards), 5);
@@ -331,10 +360,14 @@ void test_header_max_forwards(void) {
 }
 void test_header_user_agent(void) {
 	const char* l_header = "User-Agent: Linphone/3.4.99.1 (eXosip2/3.3.0)";
+	cain_sip_header_user_agent_t* L_tmp;
 	cain_sip_header_user_agent_t* L_user_agent = cain_sip_header_user_agent_parse(l_header);
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_user_agent));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_user_agent));
-	L_user_agent = cain_sip_header_user_agent_parse(l_raw_header);
+	L_tmp = cain_sip_header_user_agent_parse(l_raw_header);
+	L_user_agent = CAIN_SIP_HEADER_USER_AGENT(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
+
 	cain_sip_free(l_raw_header);
 
 	const char* values[] ={"Linphone/3.4.99.1"
@@ -352,20 +385,25 @@ void test_header_user_agent(void) {
 
 }
 void test_header_expires(void) {
-
+	cain_sip_header_expires_t* L_tmp;
 	cain_sip_header_expires_t* L_expires = cain_sip_header_expires_parse("Expires: 3600");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_expires));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_expires));
-	L_expires = cain_sip_header_expires_parse(l_raw_header);
+	L_tmp= cain_sip_header_expires_parse(l_raw_header);
+	L_expires = CAIN_SIP_HEADER_EXPIRES(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 	CU_ASSERT_EQUAL(cain_sip_header_expires_get_expires(L_expires), 3600);
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_expires));
 }
 void test_header_allow(void) {
+	cain_sip_header_allow_t* L_tmp;
 	cain_sip_header_allow_t* L_allow = cain_sip_header_allow_parse("Allow:INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO");
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_allow));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_allow));
-	L_allow = cain_sip_header_allow_parse(l_raw_header);
+	L_tmp = cain_sip_header_allow_parse(l_raw_header);
+	L_allow = CAIN_SIP_HEADER_ALLOW(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
 	cain_sip_free(l_raw_header);
 
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_allow_get_method(L_allow), "INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO");

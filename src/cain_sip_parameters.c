@@ -29,7 +29,11 @@ static void cain_sip_parameters_destroy(cain_sip_parameters_t* params) {
 }
 
 static void cain_sip_parameters_clone(cain_sip_parameters_t *params, const cain_sip_parameters_t *orig){
-	cain_sip_fatal("not implemented");
+	cain_sip_list_t* list=orig->param_list;
+	for(;list!=NULL;list=list->next){
+		cain_sip_param_pair_t* container = (cain_sip_param_pair_t* )(list->data);
+		cain_sip_parameters_set_parameter( params,container->name,container->value);
+	}
 }
 int cain_sip_parameters_marshal(cain_sip_parameters_t* params, char* buff,unsigned int offset,unsigned int buff_size) {
 	cain_sip_list_t* list=params->param_list;

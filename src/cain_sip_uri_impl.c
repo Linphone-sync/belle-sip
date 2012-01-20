@@ -50,18 +50,18 @@ struct _cain_sip_uri {
 	cain_sip_parameters_t * header_list;
 };
 
-void cain_sip_uri_destroy(cain_sip_uri_t* uri) {
+static void cain_sip_uri_destroy(cain_sip_uri_t* uri) {
 	if (uri->user) cain_sip_free (uri->user);
 	if (uri->host) cain_sip_free (uri->host);
 	cain_sip_object_unref(CAIN_SIP_OBJECT(uri->header_list));
 }
 
-void cain_sip_uri_clone(cain_sip_uri_t* uri, const cain_sip_uri_t *orig){
+static void cain_sip_uri_clone(cain_sip_uri_t* uri, const cain_sip_uri_t *orig){
 	uri->secure=orig->secure;
-	uri->user=cain_sip_strdup(orig->user);
-	uri->host=cain_sip_strdup(orig->host);
+	uri->user=orig->user?cain_sip_strdup(orig->user):NULL;
+	uri->host=orig->host?cain_sip_strdup(orig->host):NULL;
 	uri->port=orig->port;
-	uri->header_list=(cain_sip_parameters_t*)cain_sip_object_clone(CAIN_SIP_OBJECT(orig->header_list));
+	uri->header_list=orig->header_list?(cain_sip_parameters_t*)cain_sip_object_clone(CAIN_SIP_OBJECT(orig->header_list)):NULL;
 }
 
 int cain_sip_uri_marshal(cain_sip_uri_t* uri, char* buff,unsigned int offset,unsigned int buff_size) {
