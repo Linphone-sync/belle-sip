@@ -46,9 +46,7 @@ int main(int argc, char *argv[]){
 	printf("Message to send:\n%s\n",tmp);
 	cain_sip_free(tmp);
 	cain_sip_provider_send_request(prov,req);
-	cain_sip_main_loop_add_timeout(cain_sip_stack_get_main_loop(stack),(cain_sip_source_func_t)cain_sip_main_loop_quit,
-	                               cain_sip_stack_get_main_loop(stack),5000);
-	cain_sip_stack_main(stack);
+	cain_sip_stack_sleep(stack,5000);
 	printf("Exiting\n");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(prov));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(stack));

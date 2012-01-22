@@ -20,15 +20,7 @@
 
 
 
-static int listener_ctx_compare(const void *c1, const void *c2){
-	listener_ctx_t *lc1=(listener_ctx_t*)c1;
-	listener_ctx_t *lc2=(listener_ctx_t*)c2;
-	return !(lc1->listener==lc2->listener && lc1->data==lc2->data);
-}
-
-
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
-	cain_sip_list_for_each (p->listeners,cain_sip_free);
 	cain_sip_list_free(p->listeners);
 	cain_sip_list_free(p->lps);
 }
@@ -70,16 +62,12 @@ const cain_sip_list_t *cain_sip_provider_get_listening_points(cain_sip_provider_
 	return p->lps;
 }
 
-void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l, void *user_ctx){
-	listener_ctx_t *lc=cain_sip_new(listener_ctx_t);
-	lc->listener=l;
-	lc->data=user_ctx;
-	p->listeners=cain_sip_list_append(p->listeners,lc);
+void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l){
+	p->listeners=cain_sip_list_append(p->listeners,l);
 }
 
-void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l, void *user_ctx){
-	listener_ctx_t ctx={l,user_ctx};
-	p->listeners=cain_sip_list_delete_custom(p->listeners,listener_ctx_compare,&ctx);
+void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l){
+	p->listeners=cain_sip_list_remove(p->listeners,l);
 }
 
 cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov){
@@ -102,18 +90,42 @@ cain_sip_stack_t *cain_sip_provider_get_sip_stack(cain_sip_provider_t *p){
 	return p->stack;
 }
 
-cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name,
-                                                   int port, const char *transport){
+cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport){
+	cain_sip_list_t *l;
+	cain_sip_listening_point_t *candidate=NULL,*lp;
+	cain_sip_channel_t *chan;
+	for(l=p->lps;l!=NULL;l=l->next){
+		lp=(cain_sip_listening_point_t*)l->data;
+		if (strcasecmp(cain_sip_listening_point_get_transport(lp),transport)==0){
+			chan=cain_sip_listening_point_get_channel(lp,name,port);
+			if (chan) return chan;
+			candidate=lp;
+		}
+	}
+	if (candidate){
+		chan=cain_sip_listening_point_create_channel(candidate,name,port);
+		if (chan==NULL) cain_sip_error("Could not create channel to %s:%s:%i",transport,name,port);
+		return chan;
+	}
+	cain_sip_error("No listening point matching for transport %s",transport);
 	return NULL;
 }
 
 
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
-	
+	cain_sip_hop_t hop={0};
+	cain_sip_channel_t *chan;
+	cain_sip_stack_get_next_hop(p->stack,req,&hop);
+	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
+	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(req));
 }
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
-	
+	cain_sip_hop_t hop;
+	cain_sip_channel_t *chan;
+	cain_sip_response_get_return_hop(resp,&hop);
+	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
+	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(resp));
 }
 
 /*private provider API*/

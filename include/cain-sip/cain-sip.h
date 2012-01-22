@@ -102,7 +102,8 @@ typedef enum cain_sip_type_id{
 
 typedef enum cain_sip_interface_id{
 	cain_sip_interface_id_first=1,
-	CAIN_SIP_INTERFACE_ID(cain_sip_channel_listener_t)
+	CAIN_SIP_INTERFACE_ID(cain_sip_channel_listener_t),
+	CAIN_SIP_INTERFACE_ID(cain_sip_listener_t)
 }cain_sip_interface_id_t;
 
 /**
@@ -128,6 +129,22 @@ cain_sip_object_t * cain_sip_object_ref(void *obj);
  * Decrements the reference counter. When it drops to zero, the object is destroyed.
 **/
 void cain_sip_object_unref(void *obj);
+
+
+typedef void (*cain_sip_object_destroy_notify_t)(void *userpointer, cain_sip_object_t *obj_being_destroyed);
+/**
+ * Add a weak reference to object.
+ * When object will be destroyed, then the destroy_notify callback will be called.
+ * This allows another object to be informed when object is destroyed, and then possibly
+ * cleanups pointer it holds to this object.
+**/
+cain_sip_object_t *cain_sip_object_weak_ref(void *obj, cain_sip_object_destroy_notify_t destroy_notify, void *userpointer);
+
+/**
+ * Remove a weak reference to object.
+**/
+void cain_sip_object_weak_unref(void *obj, cain_sip_object_destroy_notify_t destroy_notify, void *userpointer);
+
 /**
  * Set object name.
 **/
@@ -172,12 +189,38 @@ CAIN_SIP_END_DECLS
 #define CAIN_SIP_OBJECT(obj) CAIN_SIP_CAST(obj,cain_sip_object_t)
 #define CAIN_SIP_IS_INSTANCE_OF(obj,_type) cain_sip_object_is_instance_of((cain_sip_object_t*)obj,_type##_id)
 
+#define CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name) methods_##interface_name
+
+#define CAIN_SIP_DECLARE_INTERFACE_BEGIN(interface_name) \
+	typedef struct struct##interface_name interface_name;\
+	typedef struct struct_methods_##interface_name CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name);\
+	struct struct_methods_##interface_name {\
+		cain_sip_interface_id_t id;
+
+#define CAIN_SIP_DECLARE_INTERFACE_END };
+
 
 typedef struct cain_sip_listening_point cain_sip_listening_point_t;
 typedef struct cain_sip_stack cain_sip_stack_t;
 typedef struct cain_sip_provider cain_sip_provider_t;
-typedef struct cain_sip_listener cain_sip_listener_t;
 typedef struct cain_sip_dialog cain_sip_dialog_t;
+
+
+typedef struct cain_sip_dialog_terminated_event cain_sip_dialog_terminated_event_t;
+typedef struct cain_sip_io_error_event cain_sip_io_error_event_t;
+typedef struct cain_sip_request_event cain_sip_request_event_t;
+typedef struct cain_sip_response_event cain_sip_response_event_t;
+typedef struct cain_sip_timeout_event cain_sip_timeout_event_t;
+typedef struct cain_sip_transaction_terminated_event cain_sip_transaction_terminated_event_t;
+
+CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_listener_t)
+	void (*process_dialog_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_dialog_terminated_event_t *event);
+	void (*process_io_error)(cain_sip_listener_t *user_ctx, const cain_sip_io_error_event_t *event);
+	void (*process_request_event)(cain_sip_listener_t *user_ctx, const cain_sip_request_event_t *event);
+	void (*process_response_event)(cain_sip_listener_t *user_ctx, const cain_sip_response_event_t *event);
+	void (*process_timeout)(cain_sip_listener_t *user_ctx, const cain_sip_timeout_event_t *event);
+	void (*process_transaction_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_transaction_terminated_event_t *event);
+CAIN_SIP_DECLARE_INTERFACE_END
 
 #include "cain-sip/utils.h"
 #include "cain-sip/list.h"
@@ -190,8 +233,9 @@ typedef struct cain_sip_dialog cain_sip_dialog_t;
 #include "cain-sip/dialog.h"
 #include "cain-sip/sipstack.h"
 #include "cain-sip/listeningpoint.h"
-#include "cain-sip/provider.h"
 #include "cain-sip/listener.h"
+#include "cain-sip/provider.h"
+
 
 #undef TRUE
 #define TRUE 1

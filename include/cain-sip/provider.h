@@ -31,9 +31,9 @@ cain_sip_listening_point_t *cain_sip_provider_get_listening_point(cain_sip_provi
 
 const cain_sip_list_t *cain_sip_provider_get_listening_points(cain_sip_provider_t *p);
 
-void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l, void *user_ctx);
+void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
-void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l, void *user_ctx);
+void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
 cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov);
 

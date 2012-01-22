@@ -262,7 +262,6 @@ cain_sip_list_t* cain_sip_list_remove_link(cain_sip_list_t* list, cain_sip_list_
 		elem->prev=NULL;
 		elem->next=NULL;
 		if (ret!=NULL) ret->prev=NULL;
-		free(elem);
 		return ret;
 	}
 	elem->prev->next=elem->next;
@@ -274,7 +273,7 @@ cain_sip_list_t* cain_sip_list_remove_link(cain_sip_list_t* list, cain_sip_list_
 
 cain_sip_list_t * cain_sip_list_delete_link(cain_sip_list_t* list, cain_sip_list_t* elem){
 	cain_sip_list_t *ret=cain_sip_list_remove_link(list,elem);
-	cain_sip_list_free(elem);
+	cain_sip_free(elem);
 	return ret;
 }
 
@@ -290,14 +289,6 @@ cain_sip_list_t* cain_sip_list_find_custom(cain_sip_list_t* list, cain_sip_compa
 		if (compare_func(list->data,user_data)==0) return list;
 	}
 	return NULL;
-}
-
-cain_sip_list_t *cain_sip_list_remove_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data){
-	cain_sip_list_t *elem=cain_sip_list_find_custom(list,compare_func,user_data);
-	if (elem!=NULL){
-		list=cain_sip_list_remove_link(list,elem);
-	}
-	return list;
 }
 
 cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data){

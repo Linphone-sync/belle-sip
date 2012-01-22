@@ -79,8 +79,8 @@ static void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_
 
 
 static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
-	cain_sip_main_loop_remove_source (ml,ml->control);
-	cain_sip_source_destroy(ml->control);
+	cain_sip_main_loop_remove_source(ml,ml->control);
+	cain_sip_object_unref(ml->control);
 	close(ml->control_fds[0]);
 	close(ml->control_fds[1]);
 }
@@ -99,7 +99,7 @@ cain_sip_main_loop_t *cain_sip_main_loop_new(void){
 	if (pipe(m->control_fds)==-1){
 		cain_sip_fatal("Could not create control pipe.");
 	}
-	m->control=cain_sip_fd_source_new (main_loop_done,NULL,m->control_fds[0],CAIN_SIP_EVENT_READ,-1);
+	m->control=cain_sip_fd_source_new(main_loop_done,NULL,m->control_fds[0],CAIN_SIP_EVENT_READ,-1);
 	cain_sip_main_loop_add_source(m,m->control);
 	return m;
 }

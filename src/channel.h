@@ -48,13 +48,11 @@ CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_channel_listener_t)
 void (*on_state_changed)(cain_sip_channel_listener_t *obj, cain_sip_channel_t *, cain_sip_channel_state_t state);
 CAIN_SIP_DECLARE_INTERFACE_END
 
-void cain_sip_channel_listener_on_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *, cain_sip_channel_state_t state);
-
 struct cain_sip_channel{
 	cain_sip_source_t base;
 	cain_sip_stack_t *stack;
 	cain_sip_channel_state_t state;
-	cain_sip_channel_listener_t *listener;
+	cain_sip_list_t *listeners;
 	char *peer_name;
 	int peer_port;
 	unsigned long resolver_id;
@@ -64,15 +62,15 @@ struct cain_sip_channel{
 
 #define CAIN_SIP_CHANNEL(obj)		CAIN_SIP_CAST(obj,cain_sip_channel_t)
 
-cain_sip_channel_t * cain_sip_channel_new_udp_master(cain_sip_stack_t *stack, const char *locname, int locport);
-
-cain_sip_channel_t * cain_sip_channel_new_udp_slave(cain_sip_channel_t *master, const char *peername, int peerport);
+cain_sip_channel_t * cain_sip_channel_new_udp(cain_sip_stack_t *stack, int sock, const char *peername, int peerport);
 
 cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack, const char *name, int port);
 
 void cain_sip_channel_add_listener(cain_sip_channel_t *chan, cain_sip_channel_listener_t *l);
 
-int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport);
+void cain_sip_channel_remove_listener(cain_sip_channel_t *obj, cain_sip_channel_listener_t *l);
+
+int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport, struct addrinfo *addr);
 
 int cain_sip_channel_resolve(cain_sip_channel_t *obj);
 
@@ -84,11 +82,16 @@ int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);
 
 int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *msg);
 
+int cain_sip_channel_is_reliable(const cain_sip_channel_t *obj);
+
+const char * chain_sip_channel_get_transport_name(const cain_sip_channel_t *obj);
+
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj);
 
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
-	char *transport;
+	const char *transport;
+	int reliable;
 	int (*connect)(cain_sip_channel_t *obj, const struct sockaddr *, socklen_t socklen);
 	int (*channel_send)(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 	int (*channel_recv)(cain_sip_channel_t *obj, void *buf, size_t buflen);

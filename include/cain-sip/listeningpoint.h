@@ -20,6 +20,8 @@
 #ifndef CAIN_SIP_TRANSPORT_H
 #define CAIN_SIP_TRANSPORT_H
 
+CAIN_SIP_BEGIN_DECLS
+
 const char *cain_sip_listening_point_get_ip_address(const cain_sip_listening_point_t *lp);
 int cain_sip_listening_point_get_port(const cain_sip_listening_point_t *lp);
 const char *cain_sip_listening_point_get_transport(const cain_sip_listening_point_t *ip);

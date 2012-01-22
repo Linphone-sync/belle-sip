@@ -62,6 +62,51 @@ void cain_sip_object_unref(void *ptr){
 	}
 }
 
+static weak_ref_t *weak_ref_new(cain_sip_object_destroy_notify_t destroy_notify, void *userpointer){
+	weak_ref_t *r=cain_sip_new(weak_ref_t);
+	r->next=NULL;
+	r->notify=destroy_notify;
+	r->userpointer=userpointer;
+	return r;
+}
+
+cain_sip_object_t *cain_sip_object_weak_ref(void *obj, cain_sip_object_destroy_notify_t destroy_notify, void *userpointer){
+	cain_sip_object_t *o=CAIN_SIP_OBJECT(obj);
+	weak_ref_t *old=o->weak_refs;
+	o->weak_refs=weak_ref_new(destroy_notify,userpointer);
+	o->weak_refs->next=old;
+	return o;
+}
+
+void cain_sip_object_weak_unref(void *obj, cain_sip_object_destroy_notify_t destroy_notify, void *userpointer){
+	cain_sip_object_t *o=CAIN_SIP_OBJECT(obj);
+	weak_ref_t *ref,*prevref=NULL,*next=NULL;
+
+	if (o->ref==-1) return; /*too late and avoid recursions*/
+	for(ref=o->weak_refs;ref!=NULL;ref=next){
+		next=ref->next;
+		if (ref->notify==destroy_notify && ref->userpointer==userpointer){
+			if (prevref==NULL) o->weak_refs=next;
+			else prevref->next=next;
+			cain_sip_free(ref);
+			return;
+		}else{
+			prevref=ref;
+		}
+	}
+	cain_sip_fatal("Could not find weak_ref, you're a looser.");
+}
+
+static void cain_sip_object_loose_weak_refs(cain_sip_object_t *obj){
+	weak_ref_t *ref,*next;
+	for(ref=obj->weak_refs;ref!=NULL;ref=next){
+		next=ref->next;
+		ref->notify(ref->userpointer,obj);
+		cain_sip_free(ref);
+	}
+	obj->weak_refs=NULL;
+}
+
 static void _cain_sip_object_uninit(cain_sip_object_t *obj){
 	if (obj->name)
 		cain_sip_free(obj->name);
@@ -83,15 +128,18 @@ cain_sip_object_vptr_t cain_sip_object_t_vptr={
 void cain_sip_object_delete(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
 	cain_sip_object_vptr_t *vptr;
+	
 	if (obj->ref!=0){
 		cain_sip_error("Destroying referenced object !");
-		vptr=obj->vptr;
-		while(vptr!=NULL){
-			if (vptr->destroy) vptr->destroy(obj);
-			vptr=vptr->parent;
-		}
-		cain_sip_free(obj);
 	}
+	obj->ref=-1;
+	cain_sip_object_loose_weak_refs(obj);
+	vptr=obj->vptr;
+	while(vptr!=NULL){
+		if (vptr->destroy) vptr->destroy(obj);
+		vptr=vptr->parent;
+	}
+	cain_sip_free(obj);
 }
 
 cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){

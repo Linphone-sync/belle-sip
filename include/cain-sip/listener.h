@@ -21,17 +21,6 @@
 #define cain_sip_listener_h
 
 
-typedef struct cain_sip_dialog_terminated_event cain_sip_dialog_terminated_event_t;
-
-typedef struct cain_sip_io_error_event cain_sip_io_error_event_t;
-
-typedef struct cain_sip_request_event cain_sip_request_event_t;
-
-typedef struct cain_sip_response_event cain_sip_response_event_t;
-
-typedef struct cain_sip_timeout_event cain_sip_timeout_event_t;
-
-typedef struct cain_sip_transaction_terminated_event cain_sip_transaction_terminated_event_t;
 
 struct cain_sip_dialog_terminated_event{
 	cain_sip_provider_t *source;
@@ -71,14 +60,7 @@ struct cain_sip_transaction_terminated_event{
 	int is_server_transaction;
 };
 
-struct cain_sip_listener{
-	void (*process_dialog_terminated)(void *user_ctx, const cain_sip_dialog_terminated_event_t *event);
-	void (*process_io_error)(void *user_ctx, const cain_sip_io_error_event_t *event);
-	void (*process_request_event)(void *user_ctx, const cain_sip_request_event_t *event);
-	void (*process_response_event)(void *user_ctx, const cain_sip_response_event_t *event);
-	void (*process_timeout)(void *user_ctx, const cain_sip_timeout_event_t *event);
-	void (*process_transaction_terminated)(void *user_ctx, const cain_sip_transaction_terminated_event_t *event);
-};
+
 
 
 #endif

@@ -84,15 +84,6 @@ extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
 		(cain_sip_object_marshal_t)marshal\
 		}
 
-#define CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name) methods_##interface_name
-
-#define CAIN_SIP_DECLARE_INTERFACE_BEGIN(interface_name) \
-	typedef struct struct##interface_name interface_name;\
-	typedef struct struct_methods_##interface_name CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name);\
-	struct struct_methods_##interface_name {\
-		cain_sip_interface_id_t id;
-
-#define CAIN_SIP_DECLARE_INTERFACE_END };
 
 #define CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(object_type,interface_name) \
 	static CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name)  methods_##object_type##_##interface_name={\
@@ -123,11 +114,51 @@ extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
 #define CAIN_SIP_INTERFACE_GET_METHODS(obj,interface) \
 	((CAIN_SIP_INTERFACE_METHODS_TYPE(interface)*)cain_sip_object_get_interface_methods((cain_sip_object_t*)obj,CAIN_SIP_INTERFACE_ID(interface)))
 
+#define __CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name) \
+	if (list!=NULL) {\
+		const cain_sip_list_t *__elem=list;\
+		do{\
+			interface_name *__obj=(interface_name*)__elem->data;\
+			CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->
+
+#define __CAIN_SIP_INVOKE_LISTENER_END \
+			__elem=__elem->next;\
+		}while(__elem!=NULL);\
+	}
+
+#define CAIN_SIP_INVOKE_LISTENERS_VOID(list,interface_name,method) \
+			__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name)\
+			method(__obj);\
+			__CAIN_SIP_INVOKE_LISTENER_END
+
+#define CAIN_SIP_INVOKE_LISTENERS_ARG(list,interface_name,method,arg) \
+	__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name)\
+	method(__obj,arg);\
+	__CAIN_SIP_INVOKE_LISTENER_END
+
+
+#define CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(list,interface_name,method,arg1,arg2) \
+			__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name)\
+			method(__obj,arg1,arg2);\
+			__CAIN_SIP_INVOKE_LISTENER_END
+
+#define CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2_ARG3(list,interface_name,method,arg1,arg2,arg3) \
+			__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name)\
+			method(__obj,arg1,arg2,arg3);\
+			__CAIN_SIP_INVOKE_LISTENER_END
+
+typedef struct weak_ref{
+	struct weak_ref *next;
+	cain_sip_object_destroy_notify_t notify;
+	void *userpointer;
+}weak_ref_t;
+
 struct _cain_sip_object{
 	cain_sip_object_vptr_t *vptr;
 	size_t size;
 	int ref;
 	char* name;
+	weak_ref_t *weak_refs;
 };
 
 cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed);
@@ -142,12 +173,8 @@ void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_int
 
 /*list of all vptrs (classes) used in cain-sip*/
 CAIN_SIP_DECLARE_VPTR(cain_sip_object_t);
-
-
 CAIN_SIP_DECLARE_VPTR(cain_sip_stack_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_listening_point_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_datagram_listening_point_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_udp_listening_point_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_provider_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_main_loop_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_source_t);
@@ -228,6 +255,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 /* include private headers */
 #include "channel.h"
 
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -240,7 +268,6 @@ extern "C"{
 cain_sip_list_t *cain_sip_list_new(void *data);
 cain_sip_list_t*  cain_sip_list_append_link(cain_sip_list_t* elem,cain_sip_list_t *new_elem);
 cain_sip_list_t *cain_sip_list_find_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
-cain_sip_list_t *cain_sip_list_remove_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 
@@ -511,15 +538,22 @@ void cain_sip_parameters_init(cain_sip_parameters_t *obj);
  * Listening points
 */
 
-
-
 typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_listening_point_t,cain_sip_object_t)
+const char *transport;
+cain_sip_channel_t * (*create_channel)(cain_sip_listening_point_t *,const char *dest_ip, int port);
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_udp_listening_point_t,cain_sip_listening_point_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 #define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
 #define CAIN_SIP_UDP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_udp_listening_point_t)
 
 cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
-cain_sip_channel_t *cain_sip_listening_point_find_output_channel(cain_sip_listening_point_t *ip, const struct addrinfo *dest); 
+cain_sip_channel_t *cain_sip_listening_point_get_channel(cain_sip_listening_point_t *ip, const char *dest, int port);
+cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *ip, const char *dest, int port);
 int cain_sip_listening_point_get_well_known_port(const char *transport);
 
 
@@ -558,13 +592,8 @@ typedef struct listener_ctx{
 }listener_ctx_t;
 
 #define CAIN_SIP_PROVIDER_INVOKE_LISTENERS(provider,callback,event) \
-{ \
-	cain_sip_list_t *_elem; \
-	for(_elem=(provider)->listeners;_elem!=NULL;_elem=_elem->next){ \
-		listener_ctx_t *_lctx=(listener_ctx_t*)_elem->data; \
-		_lctx->listener->callback(_lctx->data,(event)); \
-	} \
-}
+	CAIN_SIP_INVOKE_LISTENERS_ARG(((provider)->listeners),cain_sip_listener_t,callback,(event))
+
 
 /*
  cain_sip_transaction_t
