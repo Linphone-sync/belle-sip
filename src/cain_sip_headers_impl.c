@@ -64,7 +64,7 @@ int cain_sip_header_marshal(cain_sip_header_t* header, char* buff,unsigned int o
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_header_t);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_header_t,cain_sip_object_t,cain_sip_header_destroy,cain_sip_header_clone,cain_sip_header_marshal);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_header_t,cain_sip_object_t,cain_sip_header_destroy,cain_sip_header_clone,cain_sip_header_marshal,TRUE);
 
 
 /************************
@@ -727,7 +727,7 @@ GET_SET_STRING(cain_sip_header_extension,value);
 static void cain_sip_header_authorization_destroy(cain_sip_header_authorization_t* authorization) {
 	if (authorization->username) cain_sip_free((void*)authorization->username);
 	if (authorization->uri) {
-			cain_sip_object_unref(CAIN_SIP_OBJECT(authorization->uri));
+			cain_sip_object_unref(authorization->uri);
 	}
 	if (authorization->cnonce) cain_sip_free((void*)authorization->cnonce);
 	AUTH_BASE_DESTROY(authorization)
@@ -752,11 +752,11 @@ cain_sip_uri_t* cain_sip_header_authorization_get_uri(const cain_sip_header_auth
 }
 
 void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* authorization, cain_sip_uri_t* uri) {
+	if (uri) cain_sip_object_ref(uri);
 	if (authorization->uri) {
 		cain_sip_object_unref(CAIN_SIP_OBJECT(authorization->uri));
 	}
 	authorization->uri=uri;
-	if (authorization->uri) cain_sip_object_ref(authorization->uri);
 }
 int cain_sip_header_authorization_marshal(cain_sip_header_authorization_t* authorization, char* buff,unsigned int offset,unsigned int buff_size) {
 	AUTH_BASE_MARSHAL(authorization)

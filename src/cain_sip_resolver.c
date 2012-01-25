@@ -63,7 +63,7 @@ void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_resolver_context_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t,cain_sip_resolver_context_destroy, NULL, NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t,cain_sip_resolver_context_destroy, NULL, NULL,FALSE);
 
 static int resolver_callback(cain_sip_resolver_context_t *ctx){
 	ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
@@ -77,7 +77,7 @@ cain_sip_resolver_context_t *cain_sip_resolver_context_new(){
 		cain_sip_fatal("pipe() failed: %s",strerror(errno));
 	}
 	cain_sip_fd_source_init(&ctx->source,(cain_sip_source_func_t)resolver_callback,ctx,ctx->ctlpipe[0],CAIN_SIP_EVENT_READ,-1);
-	ctx->source.on_remove=(cain_sip_source_remove_callback_t)cain_sip_resolver_context_destroy;
+	ctx->source.on_remove=(cain_sip_source_remove_callback_t)cain_sip_object_unref;
 	return ctx;
 }
 

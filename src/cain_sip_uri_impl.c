@@ -97,7 +97,7 @@ int cain_sip_uri_marshal(cain_sip_uri_t* uri, char* buff,unsigned int offset,uns
 CAIN_SIP_PARSE(uri);
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_uri_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_parameters_t,cain_sip_uri_destroy,cain_sip_uri_clone,cain_sip_uri_marshal);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_parameters_t,cain_sip_uri_destroy,cain_sip_uri_clone,cain_sip_uri_marshal,TRUE);
 
 
 cain_sip_uri_t* cain_sip_uri_new () {

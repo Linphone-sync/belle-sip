@@ -32,16 +32,16 @@ int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id
 	return has_type(obj,id);
 }
 
-cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr, int initially_unowed){
+cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr){
 	cain_sip_object_t *obj=(cain_sip_object_t *)cain_sip_malloc0(objsize);
-	obj->ref=initially_unowed ? 0 : 1;
+	obj->ref=vptr->initially_unowned ? 0 : 1;
 	obj->vptr=vptr;
 	obj->size=objsize;
 	return obj;
 }
 
-int cain_sip_object_is_unowed(const cain_sip_object_t *obj){
-	return obj->ref==0;
+int cain_sip_object_is_initially_unowned(const cain_sip_object_t *obj){
+	return obj->vptr->initially_unowned;
 }
 
 cain_sip_object_t * cain_sip_object_ref(void *obj){
@@ -118,6 +118,8 @@ static void _cain_sip_object_clone(cain_sip_object_t *obj, const cain_sip_object
 
 cain_sip_object_vptr_t cain_sip_object_t_vptr={
 	CAIN_SIP_TYPE_ID(cain_sip_object_t),
+	"cain_sip_object_t",
+	FALSE,
 	NULL, /*no parent, it's god*/
 	NULL,
 	_cain_sip_object_uninit,
@@ -175,10 +177,10 @@ void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_int
 	if (obj!=NULL){
 		cain_sip_object_vptr_t *vptr;
 		for (vptr=obj->vptr;vptr!=NULL;vptr=vptr->parent){
-			cain_sip_interface_id_t **ifaces=vptr->interfaces;
+			cain_sip_interface_desc_t **ifaces=vptr->interfaces;
 			if (ifaces!=NULL){
 				for(;*ifaces!=0;++ifaces){
-					if (**ifaces==ifid){
+					if ((*ifaces)->id==ifid){
 						return *ifaces;
 					}
 				}
@@ -192,7 +194,7 @@ int cain_sip_object_implements(cain_sip_object_t *obj, cain_sip_interface_id_t i
 	return cain_sip_object_get_interface_methods(obj,id)!=NULL;
 }
 
-void *cain_sip_object_cast_to_interface(cain_sip_object_t *obj, cain_sip_interface_id_t ifid, const char *castname, const char *file, int fileno){
+void *cain_sip_object_interface_cast(cain_sip_object_t *obj, cain_sip_interface_id_t ifid, const char *castname, const char *file, int fileno){
 	if (obj!=NULL){
 		if (cain_sip_object_get_interface_methods(obj,ifid)==0){
 			cain_sip_fatal("Bad cast to interface %s at %s:%i",castname,file,fileno);
@@ -226,10 +228,71 @@ int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offs
 	}
 	return -1; /*no implementation found*/
 }
+
 char* cain_sip_object_to_string(cain_sip_object_t* obj) {
 	char buff[2048]; /*to be optimized*/
 	int size = cain_sip_object_marshal(obj,buff,0,sizeof(buff));
 	buff[size]='\0';
 	return strdup(buff);
 
+}
+
+char * _cain_sip_object_describe_type(cain_sip_object_vptr_t *vptr){
+	const int maxbufsize=2048;
+	char *ret=cain_sip_malloc(maxbufsize);
+	cain_sip_object_vptr_t *it;
+	int pos=0;
+	cain_sip_list_t *l=NULL,*elem;
+	pos+=snprintf(ret+pos,maxbufsize-pos,"Ownership:\n");
+	pos+=snprintf(ret+pos,maxbufsize-pos,"\t%s is created initially %s\n",vptr->type_name,
+	              vptr->initially_unowned ? "unowned" : "owned");
+	pos+=snprintf(ret+pos,maxbufsize-pos,"\nInheritance diagram:\n");
+	for(it=vptr;it!=NULL;it=it->parent){
+		l=cain_sip_list_prepend(l,it);
+	}
+	for(elem=l;elem!=NULL;elem=elem->next){
+		it=(cain_sip_object_vptr_t*)elem->data;
+		pos+=snprintf(ret+pos,maxbufsize-pos,"\t%s\n",it->type_name);
+		if (elem->next)
+			pos+=snprintf(ret+pos,maxbufsize-pos,"\t        |\n");
+	}
+	cain_sip_list_free(l);
+	pos+=snprintf(ret+pos,maxbufsize-pos,"\nImplemented interfaces:\n");
+	for(it=vptr;it!=NULL;it=it->parent){
+		cain_sip_interface_desc_t **desc=it->interfaces;
+		if (desc!=NULL){
+			for(;*desc!=NULL;desc++){
+				pos+=snprintf(ret+pos,maxbufsize-pos,"\t* %s\n",(*desc)->ifname);
+			}
+		}
+	}
+	return ret;
+}
+
+char *cain_sip_object_describe(void *obj){
+	cain_sip_object_t *o=CAIN_SIP_OBJECT(obj);
+	return _cain_sip_object_describe_type(o->vptr);
+}
+
+#include <dlfcn.h>
+
+char *cain_sip_object_describe_type_from_name(const char *name){
+	char *vptr_name;
+	void *handle;
+	void *symbol;
+	
+	handle=dlopen(NULL,RTLD_LAZY);
+	if (handle==NULL){
+		cain_sip_error("cain_sip_object_describe_type_from_name: dlopen() failed: %s",dlerror());
+		return NULL;
+	}
+	vptr_name=cain_sip_strdup_printf("%s_vptr",name);
+	symbol=dlsym(handle,vptr_name);
+	cain_sip_free(vptr_name);
+	dlclose(handle);
+	if (symbol==NULL){
+		cain_sip_error("cain_sip_object_describe_type_from_name: could not find vptr for type %s",name);
+		return NULL;
+	}
+	return _cain_sip_object_describe_type((cain_sip_object_vptr_t*)symbol);
 }

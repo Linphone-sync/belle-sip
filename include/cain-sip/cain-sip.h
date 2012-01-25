@@ -162,9 +162,19 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj);
 **/
 void cain_sip_object_delete(void *obj);
 
+/**
+ * Returns a string describing the inheritance diagram and implemented interfaces of object obj.
+**/
+char *cain_sip_object_describe(void *obj);
+
+/**
+ * Returns a string describing the inheritance diagram and implemented interfaces of an object given its type name.
+**/
+char *cain_sip_object_describe_type_from_name(const char *name);
+
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
 
-void *cain_sip_object_cast_to_interface(cain_sip_object_t *obj, cain_sip_interface_id_t id, const char *castname, const char *file, int fileno);
+void *cain_sip_object_interface_cast(cain_sip_object_t *obj, cain_sip_interface_id_t id, const char *castname, const char *file, int fileno);
 
 char* cain_sip_object_to_string(cain_sip_object_t* obj);
 
@@ -191,11 +201,20 @@ CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name) methods_##interface_name
 
+#define cain_sip_object_describe_type(type) \
+	cain_sip_object_describe_type_from_name(#type)
+
+typedef struct cain_sip_interface_desc{
+	cain_sip_interface_id_t id;
+	const char *ifname;
+}cain_sip_interface_desc_t;
+
 #define CAIN_SIP_DECLARE_INTERFACE_BEGIN(interface_name) \
 	typedef struct struct##interface_name interface_name;\
 	typedef struct struct_methods_##interface_name CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name);\
 	struct struct_methods_##interface_name {\
-		cain_sip_interface_id_t id;
+		cain_sip_interface_desc_t desc;\
+		
 
 #define CAIN_SIP_DECLARE_INTERFACE_END };
 

@@ -283,7 +283,6 @@ uri_token: {IS_TOKEN(uri)}? token;
 digest_uri [cain_sip_header_authorization_t* header_authorization_base]        
 	:	  uri_token /*'uri'*/ equal DQUOTE uri DQUOTE  
 	{cain_sip_header_authorization_set_uri(header_authorization_base,$uri.ret);
-	 cain_sip_object_unref(CAIN_SIP_OBJECT($uri.ret));
 	 };
 /*
 digest_uri_value  :  rquest_uri ;
@@ -394,7 +393,7 @@ contact_param
 name_addr[cain_sip_header_address_t* object]      
 	:	  ( display_name[object] )? sp_laquot_sp addr_spec[object] sp_raquot_sp;
 addr_spec[cain_sip_header_address_t* object]      
-  :  uri {cain_sip_header_address_set_uri(object,CAIN_SIP_URI(cain_sip_object_ref(CAIN_SIP_OBJECT($uri.ret))));};//| absoluteURI;
+  :  uri {cain_sip_header_address_set_uri(object,$uri.ret);};//| absoluteURI;
 
 display_name[cain_sip_header_address_t* object]   
   :  token {cain_sip_header_address_set_displayname(object,(const char*)($token.text->chars));}

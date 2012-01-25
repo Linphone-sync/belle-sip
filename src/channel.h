@@ -45,8 +45,11 @@ typedef enum cain_sip_channel_state{
 typedef struct cain_sip_channel cain_sip_channel_t;
 
 CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_channel_listener_t)
-void (*on_state_changed)(cain_sip_channel_listener_t *obj, cain_sip_channel_t *, cain_sip_channel_state_t state);
+void (*on_state_changed)(cain_sip_channel_listener_t *l, cain_sip_channel_t *, cain_sip_channel_state_t state);
+int (*on_event)(cain_sip_channel_listener_t *l, cain_sip_channel_t *obj, unsigned revents);
 CAIN_SIP_DECLARE_INTERFACE_END
+
+#define CAIN_SIP_CHANNEL_LISTENER(obj) CAIN_SIP_INTERFACE_CAST(obj,cain_sip_channel_listener_t)
 
 struct cain_sip_channel{
 	cain_sip_source_t base;
@@ -64,13 +67,15 @@ struct cain_sip_channel{
 
 cain_sip_channel_t * cain_sip_channel_new_udp(cain_sip_stack_t *stack, int sock, const char *peername, int peerport);
 
+cain_sip_channel_t * cain_sip_channel_new_udp_with_addr(cain_sip_stack_t *stack, int sock, const struct addrinfo *ai);
+
 cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack, const char *name, int port);
 
 void cain_sip_channel_add_listener(cain_sip_channel_t *chan, cain_sip_channel_listener_t *l);
 
 void cain_sip_channel_remove_listener(cain_sip_channel_t *obj, cain_sip_channel_listener_t *l);
 
-int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport, struct addrinfo *addr);
+int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport, const struct addrinfo *addr);
 
 int cain_sip_channel_resolve(cain_sip_channel_t *obj);
 
@@ -88,6 +93,8 @@ const char * chain_sip_channel_get_transport_name(const cain_sip_channel_t *obj)
 
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj);
 
+/*just invokes the listeners to process data*/
+void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
 	const char *transport;

@@ -50,7 +50,7 @@ static void cain_sip_message_destroy(cain_sip_message_t *msg){
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_message_t);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,NULL,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,NULL,NULL,FALSE);
 
 cain_sip_message_t* cain_sip_message_parse (const char* value) {
 	size_t message_length;

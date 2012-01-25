@@ -49,4 +49,6 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 
 CAIN_SIP_END_DECLS
 
+#define CAIN_SIP_PROVIDER(obj) CAIN_SIP_CAST(obj,cain_sip_provider_t)
+
 #endif

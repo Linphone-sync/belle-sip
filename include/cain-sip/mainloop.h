@@ -45,6 +45,8 @@ CAIN_SIP_BEGIN_DECLS
 
 void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
 
+void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
+
 /**
  * Creates a mainloop.
 **/

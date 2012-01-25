@@ -28,13 +28,76 @@ static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
 }
 
+static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_sip_message_t *msg){
+	/*should find existing transaction*/
+
+	if (cain_sip_message_is_request(msg)){
+		cain_sip_request_event_t event;
+		event.source=prov;
+		event.server_transaction=NULL;
+		event.request=(cain_sip_request_t*)msg;
+		event.dialog=NULL;
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_request_event,&event);
+	}else{
+		cain_sip_response_event_t event;
+		event.source=prov;
+		event.client_transaction=NULL;
+		event.dialog=NULL;
+		event.response=(cain_sip_response_t*)msg;
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
+	}
+}
+
+static void fix_via(cain_sip_request_t *msg, const struct addrinfo* origin){
+	char received[NI_MAXHOST];
+	char rport[NI_MAXSERV];
+	cain_sip_header_via_t *via;
+	int err=getnameinfo(origin->ai_addr,origin->ai_addrlen,received,sizeof(received),
+	                rport,sizeof(rport),NI_NUMERICHOST|NI_NUMERICSERV);
+	if (err!=0){
+		cain_sip_error("fix_via: getnameinfo() failed: %s",gai_strerror(errno));
+		return;
+	}
+	via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header((cain_sip_message_t*)msg,"via"));
+	if (via){
+		cain_sip_header_via_set_received(via,received);
+		cain_sip_header_via_set_rport(via,atoi(rport));
+	}
+}
+
+static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_channel_t *chan){
+	char buffer[cain_sip_network_buffer_size];
+	int err;
+	err=cain_sip_channel_recv(chan,buffer,sizeof(buffer));
+	if (err>0){
+		cain_sip_message_t *msg;
+		buffer[err]='\0';
+		cain_sip_message("provider %p read message from %s:%i\n%s",chan->peer_name,chan->peer_port,buffer);
+		msg=cain_sip_message_parse(buffer);
+		if (msg){
+			if (cain_sip_message_is_request(msg)) fix_via(CAIN_SIP_REQUEST(msg),chan->peer);
+			cain_sip_provider_dispatch_message(prov,msg);
+		}else{
+			cain_sip_error("Could not parse this message.");
+		}
+	}
+}
+
+static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, unsigned int revents){
+	if (revents & CAIN_SIP_EVENT_READ){
+		cain_sip_provider_read_message(CAIN_SIP_PROVIDER(obj),chan);
+	}
+	return 0;
+}
+
 CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(cain_sip_provider_t,cain_sip_channel_listener_t)
-	channel_state_changed
+	channel_state_changed,
+	channel_on_event
 CAIN_SIP_IMPLEMENT_INTERFACE_END
 
 CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(cain_sip_provider_t,cain_sip_channel_listener_t);
 	
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provider_uninit,NULL,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provider_uninit,NULL,NULL,FALSE);
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){
 	cain_sip_provider_t *p=cain_sip_object_new(cain_sip_provider_t);
@@ -105,6 +168,7 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 	if (candidate){
 		chan=cain_sip_listening_point_create_channel(candidate,name,port);
 		if (chan==NULL) cain_sip_error("Could not create channel to %s:%s:%i",transport,name,port);
+		else cain_sip_channel_add_listener(chan,CAIN_SIP_CHANNEL_LISTENER(p));
 		return chan;
 	}
 	cain_sip_error("No listening point matching for transport %s",transport);

@@ -1,6 +1,6 @@
 if BUILD_TESTS
 
-noinst_PROGRAMS=cain_sip_tester cast_test basic_test
+noinst_PROGRAMS=cain_sip_tester cast_test basic_test cain_sip_object_describe
 
 cain_sip_tester_SOURCES=	cain_sip_tester.c \
 							cain_sdp_tester.c \
@@ -12,9 +12,13 @@ cast_test_SOURCES=cast_test.c
 
 basic_test_SOURCES=basic_test.c
 
+cain_sip_object_describe_SOURCES=describe.c
+
 INCLUDES=-I$(top_srcdir)/include -I$(top_srcdir)/src
 
 LDADD=$(top_builddir)/src/libcainsip.la -lcunit
+
+AM_LDFLAGS=-export-dynamic
 
 AM_CFLAGS=$(STRICT_OPTIONS)
 

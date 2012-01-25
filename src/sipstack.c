@@ -26,7 +26,7 @@ static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_stack_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_stack_t,cain_sip_object_t,cain_sip_stack_destroy,NULL,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_stack_t,cain_sip_object_t,cain_sip_stack_destroy,NULL,NULL,FALSE);
 
 cain_sip_stack_t * cain_sip_stack_new(const char *properties){
 	cain_sip_stack_t *stack=cain_sip_object_new(cain_sip_stack_t);

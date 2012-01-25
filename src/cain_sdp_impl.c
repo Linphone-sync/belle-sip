@@ -269,7 +269,7 @@ int cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_descript
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_base_description_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_base_description_t,cain_sip_object_t,cain_sdp_base_description_destroy,NULL,cain_sdp_base_description_marshal);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_base_description_t,cain_sip_object_t,cain_sdp_base_description_destroy,NULL,cain_sdp_base_description_marshal,FALSE);
 
 static int cain_sdp_base_description_attribute_comp_func(const cain_sdp_attribute_t* a, const char*b) {
 	return strcmp(a->name,b);
@@ -992,7 +992,7 @@ static void cain_sdp_mime_parameter_destroy(cain_sdp_mime_parameter_t *mime_para
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_mime_parameter_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_mime_parameter_t,cain_sip_object_t,cain_sdp_mime_parameter_destroy,NULL,NULL);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_mime_parameter_t,cain_sip_object_t,cain_sdp_mime_parameter_destroy,NULL,NULL,TRUE);
 
 cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_new() {
 	cain_sdp_mime_parameter_t* l_param = cain_sip_object_new(cain_sdp_mime_parameter_t);
