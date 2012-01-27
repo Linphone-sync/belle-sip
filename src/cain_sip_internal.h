@@ -402,6 +402,8 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 		cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(obj),#attribute,value);\
 	}
 
+#define DESTROY_STRING(object,attribute) if (object->attribute) cain_sip_free((void*)object->attribute);
+
 #define CLONE_STRING(object_type,attribute,dest,src) \
 		if ( object_type##_get_##attribute (src)) {\
 			object_type##_set_##attribute(dest,object_type##_get_##attribute(src));\

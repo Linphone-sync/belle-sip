@@ -381,6 +381,16 @@ cain_sip_list_t* cain_sip_list_copy(const cain_sip_list_t* list){
 	return copy;
 }
 
+cain_sip_list_t* cain_sip_list_copy_with_data(const cain_sip_list_t* list, void* (*copyfunc)(void*)){
+	cain_sip_list_t* copy=NULL;
+	const cain_sip_list_t* iter;
+	for(iter=list;iter!=NULL;iter=cain_sip_list_next(iter)){
+		copy=cain_sip_list_append(copy,copyfunc(iter->data));
+	}
+	return copy;
+}
+
+
 char * cain_sip_concat (const char *str, ...) {
   va_list ap;
   size_t allocated = 100;

@@ -48,6 +48,8 @@ int cain_sip_list_index(const cain_sip_list_t * list, void *data);
 cain_sip_list_t * cain_sip_list_insert_sorted(cain_sip_list_t * list, void *data, cain_sip_compare_func cmp);
 cain_sip_list_t * cain_sip_list_insert(cain_sip_list_t * list, cain_sip_list_t * before, void *data);
 cain_sip_list_t * cain_sip_list_copy(const cain_sip_list_t * list);
+/*copy list elements and associated data, using the supplied function pointer*/
+cain_sip_list_t* cain_sip_list_copy_with_data(const cain_sip_list_t* list, void* (*copyfunc)(void*));
 
 
 #endif /* CAIN_SIP_LIST_H_ */

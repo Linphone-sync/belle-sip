@@ -74,36 +74,48 @@ static void test_bandwidth(void) {
 
 
 static void test_connection(void) {
+	cain_sdp_connection_t* lTmp;
 	cain_sdp_connection_t* lConnection = cain_sdp_connection_parse("c=IN IP4 192.168.0.18");
 	char* l_raw_connection = cain_sip_object_to_string(CAIN_SIP_OBJECT(lConnection));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lConnection));
-	lConnection = cain_sdp_connection_parse(l_raw_connection);
+	lTmp = cain_sdp_connection_parse(l_raw_connection);
+	lConnection = CAIN_SDP_CONNECTION(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_connection_get_address(lConnection), "192.168.0.18");
 	CU_ASSERT_STRING_EQUAL(cain_sdp_connection_get_address_type(lConnection), "IP4");
 	CU_ASSERT_STRING_EQUAL(cain_sdp_connection_get_network_type(lConnection), "IN");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lConnection));
 }
 static void test_email(void) {
+	cain_sdp_email_t* lTmp;
 	cain_sdp_email_t* l_email = cain_sdp_email_parse("e= jehan <jehan@linphone.org>");
 	char* l_raw_email = cain_sip_object_to_string(CAIN_SIP_OBJECT(l_email));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_email));
-	l_email = cain_sdp_email_parse(l_raw_email);
+	lTmp = cain_sdp_email_parse(l_raw_email);
+	l_email = CAIN_SDP_EMAIL(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_email_get_value(l_email), " jehan <jehan@linphone.org>");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_email));
 }
 static void test_info(void) {
+	cain_sdp_info_t* lTmp;
 	cain_sdp_info_t* l_info = cain_sdp_info_parse("i=A Seminar on the session description protocol");
 	char* l_raw_info = cain_sip_object_to_string(CAIN_SIP_OBJECT(l_info));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_info));
-	l_info = cain_sdp_info_parse(l_raw_info);
+	lTmp = cain_sdp_info_parse(l_raw_info);
+	l_info = CAIN_SDP_INFO(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_info_get_value(l_info), "A Seminar on the session description protocol");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_info));
 }
 static void test_media(void) {
+	cain_sdp_media_t* lTmp;
 	cain_sdp_media_t* l_media = cain_sdp_media_parse("m=audio 7078 RTP/AVP 111 110 3 0 8 101");
 	char* l_raw_media = cain_sip_object_to_string(CAIN_SIP_OBJECT(l_media));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_media));
-	l_media = cain_sdp_media_parse(l_raw_media);
+	lTmp = cain_sdp_media_parse(l_raw_media);
+	l_media = CAIN_SDP_MEDIA(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_media_get_media_type(l_media), "audio");
 	CU_ASSERT_EQUAL(cain_sdp_media_get_media_port(l_media), 7078);
 	CU_ASSERT_STRING_EQUAL(cain_sdp_media_get_protocol(l_media), "RTP/AVP");
@@ -168,10 +180,13 @@ static void test_media_description(void) {
 						"a=rtpmap:98 H263-1998/90000\r\n"\
 						"a=fmtp:98 CIF=1;QCIF=1\r\n";
 
+	cain_sdp_media_description_t* lTmp;
 	cain_sdp_media_description_t* l_media_description = cain_sdp_media_description_parse(l_src);
 	char* l_raw_media_description = cain_sip_object_to_string(CAIN_SIP_OBJECT(l_media_description));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_media_description));
-	l_media_description = cain_sdp_media_description_parse(l_raw_media_description);
+	lTmp = cain_sdp_media_description_parse(l_raw_media_description);
+	l_media_description = CAIN_SDP_MEDIA_DESCRIPTION(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	test_media_description_base(l_media_description);
 	return;
 }
@@ -196,10 +211,13 @@ static void test_session_description(void) {
 						"a=rtpmap:97 theora/90000\r\n"\
 						"a=rtpmap:98 H263-1998/90000\r\n"\
 						"a=fmtp:98 CIF=1;QCIF=1\r\n";
+	cain_sdp_session_description_t* lTmp;
 	cain_sdp_session_description_t* l_session_description = cain_sdp_session_description_parse(l_src);
 	char* l_raw_session_description = cain_sip_object_to_string(CAIN_SIP_OBJECT(l_session_description));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_session_description));
-	l_session_description = cain_sdp_session_description_parse(l_raw_session_description);
+	lTmp = cain_sdp_session_description_parse(l_raw_session_description);
+	l_session_description = CAIN_SDP_SESSION_DESCRIPTION(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_version(l_session_description));
 	CU_ASSERT_EQUAL(cain_sdp_version_get_version(cain_sdp_session_description_get_version(l_session_description)),0);
@@ -279,8 +297,11 @@ static void test_mime_parameter(void) {
 	cain_sdp_media_description_set_attribute(l_media_description,"ptime","40");
 
 	 mime_parameter_list = cain_sdp_media_description_build_mime_parameters(l_media_description);
+	cain_sdp_mime_parameter_t* l_param;
+	cain_sdp_mime_parameter_t*  lTmp = find_mime_parameter(mime_parameter_list,111);
+	l_param = CAIN_SDP_MIME_PARAMETER(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 
-	cain_sdp_mime_parameter_t* l_param = find_mime_parameter(mime_parameter_list,111);
 	CU_ASSERT_PTR_NOT_NULL(l_param);
 	check_mime_param(l_param,16000,1,40,-1,111,"speex","vbr=on");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_param));

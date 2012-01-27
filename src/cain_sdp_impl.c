@@ -101,9 +101,16 @@ struct _cain_sdp_connection {
  };
 
 void cain_sdp_connection_destroy(cain_sdp_connection_t* connection) {
+	DESTROY_STRING(connection,network_type)
+	DESTROY_STRING(connection,address_type)
+	DESTROY_STRING(connection,address)
 }
 
 void cain_sdp_connection_clone(cain_sdp_connection_t *connection, const cain_sdp_connection_t *orig){
+	CLONE_STRING(cain_sdp_connection,network_type,connection,orig)
+	CLONE_STRING(cain_sdp_connection,address_type,connection,orig)
+	CLONE_STRING(cain_sdp_connection,address,connection,orig)
+
 }
 int cain_sdp_connection_marshal(cain_sdp_connection_t* connection, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -129,9 +136,11 @@ struct _cain_sdp_email {
  };
 
 void cain_sdp_email_destroy(cain_sdp_email_t* email) {
+	DESTROY_STRING(email,value)
 }
 
 void cain_sdp_email_clone(cain_sdp_email_t *email, const cain_sdp_email_t *orig){
+	CLONE_STRING(cain_sdp_email,value,email,orig)
 }
 int cain_sdp_email_marshal(cain_sdp_email_t* email, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -153,9 +162,11 @@ struct _cain_sdp_info {
  };
 
 void cain_sdp_info_destroy(cain_sdp_info_t* info) {
+	DESTROY_STRING(info,value)
 }
 
 void cain_sdp_info_clone(cain_sdp_info_t *info, const cain_sdp_info_t *orig){
+	CLONE_STRING(cain_sdp_info,value,info,orig)
 }
 int cain_sdp_info_marshal(cain_sdp_info_t* info, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -186,12 +197,20 @@ void cain_sdp_media_set_media_formats( cain_sdp_media_t* media, cain_sip_list_t*
 	media->media_formats = formats;
 }
 void cain_sdp_media_destroy(cain_sdp_media_t* media) {
+	DESTROY_STRING(media,media_type)
+	cain_sip_list_free(media->media_formats);
+	DESTROY_STRING(media,protocol)
 }
 static void cain_sdp_media_init(cain_sdp_media_t* media) {
 	media->port_count=1;
 }
 
 void cain_sdp_media_clone(cain_sdp_media_t *media, const cain_sdp_media_t *orig){
+	CLONE_STRING(cain_sdp_media,media_type,media,orig)
+	media->media_port=orig->media_port;
+	media->media_formats = cain_sip_list_copy(orig->media_formats);
+	media->port_count=orig->port_count;
+	CLONE_STRING(cain_sdp_media,protocol,media,orig)
 }
 int cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -230,6 +249,12 @@ GET_SET_INT(cain_sdp_media,port_count,int)
 /************************
  * base_description
  ***********************/
+static void cain_sip_object_freefunc(void* obj) {
+	cain_sip_object_unref(CAIN_SIP_OBJECT(obj));
+}
+static void* cain_sip_object_copyfunc(void* obj) {
+	return cain_sip_object_clone(CAIN_SIP_OBJECT(obj));
+}
 
 typedef struct _cain_sdp_base_description {
 	cain_sip_object_t base;
@@ -239,11 +264,20 @@ typedef struct _cain_sdp_base_description {
 	cain_sip_list_t* attributes;
 } cain_sdp_base_description_t;
 
-void cain_sdp_base_description_destroy(cain_sdp_base_description_t* base_description) {
+static void cain_sdp_base_description_destroy(cain_sdp_base_description_t* base_description) {
+	if (base_description->info) cain_sip_object_unref(CAIN_SIP_OBJECT(base_description->info));
+	if (base_description->connection) cain_sip_object_unref(CAIN_SIP_OBJECT(base_description->connection));
+	cain_sip_list_free_with_data(base_description->bandwidths,cain_sip_object_freefunc);
+	cain_sip_list_free_with_data(base_description->attributes,cain_sip_object_freefunc);
 }
-void cain_sdp_base_description_init(cain_sdp_base_description_t* base_description) {
+static void cain_sdp_base_description_init(cain_sdp_base_description_t* base_description) {
 }
-void cain_sdp_base_description_clone(cain_sdp_base_description_t *base_description, const cain_sdp_base_description_t *orig){
+static void cain_sdp_base_description_clone(cain_sdp_base_description_t *base_description, const cain_sdp_base_description_t *orig){
+	if (orig->info) base_description->info = CAIN_SDP_INFO(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->info)));
+	if (orig->connection) base_description->connection = CAIN_SDP_CONNECTION(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->connection)));
+	base_description->bandwidths = cain_sip_list_copy_with_data(orig->bandwidths,cain_sip_object_copyfunc);
+	base_description->attributes = cain_sip_list_copy_with_data(orig->attributes,cain_sip_object_copyfunc);
+
 }
 int cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_description, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -269,7 +303,12 @@ int cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_descript
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_base_description_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_base_description_t,cain_sip_object_t,cain_sdp_base_description_destroy,NULL,cain_sdp_base_description_marshal,FALSE);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_base_description_t
+							,cain_sip_object_t
+							,cain_sdp_base_description_destroy
+							,cain_sdp_base_description_clone
+							,cain_sdp_base_description_marshal
+							,FALSE);
 
 static int cain_sdp_base_description_attribute_comp_func(const cain_sdp_attribute_t* a, const char*b) {
 	return strcmp(a->name,b);
@@ -361,9 +400,11 @@ struct _cain_sdp_media_description {
 	cain_sdp_media_t* media;
 };
 void cain_sdp_media_description_destroy(cain_sdp_media_description_t* media_description) {
+	if (media_description->media) cain_sip_object_unref(CAIN_SIP_OBJECT((media_description->media)));
 }
 
 void cain_sdp_media_description_clone(cain_sdp_media_description_t *media_description, const cain_sdp_media_description_t *orig){
+	if (orig->media) media_description->media = CAIN_SDP_MEDIA(cain_sip_object_clone(CAIN_SIP_OBJECT((orig->media))));
 }
 int cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_description, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -626,9 +667,19 @@ struct _cain_sdp_origin {
  };
 
 void cain_sdp_origin_destroy(cain_sdp_origin_t* origin) {
+	DESTROY_STRING(origin,address)
+	DESTROY_STRING(origin,address_type)
+	DESTROY_STRING(origin,network_type)
+	DESTROY_STRING(origin,username)
 }
 
 void cain_sdp_origin_clone(cain_sdp_origin_t *origin, const cain_sdp_origin_t *orig){
+	CLONE_STRING(cain_sdp_origin,username,origin,orig);
+	CLONE_STRING(cain_sdp_origin,address,origin,orig);
+	CLONE_STRING(cain_sdp_origin,address_type,origin,orig);
+	CLONE_STRING(cain_sdp_origin,network_type,origin,orig);
+	origin->session_id = orig->session_id;
+	origin->session_version = orig->session_version;
 }
 int cain_sdp_origin_marshal(cain_sdp_origin_t* origin, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -660,9 +711,11 @@ struct _cain_sdp_session_name {
  };
 
 void cain_sdp_session_name_destroy(cain_sdp_session_name_t* session_name) {
+	DESTROY_STRING(session_name,value)
 }
 
 void cain_sdp_session_name_clone(cain_sdp_session_name_t *session_name, const cain_sdp_session_name_t *orig){
+	CLONE_STRING(cain_sdp_session_name,value,session_name,orig);
 }
 int cain_sdp_session_name_marshal(cain_sdp_session_name_t* session_name, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -694,9 +747,27 @@ struct _cain_sdp_session_description {
 
  };
 void cain_sdp_session_description_destroy(cain_sdp_session_description_t* session_description) {
+	if (session_description->version) cain_sip_object_unref(CAIN_SIP_OBJECT(session_description->version));
+	cain_sip_list_free_with_data(session_description->emails,cain_sip_object_freefunc);
+	if (session_description->origin) cain_sip_object_unref(CAIN_SIP_OBJECT(session_description->origin));
+	if (session_description->session_name) cain_sip_object_unref(CAIN_SIP_OBJECT(session_description->session_name));
+	cain_sip_list_free_with_data(session_description->phones,cain_sip_object_freefunc);
+	cain_sip_list_free_with_data(session_description->times,cain_sip_object_freefunc);
+	if (session_description->uri) cain_sip_object_unref(CAIN_SIP_OBJECT(session_description->uri));
+	if (session_description->zone_adjustments) cain_sip_object_unref(CAIN_SIP_OBJECT(session_description->zone_adjustments));
+	cain_sip_list_free_with_data(session_description->media_descriptions,cain_sip_object_freefunc);
 }
 
 void cain_sdp_session_description_clone(cain_sdp_session_description_t *session_description, const cain_sdp_session_description_t *orig){
+	if (orig->version) session_description->version = CAIN_SDP_VERSION(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->version)));
+	session_description->emails = cain_sip_list_copy_with_data(orig->emails,cain_sip_object_copyfunc);
+	if (orig->origin) session_description->origin = CAIN_SDP_ORIGIN(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->origin)));
+	if (orig->session_name) session_description->session_name = CAIN_SDP_SESSION_NAME(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->session_name)));
+	session_description->phones = cain_sip_list_copy_with_data(orig->phones,cain_sip_object_copyfunc);
+	session_description->times = cain_sip_list_copy_with_data(orig->times,cain_sip_object_copyfunc);
+	if (orig->uri) session_description->uri = CAIN_SDP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->uri)));
+	if (orig->zone_adjustments) session_description->zone_adjustments = CAIN_SDP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->zone_adjustments)));
+	session_description->media_descriptions = cain_sip_list_copy_with_data(orig->media_descriptions,cain_sip_object_copyfunc);
 }
 int cain_sdp_session_description_marshal(cain_sdp_session_description_t* session_description, char* buff,unsigned int offset,unsigned int buff_size) {
 /*session_description:   proto_version CR LF
@@ -888,9 +959,12 @@ struct _cain_sdp_time {
  };
 
 void cain_sdp_time_destroy(cain_sdp_time_t* time) {
+
 }
 
 void cain_sdp_time_clone(cain_sdp_time_t *time, const cain_sdp_time_t *orig){
+	time->start=orig->start;
+	time->stop=orig->stop;
 }
 int cain_sdp_time_marshal(cain_sdp_time_t* time, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -916,9 +990,11 @@ struct _cain_sdp_time_description {
  };
 
 void cain_sdp_time_description_destroy(cain_sdp_time_description_t* time_description) {
+	if (time_description->time) cain_sip_object_unref(CAIN_SIP_OBJECT(time_description->time));
 }
 
 void cain_sdp_time_description_clone(cain_sdp_time_description_t *time_description, const cain_sdp_time_description_t *orig){
+	if (orig->time) time_description->time = CAIN_SDP_TIME(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->time)));
 }
 int cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_description, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -954,10 +1030,11 @@ struct _cain_sdp_version {
  };
 
 void cain_sdp_version_destroy(cain_sdp_version_t* version) {
+
 }
 
 void cain_sdp_version_clone(cain_sdp_version_t *version, const cain_sdp_version_t *orig){
-
+	version->version = orig->version;
 }
 int cain_sdp_version_marshal(cain_sdp_version_t* version, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -990,9 +1067,22 @@ static void cain_sdp_mime_parameter_destroy(cain_sdp_mime_parameter_t *mime_para
 	if (mime_parameter->type) cain_sip_free((void*)mime_parameter->type);
 	if (mime_parameter->parameters) cain_sip_free((void*)mime_parameter->parameters);
 }
-
+static void cain_sdp_mime_parameter_clone(cain_sdp_mime_parameter_t *mime_parameter,cain_sdp_mime_parameter_t *orig) {
+	mime_parameter->rate = orig->rate;
+	mime_parameter->channel_count = orig->channel_count;
+	mime_parameter->ptime = orig->ptime;
+	mime_parameter->max_ptime = orig->max_ptime;
+	mime_parameter->media_format = orig->media_format;
+	CLONE_STRING(cain_sdp_mime_parameter,type,mime_parameter,orig);
+	CLONE_STRING(cain_sdp_mime_parameter,parameters,mime_parameter,orig);
+}
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_mime_parameter_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_mime_parameter_t,cain_sip_object_t,cain_sdp_mime_parameter_destroy,NULL,NULL,TRUE);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sdp_mime_parameter_t
+							,cain_sip_object_t
+							,cain_sdp_mime_parameter_destroy
+							,cain_sdp_mime_parameter_clone
+							,NULL
+							,TRUE);
 
 cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_new() {
 	cain_sdp_mime_parameter_t* l_param = cain_sip_object_new(cain_sdp_mime_parameter_t);
