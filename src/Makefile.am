@@ -1,4 +1,3 @@
-ANTLR=antlr3
 
 grammar_files= \
 						$(srcdir)/cain_sip_message.g \
@@ -23,7 +22,7 @@ noinst_LTLIBRARIES=libcainsip_generated.la
 
 nodist_libcainsip_generated_la_SOURCES=$(generated_src)
 
-libcainsip_generated_la_CFLAGS=$(LESS_STRICT_OPTIONS)
+libcainsip_generated_la_CFLAGS=$(LESS_STRICT_OPTIONS) $(ANTLR_CFLAGS)
 
 lib_LTLIBRARIES=libcainsip.la
 
@@ -42,11 +41,12 @@ libcainsip_la_SOURCES=clock_gettime.h \
 									sipstack.c \
 									provider.c \
 									channel.c channel.h \
-									message.c
+									message.c \
+									md5.c
 
-libcainsip_la_CFLAGS=$(STRICT_OPTIONS)
+libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS)
 
-libcainsip_la_LIBADD=libcainsip_generated.la -lantlr3c
+libcainsip_la_LIBADD=libcainsip_generated.la $(ANTLR_LIBS)
 
 
 INCLUDES=-I$(top_srcdir)/include
