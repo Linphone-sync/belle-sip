@@ -209,6 +209,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_header_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_extension_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_authorization_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_www_authenticate_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_proxy_authenticate_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_proxy_authorization_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_max_forwards_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_expires_t);
@@ -404,10 +405,12 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 
 #define DESTROY_STRING(object,attribute) if (object->attribute) cain_sip_free((void*)object->attribute);
 
-#define CLONE_STRING(object_type,attribute,dest,src) \
-		if ( object_type##_get_##attribute (src)) {\
-			object_type##_set_##attribute(dest,object_type##_get_##attribute(src));\
+#define CLONE_STRING_GENERIC(object_type_src,object_type_dest,attribute,dest,src) \
+		if ( object_type_src##_get_##attribute (src)) {\
+			object_type_dest##_set_##attribute(dest,object_type_src##_get_##attribute(src));\
 		}
+
+#define CLONE_STRING(object_type,attribute,dest,src) CLONE_STRING_GENERIC(object_type,object_type,attribute,dest,src)
 
 #define GET_SET_INT(object_type,attribute,type) GET_SET_INT_PRIVATE(object_type,attribute,type,)
 

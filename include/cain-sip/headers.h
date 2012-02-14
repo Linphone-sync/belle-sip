@@ -321,6 +321,7 @@ void cain_sip_header_authorization_set_nonce(cain_sip_header_authorization_t* au
 void cain_sip_header_authorization_set_nonce_count(cain_sip_header_authorization_t* authorization, int nonceCount);
 void cain_sip_header_authorization_set_opaque(cain_sip_header_authorization_t* authorization, const char* opaque);
 void cain_sip_header_authorization_set_qop(cain_sip_header_authorization_t* authorization, const char* qop);
+void cain_sip_header_authorization_add_qop(cain_sip_header_authorization_t* authorization, const char* qop);
 void cain_sip_header_authorization_set_realm(cain_sip_header_authorization_t* authorization, const char* realm);
 void cain_sip_header_authorization_set_response(cain_sip_header_authorization_t* authorization, const char* response);
 void cain_sip_header_authorization_set_scheme(cain_sip_header_authorization_t* authorization, const char* scheme);
@@ -346,7 +347,7 @@ cain_sip_header_www_authenticate_t* cain_sip_header_www_authenticate_parse(const
 const char*	cain_sip_header_www_authenticate_get_algorithm(const cain_sip_header_www_authenticate_t* www_authenticate );
 const char* cain_sip_header_www_authenticate_get_nonce(const cain_sip_header_www_authenticate_t* www_authenticate);
 const char*	cain_sip_header_www_authenticate_get_opaque(const cain_sip_header_www_authenticate_t* www_authenticate);
-const char*	cain_sip_header_www_authenticate_get_qop(const cain_sip_header_www_authenticate_t* www_authetication);
+cain_sip_list_t* cain_sip_header_www_authenticate_get_qop(const cain_sip_header_www_authenticate_t* www_authetication);
 const char*	cain_sip_header_www_authenticate_get_realm(const cain_sip_header_www_authenticate_t* www_authenticate);
 const char*	cain_sip_header_www_authenticate_get_scheme(const cain_sip_header_www_authenticate_t* www_authenticate);
 const char*	cain_sip_header_www_authenticate_get_domain(const cain_sip_header_www_authenticate_t* www_authenticate);
@@ -354,13 +355,21 @@ unsigned int cain_sip_header_www_authenticate_is_stale(const cain_sip_header_www
 void cain_sip_header_www_authenticate_set_algorithm(cain_sip_header_www_authenticate_t* www_authenticate, const char* algorithm);
 void cain_sip_header_www_authenticate_set_nonce(cain_sip_header_www_authenticate_t* www_authenticate, const char* nonce);
 void cain_sip_header_www_authenticate_set_opaque(cain_sip_header_www_authenticate_t* www_authenticate, const char* opaque);
-void cain_sip_header_www_authenticate_set_qop(cain_sip_header_www_authenticate_t* www_authentication, const char* qop);
+void cain_sip_header_www_authenticate_set_qop(cain_sip_header_www_authenticate_t* www_authentication, cain_sip_list_t*  qop);
+void cain_sip_header_www_authenticate_add_qop(cain_sip_header_www_authenticate_t* www_authentication, const char*  qop_param);
 void cain_sip_header_www_authenticate_set_realm(cain_sip_header_www_authenticate_t* www_authenticate, const char* realm);
 void cain_sip_header_www_authenticate_set_scheme(cain_sip_header_www_authenticate_t* www_authenticate, const char* scheme);
 void cain_sip_header_www_authenticate_set_domain(cain_sip_header_www_authenticate_t* www_authenticate,const char* domain);
 void cain_sip_header_www_authenticate_set_stale(cain_sip_header_www_authenticate_t* www_authenticate, unsigned int enable);
-
 #define CAIN_SIP_HEADER_WWW_AUTHENTICATE(t) CAIN_SIP_CAST(t,cain_sip_header_www_authenticate_t)
+
+/*******************************
+ * proxy_authenticate inherit from www_authenticate
+ */
+typedef struct _cain_sip_header_proxy_authenticate cain_sip_header_proxy_authenticate_t;
+cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authenticate_new();
+cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authenticate_parse(const char* proxy_authenticate);
+#define CAIN_SIP_HEADER_PROXY_AUTHENTICATE(t) CAIN_SIP_CAST(t,cain_sip_header_proxy_authenticate_t)
 
 
 /******************************
