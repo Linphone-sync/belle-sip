@@ -843,15 +843,12 @@ static void cain_sip_header_www_authenticate_destroy(cain_sip_header_www_authent
 void cain_sip_header_www_authenticate_init(cain_sip_header_www_authenticate_t* www_authenticate) {
 	www_authenticate->stale=-1;
 }
-static void* str_copyfunc(void* value){
-	return strdup((const char*)value);
-}
 static void cain_sip_header_www_authenticate_clone(cain_sip_header_www_authenticate_t* www_authenticate,
                                                  const cain_sip_header_www_authenticate_t *orig ) {
 	AUTH_BASE_CLONE(cain_sip_header_www_authenticate,www_authenticate,orig)
 	CLONE_STRING(cain_sip_header_www_authenticate,domain,www_authenticate,orig)
 	www_authenticate->stale=orig->stale;
-	www_authenticate->qop=cain_sip_list_copy_with_data(orig->qop,str_copyfunc);
+	www_authenticate->qop=cain_sip_list_copy_with_data(orig->qop,(void* (*)(void*))cain_sip_strdup);
 }
 int cain_sip_header_www_authenticate_marshal(cain_sip_header_www_authenticate_t* www_authenticate, char* buff,unsigned int offset,unsigned int buff_size) {
 	cain_sip_list_t* qops=www_authenticate->qop;

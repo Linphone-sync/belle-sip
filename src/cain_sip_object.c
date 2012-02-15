@@ -233,7 +233,7 @@ char* cain_sip_object_to_string(cain_sip_object_t* obj) {
 	char buff[2048]; /*to be optimized*/
 	int size = cain_sip_object_marshal(obj,buff,0,sizeof(buff));
 	buff[size]='\0';
-	return strdup(buff);
+	return cain_sip_strdup(buff);
 
 }
 
