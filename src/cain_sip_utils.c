@@ -45,14 +45,14 @@ void cain_sip_set_log_handler(cain_sip_log_function_t func){
 }
 
 
-unsigned int __cain_sip_log_mask=CAIN_SIP_WARNING|CAIN_SIP_ERROR|CAIN_SIP_FATAL;
+unsigned int __cain_sip_log_mask=CAIN_SIP_LOG_WARNING|CAIN_SIP_LOG_ERROR|CAIN_SIP_LOG_FATAL;
 
 /**
- * @ param levelmask a mask of CAIN_SIP_DEBUG, CAIN_SIP_MESSAGE, CAIN_SIP_WARNING, CAIN_SIP_ERROR
- * CAIN_SIP_FATAL .
+ * @ param level: either CAIN_SIP_LOG_DEBUG, CAIN_SIP_LOG_MESSAGE, CAIN_SIP_LOG_WARNING, CAIN_SIP_LOG_ERROR
+ * CAIN_SIP_LOG_FATAL .
 **/
-void cain_sip_set_log_level_mask(int levelmask){
-        __cain_sip_log_mask=levelmask;
+void cain_sip_set_log_level(int level){
+        __cain_sip_log_mask=(level<<1)-1;
 }
 
 char * cain_sip_strdup_vprintf(const char *fmt, va_list ap)
@@ -128,19 +128,19 @@ static void __cain_sip_logv_out(cain_sip_log_level lev, const char *fmt, va_list
         char *msg;
         if (__log_file==NULL) __log_file=stderr;
         switch(lev){
-                case CAIN_SIP_DEBUG:
+                case CAIN_SIP_LOG_DEBUG:
                         lname="debug";
                         break;
-                case CAIN_SIP_MESSAGE:
+                case CAIN_SIP_LOG_MESSAGE:
                         lname="message";
                         break;
-                case CAIN_SIP_WARNING:
+                case CAIN_SIP_LOG_WARNING:
                         lname="warning";
                         break;
-                case CAIN_SIP_ERROR:
+                case CAIN_SIP_LOG_ERROR:
                         lname="error";
                         break;
-                case CAIN_SIP_FATAL:
+                case CAIN_SIP_LOG_FATAL:
                         lname="fatal";
                         break;
                 default:

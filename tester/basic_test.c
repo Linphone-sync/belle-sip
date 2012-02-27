@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
 	cain_sip_provider_t *prov;
 	cain_sip_request_t *req;
 
-	cain_sip_set_log_level_mask(CAIN_SIP_LOG_ALL);
+	cain_sip_set_log_level(CAIN_SIP_LOG_DEBUG);
 	
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
 	prov=cain_sip_stack_create_provider(stack,lp);

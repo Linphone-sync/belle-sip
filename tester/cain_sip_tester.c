@@ -17,14 +17,26 @@
 */
 #include <stdio.h>
 #include "CUnit/Basic.h"
+#include <cain-sip/cain-sip.h>
 
 extern int cain_sip_uri_test_suite ();
 extern int cain_sip_headers_test_suite ();
 extern int cain_sip_message_test_suite ();
 extern int cain_sdp_test_suite();
 extern int cain_sip_authentication_helper_suite ();
+extern int cain_sip_cast_test_suite();
+
 int main (int argc, char *argv[]) {
 
+	if (argc>1){
+		if (strcmp(argv[1],"--help")==0){
+				fprintf(stderr,"%s \t--help\n\t\t\t--verbose",argv[0]);
+				return 0;
+		}else if (strcmp(argv[1],"--verbose")==0){
+			cain_sip_set_log_level(CAIN_SIP_LOG_DEBUG);
+		}
+	}
+	
 	/* initialize the CUnit test registry */
 	if (CUE_SUCCESS != CU_initialize_registry())
 		return CU_get_error();
@@ -36,6 +48,8 @@ int main (int argc, char *argv[]) {
 	cain_sip_message_test_suite();
 
 	cain_sdp_test_suite();
+	
+	cain_sip_cast_test_suite();
 
 	cain_sip_authentication_helper_suite();
 	/* Run all tests using the CUnit Basic interface */

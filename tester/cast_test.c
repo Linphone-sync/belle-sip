@@ -16,26 +16,53 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
+#include "CUnit/Basic.h"
 
 #include "cain-sip/cain-sip.h"
 
-int main(int argc, char *argv[]){
+static int init_cast_suite(){
+	return 0;
+}
+
+static int cleanup_cast_suite(){
+	return 0;
+}
+
+static void cast_test(){
 	cain_sip_stack_t *stack=cain_sip_stack_new(NULL);
 	cain_sip_listening_point_t *lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",5060,"UDP");
 	cain_sip_provider_t *provider=cain_sip_stack_create_provider(stack,lp);
 	cain_sip_server_transaction_t *st=cain_sip_provider_get_new_server_transaction(provider,NULL);
 	cain_sip_client_transaction_t *ct=cain_sip_provider_get_new_client_transaction(provider,NULL);
 	cain_sip_transaction_t *t;
+	int tmp;
 	
-	printf("Casting cain_sip_server_transaction_t to cain_sip_transaction_t\n");
+	CU_ASSERT_PTR_NOT_NULL(stack);
+	CU_ASSERT_PTR_NOT_NULL(lp);
+	CU_ASSERT_PTR_NOT_NULL(provider);
+	CU_ASSERT_PTR_NOT_NULL(st);
+	CU_ASSERT_PTR_NOT_NULL(ct);
+	
+	cain_sip_message("Casting cain_sip_server_transaction_t to cain_sip_transaction_t");
 	t=CAIN_SIP_TRANSACTION(st);
-	printf("Ok.\n");
-	printf("Casting cain_sip_client_transaction_t to cain_sip_transaction_t\n");
+	CU_ASSERT_PTR_NOT_NULL(t);
+	cain_sip_message("Ok.");
+	cain_sip_message("Casting cain_sip_client_transaction_t to cain_sip_transaction_t");
 	t=CAIN_SIP_TRANSACTION(ct);
-	printf("Ok.\n");
-	printf("Casting cain_sip_server_transaction_t to cain_sip_client_transaction_t\n");
-	ct=CAIN_SIP_CLIENT_TRANSACTION(st);
-	printf("Ooops we should have aborted before, t=%p\n",t);
-	return 0;
+	CU_ASSERT_PTR_NOT_NULL(t);
+	cain_sip_message("Ok.");
+	tmp=CAIN_SIP_IS_INSTANCE_OF(st,cain_sip_client_transaction_t);
+	cain_sip_message("Casting cain_sip_server_transaction_t to cain_sip_client_transaction_t: %s",tmp ? "yes" : "no");
+	CU_ASSERT_EQUAL(tmp,0);
+	//ct=CAIN_SIP_CLIENT_TRANSACTION(st);
 }
+
+
+int cain_sip_cast_test_suite(){
+	CU_pSuite pSuite = CU_add_suite("Object inheritence", init_cast_suite, cleanup_cast_suite);
+
+	if (NULL == CU_add_test(pSuite, "casting transactions", cast_test)) {
+		return CU_get_error();
+	}
+}
+
