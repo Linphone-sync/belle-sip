@@ -28,13 +28,12 @@
 #define CAIN_SIP_END_DECLS
 #endif
 
-#define CAIN_SIP_TYPE_ID(_type) _type##_id
+#include "cain-sip/object.h"
 
 /**
  * This enum declares all object types used in cain-sip (see cain_sip_object_t)
 **/
-typedef enum cain_sip_type_id{
-	cain_sip_type_id_first=1,
+CAIN_SIP_DECLARE_TYPES_BEGIN(cain_sip,1)
 	CAIN_SIP_TYPE_ID(cain_sip_stack_t),
 	CAIN_SIP_TYPE_ID(cain_sip_listening_point_t),
 	CAIN_SIP_TYPE_ID(cain_sip_datagram_listening_point_t),
@@ -95,95 +94,16 @@ typedef enum cain_sip_type_id{
 	CAIN_SIP_TYPE_ID(cain_sdp_version_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_base_description_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_mime_parameter_t),
-	cain_sip_type_id_end
-}cain_sip_type_id_t;
+CAIN_SIP_DECLARE_TYPES_END
 
 
-#define CAIN_SIP_INTERFACE_ID(_interface) _interface##_id
-
-typedef enum cain_sip_interface_id{
+enum cain_sip_interface_ids{
 	cain_sip_interface_id_first=1,
 	CAIN_SIP_INTERFACE_ID(cain_sip_channel_listener_t),
 	CAIN_SIP_INTERFACE_ID(cain_sip_listener_t)
-}cain_sip_interface_id_t;
-
-/**
- * cain_sip_object_t is the base object.
- * It is the base class for all cain sip non trivial objects.
- * It owns a reference count which allows to trigger the destruction of the object when the last
- * user of it calls cain_sip_object_unref().
-**/
-
-typedef struct _cain_sip_object cain_sip_object_t;
+};
 
 CAIN_SIP_BEGIN_DECLS
-
-int cain_sip_object_is_unowed(const cain_sip_object_t *obj);
-
-/**
- * Increments reference counter, which prevents the object from being destroyed.
- * If the object is initially unowed, this acquires the first reference.
-**/
-cain_sip_object_t * cain_sip_object_ref(void *obj);
-
-/**
- * Decrements the reference counter. When it drops to zero, the object is destroyed.
-**/
-void cain_sip_object_unref(void *obj);
-
-
-typedef void (*cain_sip_object_destroy_notify_t)(void *userpointer, cain_sip_object_t *obj_being_destroyed);
-/**
- * Add a weak reference to object.
- * When object will be destroyed, then the destroy_notify callback will be called.
- * This allows another object to be informed when object is destroyed, and then possibly
- * cleanups pointer it holds to this object.
-**/
-cain_sip_object_t *cain_sip_object_weak_ref(void *obj, cain_sip_object_destroy_notify_t destroy_notify, void *userpointer);
-
-/**
- * Remove a weak reference to object.
-**/
-void cain_sip_object_weak_unref(void *obj, cain_sip_object_destroy_notify_t destroy_notify, void *userpointer);
-
-/**
- * Set object name.
-**/
-void cain_sip_object_set_name(cain_sip_object_t *obj,const char* name);
-/**
- * Get object name.
-**/
-const char* cain_sip_object_get_name(cain_sip_object_t *obj);
-
-cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj);
-
-/**
- * Delete the object: this function is intended for unowed object, that is objects
- * that were created with a 0 reference count. For all others, use cain_sip_object_unref().
-**/
-void cain_sip_object_delete(void *obj);
-
-/**
- * Returns a string describing the inheritance diagram and implemented interfaces of object obj.
-**/
-char *cain_sip_object_describe(void *obj);
-
-/**
- * Returns a string describing the inheritance diagram and implemented interfaces of an object given its type name.
-**/
-char *cain_sip_object_describe_type_from_name(const char *name);
-
-void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
-
-void *cain_sip_object_interface_cast(cain_sip_object_t *obj, cain_sip_interface_id_t id, const char *castname, const char *file, int fileno);
-
-char* cain_sip_object_to_string(cain_sip_object_t* obj);
-
-int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
-
-int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
-
-int cain_sip_object_implements(cain_sip_object_t *obj, cain_sip_interface_id_t id);
 
 void *cain_sip_malloc(size_t size);
 void *cain_sip_malloc0(size_t size);
@@ -193,31 +113,6 @@ char * cain_sip_strdup(const char *s);
 
 CAIN_SIP_END_DECLS
 
-#define CAIN_SIP_CAST(obj,_type) 		((_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__))
-#define CAIN_SIP_INTERFACE_CAST(obj,_iface) ((_iface*)cain_sip_object_interface_cast((cain_sip_object_t*)(obj),_iface##_id,#_iface,__FILE__,__LINE__))
-#define CAIN_SIP_IMPLEMENTS(obj,_iface)	cain_sip_object_implements((cain_sip_object_t*)obj,_iface##_id)
-
-#define CAIN_SIP_OBJECT(obj) CAIN_SIP_CAST(obj,cain_sip_object_t)
-#define CAIN_SIP_IS_INSTANCE_OF(obj,_type) cain_sip_object_is_instance_of((cain_sip_object_t*)obj,_type##_id)
-
-#define CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name) methods_##interface_name
-
-#define cain_sip_object_describe_type(type) \
-	cain_sip_object_describe_type_from_name(#type)
-
-typedef struct cain_sip_interface_desc{
-	cain_sip_interface_id_t id;
-	const char *ifname;
-}cain_sip_interface_desc_t;
-
-#define CAIN_SIP_DECLARE_INTERFACE_BEGIN(interface_name) \
-	typedef struct struct##interface_name interface_name;\
-	typedef struct struct_methods_##interface_name CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name);\
-	struct struct_methods_##interface_name {\
-		cain_sip_interface_desc_t desc;\
-		
-
-#define CAIN_SIP_DECLARE_INTERFACE_END };
 
 
 typedef struct cain_sip_listening_point cain_sip_listening_point_t;
