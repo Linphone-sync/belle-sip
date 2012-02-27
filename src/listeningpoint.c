@@ -133,7 +133,8 @@ static void cain_sip_udp_listening_point_uninit(cain_sip_udp_listening_point_t *
 }
 
 static cain_sip_channel_t *udp_create_channel(cain_sip_listening_point_t *lp, const char *dest_ip, int port){
-	cain_sip_channel_t *chan=cain_sip_channel_new_udp(lp->stack,((cain_sip_udp_listening_point_t*)lp)->sock,dest_ip,port);
+	cain_sip_channel_t *chan=cain_sip_channel_new_udp(lp->stack,((cain_sip_udp_listening_point_t*)lp)->sock,
+	                                                  lp->addr,lp->port,dest_ip,port);
 	return chan;
 }
 
@@ -206,7 +207,7 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 			ai.ai_addrlen=addrlen;
 			chan=_cain_sip_listening_point_get_channel((cain_sip_listening_point_t*)lp,NULL,0,&ai);
 			if (chan==NULL){
-				chan=cain_sip_channel_new_udp_with_addr(lp->base.stack,lp->sock,&ai);
+				chan=cain_sip_channel_new_udp_with_addr(lp->base.stack,lp->sock,lp->base.addr,lp->base.port,&ai);
 				if (chan!=NULL){
 					cain_sip_message("udp_listening_point: new channel created to %s:%i",chan->peer_name,chan->peer_port);
 					cain_sip_listening_point_add_channel((cain_sip_listening_point_t*)lp,chan);

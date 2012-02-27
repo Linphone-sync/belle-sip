@@ -36,9 +36,7 @@ int main(int argc, char *argv[]){
 	                    cain_sip_header_cseq_create(20,"REGISTER"),
 	                    cain_sip_header_from_create("Tester <sip:tester@test.linphone.org>","a0dke45"),
 	                    cain_sip_header_to_create("Tester <sip:tester@test.linphone.org>",NULL),
-	                    cain_sip_header_via_create(cain_sip_listening_point_get_ip_address(lp),
-	                                               cain_sip_listening_point_get_port(lp),
-	                                               cain_sip_listening_point_get_transport(lp),"67687djeij"),
+	                    cain_sip_header_via_new(),
 	                    70);
 	char *tmp=cain_sip_object_to_string(CAIN_SIP_OBJECT(req));
 

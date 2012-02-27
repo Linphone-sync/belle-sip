@@ -48,7 +48,7 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 	}
 }
 
-static void fix_via(cain_sip_request_t *msg, const struct addrinfo* origin){
+static void fix_incoming_via(cain_sip_request_t *msg, const struct addrinfo* origin){
 	char received[NI_MAXHOST];
 	char rport[NI_MAXSERV];
 	cain_sip_header_via_t *via;
@@ -65,6 +65,25 @@ static void fix_via(cain_sip_request_t *msg, const struct addrinfo* origin){
 	}
 }
 
+static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, cain_sip_message_t *msg){
+	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(msg,"via"));
+	cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(via),"rport",NULL);
+	if (cain_sip_header_via_get_host(via)==NULL){
+		const char *local_ip;
+		int local_port;
+		local_ip=cain_sip_channel_get_local_address(chan,&local_port);
+		cain_sip_header_via_set_host(via,local_ip);
+		cain_sip_header_via_set_port(via,local_port);
+		cain_sip_header_via_set_protocol(via,"SIP/2.0");
+		cain_sip_header_via_set_transport(via,cain_sip_channel_get_transport_name(chan));
+	}
+	if (cain_sip_header_via_get_branch(via)==NULL){
+		char *branchid=cain_sip_strdup_printf(CAIN_SIP_BRANCH_MAGIC_COOKIE "%x",cain_sip_random());
+		cain_sip_header_via_set_branch(via,branchid);
+		cain_sip_free(branchid);
+	}
+}
+
 static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_channel_t *chan){
 	char buffer[cain_sip_network_buffer_size];
 	int err;
@@ -72,10 +91,10 @@ static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_c
 	if (err>0){
 		cain_sip_message_t *msg;
 		buffer[err]='\0';
-		cain_sip_message("provider %p read message from %s:%i\n%s",chan->peer_name,chan->peer_port,buffer);
+		cain_sip_message("provider %p read message from %s:%i\n%s",prov,chan->peer_name,chan->peer_port,buffer);
 		msg=cain_sip_message_parse(buffer);
 		if (msg){
-			if (cain_sip_message_is_request(msg)) fix_via(CAIN_SIP_REQUEST(msg),chan->peer);
+			if (cain_sip_message_is_request(msg)) fix_incoming_via(CAIN_SIP_REQUEST(msg),chan->peer);
 			cain_sip_provider_dispatch_message(prov,msg);
 		}else{
 			cain_sip_error("Could not parse this message.");
@@ -90,9 +109,14 @@ static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t
 	return 0;
 }
 
+static void channel_on_sending(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_message_t *msg){
+	fix_outgoing_via((cain_sip_provider_t*)obj,chan,msg);
+}
+
 CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(cain_sip_provider_t,cain_sip_channel_listener_t)
 	channel_state_changed,
-	channel_on_event
+	channel_on_event,
+	channel_on_sending
 CAIN_SIP_IMPLEMENT_INTERFACE_END
 
 CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(cain_sip_provider_t,cain_sip_channel_listener_t);
@@ -175,13 +199,14 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 	return NULL;
 }
 
-
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
 	cain_sip_hop_t hop={0};
 	cain_sip_channel_t *chan;
 	cain_sip_stack_get_next_hop(p->stack,req,&hop);
 	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
-	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(req));
+	if (chan) {
+		cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(req));
+	}
 }
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){

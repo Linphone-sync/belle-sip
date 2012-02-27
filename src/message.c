@@ -355,6 +355,9 @@ cain_sip_request_t* cain_sip_request_create(cain_sip_uri_t *requri, const char* 
                                          int max_forward /*FIXME*/)
 {
 	cain_sip_request_t *ret=cain_sip_request_new();
+	cain_sip_header_max_forwards_t *mf=cain_sip_header_max_forwards_new();
+	if (max_forward==0) max_forward=70;
+	cain_sip_header_max_forwards_set_max_forwards(mf,max_forward);
 
 	cain_sip_request_set_uri(ret,requri);
 	cain_sip_request_set_method(ret,method);
@@ -363,7 +366,7 @@ cain_sip_request_t* cain_sip_request_create(cain_sip_uri_t *requri, const char* 
 	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(to));
 	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(cseq));
 	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(callid));
-	
+	cain_sip_message_add_header((cain_sip_message_t*)ret,CAIN_SIP_HEADER(mf));
 	return ret;
 }
 

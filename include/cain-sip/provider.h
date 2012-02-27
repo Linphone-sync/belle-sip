@@ -20,6 +20,7 @@
 #ifndef cain_sip_provider_h
 #define cain_sip_provider_h
 
+#define CAIN_SIP_BRANCH_MAGIC_COOKIE "z9hG4bK"
 
 CAIN_SIP_BEGIN_DECLS
 
