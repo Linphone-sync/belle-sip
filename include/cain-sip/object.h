@@ -28,12 +28,46 @@
 typedef unsigned int cain_sip_type_id_t;
 
 #define CAIN_SIP_DECLARE_TYPES_BEGIN(namezpace,unique_namespace_id) \
-	enum namezspace##type_ids{\
-		namezspace##type_id_first=unique_namespace_id,
+	enum namezpace##type_ids{\
+		namezpace##type_id_first=unique_namespace_id,
 
 #define CAIN_SIP_DECLARE_TYPES_END };
 
+#define CAIN_SIP_OBJECT_VPTR_NAME(object_type)	object_type##_vptr
 
+#define CAIN_SIP_OBJECT_VPTR_TYPE(object_type)	object_type##_vptr_t
+
+#define CAIN_SIP_DECLARE_VPTR(object_type) \
+	typedef cain_sip_object_vptr_t CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
+	extern CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type);
+
+#define CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(object_type, parent_type) \
+	typedef struct object_type##_vptr_struct CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
+	extern CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type);\
+	struct object_type##_vptr_struct{\
+		CAIN_SIP_OBJECT_VPTR_TYPE(parent_type) base;
+
+#define CAIN_SIP_DECLARE_CUSTOM_VPTR_END };
+
+#define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(object_type) \
+	CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type)
+
+
+#define CAIN_SIP_VPTR_INIT(object_type,parent_type,unowned) \
+		CAIN_SIP_TYPE_ID(object_type), \
+		#object_type,\
+		unowned,\
+		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
+		(cain_sip_interface_desc_t**)object_type##interfaces_table
+
+
+#define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone,marshal,unowned) \
+		CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type)={ \
+		CAIN_SIP_VPTR_INIT(object_type,parent_type,unowned), \
+		(cain_sip_object_destroy_t)destroy,	\
+		(cain_sip_object_clone_t)clone,	\
+		(cain_sip_object_marshal_t)marshal\
+		}
 
 /**
  * cain_sip_object_t is the base object.
@@ -43,8 +77,43 @@ typedef unsigned int cain_sip_type_id_t;
 **/
 
 typedef struct _cain_sip_object cain_sip_object_t;
+		
+
+typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
+typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_object_t *orig);
+typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
+
+struct _cain_sip_object_vptr{
+	cain_sip_type_id_t id;
+	const char *type_name;
+	int initially_unowned;
+	struct _cain_sip_object_vptr *parent;
+	struct cain_sip_interface_desc **interfaces; /*NULL terminated table of */
+	cain_sip_object_destroy_t destroy;
+	cain_sip_object_clone_t clone;
+	cain_sip_object_marshal_t marshal;
+};
+
+typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
+
+extern cain_sip_object_vptr_t cain_sip_object_t_vptr;		
+
+struct _cain_sip_object{
+	cain_sip_object_vptr_t *vptr;
+	size_t size;
+	int ref;
+	char* name;
+	struct weak_ref *weak_refs;
+};
+
 
 CAIN_SIP_BEGIN_DECLS
+
+
+cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr);
+
+#define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type))
+
 
 int cain_sip_object_is_unowed(const cain_sip_object_t *obj);
 
@@ -112,7 +181,6 @@ int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id
 CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_CAST(obj,_type) 		((_type*)cain_sip_object_cast((cain_sip_object_t *)(obj), _type##_id, #_type, __FILE__, __LINE__))
-#define CAIN_SIP_IMPLEMENTS(obj,_iface)		cain_sip_object_implements((cain_sip_object_t*)obj,_iface##_id)
 
 #define CAIN_SIP_OBJECT(obj) CAIN_SIP_CAST(obj,cain_sip_object_t)
 #define CAIN_SIP_IS_INSTANCE_OF(obj,_type) cain_sip_object_is_instance_of((cain_sip_object_t*)obj,_type##_id)
@@ -141,6 +209,8 @@ CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_INTERFACE_CAST(obj,_iface) ((_iface*)cain_sip_object_interface_cast((cain_sip_object_t*)(obj),_iface##_id,#_iface,__FILE__,__LINE__))
 
+#define CAIN_SIP_IMPLEMENTS(obj,_iface)		cain_sip_object_implements((cain_sip_object_t*)obj,_iface##_id)
+
 
 typedef struct cain_sip_interface_desc{
 	cain_sip_interface_id_t id;
@@ -155,6 +225,33 @@ typedef struct cain_sip_interface_desc{
 		
 
 #define CAIN_SIP_DECLARE_INTERFACE_END };
+
+#define CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(object_type,interface_name) \
+	static CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name)  methods_##object_type##_##interface_name={\
+		{ CAIN_SIP_INTERFACE_ID(interface_name),\
+		#interface_name },
+
+#define CAIN_SIP_IMPLEMENT_INTERFACE_END };
+
+#define CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(object_type)\
+	static cain_sip_interface_desc_t * object_type##interfaces_table[]={\
+		NULL \
+	}
+
+#define CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(object_type,iface1) \
+	static cain_sip_interface_desc_t * object_type##interfaces_table[]={\
+		(cain_sip_interface_desc_t*)&methods_##object_type##_##iface1, \
+		NULL \
+	}
+
+#define CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_2(object_type,iface1,iface2) \
+	static cain_sip_interface_desc_t * object_type##interfaces_table[]={\
+		(cain_sip_interface_desc_t*)&methods_##object_type##_##iface1, \
+		(cain_sip_interface_desc_t*)&methods_##object_type##_##iface2, \
+		NULL \
+	}
+
+
 
 
 #endif

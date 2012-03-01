@@ -35,85 +35,6 @@
 /* include all public headers*/
 #include "cain-sip/cain-sip.h"
 
-typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
-typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_object_t *orig);
-typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
-
-struct _cain_sip_object_vptr{
-	cain_sip_type_id_t id;
-	const char *type_name;
-	int initially_unowned;
-	struct _cain_sip_object_vptr *parent;
-	cain_sip_interface_desc_t **interfaces; /*NULL terminated table of */
-	cain_sip_object_destroy_t destroy;
-	cain_sip_object_clone_t clone;
-	cain_sip_object_marshal_t marshal;
-};
-
-typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
-
-extern cain_sip_object_vptr_t cain_sip_object_t_vptr;
-
-#define CAIN_SIP_OBJECT_VPTR_NAME(object_type)	object_type##_vptr
-
-#define CAIN_SIP_OBJECT_VPTR_TYPE(object_type)	object_type##_vptr_t
-
-#define CAIN_SIP_DECLARE_VPTR(object_type) \
-	typedef cain_sip_object_vptr_t CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
-	extern CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type);
-
-#define CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(object_type, parent_type) \
-	typedef struct object_type##_vptr_struct CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
-	extern CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type);\
-	struct object_type##_vptr_struct{\
-		CAIN_SIP_OBJECT_VPTR_TYPE(parent_type) base;
-
-#define CAIN_SIP_DECLARE_CUSTOM_VPTR_END };
-
-#define CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(object_type) \
-	CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type)
-
-#define CAIN_SIP_VPTR_INIT(object_type,parent_type,unowned) \
-		CAIN_SIP_TYPE_ID(object_type), \
-		#object_type,\
-		unowned,\
-		(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(parent_type), \
-		(cain_sip_interface_desc_t**)object_type##interfaces_table
-
-
-#define CAIN_SIP_INSTANCIATE_VPTR(object_type,parent_type,destroy,clone,marshal,unowned) \
-		CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type)={ \
-		CAIN_SIP_VPTR_INIT(object_type,parent_type,unowned), \
-		(cain_sip_object_destroy_t)destroy,	\
-		(cain_sip_object_clone_t)clone,	\
-		(cain_sip_object_marshal_t)marshal\
-		}
-
-
-#define CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(object_type,interface_name) \
-	static CAIN_SIP_INTERFACE_METHODS_TYPE(interface_name)  methods_##object_type##_##interface_name={\
-		{ CAIN_SIP_INTERFACE_ID(interface_name),\
-		#interface_name },
-
-#define CAIN_SIP_IMPLEMENT_INTERFACE_END };
-
-#define CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(object_type)\
-	static cain_sip_interface_desc_t * object_type##interfaces_table[]={\
-		NULL \
-	}
-
-#define CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(object_type,iface1) \
-	static cain_sip_interface_desc_t * object_type##interfaces_table[]={\
-		(cain_sip_interface_desc_t*)&methods_##object_type##_##iface1, \
-		NULL \
-	}
-
-#define CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_2(object_type,iface1,iface2) \
-	static cain_sip_interface_desc_t * object_type##interfaces_table[]={\
-		(cain_sip_interface_desc_t*)&methods_##object_type##_##iface1, \
-		(cain_sip_interface_desc_t*)&methods_##object_type##_##iface2, \
-		NULL \
-	}
 
 /*etc*/
 
@@ -159,18 +80,9 @@ typedef struct weak_ref{
 	void *userpointer;
 }weak_ref_t;
 
-struct _cain_sip_object{
-	cain_sip_object_vptr_t *vptr;
-	size_t size;
-	int ref;
-	char* name;
-	weak_ref_t *weak_refs;
-};
 
-cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr);
 void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_interface_id_t ifid);
 
-#define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type))
 
 #define CAIN_SIP_OBJECT_VPTR(obj,object_type) ((CAIN_SIP_OBJECT_VPTR_TYPE(object_type)*)(((cain_sip_object_t*)obj)->vptr))
 #define cain_sip_object_init(obj)		/*nothing*/
@@ -184,9 +96,6 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_provider_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_main_loop_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_source_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_resolver_context_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_transaction_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_server_transaction_t);
-CAIN_SIP_DECLARE_VPTR(cain_sip_client_transaction_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_dialog_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_address_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_contact_t);
@@ -534,21 +443,94 @@ struct cain_sip_transaction{
 	cain_sip_request_t *request;
 	cain_sip_response_t *prov_response;
 	cain_sip_response_t *final_response;
+	cain_sip_channel_t *channel;
 	char *branch_id;
 	cain_sip_transaction_state_t state;
 	uint64_t start_time;
-	cain_sip_source_t *timer;
-	int interval;
-	int is_reliable:1;
-	int is_server:1;
-	int is_invite:1;
 	void *appdata;
 };
 
+CAIN_SIP_DECLARE_VPTR(cain_sip_transaction_t)
 
-cain_sip_client_transaction_t * cain_sip_client_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
-cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req);
+/*
+ *
+ *
+ *	Client transaction
+ *
+ *
+*/
+
+struct cain_sip_client_transaction{
+	cain_sip_transaction_t base;
+};
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_client_transaction_t,cain_sip_transaction_t)
+	void (*send_request)(cain_sip_client_transaction_t *);
+	void (*on_response)(cain_sip_client_transaction_t *obj, cain_sip_response_t *resp);
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_sip_provider_t *prov, cain_sip_request_t *req);
 void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp);
+
+struct cain_sip_ict{
+	cain_sip_client_transaction_t base;
+};
+
+typedef struct cain_sip_ict cain_sip_ict_t;
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_ict_t,cain_sip_client_transaction_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+cain_sip_ict_t * cain_sip_ict_new(cain_sip_provider_t *prov, cain_sip_request_t *req);
+
+struct cain_sip_nict{
+	cain_sip_client_transaction_t base;
+};
+
+typedef struct cain_sip_nict cain_sip_nict_t;
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_nict_t,cain_sip_client_transaction_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+cain_sip_nict_t * cain_sip_nict_new(cain_sip_provider_t *prov, cain_sip_request_t *req);
+
+
+/*
+ *
+ *
+ *	Server transaction
+ *
+ *
+*/
+
+struct cain_sip_server_transaction{
+	cain_sip_transaction_t base;
+};
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_server_transaction_t,cain_sip_transaction_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+struct cain_sip_ist{
+	cain_sip_server_transaction_t base;
+};
+
+typedef struct cain_sip_ist cain_sip_ist_t;
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_ist_t,cain_sip_server_transaction_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+cain_sip_ist_t * cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *req);
+
+struct cain_sip_nist{
+	cain_sip_server_transaction_t base;
+};
+
+typedef struct cain_sip_nist cain_sip_nist_t;
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_nist_t,cain_sip_server_transaction_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+cain_sip_nist_t * cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_t *req);
 
 /*
  cain_sip_response_t

@@ -47,6 +47,10 @@ CAIN_SIP_DECLARE_TYPES_BEGIN(cain_sip,1)
 	CAIN_SIP_TYPE_ID(cain_sip_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_server_transaction_t),
 	CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t),
+	CAIN_SIP_TYPE_ID(cain_sip_ict_t),
+	CAIN_SIP_TYPE_ID(cain_sip_nict_t),
+	CAIN_SIP_TYPE_ID(cain_sip_ist_t),
+	CAIN_SIP_TYPE_ID(cain_sip_nist_t),
 	CAIN_SIP_TYPE_ID(cain_sip_dialog_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_address_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_contact_t),
@@ -113,32 +117,22 @@ char * cain_sip_strdup(const char *s);
 
 CAIN_SIP_END_DECLS
 
-
+/*these types are declared here because they are widely used in many headers included after*/
 
 typedef struct cain_sip_listening_point cain_sip_listening_point_t;
 typedef struct cain_sip_stack cain_sip_stack_t;
 typedef struct cain_sip_provider cain_sip_provider_t;
 typedef struct cain_sip_dialog cain_sip_dialog_t;
-
-
-typedef struct cain_sip_dialog_terminated_event cain_sip_dialog_terminated_event_t;
-typedef struct cain_sip_io_error_event cain_sip_io_error_event_t;
-typedef struct cain_sip_request_event cain_sip_request_event_t;
-typedef struct cain_sip_response_event cain_sip_response_event_t;
-typedef struct cain_sip_timeout_event cain_sip_timeout_event_t;
-typedef struct cain_sip_transaction_terminated_event cain_sip_transaction_terminated_event_t;
-
-CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_listener_t)
-	void (*process_dialog_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_dialog_terminated_event_t *event);
-	void (*process_io_error)(cain_sip_listener_t *user_ctx, const cain_sip_io_error_event_t *event);
-	void (*process_request_event)(cain_sip_listener_t *user_ctx, const cain_sip_request_event_t *event);
-	void (*process_response_event)(cain_sip_listener_t *user_ctx, const cain_sip_response_event_t *event);
-	void (*process_timeout)(cain_sip_listener_t *user_ctx, const cain_sip_timeout_event_t *event);
-	void (*process_transaction_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_transaction_terminated_event_t *event);
-CAIN_SIP_DECLARE_INTERFACE_END
+typedef struct cain_sip_transaction cain_sip_transaction_t;
+typedef struct cain_sip_server_transaction cain_sip_server_transaction_t;
+typedef struct cain_sip_client_transaction cain_sip_client_transaction_t;
+typedef struct _cain_sip_message cain_sip_message_t;
+typedef struct _cain_sip_request cain_sip_request_t;
+typedef struct _cain_sip_response cain_sip_response_t;
 
 #include "cain-sip/utils.h"
 #include "cain-sip/list.h"
+#include "cain-sip/listener.h"
 #include "cain-sip/mainloop.h"
 #include "cain-sip/uri.h"
 #include "cain-sip/headers.h"
@@ -148,7 +142,6 @@ CAIN_SIP_DECLARE_INTERFACE_END
 #include "cain-sip/dialog.h"
 #include "cain-sip/sipstack.h"
 #include "cain-sip/listeningpoint.h"
-#include "cain-sip/listener.h"
 #include "cain-sip/provider.h"
 
 

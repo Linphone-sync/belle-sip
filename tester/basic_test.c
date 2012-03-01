@@ -19,16 +19,67 @@
 #include <stdio.h>
 #include "cain-sip/cain-sip.h"
 
+static void process_dialog_terminated(cain_sip_listener_t *obj, const cain_sip_dialog_terminated_event_t *event){
+	cain_sip_message("process_dialog_terminated called");
+}
+static void process_io_error(cain_sip_listener_t *obj, const cain_sip_io_error_event_t *event){
+	cain_sip_message("process_io_error");
+}
+static void process_request_event(cain_sip_listener_t *obj, const cain_sip_request_event_t *event){
+	cain_sip_message("process_request_event");
+}
+static void process_response_event(cain_sip_listener_t *obj, const cain_sip_response_event_t *event){
+	cain_sip_message("process_response_event");
+}
+static void process_timeout(cain_sip_listener_t *obj, const cain_sip_timeout_event_t *event){
+	cain_sip_message("process_timeout");
+}
+static void process_transaction_terminated(cain_sip_listener_t *obj, const cain_sip_transaction_terminated_event_t *event){
+	cain_sip_message("process_transaction_terminated");
+}
+
+/*this would normally go to a .h file*/
+struct test_listener{
+	cain_sip_object_t base;
+	void *some_context;
+};
+
+typedef struct test_listener test_listener_t;
+
+CAIN_SIP_DECLARE_TYPES_BEGIN(test,0x1000)
+	CAIN_SIP_TYPE_ID(test_listener_t)
+CAIN_SIP_DECLARE_TYPES_END
+
+CAIN_SIP_DECLARE_VPTR(test_listener_t);
+
+/*the following would go to .c file */
+
+CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(test_listener_t,cain_sip_listener_t)
+	process_dialog_terminated,
+	process_io_error,
+	process_request_event,
+	process_response_event,
+	process_timeout,
+	process_transaction_terminated
+CAIN_SIP_IMPLEMENT_INTERFACE_END
+
+CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(test_listener_t,cain_sip_listener_t);
+
+CAIN_SIP_INSTANCIATE_VPTR(test_listener_t,cain_sip_object_t,NULL,NULL,NULL,FALSE);
+
+
 int main(int argc, char *argv[]){
 	cain_sip_stack_t * stack=cain_sip_stack_new(NULL);
 	cain_sip_listening_point_t *lp;
 	cain_sip_provider_t *prov;
 	cain_sip_request_t *req;
+	test_listener_t *listener=cain_sip_object_new(test_listener_t);
 
 	cain_sip_set_log_level(CAIN_SIP_LOG_DEBUG);
 	
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
 	prov=cain_sip_stack_create_provider(stack,lp);
+	cain_sip_provider_add_sip_listener(prov,CAIN_SIP_LISTENER(listener));
 	req=cain_sip_request_create(
 	                    cain_sip_uri_parse("sip:test.linphone.org"),
 	                    "REGISTER",
@@ -44,9 +95,9 @@ int main(int argc, char *argv[]){
 	printf("Message to send:\n%s\n",tmp);
 	cain_sip_free(tmp);
 	cain_sip_provider_send_request(prov,req);
-	cain_sip_stack_sleep(stack,5000);
+	cain_sip_stack_sleep(stack,25000);
 	printf("Exiting\n");
-	cain_sip_object_unref(CAIN_SIP_OBJECT(prov));
-	cain_sip_object_unref(CAIN_SIP_OBJECT(stack));
+	cain_sip_object_unref(prov);
+	cain_sip_object_unref(stack);
 	return 0;
 }

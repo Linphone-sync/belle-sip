@@ -165,12 +165,18 @@ cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_
 	return cid;
 }
 
-cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *p, cain_sip_request_t *req){
-	return cain_sip_client_transaction_new(p,req);
+cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
+	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0)
+		return (cain_sip_client_transaction_t*)cain_sip_ict_new(prov,req);
+	else 
+		return (cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
 }
 
-cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *p, cain_sip_request_t *req){
-	return cain_sip_server_transaction_new(p,req);
+cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
+	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0)
+		return (cain_sip_server_transaction_t*)cain_sip_ist_new(prov,req);
+	else 
+		return (cain_sip_server_transaction_t*)cain_sip_nist_new(prov,req);
 }
 
 cain_sip_stack_t *cain_sip_provider_get_sip_stack(cain_sip_provider_t *p){
@@ -223,7 +229,7 @@ void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_s
 	cain_sip_transaction_terminated_event_t ev;
 	ev.source=p;
 	ev.transaction=t;
-	ev.is_server_transaction=t->is_server;
+	ev.is_server_transaction=CAIN_SIP_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
 	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(p,process_transaction_terminated,&ev);
 }
 

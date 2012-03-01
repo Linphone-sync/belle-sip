@@ -20,7 +20,23 @@
 #ifndef cain_sip_listener_h
 #define cain_sip_listener_h
 
+typedef struct cain_sip_dialog_terminated_event cain_sip_dialog_terminated_event_t;
+typedef struct cain_sip_io_error_event cain_sip_io_error_event_t;
+typedef struct cain_sip_request_event cain_sip_request_event_t;
+typedef struct cain_sip_response_event cain_sip_response_event_t;
+typedef struct cain_sip_timeout_event cain_sip_timeout_event_t;
+typedef struct cain_sip_transaction_terminated_event cain_sip_transaction_terminated_event_t;
 
+CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_listener_t)
+	void (*process_dialog_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_dialog_terminated_event_t *event);
+	void (*process_io_error)(cain_sip_listener_t *user_ctx, const cain_sip_io_error_event_t *event);
+	void (*process_request_event)(cain_sip_listener_t *user_ctx, const cain_sip_request_event_t *event);
+	void (*process_response_event)(cain_sip_listener_t *user_ctx, const cain_sip_response_event_t *event);
+	void (*process_timeout)(cain_sip_listener_t *user_ctx, const cain_sip_timeout_event_t *event);
+	void (*process_transaction_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_transaction_terminated_event_t *event);
+CAIN_SIP_DECLARE_INTERFACE_END
+
+#define CAIN_SIP_LISTENER(obj) CAIN_SIP_INTERFACE_CAST(obj,cain_sip_listener_t)
 
 struct cain_sip_dialog_terminated_event{
 	cain_sip_provider_t *source;

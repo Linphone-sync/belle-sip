@@ -18,9 +18,7 @@
 #ifndef CAIN_SIP_MESSAGE_H
 #define CAIN_SIP_MESSAGE_H
 
-typedef struct _cain_sip_message cain_sip_message_t;
-typedef struct _cain_sip_request cain_sip_request_t;
-typedef struct _cain_sip_response cain_sip_response_t;
+
 
 #define CAIN_SIP_MESSAGE(obj)			CAIN_SIP_CAST(obj,cain_sip_message_t)
 #define CAIN_SIP_REQUEST(obj)			CAIN_SIP_CAST(obj,cain_sip_request_t)

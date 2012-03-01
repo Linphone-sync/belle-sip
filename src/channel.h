@@ -98,6 +98,8 @@ const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj);
 
 const char *cain_sip_channel_get_local_address(cain_sip_channel_t *obj, int *port);
 
+#define cain_sip_channel_get_state(chan) ((chan)->state)
+
 /*just invokes the listeners to process data*/
 void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
 
