@@ -10,7 +10,7 @@ cain_sip_tester_SOURCES=	cain_sip_tester.c \
 				auth_helper_tester.c \
 				cast_test.c
 
-cain_sip_tester_CFLAGS=$(CUNIT_CFLAGS)
+cain_sip_tester_CFLAGS=$(CUNIT_CFLAGS) $(STRICT_OPTIONS)
 
 cain_sip_tester_LDFLAGS=$(CUNIT_LIBS)
 

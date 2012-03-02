@@ -159,4 +159,14 @@ void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_s
 	cain_sip_transaction_init((cain_sip_transaction_t*)obj, prov,req);
 }
 
+cain_sip_ist_t *cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
+	return NULL;
+}
 
+cain_sip_nist_t *cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
+	return NULL;
+}
+
+cain_sip_nict_t *cain_sip_nict_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
+	return NULL;
+}

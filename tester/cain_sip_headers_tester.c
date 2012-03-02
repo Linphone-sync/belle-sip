@@ -360,7 +360,7 @@ void test_header_proxy_authenticate(void) {
 			" qop=\"auth,auth-int\", nonce=\"c60f3082ee1212b402a21831ae\", stale=true, domain=\"sip:boxesbybob.com\"";
 	cain_sip_header_proxy_authenticate_t* L_tmp;
 	cain_sip_header_proxy_authenticate_t* L_proxy_authorization = cain_sip_header_proxy_authenticate_parse(l_header);
-	cain_sip_list_t* qop;
+	//cain_sip_list_t* qop;
 
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_proxy_authorization));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_proxy_authorization));
