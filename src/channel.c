@@ -54,8 +54,35 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_channel_t)=
 		NULL, /*marshall*/
 	}
 };
-
+static void fix_incoming_via(cain_sip_request_t *msg, const struct addrinfo* origin){
+	char received[NI_MAXHOST];
+	char rport[NI_MAXSERV];
+	cain_sip_header_via_t *via;
+	int err=getnameinfo(origin->ai_addr,origin->ai_addrlen,received,sizeof(received),
+	                rport,sizeof(rport),NI_NUMERICHOST|NI_NUMERICSERV);
+	if (err!=0){
+		cain_sip_error("fix_via: getnameinfo() failed: %s",gai_strerror(errno));
+		return;
+	}
+	via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header((cain_sip_message_t*)msg,"via"));
+	if (via){
+		cain_sip_header_via_set_received(via,received);
+		cain_sip_header_via_set_rport(via,atoi(rport));
+	}
+}
 void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
+	int err;
+	err=cain_sip_channel_recv(obj,&obj->input_stream.buff,MAX_CHANNEL_BUFF_SIZE-1);
+	if (err>0){
+		obj->input_stream.buff[err]='\0';
+		cain_sip_message("read message from %s:%i\n%s",obj->peer_name,obj->peer_port,&obj->input_stream.buff);
+		obj->input_stream.msg=cain_sip_message_parse(obj->input_stream.buff);
+		if (obj->input_stream.msg){
+			if (cain_sip_message_is_request(obj->input_stream.msg)) fix_incoming_via(CAIN_SIP_REQUEST(obj->input_stream.msg),obj->peer);
+		}else{
+			cain_sip_error("Could not parse this message.");
+		}
+	}
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_event,obj,revents);
 }
 
@@ -115,7 +142,12 @@ const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj){
 	return obj->peer;
 }
 
-
+cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj) {
+	/*FIXME should be synchronized*/
+	cain_sip_message_t* result = obj->input_stream.msg;
+	obj->input_stream.msg=NULL;
+	return result;
+}
 
 static void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state){
 	cain_sip_message("channel %p: state %s",obj,channel_state_to_string(state));

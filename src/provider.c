@@ -48,22 +48,7 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 	}
 }
 
-static void fix_incoming_via(cain_sip_request_t *msg, const struct addrinfo* origin){
-	char received[NI_MAXHOST];
-	char rport[NI_MAXSERV];
-	cain_sip_header_via_t *via;
-	int err=getnameinfo(origin->ai_addr,origin->ai_addrlen,received,sizeof(received),
-	                rport,sizeof(rport),NI_NUMERICHOST|NI_NUMERICSERV);
-	if (err!=0){
-		cain_sip_error("fix_via: getnameinfo() failed: %s",gai_strerror(errno));
-		return;
-	}
-	via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header((cain_sip_message_t*)msg,"via"));
-	if (via){
-		cain_sip_header_via_set_received(via,received);
-		cain_sip_header_via_set_rport(via,atoi(rport));
-	}
-}
+
 
 static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, cain_sip_message_t *msg){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(msg,"via"));
@@ -83,7 +68,7 @@ static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, c
 		cain_sip_free(branchid);
 	}
 }
-
+/*
 static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_channel_t *chan){
 	char buffer[cain_sip_network_buffer_size];
 	int err;
@@ -101,10 +86,10 @@ static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_c
 		}
 	}
 }
-
+*/
 static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, unsigned int revents){
 	if (revents & CAIN_SIP_EVENT_READ){
-		cain_sip_provider_read_message(CAIN_SIP_PROVIDER(obj),chan);
+		cain_sip_provider_dispatch_message(CAIN_SIP_PROVIDER(obj),cain_sip_channel_pick_message(chan));
 	}
 	return 0;
 }

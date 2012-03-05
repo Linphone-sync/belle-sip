@@ -51,7 +51,7 @@ void (*on_sending)(cain_sip_channel_listener_t *l, cain_sip_channel_t *obj, cain
 CAIN_SIP_DECLARE_INTERFACE_END
 
 #define CAIN_SIP_CHANNEL_LISTENER(obj) CAIN_SIP_INTERFACE_CAST(obj,cain_sip_channel_listener_t)
-#define MAX_BUFF_SIZE 64000
+#define MAX_CHANNEL_BUFF_SIZE 64000
 
 typedef enum input_stream_state {
 	WAITING_MESSAGE_START=0
@@ -61,7 +61,8 @@ typedef enum input_stream_state {
 
 typedef struct cain_sip_channel_input_stream{
 	input_stream_state_t state;
-	char buff[MAX_BUFF_SIZE];
+	char buff[MAX_CHANNEL_BUFF_SIZE];
+	cain_sip_message_t *msg;
 }cain_sip_channel_input_stream_t;
 
 typedef struct cain_sip_stream_channel cain_sip_stream_channel_t;
@@ -102,6 +103,10 @@ int cain_sip_channel_connect(cain_sip_channel_t *obj);
 int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);
+/**
+ * pickup last received message. This method take the ownership of the message.
+ */
+cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj);
 
 int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *msg);
 
