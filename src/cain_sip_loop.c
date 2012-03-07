@@ -69,6 +69,7 @@ struct cain_sip_main_loop{
 };
 
 void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source){
+	if (!source->node.next || !source->node.prev) return; /*nothing to do*/
 	ml->sources=cain_sip_list_remove_link(ml->sources,&source->node);
 	ml->nsources--;
 	
@@ -264,4 +265,10 @@ void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){
 	cain_sip_main_loop_add_timeout(ml,(cain_sip_source_func_t)cain_sip_main_loop_quit,ml,milliseconds);
 	cain_sip_main_loop_run(ml);
 }
-
+int cain_sip_source_set_event(cain_sip_source_t* source, int event_mask) {
+	source->events = event_mask;
+	return 0;
+}
+cain_sip_fd_t cain_sip_source_get_fd(const cain_sip_source_t* source) {
+	return source->fd;
+}

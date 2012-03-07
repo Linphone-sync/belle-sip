@@ -88,7 +88,7 @@ cain_sip_channel_t * cain_sip_channel_new_udp(cain_sip_stack_t *stack, int sock,
 
 cain_sip_channel_t * cain_sip_channel_new_udp_with_addr(cain_sip_stack_t *stack, int sock, const char *bindip, int localport, const struct addrinfo *ai);
 
-cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack, const char *name, int port);
+cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack, const char *bindip, int localport,const char *name, int port);
 
 void cain_sip_channel_add_listener(cain_sip_channel_t *chan, cain_sip_channel_listener_t *l);
 
@@ -96,13 +96,17 @@ void cain_sip_channel_remove_listener(cain_sip_channel_t *obj, cain_sip_channel_
 
 int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport, const struct addrinfo *addr);
 
-int cain_sip_channel_resolve(cain_sip_channel_t *obj);
+void cain_sip_channel_resolve(cain_sip_channel_t *obj);
 
-int cain_sip_channel_connect(cain_sip_channel_t *obj);
+void cain_sip_channel_connect(cain_sip_channel_t *obj);
 
 int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);
+/*only used by channels implementation*/
+void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t slen);
+void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, int fd, cain_sip_source_func_t process_data, const char *bindip,int localport,const char *peername, int peer_port);
+/*end of channel implementations*/
 /**
  * pickup last received message. This method take the ownership of the message.
  */
@@ -113,12 +117,17 @@ int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *
 int cain_sip_channel_is_reliable(const cain_sip_channel_t *obj);
 
 const char * cain_sip_channel_get_transport_name(const cain_sip_channel_t *obj);
+const char * cain_sip_channel_get_transport_name_lower_case(const cain_sip_channel_t *obj);
 
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj);
 
 const char *cain_sip_channel_get_local_address(cain_sip_channel_t *obj, int *port);
 
 #define cain_sip_channel_get_state(chan) ((chan)->state)
+
+void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state);
+
+void channel_process_queue(cain_sip_channel_t *obj);
 
 /*just invokes the listeners to process data*/
 void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
@@ -131,7 +140,8 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
 	int (*channel_recv)(cain_sip_channel_t *obj, void *buf, size_t buflen);
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
-CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_udp_channel_t,cain_sip_channel_t)
-CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+
+
 
 #endif

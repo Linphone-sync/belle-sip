@@ -38,43 +38,8 @@ CAIN_SIP_DECLARE_INTERFACE_END
 
 #define CAIN_SIP_LISTENER(obj) CAIN_SIP_INTERFACE_CAST(obj,cain_sip_listener_t)
 
-struct cain_sip_dialog_terminated_event{
-	cain_sip_provider_t *source;
-	cain_sip_dialog_t *dialog;
-};
 
-struct cain_sip_io_error_event{
-	cain_sip_provider_t *source;
-	const char *transport;
-	const char *host;
-	int port;
-};
-
-struct cain_sip_request_event{
-	cain_sip_provider_t *source;
-	cain_sip_server_transaction_t *server_transaction;
-	cain_sip_dialog_t *dialog;
-	cain_sip_request_t *request;
-};
-
-struct cain_sip_response_event{
-	cain_sip_provider_t *source;
-	cain_sip_client_transaction_t *client_transaction;
-	cain_sip_dialog_t *dialog;
-	cain_sip_response_t *response;
-};
-
-struct cain_sip_timeout_event{
-	cain_sip_provider_t *source;
-	cain_sip_transaction_t *transaction;
-	int is_server_transaction;
-};
-
-struct cain_sip_transaction_terminated_event{
-	cain_sip_provider_t *source;
-	cain_sip_transaction_t *transaction;
-	int is_server_transaction;
-};
+cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_response_event_t* event);
 
 
 

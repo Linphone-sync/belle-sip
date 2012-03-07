@@ -26,6 +26,7 @@
 #include "cain_sip_messageParser.h"
 #include "cain_sip_messageLexer.h"
 #include "cain_sip_internal.h"
+#include "listeningpoint_internal.h"
 
 /************************
  * header
@@ -471,7 +472,7 @@ int cain_sip_header_cseq_marshal(cain_sip_header_cseq_t* cseq, char* buff,unsign
 }
 cain_sip_header_cseq_t * cain_sip_header_cseq_create(unsigned int number, const char *method){
 	cain_sip_header_cseq_t *cseq=cain_sip_header_cseq_new();
-	cseq->method=cain_sip_strdup(method);
+	cain_sip_header_cseq_set_method(cseq,method);
 	cseq->seq_number=number;
 	return cseq;
 }
@@ -598,7 +599,11 @@ int cain_sip_header_expires_marshal(cain_sip_header_expires_t* expires, char* bu
 CAIN_SIP_NEW_HEADER(header_expires,header,"Expires")
 CAIN_SIP_PARSE(header_expires)
 GET_SET_INT(cain_sip_header_expires,expires,int)
-
+cain_sip_header_expires_t* cain_sip_header_expires_create(int expires) {
+	cain_sip_header_expires_t* obj = cain_sip_header_expires_new();
+	cain_sip_header_expires_set_expires(obj,expires);
+	return obj;
+}
 /******************************
  * Extension header hinerite from header
  *
@@ -623,6 +628,7 @@ int cain_sip_header_extension_marshal(cain_sip_header_extension_t* extension, ch
 
 }
 CAIN_SIP_NEW_HEADER(header_extension,header,NULL)
+
 
 /**
  * special case for this header. I don't know why

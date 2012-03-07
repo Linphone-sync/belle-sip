@@ -17,7 +17,7 @@
 */
 
 #include "cain_sip_internal.h"
-
+#include "listeningpoint_internal.h"
 
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 	cain_sip_object_unref(stack->ml);
@@ -43,9 +43,11 @@ const cain_sip_timer_config_t *cain_sip_stack_get_timer_config(const cain_sip_st
 
 cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport){
 	cain_sip_listening_point_t *lp=NULL;
-	if (strcasecmp(transport,"UDP")==0){
+	if (strcasecmp(transport,"UDP")==0) {
 		lp=cain_sip_udp_listening_point_new(s,ipaddress,port);
-	}else{
+	} else if (strcasecmp(transport,"TCP") == 0) {
+		lp=cain_sip_stream_listening_point_new(s,ipaddress,port);
+	} else {
 		cain_sip_fatal("Unsupported transport %s",transport);
 	}
 	if (lp!=NULL){

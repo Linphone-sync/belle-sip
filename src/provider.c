@@ -17,7 +17,7 @@
 */
 
 #include "cain_sip_internal.h"
-
+#include "listeningpoint_internal.h"
 
 
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
@@ -95,7 +95,28 @@ static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t
 }
 
 static void channel_on_sending(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_message_t *msg){
+	cain_sip_header_contact_t* contact = (cain_sip_header_contact_t*)cain_sip_message_get_header(msg,"Contact");
+	cain_sip_uri_t* contact_uri;
+	/*probably better to be in channel*/
 	fix_outgoing_via((cain_sip_provider_t*)obj,chan,msg);
+	/*fill contact if needeed*/
+	if (!contact) {
+		contact = cain_sip_header_contact_new();
+		cain_sip_message_add_header(msg,(cain_sip_header_t*)contact);
+	}
+	if (!(contact_uri =cain_sip_header_address_get_uri((cain_sip_header_address_t*)contact))) {
+		contact_uri = cain_sip_uri_new();
+		cain_sip_header_address_set_uri((cain_sip_header_address_t*)contact,contact_uri);
+	}
+	if (!cain_sip_uri_get_host(contact_uri)) {
+		cain_sip_uri_set_host(contact_uri,chan->local_ip);
+	}
+	if (cain_sip_uri_get_transport_param(contact_uri) == NULL && strcasecmp("udp",cain_sip_channel_get_transport_name(chan))!=0) {
+		cain_sip_uri_set_transport_param(contact_uri,cain_sip_channel_get_transport_name_lower_case(chan));
+	}
+	if (cain_sip_uri_get_port(contact_uri) == 0 && chan->local_port!=5060) {
+		cain_sip_uri_set_port(contact_uri,chan->local_port);
+	}
 }
 
 CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(cain_sip_provider_t,cain_sip_channel_listener_t)
@@ -208,6 +229,9 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(resp));
 }
 
+cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_response_event_t* event) {
+	return event->response;
+}
 /*private provider API*/
 
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t){

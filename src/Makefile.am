@@ -27,7 +27,8 @@ libcainsip_generated_la_CFLAGS=$(LESS_STRICT_OPTIONS) $(ANTLR_CFLAGS)
 lib_LTLIBRARIES=libcainsip.la
 
 
-libcainsip_la_SOURCES=							clock_gettime.c clock_gettime.h \
+libcainsip_la_SOURCES=				\
+									clock_gettime.c clock_gettime.h \
 									cain_sip_uri_impl.c \
 									cain_sip_headers_impl.c \
 									cain_sip_utils.c cain_sip_internal.h \
@@ -44,7 +45,11 @@ libcainsip_la_SOURCES=							clock_gettime.c clock_gettime.h \
 									message.c \
 									md5.c \
 									auth_helper.c \
-									ict.c
+									ict.c \
+									transports/udp_listeningpoint.c \
+									transports/udp_channel.c \
+									transports/stream_channel.c \
+									transports/stream_listeningpoint.c
 
 libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS)
 

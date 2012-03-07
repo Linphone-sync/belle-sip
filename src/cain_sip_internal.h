@@ -35,7 +35,6 @@
 /* include all public headers*/
 #include "cain-sip/cain-sip.h"
 
-
 /*etc*/
 
 #define CAIN_SIP_INTERFACE_GET_METHODS(obj,interface) \
@@ -147,11 +146,14 @@ CAIN_SIP_DECLARE_VPTR(cain_sdp_mime_parameter_t);
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 
+
+
+
 struct cain_sip_source{
 	cain_sip_object_t base;
 	cain_sip_list_t node;
 	unsigned long id;
-	int fd;
+	cain_sip_fd_t fd;
 	unsigned int events;
 	int timeout;
 	void *data;
@@ -163,7 +165,7 @@ struct cain_sip_source{
 	unsigned char expired;
 };
 
-void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
+void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms);
 
 #define cain_list_next(elem) ((elem)->next)
 
@@ -376,23 +378,15 @@ void cain_sip_parameters_init(cain_sip_parameters_t *obj);
  * Listening points
 */
 
-typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_listening_point_t,cain_sip_object_t)
 const char *transport;
 cain_sip_channel_t * (*create_channel)(cain_sip_listening_point_t *,const char *dest_ip, int port);
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
-CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_udp_listening_point_t,cain_sip_listening_point_t)
-CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 #define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
-#define CAIN_SIP_UDP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_udp_listening_point_t)
 
-cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
-cain_sip_channel_t *cain_sip_listening_point_get_channel(cain_sip_listening_point_t *ip, const char *dest, int port);
-cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *ip, const char *dest, int port);
-int cain_sip_listening_point_get_well_known_port(const char *transport);
 
 
 /*
@@ -593,6 +587,44 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 	}
 
 
+
+struct cain_sip_dialog_terminated_event{
+	cain_sip_provider_t *source;
+	cain_sip_dialog_t *dialog;
+};
+
+struct cain_sip_io_error_event{
+	cain_sip_provider_t *source;
+	const char *transport;
+	const char *host;
+	int port;
+};
+
+struct cain_sip_request_event{
+	cain_sip_provider_t *source;
+	cain_sip_server_transaction_t *server_transaction;
+	cain_sip_dialog_t *dialog;
+	cain_sip_request_t *request;
+};
+
+struct cain_sip_response_event{
+	cain_sip_provider_t *source;
+	cain_sip_client_transaction_t *client_transaction;
+	cain_sip_dialog_t *dialog;
+	cain_sip_response_t *response;
+};
+
+struct cain_sip_timeout_event{
+	cain_sip_provider_t *source;
+	cain_sip_transaction_t *transaction;
+	int is_server_transaction;
+};
+
+struct cain_sip_transaction_terminated_event{
+	cain_sip_provider_t *source;
+	cain_sip_transaction_t *transaction;
+	int is_server_transaction;
+};
 
 
 

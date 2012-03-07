@@ -24,6 +24,7 @@
 #include "cain_sip_messageParser.h"
 #include "cain_sip_messageLexer.h"
 #include "cain_sip_internal.h"
+#include "listeningpoint_internal.h"
 
 
 #define SIP_URI_GET_SET_STRING(attribute) GET_SET_STRING(cain_sip_uri,attribute)

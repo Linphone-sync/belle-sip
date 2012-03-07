@@ -86,7 +86,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_event,obj,revents);
 }
 
-static void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, int fd, const char *bindip,int localport,const char *peername, int peer_port){
+void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, int fd, cain_sip_source_func_t process_data,const char *bindip,int localport,const char *peername, int peer_port){
 	obj->peer_name=cain_sip_strdup(peername);
 	obj->peer_port=peer_port;
 	obj->peer=NULL;
@@ -95,7 +95,9 @@ static void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *sta
 		obj->local_ip=cain_sip_strdup(bindip);
 	obj->local_port=localport;
 		
-	cain_sip_fd_source_init((cain_sip_source_t*)obj,(cain_sip_source_func_t)cain_sip_channel_process_data,obj,fd,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR,-1);
+	if (process_data) {
+		cain_sip_fd_source_init((cain_sip_source_t*)obj,(cain_sip_source_func_t)process_data,obj,fd,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR,-1);
+	}
 }
 
 void cain_sip_channel_add_listener(cain_sip_channel_t *obj, cain_sip_channel_listener_t *l){
@@ -125,7 +127,17 @@ const char *cain_sip_channel_get_local_address(cain_sip_channel_t *obj, int *por
 int cain_sip_channel_is_reliable(const cain_sip_channel_t *obj){
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->reliable;
 }
-
+const char * cain_sip_channel_get_transport_name_lower_case(const cain_sip_channel_t *obj){
+	const char* transport = cain_sip_channel_get_transport_name(obj);
+	if (strcasecmp("udp",transport)==0) return "udp";
+	else if (strcasecmp("tcp",transport)==0) return "tcp";
+	else if (strcasecmp("tls",transport)==0) return "tls";
+	else if (strcasecmp("dtls",transport)==0) return "dtls";
+	else {
+		cain_sip_message("Cannot convert [%s] to lower case",transport);
+		return transport;
+	}
+}
 const char * cain_sip_channel_get_transport_name(const cain_sip_channel_t *obj){
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->transport;
 }
@@ -143,13 +155,12 @@ const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj){
 }
 
 cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj) {
-	/*FIXME should be synchronized*/
 	cain_sip_message_t* result = obj->input_stream.msg;
 	obj->input_stream.msg=NULL;
 	return result;
 }
 
-static void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state){
+void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) {
 	cain_sip_message("channel %p: state %s",obj,channel_state_to_string(state));
 	obj->state=state;
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_state_changed,obj,state);
@@ -171,7 +182,7 @@ static void send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 }
 
 
-static void channel_process_queue(cain_sip_channel_t *obj){
+void channel_process_queue(cain_sip_channel_t *obj){
 	if (obj->msg){
 		switch(obj->state){
 			case CAIN_SIP_CHANNEL_INIT:
@@ -192,7 +203,7 @@ static void channel_process_queue(cain_sip_channel_t *obj){
 	}
 }
 
-static void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t slen){
+void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t slen){
 	char name[NI_MAXHOST];
 	char serv[NI_MAXSERV];
 
@@ -222,15 +233,20 @@ static void channel_res_done(void *data, const char *name, struct addrinfo *res)
 	channel_process_queue(obj);
 }
 
-int cain_sip_channel_resolve(cain_sip_channel_t *obj){
+void cain_sip_channel_resolve(cain_sip_channel_t *obj){
 	channel_set_state(obj,CAIN_SIP_CHANNEL_RES_IN_PROGRESS);
 	obj->resolver_id=cain_sip_resolve(obj->peer_name, obj->peer_port, 0, channel_res_done, obj, obj->stack->ml);
-	return 0;
+	return ;
 }
 
-int cain_sip_channel_connect(cain_sip_channel_t *obj){
-	int ret=CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->connect(obj,obj->peer->ai_addr,obj->peer->ai_addrlen);
-	return ret;
+void cain_sip_channel_connect(cain_sip_channel_t *obj){
+	channel_set_state(obj,CAIN_SIP_CHANNEL_CONNECTING);
+	if(CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->connect(obj,obj->peer->ai_addr,obj->peer->ai_addrlen)) {
+		cain_sip_error("Cannot connect to [%s://%s:%s]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
+		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+		channel_process_queue(obj);
+	}
+	return;
 }
 
 int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
@@ -241,104 +257,6 @@ int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *
 	obj->msg=(cain_sip_message_t*)cain_sip_object_ref(msg);
 	channel_process_queue(obj);
 	return 0;
-}
-
-struct cain_sip_udp_channel{
-	cain_sip_channel_t base;
-	int sock;
-};
-
-typedef struct cain_sip_udp_channel cain_sip_udp_channel_t;
-
-static void udp_channel_uninit(cain_sip_udp_channel_t *obj){
-	if (obj->sock!=-1)
-		close(obj->sock);
-}
-
-static int udp_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
-	cain_sip_udp_channel_t *chan=(cain_sip_udp_channel_t *)obj;
-	int err;
-	err=sendto(chan->sock,buf,buflen,0,obj->peer->ai_addr,obj->peer->ai_addrlen);
-	if (err==-1){
-		cain_sip_fatal("Could not send UDP packet: %s",strerror(errno));
-		return -errno;
-	}
-	return err;
-}
-
-static int udp_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
-	cain_sip_udp_channel_t *chan=(cain_sip_udp_channel_t *)obj;
-	int err;
-	struct sockaddr_storage addr;
-	socklen_t addrlen=sizeof(addr);
-	err=recvfrom(chan->sock,buf,buflen,MSG_DONTWAIT,(struct sockaddr*)&addr,&addrlen);
-	if (err==-1 && errno!=EWOULDBLOCK){
-		cain_sip_error("Could not receive UDP packet: %s",strerror(errno));
-		return -errno;
-	}
-	return err;
-}
-
-int udp_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t socklen){
-	struct sockaddr_storage laddr;
-	socklen_t lslen=sizeof(laddr);
-	if (obj->local_ip==NULL){
-		cain_sip_get_src_addr_for(addr,socklen,(struct sockaddr*)&laddr,&lslen);
-		if (lslen==sizeof(struct sockaddr_in6)){
-			struct sockaddr_in6 *sin6=(struct sockaddr_in6*)&laddr;
-			sin6->sin6_port=htons(obj->local_port);
-		}else{
-			struct sockaddr_in *sin=(struct sockaddr_in*)&laddr;
-			sin->sin_port=htons(obj->local_port);
-		}
-	}
-	cain_sip_channel_set_ready(obj,(struct sockaddr*)&laddr,lslen);
-	return 0;
-}
-
-CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_udp_channel_t);
-
-CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_udp_channel_t)=
-{
-	{
-		{
-			CAIN_SIP_VPTR_INIT(cain_sip_udp_channel_t,cain_sip_channel_t,FALSE),
-			(cain_sip_object_destroy_t)udp_channel_uninit,
-			NULL,
-			NULL
-		},
-		"UDP",
-		0, /*is_reliable*/
-		udp_channel_connect,
-		udp_channel_send,
-		udp_channel_recv
-	}
-};
-
-cain_sip_channel_t * cain_sip_channel_new_udp(cain_sip_stack_t *stack, int sock, const char *bindip, int localport, const char *dest, int port){
-	cain_sip_udp_channel_t *obj=cain_sip_object_new(cain_sip_udp_channel_t);
-	cain_sip_channel_init((cain_sip_channel_t*)obj,stack,sock,bindip,localport,dest,port);
-	obj->sock=sock;
-	return (cain_sip_channel_t*)obj;
-}
-
-cain_sip_channel_t * cain_sip_channel_new_udp_with_addr(cain_sip_stack_t *stack, int sock, const char *bindip, int localport, const struct addrinfo *peer){
-	cain_sip_udp_channel_t *obj=cain_sip_object_new(cain_sip_udp_channel_t);
-	struct addrinfo *ai=cain_sip_new0(struct addrinfo);
-	char name[NI_MAXHOST];
-	char serv[NI_MAXSERV];
-	int err;
-	
-	obj->sock=sock;
-	*ai=*peer;
-	err=getnameinfo(ai->ai_addr,ai->ai_addrlen,name,sizeof(name),serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
-	if (err!=0){
-		cain_sip_error("cain_sip_channel_new_udp_with_addr(): getnameinfo() failed: %s",gai_strerror(err));
-		cain_sip_object_unref(obj);
-		return NULL;
-	}
-	cain_sip_channel_init((cain_sip_channel_t*)obj,stack,sock,bindip,localport,name,atoi(serv));
-	return (cain_sip_channel_t*)obj;
 }
 
 

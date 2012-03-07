@@ -246,6 +246,7 @@ cain_sip_header_expires_t* cain_sip_header_expires_parse (const char* expires) ;
 int cain_sip_header_expires_get_expires(const cain_sip_header_expires_t* expires);
 void cain_sip_header_expires_set_expires(cain_sip_header_expires_t* expires,int value);
 int cain_sip_header_expires_decrement_expires(cain_sip_header_expires_t* expires);
+cain_sip_header_expires_t* cain_sip_header_expires_create(int expires);
 #define CAIN_SIP_HEADER_EXPIRES(t) CAIN_SIP_CAST(t,cain_sip_header_expires_t)
 
 /******************************

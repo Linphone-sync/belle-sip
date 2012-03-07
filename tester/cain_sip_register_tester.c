@@ -19,7 +19,11 @@
 #include <stdio.h>
 #include "CUnit/Basic.h"
 #include "cain-sip/cain-sip.h"
-
+#include "pthread.h"
+static int is_register_ok;
+static cain_sip_stack_t * stack;
+#define TEST_DOMAIN "localhost"
+/*#define TEST_DOMAIN "test.linphone.org"*/
 
 static void process_dialog_terminated(cain_sip_listener_t *obj, const cain_sip_dialog_terminated_event_t *event){
 	cain_sip_message("process_dialog_terminated called");
@@ -32,6 +36,10 @@ static void process_request_event(cain_sip_listener_t *obj, const cain_sip_reque
 }
 static void process_response_event(cain_sip_listener_t *obj, const cain_sip_response_event_t *event){
 	cain_sip_message("process_response_event");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_response_event_get_response(event));
+	CU_ASSERT_EQUAL(cain_sip_response_get_status_code(cain_sip_response_event_get_response(event)),200);
+	is_register_ok=1;
+	cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
 }
 static void process_timeout(cain_sip_listener_t *obj, const cain_sip_timeout_event_t *event){
 	cain_sip_message("process_timeout");
@@ -68,47 +76,66 @@ CAIN_SIP_IMPLEMENT_INTERFACE_END
 CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(test_listener_t,cain_sip_listener_t);
 
 CAIN_SIP_INSTANCIATE_VPTR(test_listener_t,cain_sip_object_t,NULL,NULL,NULL,FALSE);
+static int init(void) {
+	stack=cain_sip_stack_new(NULL);
+	return 0;
+}
+static int uninit(void) {
+	cain_sip_object_unref(stack);
+	return 0;
+}
+static void register_test(cain_sip_listening_point_t* lp,cain_sip_uri_t* uri) {
 
 
-
-void register_test() {
-	cain_sip_stack_t * stack=cain_sip_stack_new(NULL);
-	cain_sip_listening_point_t *lp;
 	cain_sip_provider_t *prov;
 	cain_sip_request_t *req;
 	test_listener_t *listener=cain_sip_object_new(test_listener_t);
 
 	cain_sip_set_log_level(CAIN_SIP_LOG_DEBUG);
-	
-	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
+
 	prov=cain_sip_stack_create_provider(stack,lp);
 	cain_sip_provider_add_sip_listener(prov,CAIN_SIP_LISTENER(listener));
 	req=cain_sip_request_create(
-	                    cain_sip_uri_parse("sip:test.linphone.org"),
+	                    uri,
 	                    "REGISTER",
 	                    cain_sip_provider_get_new_call_id(prov),
 	                    cain_sip_header_cseq_create(20,"REGISTER"),
-	                    cain_sip_header_from_create("Tester <sip:tester@test.linphone.org>","a0dke45"),
-	                    cain_sip_header_to_create("Tester <sip:tester@test.linphone.org>",NULL),
+	                    cain_sip_header_from_create("Tester <sip:tester@" TEST_DOMAIN ">","a0dke45"),
+	                    cain_sip_header_to_create("Tester <sip:tester@" TEST_DOMAIN ">",NULL),
 	                    cain_sip_header_via_new(),
 	                    70);
-	char *tmp=cain_sip_object_to_string(CAIN_SIP_OBJECT(req));
 
-	
-	printf("Message to send:\n%s\n",tmp);
-	cain_sip_free(tmp);
+	is_register_ok=0;
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(600)));
 	cain_sip_provider_send_request(prov,req);
 	cain_sip_stack_sleep(stack,25000);
-	printf("Exiting\n");
+	CU_ASSERT_EQUAL(is_register_ok,1);
 	cain_sip_object_unref(prov);
-	cain_sip_object_unref(stack);
+
 	return;
 }
-int cain_sip_register_test_suite(){
-	CU_pSuite pSuite = CU_add_suite("Register test suite", NULL, NULL);
+static void register_udp_test() {
+	cain_sip_listening_point_t *lp;
+	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(lp);
+	register_test(lp,cain_sip_uri_parse("sip:"TEST_DOMAIN));
+}
+static void register_tcp_test() {
+	cain_sip_listening_point_t *lp;
+	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"TCP");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(lp);
+	register_test(lp,cain_sip_uri_parse("sip:"TEST_DOMAIN";transport=tcp"));
+}
 
-	if (NULL == CU_add_test(pSuite, "casting transactions", register_test)) {
+int cain_sip_register_test_suite(){
+	CU_pSuite pSuite = CU_add_suite("Register test suite", init, uninit);
+
+	if (NULL == CU_add_test(pSuite, "simple udp register", register_udp_test)) {
 		return CU_get_error();
 	}
+	if (NULL == CU_add_test(pSuite, "simple tcp register", register_tcp_test)) {
+		return CU_get_error();
+	}
+	return 0;
 }
 
