@@ -1,6 +1,7 @@
 cainsipdir=$(includedir)/cain-sip
 
 cainsip_HEADERS=\
+				object.h \
 				uri.h \
 				list.h \
 				headers.h \
@@ -14,6 +15,7 @@ cainsip_HEADERS=\
 				listener.h \
 				dialog.h \
 				utils.h \
+				auth-helper.h \
 				cain-sdp.h \
 				cain-sip.h
 
