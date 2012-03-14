@@ -184,7 +184,7 @@ CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_OBJECT(obj) CAIN_SIP_CAST(obj,cain_sip_object_t)
 #define CAIN_SIP_IS_INSTANCE_OF(obj,_type) cain_sip_object_is_instance_of((cain_sip_object_t*)obj,_type##_id)
-
+#define CAIN_SIP_OBJECT_IS_INSTANCE_OF(obj,_type)	CAIN_SIP_IS_INSTANCE_OF(obj,_type)
 #define cain_sip_object_describe_type(type) \
 	cain_sip_object_describe_type_from_name(#type)
 
