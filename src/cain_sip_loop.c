@@ -133,6 +133,11 @@ void cain_sip_source_set_timeout(cain_sip_source_t *s, unsigned int value_ms){
 	s->timeout=value_ms;
 }
 
+unsigned int cain_sip_source_get_timeout(const cain_sip_source_t *s){
+	return s->timeout;
+}
+
+
 static int match_source_id(const void *s, const void *pid){
 	if ( ((cain_sip_source_t*)s)->id==(unsigned long)pid){
 		return 0;

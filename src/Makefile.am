@@ -38,18 +38,19 @@ libcainsip_la_SOURCES=				\
 									cain_sip_parameters.c \
 									cain_sdp_impl.c \
 									transaction.c \
-									listeningpoint.c \
+									listeningpoint.c listeningpoint_internal.h \
 									sipstack.c \
 									provider.c \
 									channel.c channel.h \
 									message.c \
-									md5.c \
+									md5.c md5.h \
 									auth_helper.c \
 									ict.c \
+									nict.c \
 									transports/udp_listeningpoint.c \
 									transports/udp_channel.c \
 									transports/stream_channel.c \
-									transports/stream_listeningpoint.c
+									transports/stream_listeningpoint.c 
 
 libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS)
 

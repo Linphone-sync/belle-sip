@@ -240,10 +240,6 @@ cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_respons
 /*private provider API*/
 
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t){
-	cain_sip_transaction_terminated_event_t ev;
-	ev.source=p;
-	ev.transaction=t;
-	ev.is_server_transaction=CAIN_SIP_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(p,process_transaction_terminated,&ev);
+	
 }
 

@@ -444,7 +444,24 @@ struct cain_sip_transaction{
 	void *appdata;
 };
 
-CAIN_SIP_DECLARE_VPTR(cain_sip_transaction_t)
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_transaction_t,cain_sip_object_t)
+	void (*on_terminate)(cain_sip_transaction_t *obj);
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+static inline const cain_sip_timer_config_t * cain_sip_transaction_get_timer_config(cain_sip_transaction_t *obj){
+	return cain_sip_stack_get_timer_config(obj->provider->stack);
+}
+
+static inline void cain_sip_transaction_start_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
+	cain_sip_main_loop_add_source(obj->provider->stack->ml,timer);
+}
+
+static inline void cain_sip_transaction_stop_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
+	cain_sip_main_loop_remove_source(obj->provider->stack->ml,timer);
+}
+
+void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t);
 
 /*
  *
@@ -460,7 +477,7 @@ struct cain_sip_client_transaction{
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_client_transaction_t,cain_sip_transaction_t)
 	void (*send_request)(cain_sip_client_transaction_t *);
-	void (*on_response)(cain_sip_client_transaction_t *obj, cain_sip_response_t *resp);
+	int (*on_response)(cain_sip_client_transaction_t *obj, cain_sip_response_t *resp);
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_sip_provider_t *prov, cain_sip_request_t *req);
@@ -479,6 +496,9 @@ cain_sip_ict_t * cain_sip_ict_new(cain_sip_provider_t *prov, cain_sip_request_t 
 
 struct cain_sip_nict{
 	cain_sip_client_transaction_t base;
+	cain_sip_source_t *timer_F;
+	cain_sip_source_t *timer_E;
+	cain_sip_source_t *timer_K;
 };
 
 typedef struct cain_sip_nict cain_sip_nict_t;

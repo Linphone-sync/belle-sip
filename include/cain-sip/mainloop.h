@@ -113,6 +113,8 @@ cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, voi
 
 void cain_sip_source_set_timeout(cain_sip_source_t *s, unsigned int value_ms);
 
+unsigned int cain_sip_source_get_timeout(const cain_sip_source_t *s);
+
 cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
 
 unsigned long cain_sip_source_get_id(cain_sip_source_t *s);

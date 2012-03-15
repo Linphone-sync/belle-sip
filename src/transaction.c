@@ -20,7 +20,7 @@
 
 static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_provider_t *prov, cain_sip_request_t *req){
 	if (req) cain_sip_object_ref(req);
-	t->request=req;
+	t->request=(cain_sip_request_t*)cain_sip_object_ref(req);
 	t->provider=prov;
 }
 
@@ -33,10 +33,13 @@ static void transaction_destroy(cain_sip_transaction_t *t){
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_transaction_t);
 
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_transaction_t)={
+	{
 		CAIN_SIP_VPTR_INIT(cain_sip_transaction_t,cain_sip_object_t,FALSE),
 		(cain_sip_object_destroy_t) transaction_destroy,
 		NULL,/*no clone*/
 		NULL,/*no marshall*/
+	},
+	NULL /*on_terminate*/
 };
 
 void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t){
@@ -56,12 +59,28 @@ cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_trans
 }
 
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
+	cain_sip_transaction_terminated_event_t ev;
+	
 	t->state=CAIN_SIP_TRANSACTION_TERMINATED;
 	cain_sip_provider_set_transaction_terminated(t->provider,t);
+	CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_terminate(t);
+	
+	ev.source=t->provider;
+	ev.transaction=t;
+	ev.is_server_transaction=CAIN_SIP_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->provider,process_transaction_terminated,&ev);
 }
 
 cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t){
 	return t->request;
+}
+
+void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
+	cain_sip_timeout_event_t ev;
+	ev.source=t->provider;
+	ev.transaction=t;
+	ev.is_server_transaction=CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->provider,process_timeout,&ev);
 }
 
 /*
@@ -74,12 +93,15 @@ static void server_transaction_destroy(cain_sip_server_transaction_t *t){
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_server_transaction_t);
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_server_transaction_t)={
+	{
 		{
 			CAIN_SIP_VPTR_INIT(cain_sip_server_transaction_t,cain_sip_transaction_t,FALSE),
 			(cain_sip_object_destroy_t) server_transaction_destroy,
 			NULL,
 			NULL
-		}
+		},
+		NULL
+	}
 };
 
 cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req){
@@ -122,6 +144,24 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 	}
 }
 
+void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
+	int pass=CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->on_response(t,resp);
+	if (pass){
+		cain_sip_response_event_t ev;
+
+		if (base->prov_response)
+			cain_sip_object_unref(base->prov_response);
+		base->prov_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
+		
+		ev.source=base->provider;
+		ev.response=resp;
+		ev.client_transaction=t;
+		ev.dialog=NULL;
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(base->provider,process_response_event,&ev);
+	}
+}
+
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
 }
 
@@ -146,9 +186,12 @@ CAIN_SIP_IMPLEMENT_INTERFACE_END
 CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(cain_sip_client_transaction_t, cain_sip_channel_listener_t);
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_client_transaction_t)={
 	{
-		CAIN_SIP_VPTR_INIT(cain_sip_client_transaction_t,cain_sip_transaction_t,FALSE),
-		(cain_sip_object_destroy_t)client_transaction_destroy,
-		NULL,
+		{
+			CAIN_SIP_VPTR_INIT(cain_sip_client_transaction_t,cain_sip_transaction_t,FALSE),
+			(cain_sip_object_destroy_t)client_transaction_destroy,
+			NULL,
+			NULL
+		},
 		NULL
 	},
 	NULL,
@@ -167,6 +210,3 @@ cain_sip_nist_t *cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_t
 	return NULL;
 }
 
-cain_sip_nict_t *cain_sip_nict_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
-	return NULL;
-}

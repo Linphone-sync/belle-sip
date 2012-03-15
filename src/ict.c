@@ -22,7 +22,11 @@
 static void ict_destroy(cain_sip_ict_t *obj){
 }
 
-static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
+static void on_ict_terminate(cain_sip_ict_t *obj){
+}
+
+static int ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
+	return 0;
 }
 
 static void ict_send_request(cain_sip_ict_t *obj){
@@ -36,13 +40,16 @@ CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_ict_t);
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_ict_t)={
 	{
 		{
-			CAIN_SIP_VPTR_INIT(cain_sip_ict_t,cain_sip_client_transaction_t,FALSE),
-			(cain_sip_object_destroy_t)ict_destroy,
-			NULL,
-			NULL
+			{
+				CAIN_SIP_VPTR_INIT(cain_sip_ict_t,cain_sip_client_transaction_t,FALSE),
+				(cain_sip_object_destroy_t)ict_destroy,
+				NULL,
+				NULL
+			},
+			(void (*)(cain_sip_transaction_t*))on_ict_terminate
 		},
 		(void (*)(cain_sip_client_transaction_t*))ict_send_request,
-		(void (*)(cain_sip_client_transaction_t*,cain_sip_response_t*))ict_on_response
+		(int (*)(cain_sip_client_transaction_t*,cain_sip_response_t*))ict_on_response
 	}
 };
 
