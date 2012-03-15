@@ -22,7 +22,7 @@
 
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_free(p->listeners);
-	cain_sip_list_free(p->lps);
+	cain_sip_list_free_with_data(p->lps,cain_sip_object_unref);
 }
 
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
@@ -53,6 +53,7 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, cain_sip_message_t *msg){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(msg,"via"));
 	cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(via),"rport",NULL);
+	char token[7]="fixme";
 	if (cain_sip_header_via_get_host(via)==NULL){
 		const char *local_ip;
 		int local_port;
@@ -63,7 +64,8 @@ static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, c
 		cain_sip_header_via_set_transport(via,cain_sip_channel_get_transport_name(chan));
 	}
 	if (cain_sip_header_via_get_branch(via)==NULL){
-		char *branchid=cain_sip_strdup_printf(CAIN_SIP_BRANCH_MAGIC_COOKIE "%x",cain_sip_random());
+		/*FIXME: should not be set random here: but rather a hash of message invariants*/
+		char *branchid=cain_sip_strdup_printf(CAIN_SIP_BRANCH_MAGIC_COOKIE ".%s",token);
 		cain_sip_header_via_set_branch(via,branchid);
 		cain_sip_free(branchid);
 	}
@@ -100,11 +102,8 @@ static void channel_on_sending(cain_sip_channel_listener_t *obj, cain_sip_channe
 	cain_sip_uri_t* contact_uri;
 	/*probably better to be in channel*/
 	fix_outgoing_via((cain_sip_provider_t*)obj,chan,msg);
-	/*fill contact if needeed*/
-	if (!contact) {
-		contact = cain_sip_header_contact_new();
-		cain_sip_message_add_header(msg,(cain_sip_header_t*)contact);
-	}
+
+	/* fix the contact if empty*/
 	if (!(contact_uri =cain_sip_header_address_get_uri((cain_sip_header_address_t*)contact))) {
 		contact_uri = cain_sip_uri_new();
 		cain_sip_header_address_set_uri((cain_sip_header_address_t*)contact,contact_uri);
@@ -142,7 +141,7 @@ cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listeni
 }
 
 int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp){
-	p->lps=cain_sip_list_append(p->lps,lp);
+	p->lps=cain_sip_list_append(p->lps,cain_sip_object_ref(lp));
 	return 0;
 }
 
@@ -240,6 +239,20 @@ cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_respons
 /*private provider API*/
 
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t){
-	
+	if (CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_client_transaction_t)){
+		cain_sip_provider_remove_client_transaction(p,(cain_sip_client_transaction_t*)t);
+	}
 }
 
+void cain_sip_provider_add_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t){
+	prov->client_transactions=cain_sip_list_prepend(prov->client_transactions,cain_sip_object_ref(t));
+}
+
+cain_sip_client_transaction_t * cain_sip_provider_find_matching_client_transaction(cain_sip_provider_t *prov, 
+                                                                                   cain_sip_response_t *resp){
+	return NULL;
+}
+
+void cain_sip_provider_remove_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t){
+	prov->client_transactions=cain_sip_list_remove(prov->client_transactions,t);
+}

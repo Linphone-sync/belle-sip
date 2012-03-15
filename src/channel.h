@@ -36,6 +36,7 @@ typedef enum cain_sip_channel_state{
 	CAIN_SIP_CHANNEL_ERROR
 }cain_sip_channel_state_t;
 
+const char * cain_sip_channel_state_to_string(cain_sip_channel_state_t state);
 
 /**
 * cain_sip_channel_t is an object representing a single communication channel ( socket or file descriptor), 
@@ -78,6 +79,7 @@ struct cain_sip_channel{
 	int peer_port;
 	char *local_ip;
 	int local_port;
+	int prepare;
 	unsigned long resolver_id;
 	struct addrinfo *peer;
 	cain_sip_message_t *msg;
@@ -102,6 +104,8 @@ int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername
 void cain_sip_channel_resolve(cain_sip_channel_t *obj);
 
 void cain_sip_channel_connect(cain_sip_channel_t *obj);
+
+void cain_sip_channel_prepare(cain_sip_channel_t *obj);
 
 int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 

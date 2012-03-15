@@ -1,3 +1,4 @@
+
 if BUILD_TESTS
 
 noinst_PROGRAMS=cain_sip_tester  cain_sip_object_describe
@@ -27,6 +28,6 @@ AM_CFLAGS=$(STRICT_OPTIONS)
 
 
 test: cain_sip_tester
-	./cain_sip_tester
+	./cain_sip_tester $(TEST_OPTIONS)
 	
 endif

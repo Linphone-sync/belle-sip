@@ -21,6 +21,8 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
 
 /***************/
 /* logging api */
@@ -128,6 +130,47 @@ void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
 
 void cain_sip_set_log_level(int level);
+
+char * cain_sip_random_token(char *ret, size_t size);
+
+#if defined(WIN32) || defined(WIN32_WCE)
+
+typedef SOCKET cain_sip_fd_t;
+static inline void close_socket(cain_sip_fd_t s){
+	closesocket(s);
+}
+
+static inline int get_socket_error(void){
+	return WSAGetLastError();
+}
+
+const char *getSocketErrorString();
+#define cain_sip_get_socket_error_string() getSocketErrorString()
+#define cain_sip_get_socket_error_string_from_code(code) getSocketErrorString()
+#define usleep(us) Sleep((us)/1000)
+static inline int inet_aton(const char *ip, struct in_addr *p){
+	*(long*)p=inet_addr(ip);
+	return 0;
+}
+
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#define EINPROGRESS WSAEINPROGRESS
+
+#else
+
+typedef int cain_sip_fd_t;
+static inline void close_socket(cain_sip_fd_t s){
+	close(s);
+}
+
+static inline int get_socket_error(void){
+	return errno;
+}
+
+#define cain_sip_get_socket_error_string() strerror(errno)
+#define cain_sip_get_socket_error_string_from_code(code) strerror(code)
+
+#endif
 
 CAIN_SIP_END_DECLS
 

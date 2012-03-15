@@ -66,9 +66,13 @@ CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_resolver_context_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t,cain_sip_resolver_context_destroy, NULL, NULL,FALSE);
 
 static int resolver_callback(cain_sip_resolver_context_t *ctx){
+	char tmp;
 	ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
 	ctx->ai=NULL;
-	return 0;
+	if (read(ctx->source.fd,&tmp,1)!=1){
+		cain_sip_fatal("Unexpected read from resolver_callback");
+	}
+	return CAIN_SIP_STOP;
 }
 
 cain_sip_resolver_context_t *cain_sip_resolver_context_new(){
