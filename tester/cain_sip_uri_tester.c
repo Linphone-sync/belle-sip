@@ -144,7 +144,7 @@ static void test_headers(void) {
 
 	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_uri_get_header(L_uri,"toto"));
 	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_header(L_uri,"header2"), "popo");
-
+	cain_sip_object_unref(L_uri);
 }
 
 

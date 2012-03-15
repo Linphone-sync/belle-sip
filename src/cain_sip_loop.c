@@ -43,7 +43,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_source_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_source_t,cain_sip_object_t,cain_sip_source_destroy,NULL,NULL,TRUE);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_source_t,cain_sip_object_t,cain_sip_source_destroy,NULL,NULL,FALSE);
 
 cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
 	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t);
@@ -69,7 +69,7 @@ struct cain_sip_main_loop{
 };
 
 void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source){
-	if (!source->node.next || !source->node.prev) return; /*nothing to do*/
+	if (!source->node.next && !source->node.prev) return; /*nothing to do*/
 	ml->sources=cain_sip_list_remove_link(ml->sources,&source->node);
 	ml->nsources--;
 	
@@ -83,6 +83,7 @@ static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
 	cain_sip_main_loop_remove_source(ml,ml->control);
 	close(ml->control_fds[0]);
 	close(ml->control_fds[1]);
+	cain_sip_object_unref(ml->control);
 }
 
 static int main_loop_done(void *data, unsigned int events){
@@ -120,8 +121,8 @@ void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *
 
 unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
 	cain_sip_source_t * s=cain_sip_timeout_source_new(func,data,timeout_value_ms);
-	s->on_remove=(cain_sip_source_remove_callback_t)cain_sip_object_unref;
 	cain_sip_main_loop_add_source(ml,s);
+	cain_sip_object_unref(s);
 	return s->id;
 }
 

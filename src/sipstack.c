@@ -20,9 +20,9 @@
 #include "listeningpoint_internal.h"
 
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
-	cain_sip_object_unref(stack->ml);
 	cain_sip_list_for_each (stack->lp,cain_sip_object_unref);
 	cain_sip_list_free(stack->lp);
+	cain_sip_object_unref(stack->ml);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_stack_t);

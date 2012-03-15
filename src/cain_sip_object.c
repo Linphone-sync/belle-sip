@@ -149,7 +149,7 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 	cain_sip_object_vptr_t *vptr;
 	
 	newobj=cain_sip_malloc0(obj->size);
-	newobj->ref=1;
+	newobj->ref=obj->vptr->initially_unowned ? 0 : 1;
 	newobj->vptr=obj->vptr;
 	
 	vptr=obj->vptr;

@@ -27,7 +27,10 @@ struct cain_sip_udp_listening_point{
 
 static void cain_sip_udp_listening_point_uninit(cain_sip_udp_listening_point_t *lp){
 	if (lp->sock!=-1) close(lp->sock);
-	if (lp->source) cain_sip_main_loop_remove_source(lp->base.stack->ml,lp->source);
+	if (lp->source) {
+		cain_sip_main_loop_remove_source(lp->base.stack->ml,lp->source);
+		cain_sip_object_unref(lp->source);
+	}
 }
 
 static cain_sip_channel_t *udp_create_channel(cain_sip_listening_point_t *lp, const char *dest_ip, int port){

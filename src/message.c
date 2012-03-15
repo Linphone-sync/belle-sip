@@ -33,6 +33,7 @@ static headers_container_t* cain_sip_message_headers_container_new(const char* n
 
 static void cain_sip_headers_container_delete(headers_container_t *obj){
 	cain_sip_free(obj->name);
+	cain_sip_list_free_with_data(obj->header_list,(void (*)(void*))cain_sip_object_unref);
 	cain_sip_free(obj);
 }
 
@@ -70,13 +71,13 @@ cain_sip_message_t* cain_sip_message_parse_raw (const char* buff, size_t buff_le
 	tokens = antlr3CommonTokenStreamSourceNew  (1025, lex->pLexer->rec->state->tokSource);
 	parser = cain_sip_messageParserNew               (tokens);
 	cain_sip_message_t* l_parsed_object = parser->message_raw(parser,message_length);
-	if (*message_length < buff_length) {
+/*	if (*message_length < buff_length) {*/
 		/*there is a body*/
-		l_parsed_object->body_length=buff_length-*message_length;
+/*		l_parsed_object->body_length=buff_length-*message_length;
 		l_parsed_object->body = cain_sip_malloc(l_parsed_object->body_length+1);
 		memcpy(l_parsed_object->body,buff+*message_length,l_parsed_object->body_length);
 		l_parsed_object->body[l_parsed_object->body_length]='\0';
-	}
+	}*/
 	parser ->free(parser);
 	tokens ->free(tokens);
 	lex    ->free(lex);
@@ -181,6 +182,7 @@ struct _cain_sip_request {
 
 static void cain_sip_request_destroy(cain_sip_request_t* request) {
 	if (request->method) cain_sip_free((void*)(request->method));
+	if (request->uri) cain_sip_object_unref(request->uri);
 }
 
 static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_request_t *orig){

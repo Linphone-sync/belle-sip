@@ -54,6 +54,10 @@ static void cast_test(){
 	tmp=CAIN_SIP_IS_INSTANCE_OF(req,cain_sip_response_t);
 	cain_sip_message("Casting cain_sip_request_t to cain_sip_response_t: %s",tmp ? "yes" : "no");
 	CU_ASSERT_EQUAL(tmp,0);
+	cain_sip_object_unref(req);
+	cain_sip_object_unref(resp);
+	cain_sip_object_unref(provider);
+	cain_sip_object_unref(stack);
 }
 
 

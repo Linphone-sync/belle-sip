@@ -96,6 +96,7 @@ static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t
 
 static void channel_on_sending(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_message_t *msg){
 	cain_sip_header_contact_t* contact = (cain_sip_header_contact_t*)cain_sip_message_get_header(msg,"Contact");
+	cain_sip_header_content_length_t* content_lenght = (cain_sip_header_content_length_t*)cain_sip_message_get_header(msg,"Content-Length");
 	cain_sip_uri_t* contact_uri;
 	/*probably better to be in channel*/
 	fix_outgoing_via((cain_sip_provider_t*)obj,chan,msg);
@@ -116,6 +117,10 @@ static void channel_on_sending(cain_sip_channel_listener_t *obj, cain_sip_channe
 	}
 	if (cain_sip_uri_get_port(contact_uri) == 0 && chan->local_port!=5060) {
 		cain_sip_uri_set_port(contact_uri,chan->local_port);
+	}
+	if (!content_lenght && strcasecmp("udp",cain_sip_channel_get_transport_name(chan))!=0) {
+		content_lenght = cain_sip_header_content_length_create(0);
+		cain_sip_message_add_header(msg,(cain_sip_header_t*)content_lenght);
 	}
 }
 

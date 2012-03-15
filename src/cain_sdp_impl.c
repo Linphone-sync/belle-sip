@@ -194,6 +194,7 @@ cain_sip_list_t*	cain_sdp_media_get_media_formats(const cain_sdp_media_t* media)
 	return media->media_formats;
 }
 void cain_sdp_media_set_media_formats( cain_sdp_media_t* media, cain_sip_list_t* formats) {
+	/*cain_sip_list_free(media->media_formats); to allow easy list management might be better to add an append format method*/
 	media->media_formats = formats;
 }
 void cain_sdp_media_destroy(cain_sdp_media_t* media) {

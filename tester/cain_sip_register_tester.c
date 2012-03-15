@@ -39,6 +39,7 @@ static void process_response_event(cain_sip_listener_t *obj, const cain_sip_resp
 	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_response_event_get_response(event));
 	CU_ASSERT_EQUAL(cain_sip_response_get_status_code(cain_sip_response_event_get_response(event)),200);
 	is_register_ok=1;
+	cain_sip_object_unref(cain_sip_response_event_get_response(event));
 	cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
 }
 static void process_timeout(cain_sip_listener_t *obj, const cain_sip_timeout_event_t *event){
@@ -111,6 +112,7 @@ static void register_test(cain_sip_listening_point_t* lp,cain_sip_uri_t* uri) {
 	cain_sip_stack_sleep(stack,25000);
 	CU_ASSERT_EQUAL(is_register_ok,1);
 	cain_sip_object_unref(prov);
+	cain_sip_object_unref(listener);
 
 	return;
 }

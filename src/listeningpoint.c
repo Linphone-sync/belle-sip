@@ -27,13 +27,17 @@ void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stac
 }
 
 static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
+	int existing_channels;
+	if ((existing_channels=cain_sip_list_size(lp->channels)) > 0) {
+		cain_sip_warning("Listening point destroying [%i] channels",existing_channels);
+	}
 	cain_sip_list_free_with_data(lp->channels,(void (*)(void*))cain_sip_object_unref);
 	cain_sip_free(lp->addr);
 }
 
 
 void cain_sip_listening_point_add_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan){
-	lp->channels=cain_sip_list_append(lp->channels,cain_sip_object_ref(chan));
+	lp->channels=cain_sip_list_append(lp->channels,chan);/*channel is already owned*/
 }
 
 cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *obj, const char *dest, int port){

@@ -293,9 +293,11 @@ typedef struct _cain_sip_header_content_length cain_sip_header_content_length_t;
 cain_sip_header_content_length_t* cain_sip_header_content_length_new();
 
 cain_sip_header_content_length_t* cain_sip_header_content_length_parse (const char* content_length) ;
+cain_sip_header_content_length_t* cain_sip_header_content_length_create (int content_length) ;
 unsigned int cain_sip_header_content_length_get_content_length(const cain_sip_header_content_length_t* content_length);
 void cain_sip_header_content_length_set_content_length(cain_sip_header_content_length_t* content_length,unsigned int length);
 #define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
+#define CAIN_SIP_CONTENT_LENGTH "Content-Length"
 
 /******************************
  * authorization header inherit from parameters

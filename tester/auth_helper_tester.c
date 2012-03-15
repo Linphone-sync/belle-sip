@@ -31,6 +31,8 @@ static void test_authentication(void) {
 	cain_sip_header_authorization_set_qop(authorization,"auth");
 	CU_ASSERT_EQUAL_FATAL(0,cain_sip_auth_helper_fill_authorization(authorization,"REGISTER","jehan-mac","toto"));
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_response(authorization),"77ebf3de72e41934d806175586086508");
+	cain_sip_object_unref(www_authenticate);
+	cain_sip_object_unref(authorization);
 }
 static void test_proxy_authentication(void) {
 	const char* l_raw_header = "Proxy-Authenticate: Digest "
@@ -44,6 +46,8 @@ static void test_proxy_authentication(void) {
 	CU_ASSERT_EQUAL_FATAL(0,cain_sip_auth_helper_fill_proxy_authorization(proxy_authorization,"REGISTER","jehan-mac","toto"));
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_authorization_get_response(CAIN_SIP_HEADER_AUTHORIZATION(proxy_authorization))
 							,"77ebf3de72e41934d806175586086508");
+	cain_sip_object_unref(proxy_authenticate);
+	cain_sip_object_unref(proxy_authorization);
 
 }
 int cain_sip_authentication_helper_suite () {

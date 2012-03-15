@@ -51,7 +51,7 @@ void (*on_sending)(cain_sip_channel_listener_t *l, cain_sip_channel_t *obj, cain
 CAIN_SIP_DECLARE_INTERFACE_END
 
 #define CAIN_SIP_CHANNEL_LISTENER(obj) CAIN_SIP_INTERFACE_CAST(obj,cain_sip_channel_listener_t)
-#define MAX_CHANNEL_BUFF_SIZE 64000
+#define MAX_CHANNEL_BUFF_SIZE 64000 + 1500 + 1
 
 typedef enum input_stream_state {
 	WAITING_MESSAGE_START=0
@@ -62,6 +62,8 @@ typedef enum input_stream_state {
 typedef struct cain_sip_channel_input_stream{
 	input_stream_state_t state;
 	char buff[MAX_CHANNEL_BUFF_SIZE];
+	char* read_ptr;
+	char* write_ptr;
 	cain_sip_message_t *msg;
 }cain_sip_channel_input_stream_t;
 
@@ -79,6 +81,7 @@ struct cain_sip_channel{
 	unsigned long resolver_id;
 	struct addrinfo *peer;
 	cain_sip_message_t *msg;
+	cain_sip_list_t* incoming_messages;
 	cain_sip_channel_input_stream_t input_stream;
 };
 

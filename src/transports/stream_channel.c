@@ -18,13 +18,9 @@
 
 
 
-/*
-typedef enum stream_channel_state {
-	WAITING_MESSAGE_START=0
-	,MESSAGE_AQUISITION=1
-	,BODY_AQUISITION=2
-}stream_channel_state_t;
-*/
+
+
+
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 
@@ -37,6 +33,7 @@ typedef enum stream_channel_state {
 struct cain_sip_stream_channel{
 	cain_sip_channel_t base;
 };
+
 
 static void stream_channel_uninit(cain_sip_stream_channel_t *obj){
 	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
@@ -115,7 +112,7 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 	int err, errnum;
 	socklen_t optlen=sizeof(errnum);
 	cain_sip_fd_t fd=cain_sip_source_get_fd((cain_sip_source_t*)obj);
-	if (obj->state == CAIN_SIP_CHANNEL_CONNECTING && revents&CAIN_SIP_EVENT_WRITE) {
+	if (obj->state == CAIN_SIP_CHANNEL_CONNECTING && (revents&CAIN_SIP_EVENT_WRITE)) {
 		err=getsockopt(fd,SOL_SOCKET,SO_ERROR,&errnum,&optlen);
 		if (err!=0){
 			cain_sip_error("Failed to retrieve connection status for channel [%p]: cause [%s]",obj,cain_sip_get_socket_error_string());
@@ -132,7 +129,7 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 				}
 				cain_sip_source_set_event((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
 				cain_sip_channel_set_ready(obj,(struct sockaddr*)&ss,addrlen);
-				return 0;
+				return CAIN_SIP_CONTINUE;
 			}else{
 				cain_sip_error("Connection failed  for channel [%p]: cause [%s]",obj,cain_sip_get_socket_error_string());
 				goto connect_error;
@@ -142,14 +139,14 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 	} else if ( obj->state == CAIN_SIP_CHANNEL_READY) {
 		cain_sip_channel_process_data(obj,revents);
 	} else {
-		cain_sip_error("Unexpected event for channel [%p]",obj);
+		cain_sip_error("Unexpected event [%i], for channel [%p]",revents,obj);
 	}
-	return 0;
+	return CAIN_SIP_CONTINUE;
 connect_error:
 	cain_sip_error("Cannot connect to [%s://%s:%s]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
 				channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 				channel_process_queue(obj);
-				return -1;
+				return CAIN_SIP_STOP;
 
 }
 cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char *bindip, int localport, const char *dest, int port){
