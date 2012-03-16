@@ -99,7 +99,7 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 			return CAIN_SIP_STOP;
 		}
 		/*connected, now etablishing TLS connection*/
-		cain_sip_source_set_event((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
+		cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
 		cain_sip_channel_set_ready(obj,(struct sockaddr*)&ss,addrlen);
 		return CAIN_SIP_CONTINUE;
 

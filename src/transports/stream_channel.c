@@ -144,7 +144,7 @@ static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int reve
 			channel_process_queue(obj);
 			return CAIN_SIP_STOP;
 		}
-		cain_sip_source_set_event((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
+		cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
 		cain_sip_channel_set_ready(obj,(struct sockaddr*)&ss,addrlen);
 		return CAIN_SIP_CONTINUE;
 
@@ -154,6 +154,7 @@ static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int reve
 		cain_sip_warning("Unexpected event [%i], for channel [%p]",revents,obj);
 	}
 	return CAIN_SIP_CONTINUE;
+}
 
 cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char *bindip, int localport, const char *dest, int port){
 	cain_sip_stream_channel_t *obj=cain_sip_object_new(cain_sip_stream_channel_t);
