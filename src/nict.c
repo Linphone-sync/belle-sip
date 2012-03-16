@@ -134,6 +134,7 @@ static void nict_send_request(cain_sip_nict_t *obj){
 	cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
 	
 	if (!cain_sip_channel_is_reliable(base->channel)){
+		cain_sip_message("channel is not reliable");
 		obj->timer_E=cain_sip_timeout_source_new((cain_sip_source_func_t)nict_on_timer_E,obj,cfg->T1);
 		cain_sip_transaction_start_timer(base,obj->timer_E);
 	}

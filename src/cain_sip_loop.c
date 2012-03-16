@@ -59,6 +59,16 @@ unsigned long cain_sip_source_get_id(cain_sip_source_t *s){
 	return s->id;
 }
 
+int cain_sip_source_set_events(cain_sip_source_t* source, int event_mask) {
+	source->events = event_mask;
+	return 0;
+}
+
+cain_sip_fd_t cain_sip_source_get_fd(const cain_sip_source_t* source) {
+	return source->fd;
+}
+
+
 struct cain_sip_main_loop{
 	cain_sip_object_t base;
 	cain_sip_list_t *sources;
@@ -270,11 +280,4 @@ void cain_sip_main_loop_quit(cain_sip_main_loop_t *ml){
 void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){
 	cain_sip_main_loop_add_timeout(ml,(cain_sip_source_func_t)cain_sip_main_loop_quit,ml,milliseconds);
 	cain_sip_main_loop_run(ml);
-}
-int cain_sip_source_set_event(cain_sip_source_t* source, int event_mask) {
-	source->events = event_mask;
-	return 0;
-}
-cain_sip_fd_t cain_sip_source_get_fd(const cain_sip_source_t* source) {
-	return source->fd;
 }

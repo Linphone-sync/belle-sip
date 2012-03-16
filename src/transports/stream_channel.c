@@ -74,13 +74,13 @@ int stream_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr,
 		cain_sip_error("setsockopt TCP_NODELAY failed: [%s]",cain_sip_get_socket_error_string());
 	}
 	fcntl(sock,F_SETFL,fcntl(sock,F_GETFL) | O_NONBLOCK);
-	cain_sip_source_set_event((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
+	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
 	cain_sip_main_loop_add_source(obj->stack->ml,(cain_sip_source_t*)obj);
 	err = connect(sock,addr,socklen);
 	if (err != 0 && get_socket_error()!=EINPROGRESS) {
-		    cain_sip_error("stream connect failed %s",cain_sip_get_socket_error_string());
-		    close_socket(sock);
-		    return -1;
+		cain_sip_error("stream connect failed %s",cain_sip_get_socket_error_string());
+		close_socket(sock);
+		return -1;
 	}
 
 	return 0;
@@ -124,7 +124,7 @@ int finalize_stream_connection (cain_sip_fd_t fd, struct sockaddr *addr, socklen
 			}
 			return 0;
 		}else{
-			cain_sip_error("Connection failed  for fd [%i]: cause [%s]",fd,cain_sip_get_socket_error_string());
+			cain_sip_error("Connection failed  for fd [%i]: cause [%s]",fd,cain_sip_get_socket_error_string_from_code(errnum));
 			return -1;
 		}
 	}
@@ -133,6 +133,9 @@ static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int reve
 	struct sockaddr_storage ss;
 	socklen_t addrlen=sizeof(ss);
 	cain_sip_fd_t fd=cain_sip_source_get_fd((cain_sip_source_t*)obj);
+
+	cain_sip_message("TCP channel process_data");
+	
 	if (obj->state == CAIN_SIP_CHANNEL_CONNECTING && (revents&CAIN_SIP_EVENT_WRITE)) {
 
 		if (finalize_stream_connection(fd,(struct sockaddr*)&ss,&addrlen)) {
@@ -152,7 +155,6 @@ static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int reve
 	}
 	return CAIN_SIP_CONTINUE;
 
-}
 cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char *bindip, int localport, const char *dest, int port){
 	cain_sip_stream_channel_t *obj=cain_sip_object_new(cain_sip_stream_channel_t);
 	cain_sip_channel_init((cain_sip_channel_t*)obj

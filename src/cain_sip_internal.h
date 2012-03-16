@@ -40,12 +40,13 @@
 #define CAIN_SIP_INTERFACE_GET_METHODS(obj,interface) \
 	((CAIN_SIP_INTERFACE_METHODS_TYPE(interface)*)cain_sip_object_get_interface_methods((cain_sip_object_t*)obj,CAIN_SIP_INTERFACE_ID(interface)))
 
-#define __CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name) \
+#define __CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name,method) \
 	if (list!=NULL) {\
 		const cain_sip_list_t *__elem=list;\
 		do{\
 			interface_name *__obj=(interface_name*)__elem->data;\
-			CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->
+			void *__method=CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->method;\
+			if (__method) CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->
 
 #define __CAIN_SIP_INVOKE_LISTENER_END \
 			__elem=__elem->next;\
@@ -53,18 +54,18 @@
 	}
 
 #define CAIN_SIP_INVOKE_LISTENERS_VOID(list,interface_name,method) \
-			__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name)\
+			__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name,method)\
 			method(__obj);\
 			__CAIN_SIP_INVOKE_LISTENER_END
 
 #define CAIN_SIP_INVOKE_LISTENERS_ARG(list,interface_name,method,arg) \
-	__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name)\
+	__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name,method)\
 	method(__obj,arg);\
 	__CAIN_SIP_INVOKE_LISTENER_END
 
 
 #define CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(list,interface_name,method,arg1,arg2) \
-			__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name)\
+			__CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name,method)\
 			method(__obj,arg1,arg2);\
 			__CAIN_SIP_INVOKE_LISTENER_END
 
@@ -395,7 +396,6 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 struct cain_sip_stack{
 	cain_sip_object_t base;
 	cain_sip_main_loop_t *ml;
-	cain_sip_list_t *lp;/*list of listening points*/
 	cain_sip_timer_config_t timer_config;
 };
 
@@ -412,9 +412,13 @@ struct cain_sip_provider{
 	cain_sip_stack_t *stack;
 	cain_sip_list_t *lps; /*listening points*/
 	cain_sip_list_t *listeners;
+	cain_sip_list_t *client_transactions;
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
+void cain_sip_provider_add_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t);
+cain_sip_client_transaction_t *cain_sip_provider_find_matching_client_transaction(cain_sip_provider_t *prov, cain_sip_response_t *resp);
+void cain_sip_provider_remove_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t);
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t);
 cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport);
 
