@@ -100,11 +100,18 @@ int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buf
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"\"%s\" ",header->displayname);;
 	}
 	if (header->uri) {
-		if (header->displayname || cain_sip_parameters_get_parameter_names(&header->base) !=NULL) {
+		/*cases where < is required*/
+		if (header->displayname
+			|| cain_sip_parameters_get_parameter_names((cain_sip_parameters_t*)header->uri)
+			|| cain_sip_uri_get_header_names(header->uri)
+			|| cain_sip_parameters_get_parameter_names(&header->base)) {
 			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","<");
 		}
 		current_offset+=cain_sip_uri_marshal(header->uri,buff,current_offset,buff_size);
-		if (header->displayname || cain_sip_parameters_get_parameter_names(&header->base) !=NULL) {
+		if (header->displayname
+				|| cain_sip_parameters_get_parameter_names((cain_sip_parameters_t*)header->uri)
+				|| cain_sip_uri_get_header_names(header->uri)
+				|| cain_sip_parameters_get_parameter_names(&header->base)) {
 			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",">");
 		}
 	}
