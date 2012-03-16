@@ -68,6 +68,7 @@ typedef struct cain_sip_channel_input_stream{
 }cain_sip_channel_input_stream_t;
 
 typedef struct cain_sip_stream_channel cain_sip_stream_channel_t;
+typedef struct cain_sip_tls_channel cain_sip_tls_channel_t;
 
 struct cain_sip_channel{
 	cain_sip_source_t base;
@@ -92,6 +93,8 @@ cain_sip_channel_t * cain_sip_channel_new_udp(cain_sip_stack_t *stack, int sock,
 cain_sip_channel_t * cain_sip_channel_new_udp_with_addr(cain_sip_stack_t *stack, int sock, const char *bindip, int localport, const struct addrinfo *ai);
 
 cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack, const char *bindip, int localport,const char *name, int port);
+
+cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_stack_t *stack, const char *bindip, int localport,const char *name, int port);
 
 void cain_sip_channel_add_listener(cain_sip_channel_t *chan, cain_sip_channel_listener_t *l);
 

@@ -69,7 +69,7 @@ struct cain_sip_main_loop{
 };
 
 void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source){
-	if (!source->node.next && !source->node.prev) return; /*nothing to do*/
+	if (!source->node.next && !source->node.prev && &source->node!=ml->sources) return; /*nothing to do*/
 	ml->sources=cain_sip_list_remove_link(ml->sources,&source->node);
 	ml->nsources--;
 	

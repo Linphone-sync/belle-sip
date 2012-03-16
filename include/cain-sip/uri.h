@@ -10,7 +10,7 @@
 
 
 #include "cain-sip/list.h"
-
+/*inherite from cain_sip_parameters_t*/
 typedef struct _cain_sip_uri cain_sip_uri_t;
 
 	/**

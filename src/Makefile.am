@@ -50,7 +50,11 @@ libcainsip_la_SOURCES=				\
 									transports/udp_listeningpoint.c \
 									transports/udp_channel.c \
 									transports/stream_channel.c \
-									transports/stream_listeningpoint.c 
+									transports/stream_listeningpoint.c \
+									transports/tls_listeningpoint.c 
+if BUILD_TLS
+libcainsip_la_SOURCES+=transports/tls_channel.c
+endif
 
 libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS)
 
@@ -65,4 +69,4 @@ CLEANFILES=$(generated_src) *.tokens generated_src_stamp
 
 discovery:
 	touch specs.cpp
-	$(CC) $(CFLAGS) $(ANTLR_CFLAGS) $(CUNIT_CFLAGS) -E -P -v -dD specs.cpp
+	$(CC) $(CFLAGS) -include $(top_builddir)/config.h $(ANTLR_CFLAGS) $(CUNIT_CFLAGS) -E -P -v -dD specs.cpp

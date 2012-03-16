@@ -26,9 +26,9 @@
 
 #include "cain_sip_internal.h"
 #include "cain-sip/mainloop.h"
-#include "channel.h"
+#include "stream_channel.h"
 
-
+/*************TCP********/
 
 struct cain_sip_stream_channel{
 	cain_sip_channel_t base;
@@ -107,46 +107,50 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_stream_channel_t)=
 		stream_channel_recv
 	}
 };
-
-static int process_data(cain_sip_channel_t *obj,unsigned int revents){
+int finalize_stream_connection (cain_sip_fd_t fd, struct sockaddr *addr, socklen_t* slen) {
 	int err, errnum;
 	socklen_t optlen=sizeof(errnum);
+	err=getsockopt(fd,SOL_SOCKET,SO_ERROR,&errnum,&optlen);
+	if (err!=0){
+		cain_sip_error("Failed to retrieve connection status for fd [%i]: cause [%s]",fd,cain_sip_get_socket_error_string());
+		return -1;
+	}else{
+		if (errnum==0){
+			/*obtain bind address for client*/
+			err=getsockname(fd,addr,slen);
+			if (err<0){
+				cain_sip_error("Failed to retrieve sockname  for fd [%i]: cause [%s]",fd,cain_sip_get_socket_error_string());
+				return -1;
+			}
+			return 0;
+		}else{
+			cain_sip_error("Connection failed  for fd [%i]: cause [%s]",fd,cain_sip_get_socket_error_string());
+			return -1;
+		}
+	}
+}
+static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
+	struct sockaddr_storage ss;
+	socklen_t addrlen=sizeof(ss);
 	cain_sip_fd_t fd=cain_sip_source_get_fd((cain_sip_source_t*)obj);
 	if (obj->state == CAIN_SIP_CHANNEL_CONNECTING && (revents&CAIN_SIP_EVENT_WRITE)) {
-		err=getsockopt(fd,SOL_SOCKET,SO_ERROR,&errnum,&optlen);
-		if (err!=0){
-			cain_sip_error("Failed to retrieve connection status for channel [%p]: cause [%s]",obj,cain_sip_get_socket_error_string());
-			goto connect_error;
-		}else{
-			if (errnum==0){
-				/*obtain bind address for client*/
-				struct sockaddr_storage ss;
-				socklen_t addrlen=sizeof(ss);
-				err=getsockname(fd,(struct sockaddr*)&ss,&addrlen);
-				if (err<0){
-					cain_sip_error("Failed to retrieve sockname  for channel [%p]: cause [%s]",obj,cain_sip_get_socket_error_string());
-					goto connect_error;
-				}
-				cain_sip_source_set_event((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
-				cain_sip_channel_set_ready(obj,(struct sockaddr*)&ss,addrlen);
-				return CAIN_SIP_CONTINUE;
-			}else{
-				cain_sip_error("Connection failed  for channel [%p]: cause [%s]",obj,cain_sip_get_socket_error_string());
-				goto connect_error;
-			}
 
+		if (finalize_stream_connection(fd,(struct sockaddr*)&ss,&addrlen)) {
+			cain_sip_error("Cannot connect to [%s://%s:%s]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
+			channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+			channel_process_queue(obj);
+			return CAIN_SIP_STOP;
 		}
+		cain_sip_source_set_event((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
+		cain_sip_channel_set_ready(obj,(struct sockaddr*)&ss,addrlen);
+		return CAIN_SIP_CONTINUE;
+
 	} else if ( obj->state == CAIN_SIP_CHANNEL_READY) {
 		cain_sip_channel_process_data(obj,revents);
 	} else {
-		cain_sip_error("Unexpected event [%i], for channel [%p]",revents,obj);
+		cain_sip_warning("Unexpected event [%i], for channel [%p]",revents,obj);
 	}
 	return CAIN_SIP_CONTINUE;
-connect_error:
-	cain_sip_error("Cannot connect to [%s://%s:%s]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
-				channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
-				channel_process_queue(obj);
-				return CAIN_SIP_STOP;
 
 }
 cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char *bindip, int localport, const char *dest, int port){
@@ -154,10 +158,12 @@ cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char
 	cain_sip_channel_init((cain_sip_channel_t*)obj
 							,stack
 							,socket(AF_INET, SOCK_STREAM, 0)
-							,(cain_sip_source_func_t)process_data
+							,(cain_sip_source_func_t)stream_channel_process_data
 							,bindip,localport,dest,port);
 	return (cain_sip_channel_t*)obj;
 }
+
+
 
 
 
