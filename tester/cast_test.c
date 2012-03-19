@@ -30,16 +30,16 @@ static int cleanup_cast_suite(){
 
 static void cast_test(){
 	cain_sip_stack_t *stack=cain_sip_stack_new(NULL);
-	cain_sip_listening_point_t *lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",5040,"UDP");
-	CU_ASSERT_PTR_NOT_NULL(lp);
-	cain_sip_provider_t *provider=cain_sip_stack_create_provider(stack,lp);
+	cain_sip_listening_point_t *lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
+	cain_sip_provider_t *provider;
 	cain_sip_request_t *req=cain_sip_request_new();
 	cain_sip_response_t *resp=cain_sip_response_new();
 	cain_sip_message_t *msg;
 	int tmp;
 	
 	CU_ASSERT_PTR_NOT_NULL(stack);
-
+	CU_ASSERT_PTR_NOT_NULL(lp);
+	provider=cain_sip_stack_create_provider(stack,lp);
 	CU_ASSERT_PTR_NOT_NULL(provider);
 	CU_ASSERT_PTR_NOT_NULL(req);
 	CU_ASSERT_PTR_NOT_NULL(resp);
@@ -58,6 +58,7 @@ static void cast_test(){
 	cain_sip_object_unref(req);
 	cain_sip_object_unref(resp);
 	cain_sip_object_unref(provider);
+	cain_sip_object_unref(lp);
 	cain_sip_object_unref(stack);
 }
 

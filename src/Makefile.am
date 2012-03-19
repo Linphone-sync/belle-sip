@@ -45,11 +45,13 @@ libcainsip_la_SOURCES=				\
 									message.c \
 									md5.c md5.h \
 									auth_helper.c \
+									siplistener.c \
 									ict.c \
 									nict.c \
 									transports/udp_listeningpoint.c \
 									transports/udp_channel.c \
 									transports/stream_channel.c \
+									transports/stream_channel.h \
 									transports/stream_listeningpoint.c \
 									transports/tls_listeningpoint.c 
 if BUILD_TLS

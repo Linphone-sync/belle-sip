@@ -29,8 +29,6 @@ static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_cha
 }
 
 static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_sip_message_t *msg){
-	/*should find existing transaction*/
-
 	if (cain_sip_message_is_request(msg)){
 		cain_sip_request_event_t event;
 		event.source=prov;
@@ -40,12 +38,17 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_request_event,&event);
 	}else{
 		cain_sip_response_event_t event;
+		int pass=1;
 		event.source=prov;
-		event.client_transaction=NULL;
+		event.client_transaction=cain_sip_provider_find_matching_client_transaction(prov,(cain_sip_response_t*)msg);
 		event.dialog=NULL;
 		event.response=(cain_sip_response_t*)msg;
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
+		if (event.client_transaction){
+			pass=cain_sip_client_transaction_add_response(event.client_transaction,event.response);
+		}
+		if (pass) CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
 	}
+	cain_sip_object_unref(msg);
 }
 
 
@@ -169,17 +172,20 @@ void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_list
 
 cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov){
 	cain_sip_header_call_id_t *cid=cain_sip_header_call_id_new();
-	char tmp[32];
-	snprintf(tmp,sizeof(tmp),"%u",cain_sip_random());
-	cain_sip_header_call_id_set_call_id(cid,tmp);
+	char tmp[11];
+	cain_sip_header_call_id_set_call_id(cid,cain_sip_random_token(tmp,sizeof(tmp)));
 	return cid;
 }
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
-	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0)
+	const char *method=cain_sip_request_get_method(req);
+	if (strcmp(method,"INVITE")==0)
 		return (cain_sip_client_transaction_t*)cain_sip_ict_new(prov,req);
-	else 
-		return (cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
+	else if (strcmp(method,"ACK")==0){
+		cain_sip_error("cain_sip_provider_get_new_client_transaction() cannot be used for ACK requests.");
+		return NULL;
+	}
+	else return (cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
 }
 
 cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
@@ -233,9 +239,7 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(resp));
 }
 
-cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_response_event_t* event) {
-	return event->response;
-}
+
 /*private provider API*/
 
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t){
@@ -248,11 +252,45 @@ void cain_sip_provider_add_client_transaction(cain_sip_provider_t *prov, cain_si
 	prov->client_transactions=cain_sip_list_prepend(prov->client_transactions,cain_sip_object_ref(t));
 }
 
-cain_sip_client_transaction_t * cain_sip_provider_find_matching_client_transaction(cain_sip_provider_t *prov, 
-                                                                                   cain_sip_response_t *resp){
-	return NULL;
+struct client_transaction_matcher{
+	const char *branchid;
+	const char *method;
+};
+
+static int client_transaction_match(const void *p_tr, const void *p_matcher){
+	cain_sip_client_transaction_t *tr=(cain_sip_client_transaction_t*)p_tr;
+	struct client_transaction_matcher *matcher=(struct client_transaction_matcher*)p_matcher;
+	const char *req_method=cain_sip_request_get_method(tr->base.request);
+	if (strcmp(matcher->branchid,tr->base.branch_id)==0 && strcmp(matcher->method,req_method)==0) return 0;
+	return -1;
 }
 
-void cain_sip_provider_remove_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t){
+cain_sip_client_transaction_t * cain_sip_provider_find_matching_client_transaction(cain_sip_provider_t *prov, 
+                                                                                   cain_sip_response_t *resp){
+	struct client_transaction_matcher matcher;
+	cain_sip_header_via_t *via=(cain_sip_header_via_t*)cain_sip_message_get_header((cain_sip_message_t*)resp,"via");
+	cain_sip_header_cseq_t *cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)resp,"cseq");
+	cain_sip_client_transaction_t *ret=NULL;
+	cain_sip_list_t *elem;
+	if (via==NULL){
+		cain_sip_warning("Response has no via.");
+		return NULL;
+	}
+	if (via==NULL){
+		cain_sip_warning("Response has no cseq.");
+		return NULL;
+	}
+	matcher.branchid=cain_sip_header_via_get_branch(via);
+	matcher.method=cain_sip_header_cseq_get_method(cseq);
+	elem=cain_sip_list_find_custom(prov->client_transactions,client_transaction_match,&matcher);
+	if (elem){
+		ret=(cain_sip_client_transaction_t*)elem->data;
+		cain_sip_message("Found transaction matching response.");
+	}
+	return ret;
+}
+
+void cain_sip_provider_remove_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t){	
 	prov->client_transactions=cain_sip_list_remove(prov->client_transactions,t);
+	cain_sip_object_unref(t);
 }
