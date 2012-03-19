@@ -172,17 +172,20 @@ void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_list
 
 cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov){
 	cain_sip_header_call_id_t *cid=cain_sip_header_call_id_new();
-	char tmp[32];
-	snprintf(tmp,sizeof(tmp),"%u",cain_sip_random());
-	cain_sip_header_call_id_set_call_id(cid,tmp);
+	char tmp[11];
+	cain_sip_header_call_id_set_call_id(cid,cain_sip_random_token(tmp,sizeof(tmp)));
 	return cid;
 }
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
-	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0)
+	const char *method=cain_sip_request_get_method(req);
+	if (strcmp(method,"INVITE")==0)
 		return (cain_sip_client_transaction_t*)cain_sip_ict_new(prov,req);
-	else 
-		return (cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
+	else if (strcmp(method,"ACK")==0){
+		cain_sip_error("cain_sip_provider_get_new_client_transaction() cannot be used for ACK requests.");
+		return NULL;
+	}
+	else return (cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
 }
 
 cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){

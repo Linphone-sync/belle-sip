@@ -18,6 +18,27 @@
 
 #include "cain_sip_internal.h"
 
+const char *cain_sip_transaction_state_to_string(cain_sip_transaction_state_t state){
+	switch(state){
+		case CAIN_SIP_TRANSACTION_INIT:
+			return "INIT";
+		case CAIN_SIP_TRANSACTION_TRYING:
+			return "TRYING";
+		case CAIN_SIP_TRANSACTION_CALLING:
+			return "CALLING";
+		case CAIN_SIP_TRANSACTION_COMPLETED:
+			return "COMPLETED";
+		case CAIN_SIP_TRANSACTION_CONFIRMED:
+			return "CONFIRMED";
+		case CAIN_SIP_TRANSACTION_PROCEEDING:
+			return "PROCEEDING";
+		case CAIN_SIP_TRANSACTION_TERMINATED:
+			return "TERMINATED";
+	}
+	cain_sip_fatal("Invalid transaction state.");
+	return "INVALID";
+}
+
 static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_provider_t *prov, cain_sip_request_t *req){
 	t->request=(cain_sip_request_t*)cain_sip_object_ref(req);
 	t->provider=prov;
@@ -119,8 +140,44 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
  */
 
 
+static void clone_headers(cain_sip_message_t *orig, cain_sip_message_t *dest, const char*header, int multiple){
+	const cain_sip_list_t *elem;
+	elem=cain_sip_message_get_headers(orig,header);
+	for (;elem!=NULL;elem=elem->next){
+		cain_sip_header_t *ref_header=(cain_sip_header_t*)elem->data;
+		if (ref_header){
+			cain_sip_message_add_header(dest,
+	                           (cain_sip_header_t*)cain_sip_object_clone((cain_sip_object_t*)ref_header));
+		}
+		if (!multiple) break; /*just one*/
+	}
+}
+
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t){
-	return NULL;
+	cain_sip_message_t *orig=(cain_sip_message_t*)t->base.request;
+	cain_sip_request_t *req;
+	const char *orig_method=cain_sip_request_get_method((cain_sip_request_t*)orig);
+	if (strcmp(orig_method,"ACK")==0 || strcmp(orig_method,"INVITE")!=0){
+		cain_sip_error("cain_sip_client_transaction_create_cancel() cannot be used for ACK or non-INVITE transactions.");
+		return NULL;
+	}
+	if (t->base.state==CAIN_SIP_TRANSACTION_PROCEEDING){
+		cain_sip_error("cain_sip_client_transaction_create_cancel() can only be used in state CAIN_SIP_TRANSACTION_PROCEEDING"
+		               " but current transaction state is %s",cain_sip_transaction_state_to_string(t->base.state));
+	}
+	req=cain_sip_request_new();
+	cain_sip_request_set_method(req,"CANCEL");
+	cain_sip_request_set_uri(req,(cain_sip_uri_t*)cain_sip_object_clone((cain_sip_object_t*)cain_sip_request_get_uri((cain_sip_request_t*)orig)));
+	clone_headers(orig,(cain_sip_message_t*)req,"via",FALSE);
+	clone_headers(orig,(cain_sip_message_t*)req,"call-id",FALSE);
+	clone_headers(orig,(cain_sip_message_t*)req,"from",FALSE);
+	clone_headers(orig,(cain_sip_message_t*)req,"to",FALSE);
+	clone_headers(orig,(cain_sip_message_t*)req,"route",TRUE);
+	cain_sip_message_add_header((cain_sip_message_t*)req,
+		(cain_sip_header_t*)cain_sip_header_cseq_create(
+			cain_sip_header_cseq_get_seq_number((cain_sip_header_cseq_t*)cain_sip_message_get_header(orig,"cseq")),
+		    "CANCEL"));
+	return req;
 }
 
 
@@ -199,11 +256,16 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_client_transaction_t)={
 void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_sip_provider_t *prov, cain_sip_request_t *req){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header((cain_sip_message_t*)req,"via"));
 	char token[10];
-	obj->base.branch_id=cain_sip_strdup_printf(CAIN_SIP_BRANCH_MAGIC_COOKIE ".%s",cain_sip_random_token(token,sizeof(token)));
-	if (via){
+
+	if (!via){
+		cain_sip_fatal("cain_sip_client_transaction_init(): No via in request.");
+	}
+	
+	if (strcmp(cain_sip_request_get_method(req),"CANCEL")!=0){
+		obj->base.branch_id=cain_sip_strdup_printf(CAIN_SIP_BRANCH_MAGIC_COOKIE ".%s",cain_sip_random_token(token,sizeof(token)));
 		cain_sip_header_via_set_branch(via,obj->base.branch_id);
 	}else{
-		cain_sip_fatal("cain_sip_client_transaction_init(): No via in request.");
+		obj->base.branch_id=cain_sip_strdup(cain_sip_header_via_get_branch(via));
 	}
 	cain_sip_transaction_init((cain_sip_transaction_t*)obj, prov,req);
 }
