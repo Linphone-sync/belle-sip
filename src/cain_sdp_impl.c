@@ -16,10 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "cain-sip/cain-sdp.h"
-#include "cain_sip_internal.h"
 #include "cain_sdpParser.h"
 #include "cain_sdpLexer.h"
-
+#include "cain_sip_internal.h"
 /***************************************************************************************
  * Attribute
  *
