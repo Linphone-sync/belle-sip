@@ -147,22 +147,15 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
 }
 
-void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
+int cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
 	int pass=CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->on_response(t,resp);
 	if (pass){
-		cain_sip_response_event_t ev;
-
 		if (base->prov_response)
 			cain_sip_object_unref(base->prov_response);
 		base->prov_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
-		
-		ev.source=base->provider;
-		ev.response=resp;
-		ev.client_transaction=t;
-		ev.dialog=NULL;
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(base->provider,process_response_event,&ev);
 	}
+	return pass;
 }
 
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){

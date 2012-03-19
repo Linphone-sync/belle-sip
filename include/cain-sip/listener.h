@@ -40,7 +40,7 @@ CAIN_SIP_DECLARE_INTERFACE_END
 
 
 cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_response_event_t* event);
-
+cain_sip_client_transaction_t *cain_sip_response_event_get_client_transaction(const cain_sip_response_event_t* event);
 
 
 

@@ -23,6 +23,7 @@
 
 const char *test_domain="localhost";
 static int is_register_ok;
+static int using_transaction;
 static cain_sip_stack_t * stack;
 static cain_sip_provider_t *prov;
 
@@ -40,7 +41,7 @@ static void process_response_event(cain_sip_listener_t *obj, const cain_sip_resp
 	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_response_event_get_response(event));
 	CU_ASSERT_EQUAL(cain_sip_response_get_status_code(cain_sip_response_event_get_response(event)),200);
 	is_register_ok=1;
-	cain_sip_object_unref(cain_sip_response_event_get_response(event));
+	using_transaction=cain_sip_response_event_get_client_transaction(event)!=NULL;
 	cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
 }
 static void process_timeout(cain_sip_listener_t *obj, const cain_sip_timeout_event_t *event){
@@ -121,6 +122,7 @@ static void register_test(const char *transport, int use_transaction) {
 	                    70);
 
 	is_register_ok=0;
+	using_transaction=0;
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(600)));
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_contact_new()));
 	if (use_transaction){
@@ -129,6 +131,7 @@ static void register_test(const char *transport, int use_transaction) {
 	}else cain_sip_provider_send_request(prov,req);
 	cain_sip_stack_sleep(stack,33000);
 	CU_ASSERT_EQUAL(is_register_ok,1);
+	CU_ASSERT_EQUAL(using_transaction,use_transaction);
 	return;
 }
 
