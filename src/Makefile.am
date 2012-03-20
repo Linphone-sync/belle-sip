@@ -58,9 +58,9 @@ if BUILD_TLS
 libcainsip_la_SOURCES+=transports/tls_channel.c 
 endif
 
-libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS) $(GNUTLS_CFLAGS)
+libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS) $(TLS_CFLAGS)
 
-libcainsip_la_LIBADD=libcainsip_generated.la $(ANTLR_LIBS) $(GNUTLS_LIBS)
+libcainsip_la_LIBADD=libcainsip_generated.la $(ANTLR_LIBS) $(TLS_LIBS)
 
 
 INCLUDES=-I$(top_srcdir)/include
@@ -71,4 +71,4 @@ CLEANFILES=$(generated_src) *.tokens generated_src_stamp
 
 discovery:
 	touch specs.cpp
-	$(CC) $(CFLAGS) -include $(top_builddir)/config.h $(ANTLR_CFLAGS) $(CUNIT_CFLAGS) $(GNUTLS_CFLAGS) -E -P -v -dD specs.cpp
+	$(CC) $(CFLAGS) -include $(top_builddir)/config.h $(ANTLR_CFLAGS) $(CUNIT_CFLAGS) $(TLS_CFLAGS) -E -P -v -dD specs.cpp

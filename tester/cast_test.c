@@ -37,12 +37,12 @@ static void cast_test(){
 	cain_sip_message_t *msg;
 	int tmp;
 	
-	CU_ASSERT_PTR_NOT_NULL(stack);
-	CU_ASSERT_PTR_NOT_NULL(lp);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(stack);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(lp);
 	provider=cain_sip_stack_create_provider(stack,lp);
-	CU_ASSERT_PTR_NOT_NULL(provider);
-	CU_ASSERT_PTR_NOT_NULL(req);
-	CU_ASSERT_PTR_NOT_NULL(resp);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(provider);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(req);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(resp);
 	
 	cain_sip_message("Casting cain_sip_request_t to cain_sip_message_t");
 	msg=CAIN_SIP_MESSAGE(req);

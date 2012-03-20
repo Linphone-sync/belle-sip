@@ -31,7 +31,9 @@ static void process_dialog_terminated(cain_sip_listener_t *obj, const cain_sip_d
 	cain_sip_message("process_dialog_terminated called");
 }
 static void process_io_error(cain_sip_listener_t *obj, const cain_sip_io_error_event_t *event){
-	cain_sip_message("process_io_error");
+	cain_sip_warning("process_io_error");
+	cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
+	/*CU_ASSERT(CU_FALSE);*/
 }
 static void process_request_event(cain_sip_listener_t *obj, const cain_sip_request_event_t *event){
 	cain_sip_message("process_request_event");
@@ -88,6 +90,9 @@ static int init(void) {
 	prov=cain_sip_stack_create_provider(stack,lp);
 	cain_sip_object_unref(lp);
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"TCP");
+	cain_sip_provider_add_listening_point(prov,lp);
+	cain_sip_object_unref(lp);
+	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7061,"TLS");
 	cain_sip_provider_add_listening_point(prov,lp);
 	cain_sip_object_unref(lp);
 	listener=cain_sip_object_new(test_listener_t);
@@ -155,6 +160,9 @@ static void stateful_register_udp(void){
 static void stateful_register_tcp(void){
 	register_test("tcp",1);
 }
+static void stateful_register_tls(void){
+	register_test("tls",1);
+}
 
 int cain_sip_register_test_suite(){
 	CU_pSuite pSuite = CU_add_suite("Register test suite", init, uninit);
@@ -165,7 +173,9 @@ int cain_sip_register_test_suite(){
 	if (NULL == CU_add_test(pSuite, "stateful tcp register", stateful_register_tcp)) {
 		return CU_get_error();
 	}
-
+	if (NULL == CU_add_test(pSuite, "stateful tls register", stateful_register_tls)) {
+		return CU_get_error();
+	}
 	if (NULL == CU_add_test(pSuite, "stateless udp register", stateless_register_udp)) {
 		return CU_get_error();
 	}

@@ -64,12 +64,14 @@ cain_sip_listening_point_t * cain_sip_stream_listening_point_new(cain_sip_stack_
 /*tls*/
 
 typedef struct cain_sip_tls_listening_point cain_sip_tls_listening_point_t;
-#ifdef HAVE_TLS
+
 struct cain_sip_tls_listening_point{
 	cain_sip_listening_point_t base;
+#ifdef HAVE_OPENSSL
 	SSL_CTX *ssl_context;
-};
 #endif
+};
+
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_tls_listening_point_t,cain_sip_listening_point_t)
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 #define CAIN_SIP_TLS_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_tls_listening_point_t)

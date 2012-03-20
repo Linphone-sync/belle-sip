@@ -18,25 +18,46 @@
 
 #include "cain_sip_internal.h"
 #include "listeningpoint_internal.h"
-
+#ifdef HAVE_GNUTLS
+#include <gnutls/gnutls.h>
+#endif
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 	cain_sip_object_unref(stack->ml);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_stack_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_stack_t,cain_sip_object_t,cain_sip_stack_destroy,NULL,NULL,FALSE);
-
+#ifdef HAVE_GNUTLS
+static void _gnutls_log_func( int level, const char* log) {
+	cain_sip_log_level cain_sip_level;
+	switch(level) {
+	case 1: cain_sip_level=CAIN_SIP_LOG_ERROR;break;
+	case 2: cain_sip_level=CAIN_SIP_LOG_WARNING;break;
+	case 3: cain_sip_level=CAIN_SIP_LOG_MESSAGE;break;
+	default:cain_sip_level=CAIN_SIP_LOG_MESSAGE;break;
+	}
+	cain_sip_log(cain_sip_level,"gnutls:%s",log);
+}
+#endif /*HAVE_GNUTLS*/
 cain_sip_stack_t * cain_sip_stack_new(const char *properties){
+	int result;
 	cain_sip_stack_t *stack=cain_sip_object_new(cain_sip_stack_t);
 	stack->ml=cain_sip_main_loop_new ();
 	stack->timer_config.T1=500;
 	stack->timer_config.T2=4000;
 	stack->timer_config.T4=5000;
-#ifdef HAVE_TLS
+#ifdef HAVE_OPENSSL
 	SSL_library_init();
 	SSL_load_error_strings();
 	/*CRYPTO_set_id_callback(&threadid_cb);
 	CRYPTO_set_locking_callback(&locking_function);*/
+#endif
+#ifdef HAVE_GNUTLS
+	/*gnutls_global_set_log_level(9);*/
+	gnutls_global_set_log_function(_gnutls_log_func);
+	if ((result = gnutls_global_init ()) <0) {
+		cain_sip_fatal("Cannot initialize gnu tls vaused by [%s]",gnutls_strerror(result));
+	}
 #endif
 	return stack;
 }
@@ -51,6 +72,8 @@ cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack
 		lp=cain_sip_udp_listening_point_new(s,ipaddress,port);
 	} else if (strcasecmp(transport,"TCP") == 0) {
 		lp=cain_sip_stream_listening_point_new(s,ipaddress,port);
+	}else if (strcasecmp(transport,"TLS") == 0) {
+		lp=cain_sip_tls_listening_point_new(s,ipaddress,port);
 	} else {
 		cain_sip_fatal("Unsupported transport %s",transport);
 	}
