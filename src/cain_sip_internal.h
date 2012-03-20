@@ -390,6 +390,7 @@ struct _cain_sip_header {
 
 void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next);
 cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* headers);
+void cain_sip_util_copy_headers(cain_sip_message_t *orig, cain_sip_message_t *dest, const char*header, int multiple);
 
 void cain_sip_header_init(cain_sip_header_t* obj);
 /*class parameters*/
@@ -507,14 +508,19 @@ struct cain_sip_client_transaction{
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_client_transaction_t,cain_sip_transaction_t)
 	void (*send_request)(cain_sip_client_transaction_t *);
-	int (*on_response)(cain_sip_client_transaction_t *obj, cain_sip_response_t *resp);
+	void (*on_response)(cain_sip_client_transaction_t *obj, cain_sip_response_t *resp);
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_sip_provider_t *prov, cain_sip_request_t *req);
-int cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp);
+void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp);
+void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp);
 
 struct cain_sip_ict{
 	cain_sip_client_transaction_t base;
+	cain_sip_source_t *timer_A;
+	cain_sip_source_t *timer_B;
+	cain_sip_source_t *timer_D;
+	cain_sip_request_t *ack;
 };
 
 typedef struct cain_sip_ict cain_sip_ict_t;

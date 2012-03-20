@@ -37,16 +37,26 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 		event.dialog=NULL;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_request_event,&event);
 	}else{
-		cain_sip_response_event_t event;
-		int pass=1;
-		event.source=prov;
-		event.client_transaction=cain_sip_provider_find_matching_client_transaction(prov,(cain_sip_response_t*)msg);
-		event.dialog=NULL;
-		event.response=(cain_sip_response_t*)msg;
-		if (event.client_transaction){
-			pass=cain_sip_client_transaction_add_response(event.client_transaction,event.response);
+		cain_sip_client_transaction_t *t;
+		t=cain_sip_provider_find_matching_client_transaction(prov,(cain_sip_response_t*)msg);
+		/*
+		 * If a transaction is found, pass it to the transaction and let it decide what to do.
+		 * Else notifies directly.
+		 */
+		if (t){
+			/*since the add_response may indirectly terminate the transaction, we need to guarantee the transaction is not freed
+			 * until full completion*/
+			cain_sip_object_ref(t);
+			cain_sip_client_transaction_add_response(t,(cain_sip_response_t*)msg);
+			cain_sip_object_unref(t);
+		}else{
+			cain_sip_response_event_t event;
+			event.source=prov;
+			event.client_transaction=NULL;
+			event.dialog=NULL;
+			event.response=(cain_sip_response_t*)msg;
+			CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
 		}
-		if (pass) CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
 	}
 	cain_sip_object_unref(msg);
 }
@@ -243,7 +253,14 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 /*private provider API*/
 
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t){
-	if (CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_client_transaction_t)){
+	cain_sip_transaction_terminated_event_t ev;
+	
+	CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_terminate(t);
+	ev.source=t->provider;
+	ev.transaction=t;
+	ev.is_server_transaction=CAIN_SIP_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->provider,process_transaction_terminated,&ev);
+	if (!ev.is_server_transaction){
 		cain_sip_provider_remove_client_transaction(p,(cain_sip_client_transaction_t*)t);
 	}
 }

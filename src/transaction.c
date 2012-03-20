@@ -140,18 +140,6 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
  */
 
 
-static void clone_headers(cain_sip_message_t *orig, cain_sip_message_t *dest, const char*header, int multiple){
-	const cain_sip_list_t *elem;
-	elem=cain_sip_message_get_headers(orig,header);
-	for (;elem!=NULL;elem=elem->next){
-		cain_sip_header_t *ref_header=(cain_sip_header_t*)elem->data;
-		if (ref_header){
-			cain_sip_message_add_header(dest,
-	                           (cain_sip_header_t*)cain_sip_object_clone((cain_sip_object_t*)ref_header));
-		}
-		if (!multiple) break; /*just one*/
-	}
-}
 
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t){
 	cain_sip_message_t *orig=(cain_sip_message_t*)t->base.request;
@@ -168,11 +156,11 @@ cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_t
 	req=cain_sip_request_new();
 	cain_sip_request_set_method(req,"CANCEL");
 	cain_sip_request_set_uri(req,(cain_sip_uri_t*)cain_sip_object_clone((cain_sip_object_t*)cain_sip_request_get_uri((cain_sip_request_t*)orig)));
-	clone_headers(orig,(cain_sip_message_t*)req,"via",FALSE);
-	clone_headers(orig,(cain_sip_message_t*)req,"call-id",FALSE);
-	clone_headers(orig,(cain_sip_message_t*)req,"from",FALSE);
-	clone_headers(orig,(cain_sip_message_t*)req,"to",FALSE);
-	clone_headers(orig,(cain_sip_message_t*)req,"route",TRUE);
+	cain_sip_util_copy_headers(orig,(cain_sip_message_t*)req,"via",FALSE);
+	cain_sip_util_copy_headers(orig,(cain_sip_message_t*)req,"call-id",FALSE);
+	cain_sip_util_copy_headers(orig,(cain_sip_message_t*)req,"from",FALSE);
+	cain_sip_util_copy_headers(orig,(cain_sip_message_t*)req,"to",FALSE);
+	cain_sip_util_copy_headers(orig,(cain_sip_message_t*)req,"route",TRUE);
 	cain_sip_message_add_header((cain_sip_message_t*)req,
 		(cain_sip_header_t*)cain_sip_header_cseq_create(
 			cain_sip_header_cseq_get_seq_number((cain_sip_header_cseq_t*)cain_sip_message_get_header(orig,"cseq")),
@@ -204,15 +192,24 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
 }
 
-int cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
+void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
-	int pass=CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->on_response(t,resp);
-	if (pass){
-		if (base->prov_response)
-			cain_sip_object_unref(base->prov_response);
-		base->prov_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
-	}
-	return pass;
+	cain_sip_response_event_t event;
+		
+	if (base->prov_response)
+		cain_sip_object_unref(base->prov_response);
+	base->prov_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
+
+	event.source=base->provider;
+	event.client_transaction=t;
+	event.dialog=NULL;
+	event.response=(cain_sip_response_t*)resp;
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(base->provider,process_response_event,&event);
+}
+
+
+void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
+	CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->on_response(t,resp);
 }
 
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){

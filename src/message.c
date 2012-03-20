@@ -128,6 +128,13 @@ void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_li
 	}
 }
 
+void cain_sip_message_set_header(cain_sip_message_t *msg, cain_sip_header_t* header){
+	headers_container_t *headers_container=get_or_create_container(msg,cain_sip_header_get_name(header));
+	cain_sip_object_ref(header);
+	headers_container->header_list=cain_sip_list_free_with_data(headers_container->header_list,cain_sip_object_unref);
+	headers_container->header_list=cain_sip_list_append(headers_container->header_list,header);
+}
+
 const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,const char* header_name) {
 	headers_container_t* headers_container = cain_sip_headers_container_get(message,header_name);
 	return headers_container ? headers_container->header_list:NULL;

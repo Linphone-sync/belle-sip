@@ -23,15 +23,132 @@ static void ict_destroy(cain_sip_ict_t *obj){
 }
 
 static void on_ict_terminate(cain_sip_ict_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (obj->timer_A){
+		cain_sip_transaction_stop_timer(base,obj->timer_A);
+		cain_sip_object_unref(obj->timer_A);
+		obj->timer_A=NULL;
+	}
+	if (obj->timer_B){
+		cain_sip_transaction_stop_timer(base,obj->timer_B);
+		cain_sip_object_unref(obj->timer_B);
+		obj->timer_B=NULL;
+	}
+	if (obj->timer_D){
+		cain_sip_transaction_stop_timer(base,obj->timer_D);
+		cain_sip_object_unref(obj->timer_D);
+		obj->timer_D=NULL;
+	}
+	if (obj->ack){
+		cain_sip_object_unref(obj->ack);
+		obj->ack=NULL;
+	}
 }
 
-static int ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
-	return 0;
+static cain_sip_request_t *make_ack(cain_sip_ict_t *obj, cain_sip_response_t *resp){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (obj->ack==NULL){
+		obj->ack=cain_sip_request_new();
+		cain_sip_request_set_method(obj->ack,"ACK");
+		cain_sip_request_set_uri(obj->ack,cain_sip_request_get_uri(base->request));
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"via",FALSE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"call-id",FALSE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"from",FALSE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"route",TRUE);
+		cain_sip_message_add_header((cain_sip_message_t*)obj->ack,
+		(cain_sip_header_t*)cain_sip_header_cseq_create(
+			cain_sip_header_cseq_get_seq_number((cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)base->request,"cseq")),
+		    "CANCEL"));
+	}
+	cain_sip_util_copy_headers((cain_sip_message_t*)resp,(cain_sip_message_t*)obj->ack,"to",FALSE);
+	return obj->ack;
 }
+
+static int ict_on_timer_D(cain_sip_ict_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (base->state==CAIN_SIP_TRANSACTION_COMPLETED){
+		cain_sip_transaction_terminate(base);
+	}
+	return CAIN_SIP_STOP;
+}
+
+static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	int code=cain_sip_response_get_status_code(resp);
+
+	switch (base->state){
+		case CAIN_SIP_TRANSACTION_CALLING:
+			base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
+			/* no break*/
+		case CAIN_SIP_TRANSACTION_PROCEEDING:
+			if (code>=300){
+				base->state=CAIN_SIP_TRANSACTION_COMPLETED;
+				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
+				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)make_ack(obj,resp));
+				obj->timer_D=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_D,obj,32000);
+				cain_sip_transaction_start_timer(base,obj->timer_D);
+			}else if (code>=200){
+				cain_sip_transaction_terminate(base);
+				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
+			}
+		break;
+		case CAIN_SIP_TRANSACTION_COMPLETED:
+			if (code>=300 && obj->ack){
+				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)obj->ack);
+			}
+		break;
+		default:
+		break;
+	}
+}
+
+static int ict_on_timer_A(cain_sip_ict_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+
+	switch(base->state){
+		case CAIN_SIP_TRANSACTION_CALLING:
+		{
+			/*reset the timer to twice the previous value, and retransmit */
+			unsigned int prev_timeout=cain_sip_source_get_timeout(obj->timer_A);
+			cain_sip_source_set_timeout(obj->timer_A,2*prev_timeout);
+			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
+		}
+		break;
+		default:
+		break;
+	}
+	
+	return CAIN_SIP_CONTINUE;
+}
+
+static int ict_on_timer_B(cain_sip_ict_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	switch (base->state){
+		case CAIN_SIP_TRANSACTION_CALLING:
+			cain_sip_transaction_notify_timeout(base);
+			cain_sip_transaction_terminate(base);
+		break;
+		default:
+		break;
+	}
+	return CAIN_SIP_STOP;
+}
+
 
 static void ict_send_request(cain_sip_ict_t *obj){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
+
 	base->state=CAIN_SIP_TRANSACTION_CALLING;
+	cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
+	
+	if (!cain_sip_channel_is_reliable(base->channel)){
+		obj->timer_A=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_A,obj,cfg->T1);
+		cain_sip_transaction_start_timer(base,obj->timer_A);
+	}
+
+	obj->timer_B=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_B,obj,cfg->T1*64);
+	cain_sip_transaction_start_timer(base,obj->timer_B);
 	
 }
 
@@ -49,7 +166,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_ict_t)={
 			(void (*)(cain_sip_transaction_t*))on_ict_terminate
 		},
 		(void (*)(cain_sip_client_transaction_t*))ict_send_request,
-		(int (*)(cain_sip_client_transaction_t*,cain_sip_response_t*))ict_on_response
+		(void (*)(cain_sip_client_transaction_t*,cain_sip_response_t*))ict_on_response
 	}
 };
 

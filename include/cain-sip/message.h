@@ -71,6 +71,8 @@ void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_header_t* hea
 
 void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_list_t *header_list);
 
+void cain_sip_message_set_header(cain_sip_message_t *msg, cain_sip_header_t* header);
+
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
 const char* cain_sip_message_get_body(cain_sip_message_t *msg);
 void cain_sip_message_set_body(cain_sip_message_t *msg,char* body,unsigned int size);

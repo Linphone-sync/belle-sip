@@ -27,45 +27,42 @@ static int nict_on_timer_K(cain_sip_nict_t *obj){
 	return CAIN_SIP_STOP;
 }
 
-static void nict_set_completed(cain_sip_nict_t *obj){
+static void nict_set_completed(cain_sip_nict_t *obj, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
 	base->state=CAIN_SIP_TRANSACTION_COMPLETED;
 	if (obj->timer_K) cain_sip_fatal("Should never happen.");
-	
-	obj->timer_K=cain_sip_timeout_source_new((cain_sip_source_func_t)nict_on_timer_K,obj,
-		                     cain_sip_channel_is_reliable(base->channel) ? 0 : cfg->T4);
-	/*comment: we can indeed setup a timer to fire in 0 seconds so that the process_response notification arrives before
-	 * the transaction_terminated notification*/
-	cain_sip_transaction_start_timer(base,obj->timer_K);
+
+	cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
+
+	if (!cain_sip_channel_is_reliable(base->channel)){
+		obj->timer_K=cain_sip_timeout_source_new((cain_sip_source_func_t)nict_on_timer_K,obj,cfg->T4);
+		cain_sip_transaction_start_timer(base,obj->timer_K);
+	}else cain_sip_transaction_terminate(base);
 }
 
-static int nict_on_response(cain_sip_nict_t *obj, cain_sip_response_t *resp){
+static void nict_on_response(cain_sip_nict_t *obj, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	int code=cain_sip_response_get_status_code(resp);
-	int pass=0; /*whether response should be passed to upper layer*/
 	
 	switch(base->state){
 		case CAIN_SIP_TRANSACTION_TRYING:
 			if (code<200){
 				base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
-				pass=1;
+				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 			}
 			else {
-				nict_set_completed(obj);
-				pass=1;
+				nict_set_completed(obj,resp);
 			}
 		break;
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			if (code>=200){
-				nict_set_completed(obj);
-				pass=1;
+				nict_set_completed(obj,resp);
 			}
 		break;
 		default:
 		break;
 	}
-	return pass;
 }
 
 static void nict_on_terminate(cain_sip_nict_t *obj){
@@ -153,7 +150,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_nict_t)={
 			(void (*)(cain_sip_transaction_t *))nict_on_terminate
 		},
 		(void (*)(cain_sip_client_transaction_t*))nict_send_request,
-		(int (*)(cain_sip_client_transaction_t*,cain_sip_response_t*))nict_on_response
+		(void (*)(cain_sip_client_transaction_t*,cain_sip_response_t*))nict_on_response
 	}
 };
 
