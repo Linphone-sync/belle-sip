@@ -17,6 +17,10 @@
 */
 
 
+/** 
+ * non-INVITE client transaction implementation.
+**/
+
 #include "cain_sip_internal.h"
 
 static void nict_destroy(cain_sip_nict_t *obj){

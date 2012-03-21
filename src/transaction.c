@@ -46,8 +46,7 @@ static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_provid
 
 static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->request) cain_sip_object_unref(t->request);
-	if (t->prov_response) cain_sip_object_unref(t->prov_response);
-	if (t->final_response) cain_sip_object_unref(t->final_response);
+	if (t->last_response) cain_sip_object_unref(t->last_response);
 	if (t->channel) cain_sip_object_unref(t->channel);
 }
 
@@ -125,14 +124,28 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_server_transaction_t)={
 	}
 };
 
-cain_sip_server_transaction_t * cain_sip_server_transaction_new(cain_sip_provider_t *prov,cain_sip_request_t *req){
-	cain_sip_server_transaction_t *t=cain_sip_object_new(cain_sip_server_transaction_t);
+void cain_sip_server_transaction_init(cain_sip_server_transaction_t *t, cain_sip_provider_t *prov,cain_sip_request_t *req){
 	cain_sip_transaction_init((cain_sip_transaction_t*)t,prov,req);
-	return t;
 }
 
 void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
-	//CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_response((cain_sip_transaction_t*)t,resp);
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
+	cain_sip_object_ref(resp);
+	if (!base->last_response){
+		cain_sip_hop_t hop;
+		cain_sip_response_get_return_hop(resp,&hop);
+		base->channel=cain_sip_provider_get_channel(base->provider,hop.host, hop.port, hop.transport);
+		cain_sip_object_ref(base->channel);
+	}
+	if (CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->send_new_response(t,resp)==0){
+		if (base->last_response)
+			cain_sip_object_unref(base->last_response);
+		base->last_response=resp;
+	}
+}
+
+void cain_sip_server_transaction_on_retransmission(cain_sip_server_transaction_t *t){
+	CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->on_request_retransmission(t);
 }
 
 /*
@@ -196,9 +209,9 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
 	cain_sip_response_event_t event;
 		
-	if (base->prov_response)
-		cain_sip_object_unref(base->prov_response);
-	base->prov_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
+	if (base->last_response)
+		cain_sip_object_unref(base->last_response);
+	base->last_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
 
 	event.source=base->provider;
 	event.client_transaction=t;
@@ -271,7 +284,4 @@ cain_sip_ist_t *cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *
 	return NULL;
 }
 
-cain_sip_nist_t *cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
-	return NULL;
-}
 

@@ -502,8 +502,7 @@ struct cain_sip_transaction{
 	cain_sip_object_t base;
 	cain_sip_provider_t *provider; /*the provider that created this transaction */
 	cain_sip_request_t *request;
-	cain_sip_response_t *prov_response;
-	cain_sip_response_t *final_response;
+	cain_sip_response_t *last_response;
 	cain_sip_channel_t *channel;
 	char *branch_id;
 	cain_sip_transaction_state_t state;
@@ -594,7 +593,11 @@ struct cain_sip_server_transaction{
 };
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_server_transaction_t,cain_sip_transaction_t)
+	int (*send_new_response)(cain_sip_server_transaction_t *, cain_sip_response_t *resp);
+	void (*on_request_retransmission)(cain_sip_server_transaction_t *obj);
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+void cain_sip_server_transaction_init(cain_sip_server_transaction_t *t, cain_sip_provider_t *prov,cain_sip_request_t *req);
 
 struct cain_sip_ist{
 	cain_sip_server_transaction_t base;
@@ -609,6 +612,7 @@ cain_sip_ist_t * cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t 
 
 struct cain_sip_nist{
 	cain_sip_server_transaction_t base;
+	cain_sip_source_t *timer_J;
 };
 
 typedef struct cain_sip_nist cain_sip_nist_t;
