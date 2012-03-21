@@ -2,6 +2,7 @@
 if BUILD_TESTS
 
 noinst_PROGRAMS=cain_sip_tester  cain_sip_object_describe
+TESTS=cain_sip_tester
 
 cain_sip_tester_SOURCES=	cain_sip_tester.c \
 				cain_sdp_tester.c \

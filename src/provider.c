@@ -157,13 +157,18 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provide
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){
 	cain_sip_provider_t *p=cain_sip_object_new(cain_sip_provider_t);
 	p->stack=s;
-	cain_sip_provider_add_listening_point(p,lp);
+	if (lp) cain_sip_provider_add_listening_point(p,lp);
 	return p;
 }
 
 int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp){
 	p->lps=cain_sip_list_append(p->lps,cain_sip_object_ref(lp));
 	return 0;
+}
+void cain_sip_provider_remove_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp) {
+	p->lps=cain_sip_list_remove(p->lps,lp);
+	cain_sip_object_unref(lp);
+	return;
 }
 
 cain_sip_listening_point_t *cain_sip_provider_get_listening_point(cain_sip_provider_t *p, const char *transport){

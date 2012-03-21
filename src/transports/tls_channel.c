@@ -128,7 +128,7 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 			cain_sip_source_set_events((cain_sip_source_t*)channel,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
 			channel->socket_connected=1;
 		}
-		/*connected, now etablishing TLS connection*/
+		/*connected, now establishing TLS connection*/
 #if HAVE_GNUTLS
 		gnutls_transport_set_ptr2(channel->session, (gnutls_transport_ptr_t)channel,(gnutls_transport_ptr_t) (0xFFFFFFFFULL&fd));
 		result = gnutls_handshake(channel->session);
@@ -150,9 +150,6 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 				goto process_error;
 			}
 		}
-#endif /*HAVE_OPENSSL*/
-
-#ifdef HAVE_OPENSSL
 		if (!SSL_set_fd(channel->ssl,fd)) {
 			;
 			cain_sip_error("TLS connection failed to set fd caused by [%s]",ERR_error_string(ERR_get_error(),ssl_error_string));
@@ -206,7 +203,7 @@ cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp
 		cain_sip_error("Cannot set direct priority for channel [%p] caused by [%s] at position [%s]",obj,gnutls_strerror(result),err_pos);
 		goto error;
 	}
-	/* put the anonymous credentials to the current session
+	/* put the  credentials to the current session
 	 */
 	 result = gnutls_credentials_set (obj->session, GNUTLS_CRD_CERTIFICATE, obj->xcred);
 	if (result<0) {
