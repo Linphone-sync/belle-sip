@@ -43,6 +43,7 @@ static void _gnutls_log_func( int level, const char* log) {
 }
 #endif /*HAVE_GNUTLS*/
 cain_sip_stack_t * cain_sip_stack_new(const char *properties){
+	int result;
 	cain_sip_stack_t *stack=cain_sip_object_new(cain_sip_stack_t);
 	stack->ml=cain_sip_main_loop_new ();
 	stack->timer_config.T1=500;
@@ -55,13 +56,10 @@ cain_sip_stack_t * cain_sip_stack_new(const char *properties){
 	CRYPTO_set_locking_callback(&locking_function);*/
 #endif
 #ifdef HAVE_GNUTLS
-	{
-		int result;
-		/*gnutls_global_set_log_level(9);*/
-		gnutls_global_set_log_function(_gnutls_log_func);
-		if ((result = gnutls_global_init ()) <0) {
-			cain_sip_fatal("Cannot initialize gnu tls caused by [%s]",gnutls_strerror(result));
-		}
+	/*gnutls_global_set_log_level(9);*/
+	gnutls_global_set_log_function(_gnutls_log_func);
+	if ((result = gnutls_global_init ()) <0) {
+		cain_sip_fatal("Cannot initialize gnu tls caused by [%s]",gnutls_strerror(result));
 	}
 #endif
 	return stack;
