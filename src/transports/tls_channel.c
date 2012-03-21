@@ -23,11 +23,10 @@
 #include "cain_sip_internal.h"
 #include "cain-sip/mainloop.h"
 #include "stream_channel.h"
+
 #ifdef HAVE_GNUTLS
 #include <gnutls/gnutls.h>
-#else if HAVE_OPENSSL
-#include "openssl/ssl.h"
-#endif
+
 /*************tls********/
 
 struct cain_sip_tls_channel{
@@ -226,10 +225,14 @@ error:
 }
 
 
+#else
 
 
+cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp,const char *bindip, int localport, const char *dest, int port){
+		return NULL;
+}
 
-
+#endif
 
 
 
