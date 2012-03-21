@@ -43,7 +43,9 @@ static void _gnutls_log_func( int level, const char* log) {
 }
 #endif /*HAVE_GNUTLS*/
 cain_sip_stack_t * cain_sip_stack_new(const char *properties){
+#ifdef HAVE_GNUTLS
 	int result;
+#endif
 	cain_sip_stack_t *stack=cain_sip_object_new(cain_sip_stack_t);
 	stack->ml=cain_sip_main_loop_new ();
 	stack->timer_config.T1=500;

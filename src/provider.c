@@ -162,6 +162,10 @@ cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listeni
 }
 
 int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp){
+	if (lp == NULL) {
+		cain_sip_error("Cannot add NULL lp to provider [%p]",p);
+		return -1;
+	}
 	p->lps=cain_sip_list_append(p->lps,cain_sip_object_ref(lp));
 	return 0;
 }

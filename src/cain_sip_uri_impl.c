@@ -111,11 +111,7 @@ cain_sip_uri_t* cain_sip_uri_new () {
 
 
 char*	cain_sip_uri_to_string(cain_sip_uri_t* uri)  {
-	return cain_sip_concat(	"sip:"
-					,(uri->user?uri->user:"")
-					,(uri->user?"@":"")
-					,uri->host
-					,NULL);
+	return cain_sip_object_to_string(CAIN_SIP_OBJECT(uri));
 }
 
 

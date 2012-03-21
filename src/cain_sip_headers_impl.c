@@ -120,6 +120,7 @@ int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buf
 }
 
 CAIN_SIP_NEW(header_address,parameters)
+CAIN_SIP_PARSE(header_address)
 GET_SET_STRING(cain_sip_header_address,displayname);
 
 void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value) {

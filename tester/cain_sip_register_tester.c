@@ -93,8 +93,10 @@ static int init(void) {
 	cain_sip_provider_add_listening_point(prov,lp);
 	cain_sip_object_unref(lp);
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7061,"TLS");
-	cain_sip_provider_add_listening_point(prov,lp);
-	cain_sip_object_unref(lp);
+	if (lp) {
+		cain_sip_provider_add_listening_point(prov,lp);
+		cain_sip_object_unref(lp);
+	}
 	listener=cain_sip_object_new(test_listener_t);
 	cain_sip_provider_add_sip_listener(prov,CAIN_SIP_LISTENER(listener));
 	return 0;
