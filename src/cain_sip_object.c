@@ -116,6 +116,10 @@ static void _cain_sip_object_clone(cain_sip_object_t *obj, const cain_sip_object
 	if (orig->name!=NULL) obj->name=cain_sip_strdup(obj->name);
 }
 
+static int _cain_object_marshall(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size) {
+	return snprintf(buff+offset,buff_size,"{%s::%s %p}",obj->vptr->type_name,obj->name ? obj->name : "(no name)",obj);
+}
+
 cain_sip_object_vptr_t cain_sip_object_t_vptr={
 	CAIN_SIP_TYPE_ID(cain_sip_object_t),
 	"cain_sip_object_t",
@@ -124,7 +128,7 @@ cain_sip_object_vptr_t cain_sip_object_t_vptr={
 	NULL,
 	_cain_sip_object_uninit,
 	_cain_sip_object_clone,
-	NULL
+	_cain_object_marshall
 };
 
 void cain_sip_object_delete(void *ptr){

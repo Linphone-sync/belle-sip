@@ -93,6 +93,8 @@ static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
 			}else if (code>=200){
 				cain_sip_transaction_terminate(base);
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
+			}else if (code>=100){
+				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 			}
 		break;
 		case CAIN_SIP_TRANSACTION_COMPLETED:

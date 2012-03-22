@@ -476,12 +476,17 @@ struct cain_sip_provider{
 	cain_sip_list_t *lps; /*listening points*/
 	cain_sip_list_t *listeners;
 	cain_sip_list_t *client_transactions;
+	cain_sip_list_t *server_transactions;
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 void cain_sip_provider_add_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t);
 cain_sip_client_transaction_t *cain_sip_provider_find_matching_client_transaction(cain_sip_provider_t *prov, cain_sip_response_t *resp);
 void cain_sip_provider_remove_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t);
+void cain_sip_provider_add_server_transaction(cain_sip_provider_t *prov, cain_sip_server_transaction_t *t);
+cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transaction(cain_sip_provider_t *prov, 
+                                                                                   cain_sip_request_t *req);
+void cain_sip_provider_remove_server_transaction(cain_sip_provider_t *prov, cain_sip_server_transaction_t *t);
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t);
 cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport);
 
@@ -598,6 +603,7 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_server_transaction_t,cain_sip_transa
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 void cain_sip_server_transaction_init(cain_sip_server_transaction_t *t, cain_sip_provider_t *prov,cain_sip_request_t *req);
+void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, cain_sip_request_t *req);
 
 struct cain_sip_ist{
 	cain_sip_server_transaction_t base;

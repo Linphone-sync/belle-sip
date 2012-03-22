@@ -60,6 +60,8 @@ void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 	if (ctx->ai){
 		freeaddrinfo(ctx->ai);
 	}
+	close(ctx->ctlpipe[0]);
+	close(ctx->ctlpipe[1]);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_resolver_context_t);
@@ -81,7 +83,6 @@ cain_sip_resolver_context_t *cain_sip_resolver_context_new(){
 		cain_sip_fatal("pipe() failed: %s",strerror(errno));
 	}
 	cain_sip_fd_source_init(&ctx->source,(cain_sip_source_func_t)resolver_callback,ctx,ctx->ctlpipe[0],CAIN_SIP_EVENT_READ,-1);
-	ctx->source.on_remove=(cain_sip_source_remove_callback_t)cain_sip_object_unref;
 	return ctx;
 }
 
@@ -123,6 +124,7 @@ unsigned long cain_sip_resolve(const char *name, int port, unsigned int hints, c
 		ctx->port=port;
 		ctx->hints=hints;
 		cain_sip_main_loop_add_source(ml,(cain_sip_source_t*)ctx);
+		cain_sip_object_unref(ctx);
 		pthread_create(&ctx->thread,NULL,cain_sip_resolver_thread,ctx);
 		return ctx->source.id;
 	}else{

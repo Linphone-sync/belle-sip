@@ -79,16 +79,9 @@ cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_trans
 }
 
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
-	cain_sip_transaction_terminated_event_t ev;
-	
 	t->state=CAIN_SIP_TRANSACTION_TERMINATED;
 	cain_sip_provider_set_transaction_terminated(t->provider,t);
 	CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_terminate(t);
-	
-	ev.source=t->provider;
-	ev.transaction=t;
-	ev.is_server_transaction=CAIN_SIP_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->provider,process_transaction_terminated,&ev);
 }
 
 cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t){
@@ -144,8 +137,14 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 	}
 }
 
-void cain_sip_server_transaction_on_retransmission(cain_sip_server_transaction_t *t){
-	CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->on_request_retransmission(t);
+void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, cain_sip_request_t *req){
+	const char *method=cain_sip_request_get_method(req);
+	if (strcmp(method,"ACK")==0){
+		cain_sip_error("please handle this ack");
+	}else if (strcmp(method,"CANCEL")==0){
+		cain_sip_error("please handle this cancel ??");
+	}else
+		CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->on_request_retransmission(t);
 }
 
 /*
@@ -278,10 +277,6 @@ void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_s
 		obj->base.branch_id=cain_sip_strdup(cain_sip_header_via_get_branch(via));
 	}
 	cain_sip_transaction_init((cain_sip_transaction_t*)obj, prov,req);
-}
-
-cain_sip_ist_t *cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
-	return NULL;
 }
 
 

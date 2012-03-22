@@ -41,7 +41,11 @@ CAIN_SIP_DECLARE_INTERFACE_END
 
 cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_response_event_t* event);
 cain_sip_client_transaction_t *cain_sip_response_event_get_client_transaction(const cain_sip_response_event_t* event);
+cain_sip_dialog_t *cain_sip_response_event_get_dialog(const cain_sip_response_event_t* event);
 
+cain_sip_request_t* cain_sip_request_event_get_request(const cain_sip_request_event_t* event);
+cain_sip_server_transaction_t *cain_sip_request_event_get_server_transaction(const cain_sip_request_event_t* event);
+cain_sip_dialog_t *cain_sip_request_event_get_dialog(const cain_sip_request_event_t* event);
 
 
 #endif

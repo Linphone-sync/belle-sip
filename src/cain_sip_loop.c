@@ -97,7 +97,11 @@ static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
 }
 
 static int main_loop_done(void *data, unsigned int events){
-	cain_sip_debug("Got data on control fd...");
+	cain_sip_main_loop_t * m=(cain_sip_main_loop_t*)data;
+	char tmp;
+	if (read(m->control_fds[0],&tmp,sizeof(tmp))!=1){
+		cain_sip_error("Problem on control fd of main loop.");
+	}
 	return TRUE;
 }
 
@@ -110,7 +114,8 @@ cain_sip_main_loop_t *cain_sip_main_loop_new(void){
 	if (pipe(m->control_fds)==-1){
 		cain_sip_fatal("Could not create control pipe.");
 	}
-	m->control=cain_sip_fd_source_new(main_loop_done,NULL,m->control_fds[0],CAIN_SIP_EVENT_READ,-1);
+	m->control=cain_sip_fd_source_new(main_loop_done,m,m->control_fds[0],CAIN_SIP_EVENT_READ,-1);
+	cain_sip_object_set_name((cain_sip_object_t*)m->control,"main loop control fd");
 	cain_sip_main_loop_add_source(m,m->control);
 	return m;
 }
@@ -131,6 +136,7 @@ void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *
 
 unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
 	cain_sip_source_t * s=cain_sip_timeout_source_new(func,data,timeout_value_ms);
+	cain_sip_object_set_name((cain_sip_object_t*)s,"timeout");
 	cain_sip_main_loop_add_source(ml,s);
 	cain_sip_object_unref(s);
 	return s->id;
@@ -248,7 +254,10 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 				}
 			}
 			if (revents!=0 || (s->timeout>0 && cur>=s->expire_ms)){
+				char *objdesc=cain_sip_object_to_string((cain_sip_object_t*)s);
 				s->expired=TRUE;
+				cain_sip_message("source %s notified revents=%u, timeout=%i",objdesc,revents,s->timeout);
+				cain_sip_free(objdesc);
 				ret=s->notify(s->data,revents);
 				if (ret==0){
 					/*this source needs to be removed*/

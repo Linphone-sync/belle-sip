@@ -25,8 +25,13 @@ static void cain_sip_tls_listening_point_uninit(cain_sip_tls_listening_point_t *
 }
 
 static cain_sip_channel_t *tls_create_channel(cain_sip_listening_point_t *lp, const char *dest_ip, int port){
+#ifdef HAVE_GNUTLS
 	cain_sip_channel_t *chan=cain_sip_channel_new_tls(CAIN_SIP_TLS_LISTENING_POINT(lp),lp->addr,lp->port,dest_ip,port);
 	return chan;
+#else
+	return NULL;
+#endif
+	
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_tls_listening_point_t);
