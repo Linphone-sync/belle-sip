@@ -73,6 +73,12 @@ void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_li
 
 void cain_sip_message_set_header(cain_sip_message_t *msg, cain_sip_header_t* header);
 
+void cain_sip_message_remove_first(cain_sip_message_t *msg, const char *header_name);
+
+void cain_sip_message_remove_last(cain_sip_message_t *msg, const char *header_name);
+
+void cain_sip_message_remove_header(cain_sip_message_t *msg, const char *header_name);
+
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
 const char* cain_sip_message_get_body(cain_sip_message_t *msg);
 void cain_sip_message_set_body(cain_sip_message_t *msg,char* body,unsigned int size);

@@ -185,6 +185,13 @@ cain_sip_list_t*  cain_sip_list_prepend(cain_sip_list_t* elem, void *data){
 	return new_elem;
 }
 
+cain_sip_list_t * cain_sip_list_last_elem(const cain_sip_list_t *l){
+	if (l==NULL) return NULL;
+	while(l->next){
+		l=l->next;
+	}
+	return (cain_sip_list_t*)l;
+}
 
 cain_sip_list_t*  cain_sip_list_concat(cain_sip_list_t* first, cain_sip_list_t* second){
 	cain_sip_list_t* it=first;

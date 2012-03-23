@@ -27,6 +27,7 @@ typedef struct _cain_sip_list cain_sip_list_t;
 
 cain_sip_list_t * cain_sip_list_append(cain_sip_list_t * elem, void * data);
 cain_sip_list_t * cain_sip_list_prepend(cain_sip_list_t * elem, void * data);
+cain_sip_list_t * cain_sip_list_last_elem(const cain_sip_list_t *l);
 cain_sip_list_t * cain_sip_list_free(cain_sip_list_t * elem);
 cain_sip_list_t * cain_sip_list_concat(cain_sip_list_t * first, cain_sip_list_t * second);
 cain_sip_list_t * cain_sip_list_remove(cain_sip_list_t * first, void *data);

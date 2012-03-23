@@ -98,7 +98,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_nist_t)={
 	{
 		{
 			{
-				CAIN_SIP_VPTR_INIT(cain_sip_nist_t,cain_sip_server_transaction_t,FALSE),
+				CAIN_SIP_VPTR_INIT(cain_sip_nist_t,cain_sip_server_transaction_t,TRUE),
 				(cain_sip_object_destroy_t)nist_destroy,
 				NULL,
 				NULL

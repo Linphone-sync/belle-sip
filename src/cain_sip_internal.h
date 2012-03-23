@@ -381,16 +381,30 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	return l_parsed_object;\
 }
 
-#define CAIN_SIP_NEW(object_type,super_type) CAIN_SIP_NEW_HEADER(object_type,super_type,NULL)
-#define CAIN_SIP_NEW_HEADER(object_type,super_type,name) CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,header)
-#define CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,init_type) \
-		CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_##object_type##_t); \
-		CAIN_SIP_INSTANCIATE_VPTR(	cain_sip_##object_type##_t\
+#define CAIN_SIP_NEW(object_type,super_type) \
+	CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_##object_type##_t); \
+	CAIN_SIP_INSTANCIATE_VPTR(	cain_sip_##object_type##_t\
 									, cain_sip_##super_type##_t\
 									, cain_sip_##object_type##_destroy\
 									, cain_sip_##object_type##_clone\
-									, cain_sip_##object_type##_marshal, TRUE); \
-		cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
+									, cain_sip_##object_type##_marshal, FALSE); \
+	cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
+		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
+		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
+		cain_sip_##object_type##_init((cain_sip_##object_type##_t*) l_object); \
+		return l_object;\
+	}
+
+	
+#define CAIN_SIP_NEW_HEADER(object_type,super_type,name) CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,header)
+#define CAIN_SIP_NEW_HEADER_INIT(object_type,super_type,name,init_type) \
+	CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_##object_type##_t); \
+	CAIN_SIP_INSTANCIATE_VPTR(	cain_sip_##object_type##_t\
+								, cain_sip_##super_type##_t\
+								, cain_sip_##object_type##_destroy\
+								, cain_sip_##object_type##_clone\
+								, cain_sip_##object_type##_marshal, TRUE); \
+	cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
 		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
 		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
 		cain_sip_##init_type##_init((cain_sip_##init_type##_t*) l_object); \

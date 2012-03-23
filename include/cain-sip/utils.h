@@ -32,9 +32,9 @@ typedef enum {
 	CAIN_SIP_LOG_FATAL=1,
 	CAIN_SIP_LOG_ERROR=1<<1,
 	CAIN_SIP_LOG_WARNING=1<<2,
-        CAIN_SIP_LOG_MESSAGE=1<<3,
-        CAIN_SIP_LOG_DEBUG=1<<4,
-        CAIN_SIP_LOG_END=1<<5
+	CAIN_SIP_LOG_MESSAGE=1<<3,
+	CAIN_SIP_LOG_DEBUG=1<<4,
+	CAIN_SIP_LOG_END=1<<5
 } cain_sip_log_level;
 
 

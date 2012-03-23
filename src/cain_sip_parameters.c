@@ -48,7 +48,7 @@ int cain_sip_parameters_marshal(cain_sip_parameters_t* params, char* buff,unsign
 	}
 	return curent_offset-offset;
 }
-CAIN_SIP_NEW(parameters,header)
+CAIN_SIP_NEW_HEADER(parameters,header,"parameters")
 const cain_sip_list_t *	cain_sip_parameters_get_parameters(cain_sip_parameters_t* obj) {
 	return obj->param_list;
 }

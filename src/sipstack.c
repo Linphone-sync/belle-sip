@@ -113,15 +113,30 @@ void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds){
 void cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req, cain_sip_hop_t *hop){
 	cain_sip_header_route_t *route=CAIN_SIP_HEADER_ROUTE(cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),"route"));
 	cain_sip_uri_t *uri;
+	const char *transport;
 	if (route!=NULL){
 		uri=cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(route));
 	}else{
 		uri=cain_sip_request_get_uri(req);
 	}
-	hop->transport=cain_sip_uri_get_transport_param(uri);
-	if (hop->transport==NULL) hop->transport="UDP";
-	hop->host=cain_sip_uri_get_host(uri);
+	transport=cain_sip_uri_get_transport_param(uri);
+	if (transport!=NULL) hop->transport=cain_sip_strdup(transport);
+	else hop->transport=NULL;
+	hop->host=cain_sip_strdup(cain_sip_uri_get_host(uri));
 	hop->port=cain_sip_uri_get_listening_port(uri);
+	if (route){
+		cain_sip_message_remove_first((cain_sip_message_t*)req,"route");
+	}
 }
 
+void cain_sip_hop_free(cain_sip_hop_t *hop){
+	if (hop->host) {
+		cain_sip_free(hop->host);
+		hop->host=NULL;
+	}
+	if (hop->transport){
+		cain_sip_free(hop->transport);
+		hop->transport=NULL;
+	}
+}
 

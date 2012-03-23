@@ -129,6 +129,7 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 		cain_sip_response_get_return_hop(resp,&hop);
 		base->channel=cain_sip_provider_get_channel(base->provider,hop.host, hop.port, hop.transport);
 		cain_sip_object_ref(base->channel);
+		cain_sip_hop_free(&hop);
 	}
 	if (CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->send_new_response(t,resp)==0){
 		if (base->last_response)
@@ -202,6 +203,7 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 			cain_sip_message("cain_sip_client_transaction_send_request(): waiting channel to be ready");
 		}
 	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
+	cain_sip_hop_free(&hop);
 }
 
 void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){

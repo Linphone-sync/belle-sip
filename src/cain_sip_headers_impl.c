@@ -119,7 +119,7 @@ int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buf
 	return current_offset-offset;
 }
 
-CAIN_SIP_NEW(header_address,parameters)
+CAIN_SIP_NEW_HEADER(header_address,parameters,"header_address")
 CAIN_SIP_PARSE(header_address)
 GET_SET_STRING(cain_sip_header_address,displayname);
 

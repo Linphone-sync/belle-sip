@@ -253,6 +253,9 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 	cain_sip_list_t *l;
 	cain_sip_listening_point_t *candidate=NULL,*lp;
 	cain_sip_channel_t *chan;
+
+	if (transport==NULL) transport="UDP";
+	
 	for(l=p->lps;l!=NULL;l=l->next){
 		lp=(cain_sip_listening_point_t*)l->data;
 		if (strcasecmp(cain_sip_listening_point_get_transport(lp),transport)==0){
@@ -279,6 +282,7 @@ void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *
 	if (chan) {
 		cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(req));
 	}
+	cain_sip_hop_free(&hop);
 }
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
@@ -287,6 +291,7 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 	cain_sip_response_get_return_hop(resp,&hop);
 	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
 	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(resp));
+	cain_sip_hop_free(&hop);
 }
 
 

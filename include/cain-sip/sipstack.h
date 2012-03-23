@@ -21,8 +21,8 @@
 #define cain_sip_stack_h
 
 struct cain_sip_hop{
-	const char *host;
-	const char *transport;
+	char *host;
+	char *transport;
 	int port;
 };
 
@@ -52,6 +52,8 @@ cain_sip_main_loop_t* cain_sip_stack_get_main_loop(cain_sip_stack_t *stack);
 void cain_sip_stack_main(cain_sip_stack_t *stack);
 
 void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
+
+void cain_sip_hop_free(cain_sip_hop_t *hop);
 
 CAIN_SIP_END_DECLS
 

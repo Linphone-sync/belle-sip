@@ -140,6 +140,33 @@ const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,
 	return headers_container ? headers_container->header_list:NULL;
 }
 
+void cain_sip_message_remove_first(cain_sip_message_t *msg, const char *header_name){
+	headers_container_t* headers_container = cain_sip_headers_container_get(msg,header_name);
+	if (headers_container && headers_container->header_list){
+		cain_sip_list_t *to_be_removed=headers_container->header_list;
+		headers_container->header_list=cain_sip_list_remove_link(headers_container->header_list,to_be_removed);
+		cain_sip_list_free_with_data(to_be_removed,cain_sip_object_unref);
+	}
+}
+
+void cain_sip_message_remove_last(cain_sip_message_t *msg, const char *header_name){
+	headers_container_t* headers_container = cain_sip_headers_container_get(msg,header_name);
+	if (headers_container && headers_container->header_list){
+		cain_sip_list_t *to_be_removed=cain_sip_list_last_elem(headers_container->header_list);
+		headers_container->header_list=cain_sip_list_remove_link(headers_container->header_list,to_be_removed);
+		cain_sip_list_free_with_data(to_be_removed,cain_sip_object_unref);
+	}
+}
+
+void cain_sip_message_remove_header(cain_sip_message_t *msg, const char *header_name){
+	headers_container_t* headers_container = cain_sip_headers_container_get(msg,header_name);
+	if (headers_container){
+		cain_sip_headers_container_delete(headers_container);
+		cain_sip_list_remove(msg->header_list,headers_container);
+	}
+}
+
+
 /*
 int cain_sip_message_named_headers_marshal(cain_sip_message_t *message, const char* header_name, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -192,6 +219,9 @@ static void cain_sip_request_destroy(cain_sip_request_t* request) {
 	if (request->uri) cain_sip_object_unref(request->uri);
 }
 
+static void cain_sip_request_init(cain_sip_request_t *message){	
+}
+
 static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_request_t *orig){
 		if (orig->method) request->method=cain_sip_strdup(orig->method);
 }
@@ -206,6 +236,7 @@ int cain_sip_request_marshal(cain_sip_request_t* request, char* buff,unsigned in
 	}
 	return current_offset-offset;
 }
+
 CAIN_SIP_NEW(request,message)
 CAIN_SIP_PARSE(request)
 GET_SET_STRING(cain_sip_request,method);
@@ -240,9 +271,11 @@ cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const ch
 char *cain_sip_message_to_string(cain_sip_message_t *msg){
 	return cain_sip_object_to_string(CAIN_SIP_OBJECT(msg));
 }
+
 const char* cain_sip_message_get_body(cain_sip_message_t *msg) {
 	return msg->body;
 }
+
 void cain_sip_message_set_body(cain_sip_message_t *msg,char* body,unsigned int size) {
 	if (msg->body) {
 		cain_sip_free((void*)body);
@@ -333,6 +366,9 @@ void cain_sip_response_destroy(cain_sip_response_t *resp){
 	if (resp->reason_phrase) cain_sip_free(resp->reason_phrase);
 }
 
+static void cain_sip_response_init(cain_sip_response_t *resp){
+}
+
 static void cain_sip_response_clone(cain_sip_response_t *resp, const cain_sip_response_t *orig){
 	if (orig->sip_version) resp->sip_version=cain_sip_strdup(orig->sip_version);
 	if (orig->reason_phrase) resp->reason_phrase=cain_sip_strdup(orig->reason_phrase);
@@ -400,14 +436,14 @@ cain_sip_response_t *cain_sip_response_new_from_request(cain_sip_request_t *req,
 	return resp;
 }
 
-
-
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
-	hop->transport=cain_sip_header_via_get_protocol(via);
-	hop->host=cain_sip_header_via_get_received(via);
-	if (hop->host==NULL)
-		hop->host=cain_sip_header_via_get_host(via);
+	const char *host;
+	hop->transport=cain_sip_strdup(cain_sip_header_via_get_protocol(via));
+	host=cain_sip_header_via_get_received(via);
+	if (host==NULL)
+		host=cain_sip_header_via_get_host(via);
+	hop->host=cain_sip_strdup(host);
 	hop->port=cain_sip_header_via_get_rport(via);
 	if (hop->port==-1)
 		hop->port=cain_sip_header_via_get_listening_port(via);
