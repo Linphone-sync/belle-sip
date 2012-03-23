@@ -127,7 +127,7 @@ void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *
 		return;
 	}
 	cain_sip_object_ref(source);
-	if (source->timeout>0){
+	if (source->timeout>=0){
 		source->expire_ms=cain_sip_time_ms()+source->timeout;
 	}
 	ml->sources=cain_sip_list_append_link(ml->sources,&source->node);
