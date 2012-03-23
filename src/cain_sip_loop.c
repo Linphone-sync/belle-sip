@@ -80,6 +80,7 @@ struct cain_sip_main_loop{
 
 void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source){
 	if (!source->node.next && !source->node.prev && &source->node!=ml->sources) return; /*nothing to do*/
+	source->cancelled=TRUE;
 	ml->sources=cain_sip_list_remove_link(ml->sources,&source->node);
 	ml->nsources--;
 	
@@ -204,6 +205,7 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 	int duration=-1;
 	int ret;
 	uint64_t cur;
+	cain_sip_list_t *copy;
 	
 	/*prepare the pollfd table */
 	for(elem=ml->sources;elem!=NULL;elem=next){
@@ -241,11 +243,11 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		return;
 	}
 	cur=cain_sip_time_ms();
+	copy=cain_sip_list_copy_with_data(ml->sources,(void *(*)(void*))cain_sip_object_ref);
 	/* examine poll results*/
-	for(elem=ml->sources;elem!=NULL;elem=next){
+	for(elem=copy;elem!=NULL;elem=elem->next){
 		unsigned revents=0;
 		s=(cain_sip_source_t*)elem->data;
-		next=elem->next;
 
 		if (!s->cancelled){
 			if (s->fd!=-1){
@@ -270,6 +272,7 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 			}
 		}else cain_sip_main_loop_remove_source(ml,s);
 	}
+	cain_sip_list_free_with_data(copy,cain_sip_object_unref);
 }
 
 void cain_sip_main_loop_run(cain_sip_main_loop_t *ml){
