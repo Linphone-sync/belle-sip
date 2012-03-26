@@ -102,6 +102,7 @@ CAIN_SIP_DECLARE_TYPES_BEGIN(cain_sip,1)
 	CAIN_SIP_TYPE_ID(cain_sdp_version_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_base_description_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_mime_parameter_t),
+	CAIN_SIP_TYPE_ID(cain_sip_callbacks_t),
 CAIN_SIP_DECLARE_TYPES_END
 
 

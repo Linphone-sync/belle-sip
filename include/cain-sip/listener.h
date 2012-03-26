@@ -48,5 +48,22 @@ cain_sip_server_transaction_t *cain_sip_request_event_get_server_transaction(con
 cain_sip_dialog_t *cain_sip_request_event_get_dialog(const cain_sip_request_event_t* event);
 
 
+struct cain_sip_listener_callbacks{
+	void (*process_dialog_terminated)(void *user_ctx, const cain_sip_dialog_terminated_event_t *event);
+	void (*process_io_error)(void *user_ctx, const cain_sip_io_error_event_t *event);
+	void (*process_request_event)(void *user_ctx, const cain_sip_request_event_t *event);
+	void (*process_response_event)(void *user_ctx, const cain_sip_response_event_t *event);
+	void (*process_timeout)(void *user_ctx, const cain_sip_timeout_event_t *event);
+	void (*process_transaction_terminated)(void *user_ctx, const cain_sip_transaction_terminated_event_t *event);
+};
+
+typedef struct cain_sip_listener_callbacks cain_sip_listener_callbacks_t;
+
+/**
+ * Creates an object implementing the cain_sip_listener_t interface.
+ * This object passes the events to the callbacks, providing also the user context.
+**/
+cain_sip_listener_t *cain_sip_listener_create_from_callbacks(const cain_sip_listener_callbacks_t *callbacks, void *user_ctx);
+
 #endif
 
