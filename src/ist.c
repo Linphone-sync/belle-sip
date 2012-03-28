@@ -30,6 +30,24 @@ static void ist_on_terminate(cain_sip_ist_t *obj){
 //	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 }
 
+static int ist_send_new_response(cain_sip_ist_t *obj, cain_sip_response_t *resp){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	int code=cain_sip_response_get_status_code(resp);
+	int ret=0;
+	switch(base->state){
+		case CAIN_SIP_TRANSACTION_PROCEEDING:
+			if (code==100)
+				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
+		break;
+		default:
+		break;
+	}
+	return ret;
+}
+
+static void ist_on_request_retransmission(cain_sip_nist_t *obj){
+}
+
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_ist_t);
 
@@ -44,6 +62,8 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_ist_t)={
 			},
 			(void (*)(cain_sip_transaction_t *))ist_on_terminate
 		},
+		(int (*)(cain_sip_server_transaction_t*, cain_sip_response_t *))ist_send_new_response,
+		(void (*)(cain_sip_server_transaction_t*))ist_on_request_retransmission,
 	}
 };
 
@@ -51,5 +71,12 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_ist_t)={
 cain_sip_ist_t *cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
 	cain_sip_ist_t *obj=cain_sip_object_new(cain_sip_ist_t);
 	cain_sip_server_transaction_init((cain_sip_server_transaction_t*)obj,prov,req);
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	cain_sip_response_t *resp;
+	
+	base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
+	resp=cain_sip_response_create_from_request(req,100);
+	cain_sip_server_transaction_send_response((cain_sip_server_transaction_t*)obj,resp);
+	cain_sip_object_unref(resp);
 	return obj;
 }

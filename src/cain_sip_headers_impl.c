@@ -251,6 +251,12 @@ CAIN_SIP_NEW_HEADER(header_from,header_address,"From")
 CAIN_SIP_PARSE(header_from)
 GET_SET_STRING_PARAM(cain_sip_header_from,tag);
 
+void cain_sip_header_from_set_random_tag(cain_sip_header_from_t *obj){
+	char tmp[8];
+	/*not less than 32bit */
+	cain_sip_header_from_set_tag(obj,cain_sip_random_token(tmp,sizeof(tmp)));
+}
+
 /**************************
 * To header object inherits from header_address
 ****************************
@@ -278,6 +284,12 @@ cain_sip_header_to_t* cain_sip_header_to_create(const char *address, const char 
 	if (tag) cain_sip_header_to_set_tag(to,tag);
 	cain_sip_free(tmp);
 	return to;
+}
+
+void cain_sip_header_to_set_random_tag(cain_sip_header_to_t *obj){
+	char tmp[8];
+	/*not less than 32bit */
+	cain_sip_header_to_set_tag(obj,cain_sip_random_token(tmp,sizeof(tmp)));
 }
 
 /******************************

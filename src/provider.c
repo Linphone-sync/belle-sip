@@ -288,6 +288,11 @@ void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
 	cain_sip_hop_t hop;
 	cain_sip_channel_t *chan;
+	cain_sip_header_to_t *to=(cain_sip_header_to_t*)cain_sip_message_get_header((cain_sip_message_t*)resp,"to");
+
+	if (cain_sip_response_get_status_code(resp)!=100 && cain_sip_header_to_get_tag(to)==NULL){
+		cain_sip_fatal("Generation of unique to tags for stateless responses is not implemented.");
+	}
 	cain_sip_response_get_return_hop(resp,&hop);
 	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
 	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(resp));

@@ -544,7 +544,6 @@ char * cain_sip_random_token(char *ret, size_t size){
 	return ret;
 }
 
-
 void cain_sip_util_copy_headers(cain_sip_message_t *orig, cain_sip_message_t *dest, const char*header, int multiple){
 	const cain_sip_list_t *elem;
 	elem=cain_sip_message_get_headers(orig,header);

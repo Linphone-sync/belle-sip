@@ -609,6 +609,7 @@ cain_sip_nict_t * cain_sip_nict_new(cain_sip_provider_t *prov, cain_sip_request_
 
 struct cain_sip_server_transaction{
 	cain_sip_transaction_t base;
+	char to_tag[8];
 };
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_server_transaction_t,cain_sip_transaction_t)

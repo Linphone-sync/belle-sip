@@ -133,6 +133,8 @@ void cain_sip_set_log_level(int level);
 
 char * cain_sip_random_token(char *ret, size_t size);
 
+char * cain_sip_create_tag(char *ret, size_t size);
+
 #if defined(WIN32) || defined(WIN32_WCE)
 typedef SOCKET cain_sip_fd_t;
 #else

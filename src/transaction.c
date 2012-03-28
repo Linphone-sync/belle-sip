@@ -119,10 +119,12 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_server_transaction_t)={
 
 void cain_sip_server_transaction_init(cain_sip_server_transaction_t *t, cain_sip_provider_t *prov,cain_sip_request_t *req){
 	cain_sip_transaction_init((cain_sip_transaction_t*)t,prov,req);
+	cain_sip_random_token(t->to_tag,sizeof(t->to_tag));
 }
 
 void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
+	cain_sip_header_to_t *to=(cain_sip_header_to_t*)cain_sip_message_get_header((cain_sip_message_t*)resp,"to");
 	cain_sip_object_ref(resp);
 	if (!base->last_response){
 		cain_sip_hop_t hop;
@@ -130,6 +132,10 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 		base->channel=cain_sip_provider_get_channel(base->provider,hop.host, hop.port, hop.transport);
 		cain_sip_object_ref(base->channel);
 		cain_sip_hop_free(&hop);
+	}
+	if (cain_sip_header_to_get_tag(to)==NULL && cain_sip_response_get_status_code(resp)!=100){
+		//add a random to tag
+		cain_sip_header_to_set_tag(to,t->to_tag);
 	}
 	if (CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->send_new_response(t,resp)==0){
 		if (base->last_response)

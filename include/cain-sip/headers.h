@@ -135,12 +135,13 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 
  cain_sip_header_from_t* cain_sip_header_from_create(const char *address, const char *tag);
 
- cain_sip_header_from_t* cain_sip_header_from_parse (const char* from) ;
-
+ cain_sip_header_from_t* cain_sip_header_from_parse(const char* from) ;
 
  void cain_sip_header_from_set_tag(cain_sip_header_from_t* from, const char* tag);
 
  const char* cain_sip_header_from_get_tag(const cain_sip_header_from_t* from);
+
+ void cain_sip_header_from_set_random_tag(cain_sip_header_from_t *obj);
 
 #define CAIN_SIP_HEADER_FROM(t) CAIN_SIP_CAST(t,cain_sip_header_from_t)
  /******************************
@@ -158,6 +159,8 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
  void cain_sip_header_to_set_tag(cain_sip_header_to_t* from, const char* tag);
 
  const char* cain_sip_header_to_get_tag(const cain_sip_header_to_t* from);
+
+ void cain_sip_header_to_set_random_tag(cain_sip_header_to_t *obj);
 
 #define CAIN_SIP_HEADER_TO(t) CAIN_SIP_CAST(t,cain_sip_header_to_t)
 

@@ -92,7 +92,7 @@ void cain_sip_response_set_reason_phrase(cain_sip_response_t *response,const cha
 
 cain_sip_response_t *cain_sip_response_new(void);
 
-cain_sip_response_t *cain_sip_response_new_from_request(cain_sip_request_t *req, int status_code);
+cain_sip_response_t *cain_sip_response_create_from_request(cain_sip_request_t *req, int status_code);
 
 CAIN_SIP_END_DECLS
 

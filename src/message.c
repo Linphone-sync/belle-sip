@@ -267,7 +267,6 @@ cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const ch
 	return NULL;
 }
 
-
 char *cain_sip_message_to_string(cain_sip_message_t *msg){
 	return cain_sip_object_to_string(CAIN_SIP_OBJECT(msg));
 }
@@ -422,17 +421,28 @@ static void cain_sip_response_init_default(cain_sip_response_t *resp, int status
 	resp->reason_phrase=cain_sip_strdup(phrase);
 }
 
-cain_sip_response_t *cain_sip_response_new_from_request(cain_sip_request_t *req, int status_code){
+cain_sip_response_t *cain_sip_response_create_from_request(cain_sip_request_t *req, int status_code){
 	cain_sip_response_t *resp=cain_sip_response_new();
 	cain_sip_header_t *h;
+	cain_sip_header_to_t *to;
 	cain_sip_response_init_default(resp,status_code,NULL);
+	if (status_code==100){
+		h=cain_sip_message_get_header((cain_sip_message_t*)req,"timestamp");
+		cain_sip_message_add_header((cain_sip_message_t*)resp,h);
+	}
 	cain_sip_message_add_headers((cain_sip_message_t*)resp,cain_sip_message_get_headers ((cain_sip_message_t*)req,"via"));
 	cain_sip_message_add_header((cain_sip_message_t*)resp,cain_sip_message_get_header((cain_sip_message_t*)req,"from"));
-	cain_sip_message_add_header((cain_sip_message_t*)resp,cain_sip_message_get_header((cain_sip_message_t*)req,"to"));
-	cain_sip_message_add_header((cain_sip_message_t*)resp,cain_sip_message_get_header((cain_sip_message_t*)req,"cseq"));
+	h=cain_sip_message_get_header((cain_sip_message_t*)req,"to");
+	if (status_code!=100){
+		//so that to tag can be added
+		to=(cain_sip_header_to_t*)cain_sip_object_clone((cain_sip_object_t*)h);
+	}else{
+		to=(cain_sip_header_to_t*)h;
+	}
+	cain_sip_message_add_header((cain_sip_message_t*)req,(cain_sip_header_t*)to);
 	h=cain_sip_message_get_header((cain_sip_message_t*)req,"call-id");
-	if (h) cain_sip_message_add_header((cain_sip_message_t*)resp,h);
-	
+	cain_sip_message_add_header((cain_sip_message_t*)resp,h);
+	cain_sip_message_add_header((cain_sip_message_t*)resp,cain_sip_message_get_header((cain_sip_message_t*)req,"cseq"));
 	return resp;
 }
 
