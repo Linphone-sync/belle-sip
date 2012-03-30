@@ -287,7 +287,8 @@ void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) 
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_state_changed,obj,state);
 }
 
-static void send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
+
+static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 	char buffer[cain_sip_network_buffer_size];
 	int len;
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_sending,obj,msg);
@@ -302,6 +303,31 @@ static void send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 	}
 }
 
+/* just to emulate network transmission delay */
+
+typedef struct delayed_send{
+	cain_sip_channel_t *chan;
+	cain_sip_message_t *msg;
+}delayed_send_t;
+
+static int on_delayed_send_do(delayed_send_t *ds){
+	if (ds->chan->state==CAIN_SIP_CHANNEL_READY){
+		_send_message(ds->chan,ds->msg);
+	}
+	cain_sip_object_unref(ds->chan);
+	cain_sip_object_unref(ds->msg);
+	cain_sip_free(ds);
+	return FALSE;
+}
+
+static void send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
+	if (obj->stack->tx_delay>0){
+		delayed_send_t *ds=cain_sip_new(delayed_send_t);
+		ds->chan=(cain_sip_channel_t*)cain_sip_object_ref(obj);
+		ds->msg=(cain_sip_message_t*)cain_sip_object_ref(msg);
+		cain_sip_main_loop_add_timeout(obj->stack->ml,(cain_sip_source_func_t)on_delayed_send_do,ds,obj->stack->tx_delay);
+	}else _send_message(obj,msg);
+}
 
 void cain_sip_channel_prepare(cain_sip_channel_t *obj){
 	obj->prepare=1;

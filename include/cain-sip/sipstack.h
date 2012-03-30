@@ -55,6 +55,11 @@ void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
 
 void cain_sip_hop_free(cain_sip_hop_t *hop);
 
+/**
+ * Can be used to simulate network transmission delays, for tests.
+**/
+void cain_sip_stack_set_tx_delay(cain_sip_stack_t *stack, int delay_ms);
+
 CAIN_SIP_END_DECLS
 
 #endif
