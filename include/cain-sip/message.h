@@ -56,11 +56,11 @@ void cain_sip_request_set_uri(cain_sip_request_t* request, cain_sip_uri_t* uri);
 const char* cain_sip_request_get_method(const cain_sip_request_t* request);
 void cain_sip_request_set_method(cain_sip_request_t* request,const char* method);
 
-int cain_sip_message_is_response(cain_sip_message_t *msg);
+int cain_sip_message_is_response(const cain_sip_message_t *msg);
 
-cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const char *header_name);
+cain_sip_header_t *cain_sip_message_get_header(const cain_sip_message_t *msg, const char *header_name);
 
-const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,const char* header_name);
+const cain_sip_list_t* cain_sip_message_get_headers(const cain_sip_message_t *message,const char* header_name);
 
 /**
  * add an header to this message

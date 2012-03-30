@@ -217,7 +217,7 @@ void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_list
 	p->listeners=cain_sip_list_remove(p->listeners,l);
 }
 
-cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov){
+cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_provider_t *prov){
 	cain_sip_header_call_id_t *cid=cain_sip_header_call_id_new();
 	char tmp[11];
 	cain_sip_header_call_id_set_call_id(cid,cain_sip_random_token(tmp,sizeof(tmp)));

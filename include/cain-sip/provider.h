@@ -36,7 +36,7 @@ void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listene
 
 void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
-cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(cain_sip_provider_t *prov);
+cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_provider_t *prov);
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *p, cain_sip_request_t *req);
 

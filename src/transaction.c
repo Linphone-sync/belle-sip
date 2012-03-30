@@ -213,6 +213,7 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 	cain_sip_stack_get_next_hop(prov->stack,t->base.request,&hop);
 	chan=cain_sip_provider_get_channel(prov,hop.host, hop.port, hop.transport);
 	if (chan){
+		cain_sip_provider_add_client_transaction(t->base.provider,t);
 		cain_sip_object_ref(chan);
 		cain_sip_channel_add_listener(chan,CAIN_SIP_CHANNEL_LISTENER(t));
 		t->base.channel=chan;
@@ -220,6 +221,8 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 			cain_sip_channel_prepare(chan);
 		if (cain_sip_channel_get_state(chan)!=CAIN_SIP_CHANNEL_READY){
 			cain_sip_message("cain_sip_client_transaction_send_request(): waiting channel to be ready");
+		} else {
+			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
 		}
 	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
 	cain_sip_hop_free(&hop);
@@ -253,7 +256,6 @@ static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_ch
 	cain_sip_message("transaction on_channel_state_changed");
 	switch(state){
 		case CAIN_SIP_CHANNEL_READY:
-			cain_sip_provider_add_client_transaction(t->base.provider,t);
 			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
 		break;
 		default:

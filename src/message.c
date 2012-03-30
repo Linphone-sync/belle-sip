@@ -93,7 +93,7 @@ static void cain_sip_message_init(cain_sip_message_t *message){
 	
 }
 
-headers_container_t* cain_sip_headers_container_get(cain_sip_message_t* message,const char* header_name) {
+headers_container_t* cain_sip_headers_container_get(const cain_sip_message_t* message,const char* header_name) {
 	cain_sip_list_t *  result = cain_sip_list_find_custom(	message->header_list
 															, (cain_sip_compare_func)cain_sip_headers_container_comp_func
 															, header_name);
@@ -135,7 +135,7 @@ void cain_sip_message_set_header(cain_sip_message_t *msg, cain_sip_header_t* hea
 	headers_container->header_list=cain_sip_list_append(headers_container->header_list,header);
 }
 
-const cain_sip_list_t* cain_sip_message_get_headers(cain_sip_message_t *message,const char* header_name) {
+const cain_sip_list_t* cain_sip_message_get_headers(const cain_sip_message_t *message,const char* header_name) {
 	headers_container_t* headers_container = cain_sip_headers_container_get(message,header_name);
 	return headers_container ? headers_container->header_list:NULL;
 }
@@ -256,11 +256,11 @@ int cain_sip_message_is_request(cain_sip_message_t *msg){
 	return CAIN_SIP_IS_INSTANCE_OF(CAIN_SIP_OBJECT(msg),cain_sip_request_t);
 }
 
-int cain_sip_message_is_response(cain_sip_message_t *msg){
+int cain_sip_message_is_response(const cain_sip_message_t *msg){
 	return CAIN_SIP_IS_INSTANCE_OF(CAIN_SIP_OBJECT(msg),cain_sip_response_t);
 }
 
-cain_sip_header_t *cain_sip_message_get_header(cain_sip_message_t *msg, const char *header_name){
+cain_sip_header_t *cain_sip_message_get_header(const cain_sip_message_t *msg, const char *header_name){
 	const cain_sip_list_t *l=cain_sip_message_get_headers(msg,header_name);
 	if (l!=NULL)
 		return (cain_sip_header_t*)l->data;

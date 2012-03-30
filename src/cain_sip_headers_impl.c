@@ -496,7 +496,7 @@ cain_sip_header_cseq_t * cain_sip_header_cseq_create(unsigned int number, const 
 	cseq->seq_number=number;
 	return cseq;
 }
-CAIN_SIP_NEW_HEADER(header_cseq,header,"CSeq")
+CAIN_SIP_NEW_HEADER(header_cseq,header,CAIN_SIP_CSEQ)
 CAIN_SIP_PARSE(header_cseq)
 GET_SET_STRING(cain_sip_header_cseq,method);
 GET_SET_INT(cain_sip_header_cseq,seq_number,unsigned int)
@@ -622,7 +622,7 @@ int cain_sip_header_expires_marshal(cain_sip_header_expires_t* expires, char* bu
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i",expires->expires);
 	return current_offset-offset;
 }
-CAIN_SIP_NEW_HEADER(header_expires,header,"Expires")
+CAIN_SIP_NEW_HEADER(header_expires,header,CAIN_SIP_EXPIRES)
 CAIN_SIP_PARSE(header_expires)
 GET_SET_INT(cain_sip_header_expires,expires,int)
 cain_sip_header_expires_t* cain_sip_header_expires_create(int expires) {

@@ -144,6 +144,21 @@ static void register_test(const char *transport, int use_transaction) {
 	cain_sip_stack_sleep(stack,33000);
 	CU_ASSERT_EQUAL(is_register_ok,1);
 	CU_ASSERT_EQUAL(using_transaction,use_transaction);
+	/*unregister*/
+	is_register_ok=0;
+	using_transaction=0;
+	cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)req,CAIN_SIP_CSEQ);
+	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
+	cain_sip_header_expires_t* expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_EXPIRES);
+	cain_sip_header_expires_set_expires(expires_header,0);
+	if (use_transaction){
+		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
+		cain_sip_client_transaction_send_request(t);
+	}else cain_sip_provider_send_request(prov,req);
+	cain_sip_stack_sleep(stack,33000);
+	CU_ASSERT_EQUAL(is_register_ok,1);
+	CU_ASSERT_EQUAL(using_transaction,use_transaction);
+
 	return;
 }
 

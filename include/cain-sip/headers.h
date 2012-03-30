@@ -222,6 +222,7 @@ void cain_sip_header_cseq_set_method(cain_sip_header_cseq_t* cseq,const char* me
 unsigned int	cain_sip_header_cseq_get_seq_number(const cain_sip_header_cseq_t* cseq);
 void cain_sip_header_cseq_set_seq_number(cain_sip_header_cseq_t* cseq,unsigned int seq_number);
 #define CAIN_SIP_HEADER_CSEQ(t) CAIN_SIP_CAST(t,cain_sip_header_cseq_t)
+#define CAIN_SIP_CSEQ "CSeq"
 /******************************
  * content type object inherent from parameters
  *
@@ -251,7 +252,7 @@ void cain_sip_header_expires_set_expires(cain_sip_header_expires_t* expires,int 
 int cain_sip_header_expires_decrement_expires(cain_sip_header_expires_t* expires);
 cain_sip_header_expires_t* cain_sip_header_expires_create(int expires);
 #define CAIN_SIP_HEADER_EXPIRES(t) CAIN_SIP_CAST(t,cain_sip_header_expires_t)
-
+#define CAIN_SIP_EXPIRES "Expires"
 /******************************
  * Route header object inherent from header_address
  *
