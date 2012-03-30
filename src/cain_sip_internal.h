@@ -622,6 +622,9 @@ void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, ca
 
 struct cain_sip_ist{
 	cain_sip_server_transaction_t base;
+	cain_sip_source_t *timer_G;
+	cain_sip_source_t *timer_H;
+	cain_sip_source_t *timer_I;
 };
 
 typedef struct cain_sip_ist cain_sip_ist_t;
@@ -630,6 +633,7 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_ist_t,cain_sip_server_transaction_t)
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 cain_sip_ist_t * cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *req);
+void cain_sip_ist_process_ack(cain_sip_ist_t *obj, cain_sip_message_t *ack);
 
 struct cain_sip_nist{
 	cain_sip_server_transaction_t base;

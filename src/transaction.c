@@ -147,9 +147,22 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, cain_sip_request_t *req){
 	const char *method=cain_sip_request_get_method(req);
 	if (strcmp(method,"ACK")==0){
-		cain_sip_error("please handle this ack");
+		/*this must be for an INVITE server transaction */
+		if (CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_ist_t)){
+			cain_sip_ist_t *ist=(cain_sip_ist_t*)t;
+			cain_sip_ist_process_ack(ist,(cain_sip_message_t*)req);
+		}else{
+			cain_sip_warning("ACK received for non-invite server transaction ?");
+		}
 	}else if (strcmp(method,"CANCEL")==0){
-		cain_sip_error("please handle this cancel ??");
+		/*just notify the application */
+		cain_sip_request_event_t event;
+
+		event.source=t->base.provider;
+		event.server_transaction=t;
+		event.dialog=NULL;
+		event.request=req;
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->base.provider,process_request_event,&event);
 	}else
 		CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->on_request_retransmission(t);
 }

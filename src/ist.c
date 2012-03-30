@@ -27,17 +27,87 @@ static void ist_destroy(cain_sip_ist_t *obj){
 
 
 static void ist_on_terminate(cain_sip_ist_t *obj){
-//	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (obj->timer_G){
+		cain_sip_transaction_stop_timer(base,obj->timer_G);
+		cain_sip_object_unref(obj->timer_G);
+	}
+	if (obj->timer_H){
+		cain_sip_transaction_stop_timer(base,obj->timer_H);
+		cain_sip_object_unref(obj->timer_H);
+	}
+	if (obj->timer_I){
+		cain_sip_transaction_stop_timer(base,obj->timer_I);
+		cain_sip_object_unref(obj->timer_I);
+	}
+}
+
+static int ist_on_timer_G(cain_sip_ist_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (base->state==CAIN_SIP_TRANSACTION_COMPLETED){
+		const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
+		int interval=cain_sip_source_get_timeout(obj->timer_G);
+	
+		cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->last_response);
+		cain_sip_source_set_timeout(obj->timer_G,MIN(2*interval,cfg->T2));
+		return CAIN_SIP_CONTINUE;
+	}
+	return CAIN_SIP_STOP;
+}
+
+static int ist_on_timer_H(cain_sip_ist_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (base->state==CAIN_SIP_TRANSACTION_COMPLETED){
+		cain_sip_transaction_terminate(base);
+		/*FIXME: no ACK was received, should report the faillure */
+	}
+	return CAIN_SIP_STOP;
+}
+
+static int ist_on_timer_I(cain_sip_ist_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	cain_sip_transaction_terminate(base);
+	return CAIN_SIP_STOP;
+}
+
+void cain_sip_ist_process_ack(cain_sip_ist_t *obj, cain_sip_message_t *ack){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (base->state==CAIN_SIP_TRANSACTION_COMPLETED){
+		/*clear timer G*/
+		if (obj->timer_G){
+			cain_sip_transaction_stop_timer(base,obj->timer_G);
+			cain_sip_object_unref(obj->timer_G);
+			obj->timer_G=NULL;
+		}
+		base->state=CAIN_SIP_TRANSACTION_CONFIRMED;
+		if (!cain_sip_channel_is_reliable(base->channel)){
+			const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
+			obj->timer_I=cain_sip_timeout_source_new((cain_sip_source_func_t)ist_on_timer_I,obj,cfg->T4);
+			cain_sip_transaction_start_timer(base,obj->timer_I);
+		}else ist_on_timer_I(obj);
+	}
 }
 
 static int ist_send_new_response(cain_sip_ist_t *obj, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	int code=cain_sip_response_get_status_code(resp);
-	int ret=0;
+	int ret=-1;
 	switch(base->state){
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
-			if (code==100)
-				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
+			ret=0;
+			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
+			if (code>=200 && code<300)
+				cain_sip_transaction_terminate(base);
+			else if (code>=300){
+				const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
+				base->state=CAIN_SIP_TRANSACTION_COMPLETED;
+				if (!cain_sip_channel_is_reliable(base->channel)){
+					obj->timer_G=cain_sip_timeout_source_new((cain_sip_source_func_t)ist_on_timer_G,obj,cfg->T1);
+					cain_sip_transaction_start_timer(base,obj->timer_G);
+				}
+				obj->timer_H=cain_sip_timeout_source_new((cain_sip_source_func_t)ist_on_timer_H,obj,64*cfg->T1);
+				cain_sip_transaction_start_timer(base,obj->timer_H);
+			}
 		break;
 		default:
 		break;
@@ -46,6 +116,15 @@ static int ist_send_new_response(cain_sip_ist_t *obj, cain_sip_response_t *resp)
 }
 
 static void ist_on_request_retransmission(cain_sip_nist_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	switch(base->state){
+		case CAIN_SIP_TRANSACTION_PROCEEDING:
+		case CAIN_SIP_TRANSACTION_COMPLETED:
+			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->last_response);
+		break;
+		default:
+		break;
+	}
 }
 
 
