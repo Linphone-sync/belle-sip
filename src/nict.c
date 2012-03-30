@@ -41,6 +41,7 @@ static void nict_set_completed(cain_sip_nict_t *obj, cain_sip_response_t *resp){
 
 	if (!cain_sip_channel_is_reliable(base->channel)){
 		obj->timer_K=cain_sip_timeout_source_new((cain_sip_source_func_t)nict_on_timer_K,obj,cfg->T4);
+		cain_sip_object_set_name((cain_sip_object_t*)obj->timer_K,"timer_K");
 		cain_sip_transaction_start_timer(base,obj->timer_K);
 	}else cain_sip_transaction_terminate(base);
 }
@@ -120,6 +121,8 @@ static int nict_on_timer_E(cain_sip_nict_t *obj){
 			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
 		break;
 		default:
+			/*if we are not in these cases, timer_E does nothing, so remove it*/
+			return CAIN_SIP_STOP;
 		break;
 	}
 	return CAIN_SIP_CONTINUE;
@@ -131,11 +134,13 @@ static void nict_send_request(cain_sip_nict_t *obj){
 	
 	base->state=CAIN_SIP_TRANSACTION_TRYING;
 	obj->timer_F=cain_sip_timeout_source_new((cain_sip_source_func_t)nict_on_timer_F,obj,cfg->T1*64);
+	cain_sip_object_set_name((cain_sip_object_t*)obj->timer_F,"timer_F");
 	cain_sip_transaction_start_timer(base,obj->timer_F);
 	cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
 	
 	if (!cain_sip_channel_is_reliable(base->channel)){
 		obj->timer_E=cain_sip_timeout_source_new((cain_sip_source_func_t)nict_on_timer_E,obj,cfg->T1);
+		cain_sip_object_set_name((cain_sip_object_t*)obj->timer_E,"timer_E");
 		cain_sip_transaction_start_timer(base,obj->timer_E);
 	}
 }

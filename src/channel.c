@@ -311,6 +311,7 @@ typedef struct delayed_send{
 }delayed_send_t;
 
 static int on_delayed_send_do(delayed_send_t *ds){
+	cain_sip_message("on_delayed_send_do(): sending now");
 	if (ds->chan->state==CAIN_SIP_CHANNEL_READY){
 		_send_message(ds->chan,ds->msg);
 	}
@@ -326,6 +327,7 @@ static void send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 		ds->chan=(cain_sip_channel_t*)cain_sip_object_ref(obj);
 		ds->msg=(cain_sip_message_t*)cain_sip_object_ref(msg);
 		cain_sip_main_loop_add_timeout(obj->stack->ml,(cain_sip_source_func_t)on_delayed_send_do,ds,obj->stack->tx_delay);
+		cain_sip_message("channel %p: message sending delayed by %i ms",obj,obj->stack->tx_delay);
 	}else _send_message(obj,msg);
 }
 

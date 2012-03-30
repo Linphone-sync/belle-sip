@@ -49,9 +49,23 @@ static void cain_sip_message_destroy(cain_sip_message_t *msg){
 	cain_sip_list_free(msg->header_list);
 }
 
+/*very sub-optimal clone method */
+static void cain_sip_message_clone(cain_sip_message_t *obj, const cain_sip_message_t *orig){
+	headers_container_t *c;
+	const cain_sip_list_t *l;
+	for(l=orig->header_list;l!=NULL;l=l->next){
+		c=(headers_container_t*)l->data;
+		if (c->header_list){
+			cain_sip_list_t * ll=cain_sip_list_copy_with_data(c->header_list,(void *(*)(void*))cain_sip_object_clone);
+			cain_sip_message_add_headers(obj,ll);
+			cain_sip_list_free(ll);
+		}
+	}
+}
+
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_message_t);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,NULL,NULL,FALSE);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,cain_sip_message_clone,NULL,FALSE);
 
 cain_sip_message_t* cain_sip_message_parse (const char* value) {
 	size_t message_length;
@@ -223,7 +237,8 @@ static void cain_sip_request_init(cain_sip_request_t *message){
 }
 
 static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_request_t *orig){
-		if (orig->method) request->method=cain_sip_strdup(orig->method);
+	if (orig->method) request->method=cain_sip_strdup(orig->method);
+	if (orig->uri) request->uri=(cain_sip_uri_t*)cain_sip_object_clone((cain_sip_object_t*)orig->uri);
 }
 int cain_sip_request_marshal(cain_sip_request_t* request, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;

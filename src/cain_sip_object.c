@@ -155,11 +155,13 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 	newobj=cain_sip_malloc0(obj->size);
 	newobj->ref=obj->vptr->initially_unowned ? 0 : 1;
 	newobj->vptr=obj->vptr;
+	newobj->size=obj->size;
+	if (obj->name) newobj->name=cain_sip_strdup(obj->name);
 	
 	vptr=obj->vptr;
 	while(vptr!=NULL){
 		if (vptr->clone==NULL){
-			cain_sip_fatal("Object of type %i cannot be cloned, it does not provide a clone() implementation.",vptr->id);
+			cain_sip_fatal("Object of type %s cannot be cloned, it does not provide a clone() implementation.",vptr->type_name);
 			return NULL;
 		}else vptr->clone(newobj,obj);
 		vptr=vptr->parent;

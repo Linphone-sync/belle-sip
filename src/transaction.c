@@ -48,6 +48,7 @@ static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->request) cain_sip_object_unref(t->request);
 	if (t->last_response) cain_sip_object_unref(t->last_response);
 	if (t->channel) cain_sip_object_unref(t->channel);
+	if (t->branch_id) cain_sip_free(t->branch_id);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_transaction_t);
@@ -80,8 +81,8 @@ cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_trans
 
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
 	t->state=CAIN_SIP_TRANSACTION_TERMINATED;
-	cain_sip_provider_set_transaction_terminated(t->provider,t);
 	CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_terminate(t);
+	cain_sip_provider_set_transaction_terminated(t->provider,t);
 }
 
 cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t){
