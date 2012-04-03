@@ -284,9 +284,9 @@ void cain_sip_main_loop_run(cain_sip_main_loop_t *ml){
 
 void cain_sip_main_loop_quit(cain_sip_main_loop_t *ml){
 	ml->run=0;
-	if (write(ml->control_fds[1],"a",1)==-1){
-		cain_sip_error("Fail to write to main loop control fd.");
-	}
+	//if (write(ml->control_fds[1],"a",1)==-1){
+	//	cain_sip_error("Fail to write to main loop control fd.");
+	//}
 }
 
 void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){
