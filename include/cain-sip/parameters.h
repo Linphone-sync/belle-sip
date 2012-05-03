@@ -29,21 +29,21 @@ typedef struct _cain_sip_parameters cain_sip_parameters_t;
 
 cain_sip_parameters_t* cain_sip_parameters_new();
 
-const char*	cain_sip_parameters_get_parameter(cain_sip_parameters_t* obj,const char* name);
+const char*	cain_sip_parameters_get_parameter(const cain_sip_parameters_t* obj,const char* name);
 /**
  * returns 0 if not found
  */
-unsigned int cain_sip_parameters_is_parameter(cain_sip_parameters_t* obj,const char* name);
+unsigned int cain_sip_parameters_is_parameter(const cain_sip_parameters_t* obj,const char* name);
 
 void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* obj,const char* name,const char* value);
 
-const cain_sip_list_t *	cain_sip_parameters_get_parameter_names(cain_sip_parameters_t* obj);
+const cain_sip_list_t *	cain_sip_parameters_get_parameter_names(const cain_sip_parameters_t* obj);
 
-const cain_sip_list_t *	cain_sip_parameters_get_parameters(cain_sip_parameters_t* obj);
+const cain_sip_list_t *	cain_sip_parameters_get_parameters(const cain_sip_parameters_t* obj);
 
 void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* obj,const char* name);
 
-int cain_sip_parameters_marshal(cain_sip_parameters_t* obj, char* buff,unsigned int offset,unsigned int buff_size);
+int cain_sip_parameters_marshal(const cain_sip_parameters_t* obj, char* buff,unsigned int offset,unsigned int buff_size);
 
 #define CAIN_SIP_PARAMETERS(obj) CAIN_SIP_CAST(obj,cain_sip_parameters_t)
 

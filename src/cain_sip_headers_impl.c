@@ -189,7 +189,7 @@ int cain_sip_header_contact_marshal(cain_sip_header_contact_t* contact, char* bu
 	}
 	return current_offset-offset;
 }
-CAIN_SIP_NEW_HEADER(header_contact,header_address,"Contact")
+CAIN_SIP_NEW_HEADER(header_contact,header_address,CAIN_SIP_CONTACT)
 CAIN_SIP_PARSE(header_contact)
 
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,expires,int,_)
@@ -247,7 +247,7 @@ cain_sip_header_from_t* cain_sip_header_from_create(const char *address, const c
 	return from;
 }
 
-CAIN_SIP_NEW_HEADER(header_from,header_address,"From")
+CAIN_SIP_NEW_HEADER(header_from,header_address,CAIN_SIP_FROM)
 CAIN_SIP_PARSE(header_from)
 GET_SET_STRING_PARAM(cain_sip_header_from,tag);
 
@@ -391,7 +391,7 @@ cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, co
 	return via;
 }
 
-CAIN_SIP_NEW_HEADER(header_via,parameters,"Via")
+CAIN_SIP_NEW_HEADER(header_via,parameters,CAIN_SIP_VIA)
 CAIN_SIP_PARSE(header_via)
 GET_SET_STRING(cain_sip_header_via,protocol);
 GET_SET_STRING(cain_sip_header_via,transport);
@@ -918,7 +918,7 @@ void header##_add_name(header##_t* obj, const char*  value) {\
 	obj->name=cain_sip_list_append(obj->name,strdup(value));\
 }
 
-CAIN_SIP_NEW_HEADER_INIT(header_www_authenticate,parameters,"WWW-Authenticate",header_www_authenticate)
+CAIN_SIP_NEW_HEADER_INIT(header_www_authenticate,parameters,CAIN_SIP_WWW_AUTHENTICATE,header_www_authenticate)
 CAIN_SIP_PARSE(header_www_authenticate)
 GET_SET_STRING(cain_sip_header_www_authenticate,scheme);
 GET_SET_STRING(cain_sip_header_www_authenticate,realm);
@@ -951,7 +951,7 @@ static void cain_sip_header_proxy_authenticate_clone(cain_sip_header_proxy_authe
 int cain_sip_header_proxy_authenticate_marshal(cain_sip_header_proxy_authenticate_t* proxy_authenticate, char* buff,unsigned int offset,unsigned int buff_size) {
 	return cain_sip_header_www_authenticate_marshal(&proxy_authenticate->www_authenticate,buff,offset,buff_size);
 }
-CAIN_SIP_NEW_HEADER(header_proxy_authenticate,header_www_authenticate,"Proxy-Authenticate")
+CAIN_SIP_NEW_HEADER(header_proxy_authenticate,header_www_authenticate,CAIN_SIP_PROXY_AUTHENTICATE)
 CAIN_SIP_PARSE(header_proxy_authenticate)
 
 /**************************

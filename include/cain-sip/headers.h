@@ -124,7 +124,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
  void cain_sip_header_contact_set_wildcard(cain_sip_header_contact_t* contact,unsigned int is_wildcard);
 
 #define CAIN_SIP_HEADER_CONTACT(t) CAIN_SIP_CAST(t,cain_sip_header_contact_t)
-
+#define CAIN_SIP_CONTACT "Contact"
  /******************************
  * From header object inherent from header_address
  *
@@ -144,6 +144,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
  void cain_sip_header_from_set_random_tag(cain_sip_header_from_t *obj);
 
 #define CAIN_SIP_HEADER_FROM(t) CAIN_SIP_CAST(t,cain_sip_header_from_t)
+#define CAIN_SIP_FROM "From"
  /******************************
  * To header object inherent from header_address
  *
@@ -195,6 +196,7 @@ int cain_sip_header_via_set_rport(cain_sip_header_via_t* via,int rport);
 void cain_sip_header_via_set_transport(cain_sip_header_via_t* via,const char* transport);
 int cain_sip_header_via_set_ttl(cain_sip_header_via_t* via, int ttl);
 #define CAIN_SIP_HEADER_VIA(t) CAIN_SIP_CAST(t,cain_sip_header_via_t)
+#define CAIN_SIP_VIA "Via"
 
 /******************************
  * Call id object inherent from object
@@ -369,6 +371,7 @@ void cain_sip_header_www_authenticate_set_scheme(cain_sip_header_www_authenticat
 void cain_sip_header_www_authenticate_set_domain(cain_sip_header_www_authenticate_t* www_authenticate,const char* domain);
 void cain_sip_header_www_authenticate_set_stale(cain_sip_header_www_authenticate_t* www_authenticate, unsigned int enable);
 #define CAIN_SIP_HEADER_WWW_AUTHENTICATE(t) CAIN_SIP_CAST(t,cain_sip_header_www_authenticate_t)
+#define CAIN_SIP_WWW_AUTHENTICATE "WWW-Authenticate"
 
 /*******************************
  * proxy_authenticate inherit from www_authenticate
@@ -377,7 +380,7 @@ typedef struct _cain_sip_header_proxy_authenticate cain_sip_header_proxy_authent
 cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authenticate_new();
 cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authenticate_parse(const char* proxy_authenticate);
 #define CAIN_SIP_HEADER_PROXY_AUTHENTICATE(t) CAIN_SIP_CAST(t,cain_sip_header_proxy_authenticate_t)
-
+#define CAIN_SIP_PROXY_AUTHENTICATE "Proxy-Authenticate"
 
 /******************************
  *
