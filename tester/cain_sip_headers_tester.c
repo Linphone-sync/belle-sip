@@ -251,8 +251,10 @@ void test_header_record_route(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_record_route));
 }
 void test_header_route(void) {
-
-	cain_sip_header_route_t* L_route = cain_sip_header_route_parse("Route: <sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4");
+	cain_sip_header_address_t* address = cain_sip_header_address_parse("<sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(address);
+	cain_sip_header_route_t* L_route = cain_sip_header_route_create(address);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(L_route);
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_route));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_route));
 	L_route = cain_sip_header_route_parse(l_raw_header);

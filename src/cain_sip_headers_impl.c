@@ -546,8 +546,13 @@ static void cain_sip_header_route_clone(cain_sip_header_route_t* route, const ca
 int cain_sip_header_route_marshal(cain_sip_header_route_t* route, char* buff,unsigned int offset,unsigned int buff_size) {
 	CAIN_SIP_FROM_LIKE_MARSHAL(route)
 }
-CAIN_SIP_NEW_HEADER(header_route,header_address,"Route")
+CAIN_SIP_NEW_HEADER(header_route,header_address,CAIN_SIP_ROUTE)
 CAIN_SIP_PARSE(header_route)
+cain_sip_header_route_t* cain_sip_header_route_create(const cain_sip_header_address_t* route) {
+	cain_sip_header_route_t* header= cain_sip_header_route_new();
+	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),CAIN_SIP_HEADER_ADDRESS(route));
+	return header;
+}
 /**************************
 * Record route header object inherent from header_address
 ****************************

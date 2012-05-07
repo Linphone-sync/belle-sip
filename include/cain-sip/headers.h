@@ -263,8 +263,10 @@ cain_sip_header_expires_t* cain_sip_header_expires_create(int expires);
 
  cain_sip_header_route_t* cain_sip_header_route_new();
  cain_sip_header_route_t* cain_sip_header_route_parse (const char* route) ;
+ cain_sip_header_route_t* cain_sip_header_route_create(const cain_sip_header_address_t* route);
 
 #define CAIN_SIP_HEADER_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_route_t)
+#define CAIN_SIP_ROUTE "Route"
 /******************************
  * Record route header object inherent from header_address
  *
