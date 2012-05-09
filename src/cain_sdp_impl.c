@@ -52,6 +52,12 @@ int cain_sdp_attribute_marshal(cain_sdp_attribute_t* attribute, char* buff,unsig
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(attribute,cain_sip_object)
+cain_sdp_attribute_t* cain_sdp_attribute_create (const char* name,const char* value) {
+	cain_sdp_attribute_t* attribute = cain_sdp_attribute_new();
+	cain_sdp_attribute_set_name(attribute,name);
+	cain_sdp_attribute_set_value(attribute,value);
+	return attribute;
+}
 CAIN_SDP_PARSE(attribute)
 GET_SET_STRING(cain_sdp_attribute,name);
 GET_SET_STRING(cain_sdp_attribute,value);
@@ -123,6 +129,13 @@ int cain_sdp_connection_marshal(cain_sdp_connection_t* connection, char* buff,un
 }
 CAIN_SDP_NEW(connection,cain_sip_object)
 CAIN_SDP_PARSE(connection)
+cain_sdp_connection_t* cain_sdp_connection_create(const char* net_type, const char* addr_type, const char* addr) {
+	cain_sdp_connection_t* connection = cain_sdp_connection_new();
+	cain_sdp_connection_set_network_type(connection,net_type);
+	cain_sdp_connection_set_address_type(connection,addr_type);
+	cain_sdp_connection_set_address(connection,addr);
+	return connection;
+}
 GET_SET_STRING(cain_sdp_connection,network_type);
 GET_SET_STRING(cain_sdp_connection,address_type);
 GET_SET_STRING(cain_sdp_connection,address);
@@ -241,6 +254,19 @@ int cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff,unsigned int offs
 }
 CAIN_SDP_NEW_WITH_CTR(media,cain_sip_object)
 CAIN_SDP_PARSE(media)
+cain_sdp_media_t* cain_sdp_media_create(const char* media_type
+                         ,int media_port
+                         ,int port_count
+                         ,const char* protocol
+                         ,cain_sip_list_t* static_media_formats) {
+	cain_sdp_media_t* media= cain_sdp_media_new();
+	cain_sdp_media_set_media_type(media,media_type);
+	cain_sdp_media_set_media_port(media,media_port);
+	cain_sdp_media_set_port_count(media,port_count);
+	cain_sdp_media_set_protocol(media,protocol);
+	if (static_media_formats) cain_sdp_media_set_media_formats(media,static_media_formats);
+	return media;
+}
 GET_SET_STRING(cain_sdp_media,media_type);
 GET_SET_STRING(cain_sdp_media,protocol);
 GET_SET_INT(cain_sdp_media,media_port,int)
@@ -414,6 +440,15 @@ int cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_descr
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(media_description,cain_sdp_base_description)
+cain_sdp_media_description_t* cain_sdp_media_description_create(const char* media_type
+                         	 	 	 	 	 	 	 	 	 	 ,int media_port
+                         	 	 	 	 	 	 	 	 	 	 ,int port_count
+                         	 	 	 	 	 	 	 	 	 	 ,const char* protocol
+                         	 	 	 	 	 	 	 	 	 	 ,cain_sip_list_t* static_media_formats) {
+	cain_sdp_media_description_t* media_desc=cain_sdp_media_description_new();
+	cain_sdp_media_description_set_media(media_desc,cain_sdp_media_create(media_type,media_port,port_count,protocol,static_media_formats));
+	return media_desc;
+}
 CAIN_SDP_PARSE(media_description)
 void cain_sdp_media_description_add_dynamic_payloads(cain_sdp_media_description_t* media_description, cain_sip_list_t* payloadNames, cain_sip_list_t* payloadValues) {
 
@@ -661,8 +696,8 @@ struct _cain_sdp_origin {
 	const char* address_type;
 	const char* network_type;
 	const char* username;
-	int session_id;
-	int session_version;
+	unsigned int session_id;
+	unsigned int session_version;
 
  };
 
@@ -695,13 +730,28 @@ int cain_sdp_origin_marshal(cain_sdp_origin_t* origin, char* buff,unsigned int o
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(origin,cain_sip_object)
+cain_sdp_origin_t* cain_sdp_origin_create(const char* user_name
+											, unsigned int session_id
+											, unsigned int session_version
+											, const char* network_type
+											, const char* addr_type
+											, const char* address) {
+	cain_sdp_origin_t* origin=cain_sdp_origin_new();
+	cain_sdp_origin_set_username(origin,user_name);
+	cain_sdp_origin_set_session_id(origin,session_id);
+	cain_sdp_origin_set_session_version(origin,session_version);
+	cain_sdp_origin_set_network_type(origin,network_type);
+	cain_sdp_origin_set_address_type(origin,addr_type);
+	cain_sdp_origin_set_address(origin,address);
+	return origin;
+}
 CAIN_SDP_PARSE(origin)
 GET_SET_STRING(cain_sdp_origin,username);
 GET_SET_STRING(cain_sdp_origin,address);
 GET_SET_STRING(cain_sdp_origin,address_type);
 GET_SET_STRING(cain_sdp_origin,network_type);
-GET_SET_INT(cain_sdp_origin,session_id,int);
-GET_SET_INT(cain_sdp_origin,session_version,int);
+GET_SET_INT(cain_sdp_origin,session_id,unsigned int);
+GET_SET_INT(cain_sdp_origin,session_version,unsigned int);
 /************************
  * session_name
  ***********************/
@@ -726,6 +776,11 @@ int cain_sdp_session_name_marshal(cain_sdp_session_name_t* session_name, char* b
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(session_name,cain_sip_object)
+cain_sdp_session_name_t* cain_sdp_session_name_create (const char* name) {
+	cain_sdp_session_name_t* n=cain_sdp_session_name_new();
+	cain_sdp_session_name_set_value(n,name);
+	return n;
+}
 //CAIN_SDP_PARSE(session_name)
 GET_SET_STRING(cain_sdp_session_name,value);
 
@@ -928,6 +983,9 @@ void cain_sdp_session_description_set_session_name(cain_sdp_session_description_
 void cain_sdp_session_description_set_time_descriptions(cain_sdp_session_description_t* session_description, cain_sip_list_t* times) {
 	SET_LIST(session_description->times,times)
 }
+void cain_sdp_session_description_set_time_description(cain_sdp_session_description_t* session_description, cain_sdp_time_description_t* time_desc) {
+	cain_sdp_session_description_set_time_descriptions(session_description,cain_sip_list_new(time_desc));
+}
 void cain_sdp_session_description_set_uri(cain_sdp_session_description_t* session_description, cain_sdp_uri_t* uri) {
 	cain_sdp_uri_t** current = &session_description->uri;
 	if (*current) {
@@ -1003,6 +1061,14 @@ int cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_descript
 }
 CAIN_SDP_NEW(time_description,cain_sip_object)
 
+cain_sdp_time_description_t* cain_sdp_time_description_create (int start,int stop) {
+	cain_sdp_time_description_t* time_desc= cain_sdp_time_description_new();
+	cain_sdp_time_t* time = cain_sdp_time_new();
+	cain_sdp_time_set_start(time,start);
+	cain_sdp_time_set_stop(time,stop);
+	cain_sdp_time_description_set_time(time_desc,time);
+	return time_desc;
+}
 cain_sip_list_t* cain_sdp_time_description_get_repeate_times(const cain_sdp_time_description_t* time_description) {
 	return NULL;
 }
@@ -1045,6 +1111,11 @@ int cain_sdp_version_marshal(cain_sdp_version_t* version, char* buff,unsigned in
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(version,cain_sip_object)
+cain_sdp_version_t* cain_sdp_version_create(int version) {
+	cain_sdp_version_t* v = cain_sdp_version_new();
+	cain_sdp_version_set_version(v,version);
+	return v;
+}
 //CAIN_SDP_PARSE(version)
 GET_SET_INT(cain_sdp_version,version,int);
 
@@ -1089,6 +1160,14 @@ cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_new() {
 	l_param->ptime = -1;
 	l_param->max_ptime = -1;
 	return l_param;
+}
+cain_sdp_mime_parameter_t* cain_sdp_mime_parameter_create(const char* type, int media_format, int rate,int channel_count) {
+	cain_sdp_mime_parameter_t* mime_param= cain_sdp_mime_parameter_new();
+	cain_sdp_mime_parameter_set_type(mime_param,type);
+	cain_sdp_mime_parameter_set_media_format(mime_param,media_format);
+	cain_sdp_mime_parameter_set_rate(mime_param,rate);
+	cain_sdp_mime_parameter_set_channel_count(mime_param,channel_count);
+	return mime_param;
 }
 GET_SET_INT(cain_sdp_mime_parameter,rate,int);
 GET_SET_INT(cain_sdp_mime_parameter,channel_count,int);
