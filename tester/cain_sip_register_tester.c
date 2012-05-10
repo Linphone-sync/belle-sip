@@ -128,8 +128,8 @@ static void register_test(const char *transport, int use_transaction) {
 	                    "REGISTER",
 	                    cain_sip_provider_get_new_call_id(prov),
 	                    cain_sip_header_cseq_create(20,"REGISTER"),
-	                    cain_sip_header_from_create(identity,cain_sip_random_token(token,sizeof(token))),
-	                    cain_sip_header_to_create(identity,NULL),
+	                    cain_sip_header_from_create2(identity,cain_sip_random_token(token,sizeof(token))),
+	                    cain_sip_header_to_create2(identity,NULL),
 	                    cain_sip_header_via_new(),
 	                    70);
 
