@@ -141,6 +141,7 @@ typedef SOCKET cain_sip_fd_t;
 typedef int cain_sip_fd_t;
 #endif
 
+const char* cain_sip_version_to_string();
 CAIN_SIP_END_DECLS
 
 #endif
