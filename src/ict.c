@@ -54,16 +54,18 @@ static cain_sip_request_t *make_ack(cain_sip_ict_t *obj, cain_sip_response_t *re
 		obj->ack=cain_sip_request_new();
 		cain_sip_request_set_method(obj->ack,"ACK");
 		cain_sip_request_set_uri(obj->ack,cain_sip_request_get_uri(base->request));
-		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"via",FALSE);
-		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"call-id",FALSE);
-		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"from",FALSE);
-		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,"route",TRUE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,CAIN_SIP_VIA,FALSE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,CAIN_SIP_CALL_ID,FALSE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,CAIN_SIP_FROM,FALSE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)resp,(cain_sip_message_t*)obj->ack,CAIN_SIP_TO,FALSE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,CAIN_SIP_CONTACT,TRUE);
+		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,CAIN_SIP_ROUTE,TRUE);
 		cain_sip_message_add_header((cain_sip_message_t*)obj->ack,
 		(cain_sip_header_t*)cain_sip_header_cseq_create(
-			cain_sip_header_cseq_get_seq_number((cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)base->request,"cseq")),
+			cain_sip_header_cseq_get_seq_number((cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)base->request,CAIN_SIP_CSEQ)),
 		    "CANCEL"));
 	}
-	cain_sip_util_copy_headers((cain_sip_message_t*)resp,(cain_sip_message_t*)obj->ack,"to",FALSE);
+
 	return obj->ack;
 }
 

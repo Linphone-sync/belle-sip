@@ -291,7 +291,7 @@ int cain_sip_header_to_marshal(cain_sip_header_to_t* to, char* buff,unsigned int
 	CAIN_SIP_FROM_LIKE_MARSHAL(to)
 }
 
-CAIN_SIP_NEW_HEADER(header_to,header_address,"To")
+CAIN_SIP_NEW_HEADER(header_to,header_address,CAIN_SIP_TO)
 CAIN_SIP_PARSE(header_to)
 GET_SET_STRING_PARAM(cain_sip_header_to,tag);
 
@@ -305,7 +305,7 @@ cain_sip_header_to_t* cain_sip_header_to_create2(const char *address, const char
 cain_sip_header_to_t* cain_sip_header_to_create(const cain_sip_header_address_t* address, const char *tag) {
 	cain_sip_header_to_t* header= cain_sip_header_to_new();
 	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),address);
-	cain_sip_header_to_set_tag(header,tag);
+	if (tag) cain_sip_header_to_set_tag(header,tag);
 	return header;
 }
 void cain_sip_header_to_set_random_tag(cain_sip_header_to_t *obj){
@@ -485,7 +485,7 @@ int cain_sip_header_call_id_marshal(cain_sip_header_call_id_t* call_id, char* bu
 	return current_offset-offset;
 }
 
-CAIN_SIP_NEW_HEADER(header_call_id,header,"Call-ID")
+CAIN_SIP_NEW_HEADER(header_call_id,header,CAIN_SIP_CALL_ID)
 CAIN_SIP_PARSE(header_call_id)
 GET_SET_STRING(cain_sip_header_call_id,call_id);
 /**************************

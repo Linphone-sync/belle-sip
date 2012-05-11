@@ -173,6 +173,7 @@ cain_sip_header_contact_t* cain_sip_header_contact_create (const cain_sip_header
  void cain_sip_header_to_set_random_tag(cain_sip_header_to_t *obj);
 
 #define CAIN_SIP_HEADER_TO(t) CAIN_SIP_CAST(t,cain_sip_header_to_t)
+#define CAIN_SIP_TO "To"
 
 /******************************
  * Via header object inherent from header_address
@@ -219,6 +220,7 @@ cain_sip_header_call_id_t* cain_sip_header_call_id_parse (const char* call_id) ;
 const char*	cain_sip_header_call_id_get_call_id(const cain_sip_header_call_id_t* call_id);
 void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* via,const char* call_id);
 #define CAIN_SIP_HEADER_CALL_ID(t) CAIN_SIP_CAST(t,cain_sip_header_call_id_t)
+#define CAIN_SIP_CALL_ID "Call-ID"
 /******************************
  * cseq object inherent from object
  *
