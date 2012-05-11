@@ -30,8 +30,8 @@ static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_cha
 	if (state == CAIN_SIP_CHANNEL_ERROR) {
 		ev.transport=cain_sip_channel_get_transport_name(chan);
 		ev.source=(cain_sip_provider_t*)obj;
-		ev.port=chan->local_port;
-		ev.host=chan->local_ip;
+		ev.port=chan->peer_port;
+		ev.host=chan->peer_name;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(ev.source,process_io_error,&ev);
 	}
 }

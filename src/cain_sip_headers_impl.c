@@ -242,7 +242,10 @@ int cain_sip_header_from_marshal(cain_sip_header_from_t* from, char* buff,unsign
 cain_sip_header_from_t* cain_sip_header_from_create(const char *address, const char *tag){
 	char *tmp=cain_sip_strdup_printf("From: %s",address);
 	cain_sip_header_from_t *from=cain_sip_header_from_parse(tmp);
-	if (tag) cain_sip_header_from_set_tag(from,tag);
+	if (from){
+		if (tag==CAIN_SIP_RANDOM_TAG) cain_sip_header_from_set_random_tag(from);
+		else if (tag) cain_sip_header_from_set_tag(from,tag);
+	}
 	cain_sip_free(tmp);
 	return from;
 }
@@ -281,7 +284,10 @@ GET_SET_STRING_PARAM(cain_sip_header_to,tag);
 cain_sip_header_to_t* cain_sip_header_to_create(const char *address, const char *tag){
 	char *tmp=cain_sip_strdup_printf("To: %s",address);
 	cain_sip_header_to_t *to=cain_sip_header_to_parse(tmp);
-	if (tag) cain_sip_header_to_set_tag(to,tag);
+	if (to){
+		if (tag==CAIN_SIP_RANDOM_TAG) cain_sip_header_to_set_random_tag(to);
+		else if (tag) cain_sip_header_to_set_tag(to,tag);
+	}
 	cain_sip_free(tmp);
 	return to;
 }

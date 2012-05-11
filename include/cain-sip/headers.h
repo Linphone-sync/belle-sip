@@ -125,6 +125,8 @@ cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 
 #define CAIN_SIP_HEADER_CONTACT(t) CAIN_SIP_CAST(t,cain_sip_header_contact_t)
 
+#define CAIN_SIP_RANDOM_TAG ((const char*)-1)
+
  /******************************
  * From header object inherent from header_address
  *
