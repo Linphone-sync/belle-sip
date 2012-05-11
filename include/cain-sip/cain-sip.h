@@ -148,6 +148,7 @@ typedef struct _cain_sip_response cain_sip_response_t;
 #include "cain-sip/sipstack.h"
 #include "cain-sip/listeningpoint.h"
 #include "cain-sip/provider.h"
+#include "cain-sip/auth-helper.h"
 
 
 #undef TRUE

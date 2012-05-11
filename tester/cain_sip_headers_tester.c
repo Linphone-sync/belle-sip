@@ -103,7 +103,7 @@ void test_simple_header_from(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_from));
 
 	/*test factory*/
-	L_from = cain_sip_header_from_create("super <sip:titi.com>","12345-abc");
+	L_from = cain_sip_header_from_create2("super <sip:titi.com>","12345-abc");
 	CU_ASSERT_PTR_NOT_NULL_FATAL(L_from);
 	L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_from));
 	CU_ASSERT_PTR_NOT_NULL_FATAL(L_uri);
@@ -127,7 +127,7 @@ void test_simple_header_to(void) {
 	CU_ASSERT_STRING_EQUAL(cain_sip_header_to_get_tag(L_to),"dlfjklcn6545614XX");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_to));
 	/*test factory*/
-	L_to = cain_sip_header_to_create("\"super man\" <sip:titi.com>","12345-abc");
+	L_to = cain_sip_header_to_create2("\"super man\" <sip:titi.com>","12345-abc");
 	CU_ASSERT_PTR_NOT_NULL_FATAL(L_to);
 	L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_to));
 	CU_ASSERT_PTR_NOT_NULL_FATAL(L_uri);
@@ -251,8 +251,10 @@ void test_header_record_route(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_record_route));
 }
 void test_header_route(void) {
-
-	cain_sip_header_route_t* L_route = cain_sip_header_route_parse("Route: <sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4");
+	cain_sip_header_address_t* address = cain_sip_header_address_parse("<sip:212.27.52.5:5060;transport=udp;lr>");
+	CU_ASSERT_PTR_NOT_NULL_FATAL(address);
+	cain_sip_header_route_t* L_route = cain_sip_header_route_create(address);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(L_route);
 	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_route));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_route));
 	L_route = cain_sip_header_route_parse(l_raw_header);
@@ -260,7 +262,7 @@ void test_header_route(void) {
 	cain_sip_uri_t* L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_route));
 	CU_ASSERT_PTR_NULL(cain_sip_uri_get_user(L_uri));
 	CU_ASSERT_EQUAL(cain_sip_uri_get_port(L_uri), 5060);
-	CU_ASSERT_STRING_EQUAL(cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(L_route),"charset"),"ISO-8859-4");
+
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_route));
 
 	L_route = cain_sip_header_route_parse("Route: <sip:212.27.52.5:5060;transport=udp;lr>;charset=ISO-8859-4, <sip:titi.com>");
@@ -469,6 +471,10 @@ void test_header_allow(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_allow));
 }
 
+static void test_header_address_with_error() {
+	cain_sip_header_address_t* laddress = cain_sip_header_address_parse("sip:liblinphone_tester@=auth1.example.org");
+	CU_ASSERT_PTR_NULL(laddress);
+}
 int cain_sip_headers_test_suite() {
 	
 	   CU_pSuite pSuite = NULL;
@@ -535,6 +541,9 @@ int cain_sip_headers_test_suite() {
 	   	  return CU_get_error();
 	   	}
 	   if (NULL == CU_add_test(pSuite, "test of  allow", test_header_allow)) {
+	   	  return CU_get_error();
+	   	}
+	   if (NULL == CU_add_test(pSuite, "test header address with error",test_header_address_with_error )) {
 	   	  return CU_get_error();
 	   	}
 	   return 0;

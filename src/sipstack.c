@@ -144,3 +144,6 @@ void cain_sip_stack_set_tx_delay(cain_sip_stack_t *stack, int delay_ms){
 	stack->tx_delay=delay_ms;
 }
 
+const char* cain_sip_version_to_string() {
+	return PACKAGE_VERSION;
+}

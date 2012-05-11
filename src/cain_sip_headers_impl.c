@@ -34,6 +34,9 @@
 
 GET_SET_STRING(cain_sip_header,name);
 
+cain_sip_header_t* cain_sip_header_create (const char* name,const char* value) {
+	return CAIN_SIP_HEADER(cain_sip_header_extension_create(name,value));
+}
 void cain_sip_header_init(cain_sip_header_t *header) {
 
 }
@@ -137,7 +140,7 @@ void cain_sip_header_address_set_uri(cain_sip_header_address_t* address, cain_si
 
 
 /******************************
- * Extension header hinerite from header
+ * Extension header inherits from header
  *
  ******************************/
 struct _cain_sip_header_allow  {
@@ -161,6 +164,11 @@ int cain_sip_header_allow_marshal(cain_sip_header_allow_t* allow, char* buff,uns
 }
 CAIN_SIP_NEW_HEADER(header_allow,header,"Allow")
 CAIN_SIP_PARSE(header_allow)
+cain_sip_header_allow_t* cain_sip_header_allow_create (const char* methods) {
+	cain_sip_header_allow_t* allow = cain_sip_header_allow_new();
+	cain_sip_header_allow_set_method(allow,methods);
+	return allow;
+}
 GET_SET_STRING(cain_sip_header_allow,method);
 
 
@@ -189,9 +197,13 @@ int cain_sip_header_contact_marshal(cain_sip_header_contact_t* contact, char* bu
 	}
 	return current_offset-offset;
 }
-CAIN_SIP_NEW_HEADER(header_contact,header_address,"Contact")
+CAIN_SIP_NEW_HEADER(header_contact,header_address,CAIN_SIP_CONTACT)
 CAIN_SIP_PARSE(header_contact)
-
+cain_sip_header_contact_t* cain_sip_header_contact_create (const cain_sip_header_address_t* contact) {
+	cain_sip_header_contact_t* header = cain_sip_header_contact_new();
+	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),contact);
+	return header;
+}
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,expires,int,_)
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,q,float,_);
 GET_SET_BOOL(cain_sip_header_contact,wildcard,is);
@@ -239,25 +251,38 @@ int cain_sip_header_from_marshal(cain_sip_header_from_t* from, char* buff,unsign
 	CAIN_SIP_FROM_LIKE_MARSHAL(from);
 }
 
-cain_sip_header_from_t* cain_sip_header_from_create(const char *address, const char *tag){
+cain_sip_header_from_t* cain_sip_header_from_create2(const char *address, const char *tag){
 	char *tmp=cain_sip_strdup_printf("From: %s",address);
 	cain_sip_header_from_t *from=cain_sip_header_from_parse(tmp);
 	if (from){
-		if (tag==CAIN_SIP_RANDOM_TAG) cain_sip_header_from_set_random_tag(from);
-		else if (tag) cain_sip_header_from_set_tag(from,tag);
+		if (tag) cain_sip_header_from_set_tag(from,tag);
 	}
 	cain_sip_free(tmp);
 	return from;
 }
-
-CAIN_SIP_NEW_HEADER(header_from,header_address,"From")
+cain_sip_header_from_t* cain_sip_header_from_create(const cain_sip_header_address_t* address, const char *tag) {
+	cain_sip_header_from_t* header= cain_sip_header_from_new();
+	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),address);
+	if (tag) cain_sip_header_from_set_tag(header,tag);
+	return header;
+}
+CAIN_SIP_NEW_HEADER(header_from,header_address,CAIN_SIP_FROM)
 CAIN_SIP_PARSE(header_from)
-GET_SET_STRING_PARAM(cain_sip_header_from,tag);
+GET_SET_STRING_PARAM2(cain_sip_header_from,tag,raw_tag);
 
 void cain_sip_header_from_set_random_tag(cain_sip_header_from_t *obj){
 	char tmp[8];
 	/*not less than 32bit */
-	cain_sip_header_from_set_tag(obj,cain_sip_random_token(tmp,sizeof(tmp)));
+	cain_sip_header_from_set_raw_tag(obj,cain_sip_random_token(tmp,sizeof(tmp)));
+}
+
+void cain_sip_header_from_set_tag(cain_sip_header_from_t *obj, const char *tag){
+	if (tag==CAIN_SIP_RANDOM_TAG) cain_sip_header_from_set_random_tag(obj);
+	else cain_sip_header_from_set_raw_tag(obj,tag);
+}
+
+const char *cain_sip_header_from_get_tag(const cain_sip_header_from_t *obj){
+	return cain_sip_header_from_get_raw_tag(obj);
 }
 
 /**************************
@@ -277,29 +302,43 @@ int cain_sip_header_to_marshal(cain_sip_header_to_t* to, char* buff,unsigned int
 	CAIN_SIP_FROM_LIKE_MARSHAL(to)
 }
 
-CAIN_SIP_NEW_HEADER(header_to,header_address,"To")
+CAIN_SIP_NEW_HEADER(header_to,header_address,CAIN_SIP_TO)
 CAIN_SIP_PARSE(header_to)
-GET_SET_STRING_PARAM(cain_sip_header_to,tag);
+GET_SET_STRING_PARAM2(cain_sip_header_to,tag,raw_tag);
 
-cain_sip_header_to_t* cain_sip_header_to_create(const char *address, const char *tag){
+cain_sip_header_to_t* cain_sip_header_to_create2(const char *address, const char *tag){
 	char *tmp=cain_sip_strdup_printf("To: %s",address);
 	cain_sip_header_to_t *to=cain_sip_header_to_parse(tmp);
 	if (to){
-		if (tag==CAIN_SIP_RANDOM_TAG) cain_sip_header_to_set_random_tag(to);
-		else if (tag) cain_sip_header_to_set_tag(to,tag);
+		if (tag) cain_sip_header_to_set_tag(to,tag);
 	}
 	cain_sip_free(tmp);
 	return to;
 }
-
+cain_sip_header_to_t* cain_sip_header_to_create(const cain_sip_header_address_t* address, const char *tag) {
+	cain_sip_header_to_t* header= cain_sip_header_to_new();
+	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),address);
+	if (tag) cain_sip_header_to_set_tag(header,tag);
+	return header;
+}
 void cain_sip_header_to_set_random_tag(cain_sip_header_to_t *obj){
 	char tmp[8];
 	/*not less than 32bit */
 	cain_sip_header_to_set_tag(obj,cain_sip_random_token(tmp,sizeof(tmp)));
 }
 
+void cain_sip_header_to_set_tag(cain_sip_header_to_t *obj, const char *tag){
+	if (tag==CAIN_SIP_RANDOM_TAG) cain_sip_header_to_set_random_tag(obj);
+	else cain_sip_header_to_set_raw_tag(obj,tag);
+}
+
+const char *cain_sip_header_to_get_tag(const cain_sip_header_to_t *obj){
+	return cain_sip_header_to_get_raw_tag(obj);
+}
+
+
 /******************************
- * User-Agent header hinerite from header
+ * User-Agent header inherits from header
  *
  ******************************/
 struct _cain_sip_header_user_agent  {
@@ -397,7 +436,7 @@ cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, co
 	return via;
 }
 
-CAIN_SIP_NEW_HEADER(header_via,parameters,"Via")
+CAIN_SIP_NEW_HEADER(header_via,parameters,CAIN_SIP_VIA)
 CAIN_SIP_PARSE(header_via)
 GET_SET_STRING(cain_sip_header_via,protocol);
 GET_SET_STRING(cain_sip_header_via,transport);
@@ -469,7 +508,7 @@ int cain_sip_header_call_id_marshal(cain_sip_header_call_id_t* call_id, char* bu
 	return current_offset-offset;
 }
 
-CAIN_SIP_NEW_HEADER(header_call_id,header,"Call-ID")
+CAIN_SIP_NEW_HEADER(header_call_id,header,CAIN_SIP_CALL_ID)
 CAIN_SIP_PARSE(header_call_id)
 GET_SET_STRING(cain_sip_header_call_id,call_id);
 /**************************
@@ -534,6 +573,12 @@ int cain_sip_header_content_type_marshal(cain_sip_header_content_type_t* content
 }
 CAIN_SIP_NEW_HEADER(header_content_type,parameters,"Content-Type")
 CAIN_SIP_PARSE(header_content_type)
+cain_sip_header_content_type_t* cain_sip_header_content_type_create (const char* type,const char* sub_type) {
+	cain_sip_header_content_type_t* header = cain_sip_header_content_type_new();
+	cain_sip_header_content_type_set_type(header,type);
+	cain_sip_header_content_type_set_subtype(header,sub_type);
+	return header;
+}
 GET_SET_STRING(cain_sip_header_content_type,type);
 GET_SET_STRING(cain_sip_header_content_type,subtype);
 /**************************
@@ -552,8 +597,13 @@ static void cain_sip_header_route_clone(cain_sip_header_route_t* route, const ca
 int cain_sip_header_route_marshal(cain_sip_header_route_t* route, char* buff,unsigned int offset,unsigned int buff_size) {
 	CAIN_SIP_FROM_LIKE_MARSHAL(route)
 }
-CAIN_SIP_NEW_HEADER(header_route,header_address,"Route")
+CAIN_SIP_NEW_HEADER(header_route,header_address,CAIN_SIP_ROUTE)
 CAIN_SIP_PARSE(header_route)
+cain_sip_header_route_t* cain_sip_header_route_create(const cain_sip_header_address_t* route) {
+	cain_sip_header_route_t* header= cain_sip_header_route_new();
+	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),CAIN_SIP_HEADER_ADDRESS(route));
+	return header;
+}
 /**************************
 * Record route header object inherent from header_address
 ****************************
@@ -661,7 +711,13 @@ int cain_sip_header_extension_marshal(cain_sip_header_extension_t* extension, ch
 }
 CAIN_SIP_NEW_HEADER(header_extension,header,NULL)
 
+cain_sip_header_extension_t* cain_sip_header_extension_create (const char* name,const char* value) {
+	cain_sip_header_extension_t* ext = cain_sip_header_extension_new();
+	cain_sip_header_set_name(CAIN_SIP_HEADER(ext),name);
+	cain_sip_header_extension_set_value(ext,value);
+	return ext;
 
+}
 /**
  * special case for this header. I don't know why
  */
@@ -924,7 +980,7 @@ void header##_add_name(header##_t* obj, const char*  value) {\
 	obj->name=cain_sip_list_append(obj->name,strdup(value));\
 }
 
-CAIN_SIP_NEW_HEADER_INIT(header_www_authenticate,parameters,"WWW-Authenticate",header_www_authenticate)
+CAIN_SIP_NEW_HEADER_INIT(header_www_authenticate,parameters,CAIN_SIP_WWW_AUTHENTICATE,header_www_authenticate)
 CAIN_SIP_PARSE(header_www_authenticate)
 GET_SET_STRING(cain_sip_header_www_authenticate,scheme);
 GET_SET_STRING(cain_sip_header_www_authenticate,realm);
@@ -957,7 +1013,7 @@ static void cain_sip_header_proxy_authenticate_clone(cain_sip_header_proxy_authe
 int cain_sip_header_proxy_authenticate_marshal(cain_sip_header_proxy_authenticate_t* proxy_authenticate, char* buff,unsigned int offset,unsigned int buff_size) {
 	return cain_sip_header_www_authenticate_marshal(&proxy_authenticate->www_authenticate,buff,offset,buff_size);
 }
-CAIN_SIP_NEW_HEADER(header_proxy_authenticate,header_www_authenticate,"Proxy-Authenticate")
+CAIN_SIP_NEW_HEADER(header_proxy_authenticate,header_www_authenticate,CAIN_SIP_PROXY_AUTHENTICATE)
 CAIN_SIP_PARSE(header_proxy_authenticate)
 
 /**************************

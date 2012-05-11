@@ -298,6 +298,12 @@ void cain_sip_message_set_body(cain_sip_message_t *msg,char* body,unsigned int s
 	memcpy(msg->body,body,size);
 	msg->body[size]='\0';
 }
+void cain_sip_message_assign_body(cain_sip_message_t *msg, char* body) {
+	if (msg->body) {
+		cain_sip_free((void*)body);
+	}
+	msg->body = body;
+}
 struct _cain_sip_response{
 	cain_sip_message_t base;
 	char *sip_version;
