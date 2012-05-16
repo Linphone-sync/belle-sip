@@ -37,31 +37,35 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *dialog, co
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *dialog);
 
-void *cain_sip_get_application_data(cain_sip_dialog_t *dialog);
+void *cain_sip_get_application_data(const cain_sip_dialog_t *dialog);
 
 void cain_sip_set_application_data(cain_sip_dialog_t *dialog, void *data);
 
-const char *cain_sip_dialog_get_dialog_id(cain_sip_dialog_t *dialog);
+const char *cain_sip_dialog_get_dialog_id(const cain_sip_dialog_t *dialog);
 
-const cain_sip_header_address_t *cain_sip_get_local_party(cain_sip_dialog_t *dialog);
+const cain_sip_header_call_id_t *cain_sip_dialog_get_call_id(const cain_sip_dialog_t *dialog);
 
-const cain_sip_header_address_t *cain_sip_get_remote_party(cain_sip_dialog_t *dialog);
+const cain_sip_header_address_t *cain_sip_get_local_party(const cain_sip_dialog_t *dialog);
 
-unsigned int cain_sip_dialog_get_local_seq_number(cain_sip_dialog_t *dialog);
+const cain_sip_header_address_t *cain_sip_get_remote_party(const cain_sip_dialog_t *dialog);
 
-unsigned int cain_sip_dialog_get_remote_seq_number(cain_sip_dialog_t *dialog);
+unsigned int cain_sip_dialog_get_local_seq_number(const cain_sip_dialog_t *dialog);
 
-const char *cain_sip_dialog_get_local_tag(cain_sip_dialog_t *dialog);
+unsigned int cain_sip_dialog_get_remote_seq_number(const cain_sip_dialog_t *dialog);
 
-const char *cain_sip_dialog_get_remote_tag(cain_sip_dialog_t *dialog);
+const char *cain_sip_dialog_get_local_tag(const cain_sip_dialog_t *dialog);
+
+const char *cain_sip_dialog_get_remote_tag(const cain_sip_dialog_t *dialog);
 
 const cain_sip_header_address_t *cain_sip_dialog_get_remote_target(cain_sip_dialog_t *dialog);
 
 const cain_sip_list_t* cain_sip_dialog_get_route_set(cain_sip_dialog_t *dialog);
 
-cain_sip_dialog_state_t cain_sip_dialog_get_state(cain_sip_dialog_t *dialog);
+cain_sip_dialog_state_t cain_sip_dialog_get_state(const cain_sip_dialog_t *dialog);
 
-int cain_sip_dialog_is_server(cain_sip_dialog_t *dialog);
+int cain_sip_dialog_is_server(const cain_sip_dialog_t *dialog);
+
+int cain_sip_dialog_is_secure(const cain_sip_dialog_t *dialog);
 
 void cain_sip_dialog_send_ack(cain_sip_dialog_t *dialog, cain_sip_request_t *request);
 

@@ -85,8 +85,6 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 	cain_sip_object_unref(msg);
 }
 
-
-
 static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, cain_sip_message_t *msg){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(msg,"via"));
 	cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(via),"rport",NULL);
@@ -143,19 +141,21 @@ static void channel_on_sending(cain_sip_channel_listener_t *obj, cain_sip_channe
 		fix_outgoing_via((cain_sip_provider_t*)obj,chan,msg);
 	}
 
-	/* fix the contact if empty*/
-	if (!(contact_uri =cain_sip_header_address_get_uri((cain_sip_header_address_t*)contact))) {
-		contact_uri = cain_sip_uri_new();
-		cain_sip_header_address_set_uri((cain_sip_header_address_t*)contact,contact_uri);
-	}
-	if (!cain_sip_uri_get_host(contact_uri)) {
-		cain_sip_uri_set_host(contact_uri,chan->local_ip);
-	}
-	if (cain_sip_uri_get_transport_param(contact_uri) == NULL && strcasecmp("udp",cain_sip_channel_get_transport_name(chan))!=0) {
-		cain_sip_uri_set_transport_param(contact_uri,cain_sip_channel_get_transport_name_lower_case(chan));
-	}
-	if (cain_sip_uri_get_port(contact_uri) == 0 && chan->local_port!=5060) {
-		cain_sip_uri_set_port(contact_uri,chan->local_port);
+	if (contact){
+		/* fix the contact if empty*/
+		if (!(contact_uri =cain_sip_header_address_get_uri((cain_sip_header_address_t*)contact))) {
+			contact_uri = cain_sip_uri_new();
+			cain_sip_header_address_set_uri((cain_sip_header_address_t*)contact,contact_uri);
+		}
+		if (!cain_sip_uri_get_host(contact_uri)) {
+			cain_sip_uri_set_host(contact_uri,chan->local_ip);
+		}
+		if (cain_sip_uri_get_transport_param(contact_uri) == NULL && strcasecmp("udp",cain_sip_channel_get_transport_name(chan))!=0) {
+			cain_sip_uri_set_transport_param(contact_uri,cain_sip_channel_get_transport_name_lower_case(chan));
+		}
+		if (cain_sip_uri_get_port(contact_uri) == 0 && chan->local_port!=5060) {
+			cain_sip_uri_set_port(contact_uri,chan->local_port);
+		}
 	}
 	if (!content_lenght && strcasecmp("udp",cain_sip_channel_get_transport_name(chan))!=0) {
 		content_lenght = cain_sip_header_content_length_create(0);
@@ -222,6 +222,13 @@ cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_pro
 	char tmp[11];
 	cain_sip_header_call_id_set_call_id(cid,cain_sip_random_token(tmp,sizeof(tmp)));
 	return cid;
+}
+
+cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, cain_sip_transaction_t *t){
+	cain_sip_dialog_t *dialog=NULL;
+	dialog=cain_sip_dialog_new(t);
+	t->dialog=(cain_sip_dialog_t*)cain_sip_object_ref(dialog);
+	return dialog;
 }
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){

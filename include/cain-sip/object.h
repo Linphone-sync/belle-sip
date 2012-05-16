@@ -152,6 +152,9 @@ void cain_sip_object_set_name(cain_sip_object_t *obj,const char* name);
 **/
 const char* cain_sip_object_get_name(cain_sip_object_t *obj);
 
+/*copy the content of ref object to new object, for the part they have in common in their inheritence diagram*/
+void _cain_sip_object_copy(cain_sip_object_t *newobj, const cain_sip_object_t *ref);
+
 cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj);
 
 /**

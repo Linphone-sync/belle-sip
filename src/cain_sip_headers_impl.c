@@ -262,7 +262,7 @@ cain_sip_header_from_t* cain_sip_header_from_create2(const char *address, const 
 }
 cain_sip_header_from_t* cain_sip_header_from_create(const cain_sip_header_address_t* address, const char *tag) {
 	cain_sip_header_from_t* header= cain_sip_header_from_new();
-	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),address);
+	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
 	if (tag) cain_sip_header_from_set_tag(header,tag);
 	return header;
 }
@@ -317,7 +317,7 @@ cain_sip_header_to_t* cain_sip_header_to_create2(const char *address, const char
 }
 cain_sip_header_to_t* cain_sip_header_to_create(const cain_sip_header_address_t* address, const char *tag) {
 	cain_sip_header_to_t* header= cain_sip_header_to_new();
-	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),address);
+	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
 	if (tag) cain_sip_header_to_set_tag(header,tag);
 	return header;
 }

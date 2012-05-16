@@ -154,6 +154,18 @@ const cain_sip_list_t* cain_sip_message_get_headers(const cain_sip_message_t *me
 	return headers_container ? headers_container->header_list:NULL;
 }
 
+cain_sip_object_t *_cain_sip_message_get_header_by_type_id(const cain_sip_message_t *message, cain_sip_type_id_t id){
+	const cain_sip_list_t *e1;
+	for(e1=message->header_list;e1!=NULL;e1=e1->next){
+		headers_container_t* headers_container=(headers_container_t*)e1->data;
+		if (headers_container->header_list){
+			cain_sip_object_t *ret=headers_container->header_list->data;
+			if (ret->vptr->id==id) return ret;
+		}
+	}
+	return NULL;
+}
+
 void cain_sip_message_remove_first(cain_sip_message_t *msg, const char *header_name){
 	headers_container_t* headers_container = cain_sip_headers_container_get(msg,header_name);
 	if (headers_container && headers_container->header_list){
@@ -417,7 +429,7 @@ cain_sip_request_t* cain_sip_request_create(cain_sip_uri_t *requri, const char* 
                                          cain_sip_header_from_t *from,
                                          cain_sip_header_to_t *to,
                                          cain_sip_header_via_t *via,
-                                         int max_forward /*FIXME*/)
+                                         int max_forward)
 {
 	cain_sip_request_t *ret=cain_sip_request_new();
 	cain_sip_header_max_forwards_t *mf=cain_sip_header_max_forwards_new();

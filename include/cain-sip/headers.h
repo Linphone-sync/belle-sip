@@ -290,6 +290,7 @@ cain_sip_header_expires_t* cain_sip_header_expires_create(int expires);
  cain_sip_header_record_route_t* cain_sip_header_record_route_parse (const char* route) ;
 
 #define CAIN_SIP_HEADER_RECORD_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_record_route_t)
+#define CAIN_SIP_RECORD_ROUTE	"Record-route"
  /******************************
   *
   * user-Agent header inherit from header

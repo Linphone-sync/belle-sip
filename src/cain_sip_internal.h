@@ -278,9 +278,9 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 		return obj->attribute;\
 	}\
 	void object_type##_set_##attribute (object_type##_t* obj,const char* value) {\
-		if (obj->attribute != NULL) free((void*)obj->attribute);\
+		if (obj->attribute != NULL) cain_sip_free((void*)obj->attribute);\
 		if (value) {\
-			obj->attribute=malloc(strlen(value)+1);\
+			obj->attribute=cain_sip_malloc(strlen(value)+1);\
 			strcpy((char*)(obj->attribute),value);\
 		} else obj->attribute=NULL;\
 	}
@@ -526,6 +526,7 @@ struct cain_sip_transaction{
 	cain_sip_request_t *request;
 	cain_sip_response_t *last_response;
 	cain_sip_channel_t *channel;
+	cain_sip_dialog_t *dialog;
 	char *branch_id;
 	cain_sip_transaction_state_t state;
 	uint64_t start_time;
@@ -649,6 +650,30 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_nist_t,cain_sip_server_transaction_t
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 cain_sip_nist_t * cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_t *req);
+
+
+/*
+ * Dialogs
+ */ 
+struct cain_sip_dialog{
+	cain_sip_object_t base;
+	cain_sip_dialog_state_t state;
+	void *appdata;
+	cain_sip_header_call_id_t *call_id;
+	cain_sip_header_address_t *local_party;
+	cain_sip_header_address_t *remote_party;
+	cain_sip_list_t *route_set;
+	cain_sip_header_address_t *remote_target;
+	char *local_tag;
+	char *remote_tag;
+	unsigned int local_cseq;
+	unsigned int remote_cseq;
+	int is_server:1;
+	int is_secure:1;
+	int terminate_on_bye:1;
+};
+
+cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t);
 
 /*
  cain_sip_response_t

@@ -63,7 +63,7 @@ static cain_sip_request_t *make_ack(cain_sip_ict_t *obj, cain_sip_response_t *re
 		cain_sip_message_add_header((cain_sip_message_t*)obj->ack,
 		(cain_sip_header_t*)cain_sip_header_cseq_create(
 			cain_sip_header_cseq_get_seq_number((cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)base->request,CAIN_SIP_CSEQ)),
-		    "CANCEL"));
+		    "ACK"));
 	}
 
 	return obj->ack;

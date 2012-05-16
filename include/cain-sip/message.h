@@ -60,6 +60,11 @@ int cain_sip_message_is_response(const cain_sip_message_t *msg);
 
 cain_sip_header_t *cain_sip_message_get_header(const cain_sip_message_t *msg, const char *header_name);
 
+cain_sip_object_t *_cain_sip_message_get_header_by_type_id(const cain_sip_message_t *message, cain_sip_type_id_t id);
+
+#define cain_sip_message_get_header_by_type(msg,header_type)\
+	(header_type*)_cain_sip_message_get_header_by_type_id(CAIN_SIP_MESSAGE(msg),CAIN_SIP_TYPE_ID(header_type))
+
 const cain_sip_list_t* cain_sip_message_get_headers(const cain_sip_message_t *message,const char* header_name);
 
 /**

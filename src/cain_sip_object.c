@@ -148,26 +148,49 @@ void cain_sip_object_delete(void *ptr){
 	cain_sip_free(obj);
 }
 
+static cain_sip_object_vptr_t *find_common_floor(cain_sip_object_vptr_t *vptr1, cain_sip_object_vptr_t *vptr2){
+	cain_sip_object_vptr_t *it1,*it2;
+	for (it1=vptr1;it1!=NULL;it1=it1->parent){
+		if (it1==vptr2)
+			return vptr2;
+	}
+	for(it2=vptr2;it2!=NULL;it2=it2->parent){
+		if (vptr1==it2)
+			return vptr1;
+	}
+	return NULL;
+}
+
+/*copy the content of ref object to new object, for the part they have in common in their inheritence diagram*/
+void _cain_sip_object_copy(cain_sip_object_t *newobj, const cain_sip_object_t *ref){
+	cain_sip_object_vptr_t *vptr;
+	vptr=find_common_floor(newobj->vptr,ref->vptr);
+	if (vptr==NULL){
+		cain_sip_fatal("Should not happen");
+	}
+	while(vptr!=NULL){
+		if (vptr->clone==NULL){
+			cain_sip_fatal("Object of type %s cannot be cloned, it does not provide a clone() implementation.",vptr->type_name);
+			return;
+		}else vptr->clone(newobj,ref);
+		vptr=vptr->parent;
+	}
+}
+
 cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 	cain_sip_object_t *newobj;
-	cain_sip_object_vptr_t *vptr;
 	
 	newobj=cain_sip_malloc0(obj->size);
 	newobj->ref=obj->vptr->initially_unowned ? 0 : 1;
 	newobj->vptr=obj->vptr;
 	newobj->size=obj->size;
-	if (obj->name) newobj->name=cain_sip_strdup(obj->name);
 	
-	vptr=obj->vptr;
-	while(vptr!=NULL){
-		if (vptr->clone==NULL){
-			cain_sip_fatal("Object of type %s cannot be cloned, it does not provide a clone() implementation.",vptr->type_name);
-			return NULL;
-		}else vptr->clone(newobj,obj);
-		vptr=vptr->parent;
-	}
+	_cain_sip_object_copy(newobj,obj);
+	
 	return newobj;
 }
+
+
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno){
 	if (obj!=NULL){
