@@ -126,6 +126,8 @@ void cain_sip_server_transaction_init(cain_sip_server_transaction_t *t, cain_sip
 void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
 	cain_sip_header_to_t *to=(cain_sip_header_to_t*)cain_sip_message_get_header((cain_sip_message_t*)resp,"to");
+	cain_sip_dialog_t *dialog=base->dialog;
+	
 	cain_sip_object_ref(resp);
 	if (!base->last_response){
 		cain_sip_hop_t hop;
@@ -143,6 +145,8 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 			cain_sip_object_unref(base->last_response);
 		base->last_response=resp;
 	}
+	if (dialog)
+		cain_sip_dialog_update(dialog,base->request,resp,TRUE);
 }
 
 void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, cain_sip_request_t *req){
@@ -161,7 +165,7 @@ void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, ca
 
 		event.source=t->base.provider;
 		event.server_transaction=t;
-		event.dialog=NULL;
+		event.dialog=t->base.dialog;
 		event.request=req;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->base.provider,process_request_event,&event);
 	}else
@@ -232,14 +236,27 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
 	cain_sip_response_event_t event;
+	cain_sip_dialog_t *dialog=base->dialog;
 		
 	if (base->last_response)
 		cain_sip_object_unref(base->last_response);
 	base->last_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
 
+	if (dialog){
+		if (dialog->state==CAIN_SIP_DIALOG_EARLY || dialog->state==CAIN_SIP_DIALOG_CONFIRMED){
+			/*make sure this response matches the current dialog, or creates a new one*/
+			if (!cain_sip_dialog_match(dialog,(cain_sip_message_t*)resp,FALSE)){
+				dialog=cain_sip_dialog_new(base);
+				if (dialog){
+					cain_sip_message("Handling response creating a new dialog !");
+				}
+			}
+		}
+		if (dialog) cain_sip_dialog_update(dialog,base->request,resp,FALSE);
+	}
 	event.source=base->provider;
 	event.client_transaction=t;
-	event.dialog=NULL;
+	event.dialog=dialog;
 	event.response=(cain_sip_response_t*)resp;
 	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(base->provider,process_response_event,&event);
 }

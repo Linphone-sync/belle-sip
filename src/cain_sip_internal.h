@@ -494,6 +494,7 @@ struct cain_sip_provider{
 	cain_sip_list_t *listeners;
 	cain_sip_list_t *client_transactions;
 	cain_sip_list_t *server_transactions;
+	cain_sip_list_t *dialogs;
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
@@ -674,6 +675,10 @@ struct cain_sip_dialog{
 };
 
 cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t);
+/*returns 1 if message belongs to the dialog, 0 otherwise */
+int _cain_sip_dialog_match(cain_sip_dialog_t *obj, const char *call_id, const char *local_tag, const char *remote_tag);
+int cain_sip_dialog_match(cain_sip_dialog_t *obj, cain_sip_message_t *msg, int as_uas);
+int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas);
 
 /*
  cain_sip_response_t

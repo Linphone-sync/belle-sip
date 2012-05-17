@@ -223,13 +223,6 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 	cain_sip_header_from_t *from;
 	const char *from_tag;
 	
-	if (t->last_response){
-		int code=cain_sip_response_get_status_code(t->last_response);
-		if (code>=200 && code<300){
-			cain_sip_fatal("You must not create dialog after sending the response that establish the dialog.");
-		}
-		return NULL;
-	}
 	from=cain_sip_message_get_header_by_type(t->request,cain_sip_header_from_t);
 	if (from==NULL){
 		cain_sip_error("cain_sip_dialog_new(): no from!");
@@ -340,4 +333,28 @@ void cain_sip_dialog_send_ack(cain_sip_dialog_t *dialog, cain_sip_request_t *req
 
 void cain_sip_dialog_terminate_on_bye(cain_sip_dialog_t *obj, int val){
 	obj->terminate_on_bye=val;
+}
+
+/*returns 1 if message belongs to the dialog, 0 otherwise */
+int cain_sip_dialog_match(cain_sip_dialog_t *obj, cain_sip_message_t *msg, int as_uas){
+	cain_sip_header_call_id_t *call_id=cain_sip_message_get_header_by_type(msg,cain_sip_header_call_id_t);
+	cain_sip_header_from_t *from=cain_sip_message_get_header_by_type(msg,cain_sip_header_from_t);
+	cain_sip_header_to_t *to=cain_sip_message_get_header_by_type(msg,cain_sip_header_to_t);
+	const char *from_tag;
+	const char *to_tag;
+	const char *call_id_value;
+
+	if (call_id==NULL || from==NULL || to==NULL) return 0;
+
+	call_id_value=cain_sip_header_call_id_get_call_id(call_id);
+	from_tag=cain_sip_header_from_get_tag(from);
+	to_tag=cain_sip_header_to_get_tag(to);
+	
+	return _cain_sip_dialog_match(obj,call_id_value,as_uas ? to_tag : from_tag, as_uas ? from_tag : to_tag);
+}
+
+int _cain_sip_dialog_match(cain_sip_dialog_t *obj, const char *call_id, const char *local_tag, const char *remote_tag){
+	const char *dcid=cain_sip_header_call_id_get_call_id(obj->call_id);
+	if (obj->state==CAIN_SIP_DIALOG_NULL) cain_sip_fatal("_cain_sip_dialog_match() must not be used for dialog in null state.");
+	return strcmp(dcid,call_id)==0 && strcmp(obj->local_tag,local_tag)==0 && strcmp(obj->remote_tag,remote_tag)==0;
 }
