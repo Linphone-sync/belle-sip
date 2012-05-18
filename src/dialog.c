@@ -34,6 +34,10 @@ static void cain_sip_dialog_uninit(cain_sip_dialog_t *obj){
 		cain_sip_free(obj->local_tag);
 	if (obj->remote_tag)
 		cain_sip_free(obj->remote_tag);
+	if (obj->last_out_invite)
+		cain_sip_object_unref(obj->last_out_invite);
+	if (obj->last_out_ack)
+		cain_sip_object_unref(obj->last_out_ack);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_dialog_t);
@@ -110,6 +114,12 @@ static int cain_sip_dialog_init_as_uas(cain_sip_dialog_t *obj, cain_sip_request_
 	return 0;
 }
 
+static void set_last_out_invite(cain_sip_dialog_t *obj, cain_sip_request_t *req){
+	if (obj->last_out_invite)
+		cain_sip_object_unref(obj->last_out_invite);
+	obj->last_out_invite=(cain_sip_request_t*)cain_sip_object_ref(req);
+}
+
 static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_t *req, cain_sip_response_t *resp){
 	const cain_sip_list_t *elem;
 	cain_sip_header_contact_t *ct=cain_sip_message_get_header_by_type(resp,cain_sip_header_contact_t);
@@ -154,6 +164,9 @@ static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_
 	/*local_tag is already set*/
 	obj->remote_party=(cain_sip_header_address_t*)cain_sip_object_ref(to);
 	/*local party is already set*/
+	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0){
+		set_last_out_invite(obj,req);
+	}
 	return 0;
 }
 
@@ -182,6 +195,7 @@ int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, c
 			set_to_tag(obj,to);
 		if (cain_sip_dialog_establish_full(obj,req,resp)==0){
 			obj->state=CAIN_SIP_DIALOG_CONFIRMED;
+			obj->needs_ack=TRUE;
 		}else return -1;
 	}
 	return 0;
@@ -201,12 +215,14 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_
 				if (as_uas){
 					ct=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t);
 				}else{
+					set_last_out_invite(obj,req);
 					ct=cain_sip_message_get_header_by_type(resp,cain_sip_header_contact_t);
 				}
 				if (ct){
 					cain_sip_object_unref(obj->remote_target);
 					obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
 				}
+				obj->needs_ack=TRUE;
 			}else if (strcmp(cain_sip_request_get_method(req),"INVITE")==0 && code>=200 && code<300){
 				if (obj->terminate_on_bye) cain_sip_dialog_delete(obj);
 			}
@@ -235,6 +251,7 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 	}
 	obj=cain_sip_object_new(cain_sip_dialog_t);
 	obj->terminate_on_bye=1;
+	obj->provider=t->provider;
 	
 	if (CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_server_transaction_t)){
 		obj->remote_tag=cain_sip_strdup(from_tag);
@@ -249,24 +266,52 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 	return obj;
 }
 
-cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *dialog, unsigned int cseq);
+cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *obj, unsigned int cseq){
+	cain_sip_header_cseq_t *cseqh;
+	cain_sip_request_t *invite=obj->last_out_invite;
+	cain_sip_request_t *ack;
+	if (!invite){
+		cain_sip_error("No INVITE to ACK.");
+		return NULL;
+	}
+	cseqh=cain_sip_message_get_header_by_type(invite,cain_sip_header_cseq_t);
+	if (cain_sip_header_cseq_get_seq_number(cseqh)!=cseq){
+		cain_sip_error("No INVITE with cseq %i to create ack for.",cseq);
+		return NULL;
+	}
+	ack=cain_sip_dialog_create_request(obj,"ACK");
+	if (ack){
+		const cain_sip_list_t *aut=cain_sip_message_get_headers((cain_sip_message_t*)obj->last_out_invite,"Authorization");
+		const cain_sip_list_t *prx_aut=cain_sip_message_get_headers((cain_sip_message_t*)obj->last_out_invite,"Proxy-Authorization");
+		if (aut)
+			cain_sip_message_add_headers((cain_sip_message_t*)ack,aut);
+		if (prx_aut)
+			cain_sip_message_add_headers((cain_sip_message_t*)ack,prx_aut);
+	}
+	return ack;
+}
 
 cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const char *method){
 	if (obj->local_cseq==0) obj->local_cseq=110;
 	cain_sip_request_t *req=cain_sip_request_create(cain_sip_header_address_get_uri(obj->remote_target),
 	                                                method,
 	                                                obj->call_id,
-	                                                cain_sip_header_cseq_create(obj->local_cseq++,method),
+	                                                cain_sip_header_cseq_create(obj->local_cseq,method),
 	                                                cain_sip_header_from_create(obj->local_party,NULL),
 	                                                cain_sip_header_to_create(obj->remote_party,NULL),
 	                                                cain_sip_header_via_new(),
 	                                                0);
 	cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
+	if (strcmp(method,"ACK")!=0) obj->local_cseq++;
 	return req;
 }
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *obj){
+	cain_sip_dialog_state_t prevstate=obj->state;
 	obj->state=CAIN_SIP_DIALOG_TERMINATED;
+	if (prevstate!=CAIN_SIP_DIALOG_NULL)
+		cain_sip_provider_remove_dialog(obj->provider,obj);
+	
 }
 
 void *cain_sip_get_application_data(const cain_sip_dialog_t *dialog){
@@ -329,7 +374,17 @@ int cain_sip_dialog_is_secure(const cain_sip_dialog_t *dialog){
 	return dialog->is_secure;
 }
 
-void cain_sip_dialog_send_ack(cain_sip_dialog_t *dialog, cain_sip_request_t *request);
+void cain_sip_dialog_send_ack(cain_sip_dialog_t *obj, cain_sip_request_t *request){
+	if (obj->needs_ack){
+		obj->needs_ack=FALSE;
+		if (obj->last_out_ack)
+			cain_sip_object_unref(obj->last_out_ack);
+		obj->last_out_ack=(cain_sip_request_t*)cain_sip_object_ref(request);
+		cain_sip_provider_send_request(obj->provider,request);
+	}else{
+		cain_sip_error("Why do you want to send an ACK ?");
+	}
+}
 
 void cain_sip_dialog_terminate_on_bye(cain_sip_dialog_t *obj, int val){
 	obj->terminate_on_bye=val;
@@ -357,4 +412,14 @@ int _cain_sip_dialog_match(cain_sip_dialog_t *obj, const char *call_id, const ch
 	const char *dcid=cain_sip_header_call_id_get_call_id(obj->call_id);
 	if (obj->state==CAIN_SIP_DIALOG_NULL) cain_sip_fatal("_cain_sip_dialog_match() must not be used for dialog in null state.");
 	return strcmp(dcid,call_id)==0 && strcmp(obj->local_tag,local_tag)==0 && strcmp(obj->remote_tag,remote_tag)==0;
+}
+
+void cain_sip_dialog_check_ack_sent(cain_sip_dialog_t*obj){
+	if (obj->needs_ack){
+		cain_sip_request_t *req;
+		cain_sip_error("Your listener did not ACK'd the 200Ok for your INVITE request. The dialog will be terminated.");
+		req=cain_sip_dialog_create_request(obj,"BYE");
+		cain_sip_client_transaction_send_request(
+			cain_sip_provider_get_new_client_transaction(obj->provider,req));
+	}
 }

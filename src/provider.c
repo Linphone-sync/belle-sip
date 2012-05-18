@@ -268,6 +268,15 @@ cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain
 	return NULL;
 }
 
+void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog){
+	prov->dialogs=cain_sip_list_prepend(prov->dialogs,cain_sip_object_ref(dialog));
+}
+
+void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog){
+	prov->dialogs=cain_sip_list_remove(prov->dialogs,dialog);
+	cain_sip_object_unref(dialog);
+}
+
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
 	const char *method=cain_sip_request_get_method(req);
 	if (strcmp(method,"INVITE")==0)
