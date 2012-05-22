@@ -327,6 +327,10 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 	return NULL;
 }
 
+void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_t *chan){
+	cain_sip_listening_point_remove_channel(chan->lp,chan);
+}
+
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
 	cain_sip_hop_t hop={0};
 	cain_sip_channel_t *chan;

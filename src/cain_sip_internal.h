@@ -467,7 +467,7 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 
 #define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
-
+void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
 
 
 /*

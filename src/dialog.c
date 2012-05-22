@@ -423,3 +423,17 @@ void cain_sip_dialog_check_ack_sent(cain_sip_dialog_t*obj){
 			cain_sip_provider_get_new_client_transaction(obj->provider,req));
 	}
 }
+
+void cain_sip_dialog_handle_200Ok(cain_sip_dialog_t *obj, cain_sip_message_t *msg){
+	if (obj->last_out_ack){
+		cain_sip_header_cseq_t *cseq=cain_sip_message_get_header_by_type(msg,cain_sip_header_cseq_t);
+		if (cseq){
+			cain_sip_header_cseq_t *ack_cseq=cain_sip_message_get_header_by_type(msg,cain_sip_header_cseq_t);
+			if (cain_sip_header_cseq_get_seq_number(cseq)==cain_sip_header_cseq_get_seq_number(ack_cseq)){
+				/*pass for retransmission*/
+				cain_sip_message("Dialog retransmitting last ack automatically");
+				cain_sip_provider_send_request(obj->provider,obj->last_out_ack);
+			}else cain_sip_warning("No ACK to retransmit matching 200Ok");
+		}
+	}
+}

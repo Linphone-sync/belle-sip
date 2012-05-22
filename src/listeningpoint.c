@@ -43,17 +43,18 @@ void cain_sip_listening_point_add_channel(cain_sip_listening_point_t *lp, cain_s
 cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *obj, const char *dest, int port){
 	cain_sip_channel_t *chan=CAIN_SIP_OBJECT_VPTR(obj,cain_sip_listening_point_t)->create_channel(obj,dest,port);
 	if (chan){
+		chan->lp=obj;
 		cain_sip_listening_point_add_channel(obj,chan);
 	}
 	return chan;
 }
 
-#if 0
-static void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan){
+
+void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan){
 	lp->channels=cain_sip_list_remove(lp->channels,chan);
 	cain_sip_object_unref(chan);
 }
-#endif
+
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_listening_point_t);
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_listening_point_t)={

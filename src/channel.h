@@ -74,6 +74,7 @@ typedef struct cain_sip_tls_channel cain_sip_tls_channel_t;
 
 struct cain_sip_channel{
 	cain_sip_source_t base;
+	cain_sip_listening_point_t *lp; /*the listening point that owns this channel*/
 	cain_sip_stack_t *stack;
 	cain_sip_channel_state_t state;
 	cain_sip_list_t *listeners;
