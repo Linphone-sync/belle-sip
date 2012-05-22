@@ -33,7 +33,8 @@ typedef enum cain_sip_channel_state{
 	CAIN_SIP_CHANNEL_RES_DONE,
 	CAIN_SIP_CHANNEL_CONNECTING,
 	CAIN_SIP_CHANNEL_READY,
-	CAIN_SIP_CHANNEL_ERROR
+	CAIN_SIP_CHANNEL_ERROR,
+	CAIN_SIP_CHANNEL_DISCONNECTED
 }cain_sip_channel_state_t;
 
 const char * cain_sip_channel_state_to_string(cain_sip_channel_state_t state);

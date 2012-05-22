@@ -27,9 +27,12 @@ extern int cain_sdp_test_suite();
 extern int cain_sip_authentication_helper_suite ();
 extern int cain_sip_cast_test_suite();
 extern int cain_sip_register_test_suite();
+extern int cain_sip_dialog_test_suite();
 
 int main (int argc, char *argv[]) {
 	int i;
+	char *suite_name;
+	CU_pSuite suite;
 	const char *env_domain=getenv("TEST_DOMAIN");
 	if (env_domain)
 		test_domain=env_domain;
@@ -43,6 +46,9 @@ int main (int argc, char *argv[]) {
 		}else if (strcmp(argv[i],"--domain")==0){
 			i++;
 			test_domain=argv[i];
+		}else if (strcmp(argv[i],"--suite")==0){
+			i++;
+			suite_name=argv[i];
 		}
 	}
 	
@@ -63,9 +69,16 @@ int main (int argc, char *argv[]) {
 	cain_sip_authentication_helper_suite();
 
 	cain_sip_register_test_suite();
+
+	cain_sip_dialog_test_suite ();
+
 	/* Run all tests using the CUnit Basic interface */
 	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
+	if (suite_name && (suite=CU_get_suite(suite_name))) {
+		CU_basic_run_suite(suite);
+	} else
+		CU_basic_run_tests();
+
 	CU_cleanup_registry();
 	return CU_get_error();
 

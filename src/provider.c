@@ -27,7 +27,7 @@ static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
 	cain_sip_io_error_event_t ev;
-	if (state == CAIN_SIP_CHANNEL_ERROR) {
+	if (state == CAIN_SIP_CHANNEL_ERROR || state == CAIN_SIP_CHANNEL_DISCONNECTED) {
 		ev.transport=cain_sip_channel_get_transport_name(chan);
 		ev.source=(cain_sip_provider_t*)obj;
 		ev.port=chan->peer_port;

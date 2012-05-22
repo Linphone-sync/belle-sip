@@ -25,6 +25,11 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 	 *
 	 */
 	cain_sip_uri_t* cain_sip_uri_parse (const char* uri) ;
+	/**
+	 *
+	 */
+	cain_sip_uri_t* cain_sip_uri_create (const char* username,const char* host) ;
+
 	
 	/**
 	 *	Returns the value of the named header, or null if it is not set.

@@ -86,7 +86,7 @@ void cain_sip_message_remove_header(cain_sip_message_t *msg, const char *header_
 
 char *cain_sip_message_to_string(cain_sip_message_t *msg);
 const char* cain_sip_message_get_body(cain_sip_message_t *msg);
-void cain_sip_message_set_body(cain_sip_message_t *msg,char* body,unsigned int size);
+void cain_sip_message_set_body(cain_sip_message_t *msg,const char* body,unsigned int size);
 /*message keep ownership of the null terminated body buffer
 void cain_sip_message_assign_body(cain_sip_message_t *msg,char* body);*/
 

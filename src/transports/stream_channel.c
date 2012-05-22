@@ -151,7 +151,7 @@ static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int reve
 	} else if ( obj->state == CAIN_SIP_CHANNEL_READY) {
 		cain_sip_channel_process_data(obj,revents);
 	} else {
-		cain_sip_warning("Unexpected event [%i], for channel [%p]",revents,obj);
+		cain_sip_warning("Unexpected event [%i], in state [%s] for channel [%p]",revents,cain_sip_channel_state_to_string(obj->state),obj);
 	}
 	return CAIN_SIP_CONTINUE;
 }

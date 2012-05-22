@@ -138,6 +138,12 @@ void cain_sip_header_address_set_uri(cain_sip_header_address_t* address, cain_si
 	address->uri=(cain_sip_uri_t*)cain_sip_object_ref(uri);
 }
 
+cain_sip_header_address_t* cain_sip_header_address_create(const char* display, cain_sip_uri_t* uri) {
+	cain_sip_header_address_t* address = cain_sip_header_address_new();
+	cain_sip_header_address_set_displayname(address,display);
+	cain_sip_header_address_set_uri(address,uri);
+	return address;
+}
 
 /******************************
  * Extension header inherits from header
@@ -263,6 +269,7 @@ cain_sip_header_from_t* cain_sip_header_from_create2(const char *address, const 
 cain_sip_header_from_t* cain_sip_header_from_create(const cain_sip_header_address_t* address, const char *tag) {
 	cain_sip_header_from_t* header= cain_sip_header_from_new();
 	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
+	/*cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_FROM);*/ /*restaure header name*/
 	if (tag) cain_sip_header_from_set_tag(header,tag);
 	return header;
 }
@@ -318,6 +325,7 @@ cain_sip_header_to_t* cain_sip_header_to_create2(const char *address, const char
 cain_sip_header_to_t* cain_sip_header_to_create(const cain_sip_header_address_t* address, const char *tag) {
 	cain_sip_header_to_t* header= cain_sip_header_to_new();
 	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_TO); /*restaure header name*/
 	if (tag) cain_sip_header_to_set_tag(header,tag);
 	return header;
 }
@@ -601,7 +609,8 @@ CAIN_SIP_NEW_HEADER(header_route,header_address,CAIN_SIP_ROUTE)
 CAIN_SIP_PARSE(header_route)
 cain_sip_header_route_t* cain_sip_header_route_create(const cain_sip_header_address_t* route) {
 	cain_sip_header_route_t* header= cain_sip_header_route_new();
-	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),CAIN_SIP_HEADER_ADDRESS(route));
+	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)route);
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_ROUTE); /*restaure header name*/
 	return header;
 }
 /**************************

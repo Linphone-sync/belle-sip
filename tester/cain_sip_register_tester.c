@@ -24,8 +24,9 @@
 const char *test_domain="test.linphone.org";
 static int is_register_ok;
 static int using_transaction;
-static cain_sip_stack_t * stack;
-static cain_sip_provider_t *prov;
+cain_sip_stack_t * stack;
+cain_sip_provider_t *prov;
+static cain_sip_listener_t* l;
 
 static void process_dialog_terminated(cain_sip_listener_t *obj, const cain_sip_dialog_terminated_event_t *event){
 	cain_sip_message("process_dialog_terminated called");
@@ -84,7 +85,7 @@ CAIN_SIP_INSTANCIATE_VPTR(test_listener_t,cain_sip_object_t,NULL,NULL,NULL,FALSE
 
 static test_listener_t *listener;
 
-static int init(void) {
+int register_init(void) {
 	stack=cain_sip_stack_new(NULL);
 	cain_sip_listening_point_t *lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
 	prov=cain_sip_stack_create_provider(stack,lp);
@@ -98,16 +99,43 @@ static int init(void) {
 		cain_sip_object_unref(lp);
 	}
 	listener=cain_sip_object_new(test_listener_t);
-	cain_sip_provider_add_sip_listener(prov,CAIN_SIP_LISTENER(listener));
+
 	return 0;
 }
-static int uninit(void) {
+int register_uninit(void) {
 	cain_sip_object_unref(prov);
 	cain_sip_object_unref(stack);
 	cain_sip_object_unref(listener);
 	return 0;
 }
-static void register_test(const char *transport, int use_transaction) {
+
+void unregister_user(cain_sip_stack_t * stack
+					,cain_sip_provider_t *prov
+					,cain_sip_request_t* initial_request
+					,int use_transaction) {
+	cain_sip_request_t *req;
+	cain_sip_provider_add_sip_listener(prov,l);
+	is_register_ok=0;
+	using_transaction=0;
+	req=(cain_sip_request_t*)cain_sip_object_clone((cain_sip_object_t*)initial_request);
+	cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)req,CAIN_SIP_CSEQ);
+	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
+	cain_sip_header_expires_t* expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_EXPIRES);
+	cain_sip_header_expires_set_expires(expires_header,0);
+	if (use_transaction){
+		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
+		cain_sip_client_transaction_send_request(t);
+	}else cain_sip_provider_send_request(prov,req);
+	cain_sip_stack_sleep(stack,33000);
+	CU_ASSERT_EQUAL(is_register_ok,1);
+	CU_ASSERT_EQUAL(using_transaction,use_transaction);
+	cain_sip_provider_remove_sip_listener(prov,l);
+}
+cain_sip_request_t* register_user(cain_sip_stack_t * stack
+					,cain_sip_provider_t *prov
+					,const char *transport
+					,int use_transaction
+					,const char* username) {
 	cain_sip_request_t *req;
 	char identity[256];
 	char uri[256];
@@ -118,10 +146,10 @@ static void register_test(const char *transport, int use_transaction) {
 
 	if (transport && strcasecmp("tls",transport)==0 && cain_sip_provider_get_listening_point(prov,"tls")==NULL){
 		cain_sip_error("No TLS support, test skipped.");
-		return;
+		return NULL;
 	}
 
-	snprintf(identity,sizeof(identity),"Tester <sip:tester@%s>",test_domain);
+	snprintf(identity,sizeof(identity),"Tester <sip:%s@%s>",username,test_domain);
 	req=cain_sip_request_create(
 	                    cain_sip_uri_parse(uri),
 	                    "REGISTER",
@@ -136,21 +164,7 @@ static void register_test(const char *transport, int use_transaction) {
 	using_transaction=0;
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(600)));
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_contact_new()));
-	if (use_transaction){
-		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
-		cain_sip_client_transaction_send_request(t);
-	}else cain_sip_provider_send_request(prov,req);
-	cain_sip_stack_sleep(stack,33000);
-	CU_ASSERT_EQUAL(is_register_ok,1);
-	CU_ASSERT_EQUAL(using_transaction,use_transaction);
-	/*unregister*/
-	is_register_ok=0;
-	using_transaction=0;
-	req=(cain_sip_request_t*)cain_sip_object_clone((cain_sip_object_t*)req);
-	cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)req,CAIN_SIP_CSEQ);
-	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
-	cain_sip_header_expires_t* expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_EXPIRES);
-	cain_sip_header_expires_set_expires(expires_header,0);
+	cain_sip_provider_add_sip_listener(prov,l=CAIN_SIP_LISTENER(listener));
 	if (use_transaction){
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
 		cain_sip_client_transaction_send_request(t);
@@ -159,9 +173,16 @@ static void register_test(const char *transport, int use_transaction) {
 	CU_ASSERT_EQUAL(is_register_ok,1);
 	CU_ASSERT_EQUAL(using_transaction,use_transaction);
 
-	return;
+	cain_sip_provider_remove_sip_listener(prov,l);
+
+	return req;
 }
 
+static void register_test(const char *transport, int use_transaction) {
+	cain_sip_request_t *req;
+	req=register_user(stack, prov, transport,use_transaction,"tester");
+	unregister_user(stack,prov,req,use_transaction);
+}
 
 static void stateless_register_udp(void){
 	register_test(NULL,0);
@@ -193,8 +214,52 @@ static void stateful_register_tls(void){
 	register_test("tls",1);
 }
 
+
+static void bad_req_process_io_error(void *user_ctx, const cain_sip_io_error_event_t *event){
+	cain_sip_message("bad_req_process_io_error not implemented yet");
+}
+static void bad_req_process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
+	cain_sip_message("bad_req_process_response_event not implemented yet");
+}
+
+static void test_bad_request() {
+	cain_sip_request_t *req;
+	cain_sip_header_address_t* route_address=cain_sip_header_address_create(NULL,cain_sip_uri_create(NULL,test_domain));
+	cain_sip_header_route_t* route;
+	cain_sip_header_to_t* to = cain_sip_header_to_create2("sip:toto@titi.com",NULL);
+	cain_sip_listener_callbacks_t cbs;
+	memset(&cbs,0,sizeof(cbs));
+
+	cain_sip_listener_t* bad_req_listener = cain_sip_listener_create_from_callbacks(&cbs,NULL);
+	cbs.process_io_error=bad_req_process_io_error;
+	cbs.process_response_event=bad_req_process_response_event;
+
+	req=cain_sip_request_create(
+	                    CAIN_SIP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_header_address_get_uri(route_address)))),
+	                    "REGISTER",
+	                    cain_sip_provider_get_new_call_id(prov),
+	                    cain_sip_header_cseq_create(20,"REGISTER"),
+	                    cain_sip_header_from_create2("sip:toto@titi.com",CAIN_SIP_RANDOM_TAG),
+	                    to,
+	                    cain_sip_header_via_new(),
+	                    70);
+
+	cain_sip_uri_set_transport_param(cain_sip_header_address_get_uri(route_address),"tcp");
+	route = cain_sip_header_route_create(route_address);
+	cain_sip_header_set_name(CAIN_SIP_HEADER(to),"BrokenHeader");
+
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(600)));
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(route));
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_contact_new()));
+	cain_sip_provider_add_sip_listener(prov,bad_req_listener);
+	cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
+	cain_sip_client_transaction_send_request(t);
+	cain_sip_stack_sleep(stack,100);
+	cain_sip_provider_remove_sip_listener(prov,bad_req_listener);
+}
+
 int cain_sip_register_test_suite(){
-	CU_pSuite pSuite = CU_add_suite("Register test suite", init, uninit);
+	CU_pSuite pSuite = CU_add_suite("Register", register_init, register_uninit);
 
 	if (NULL == CU_add_test(pSuite, "stateful udp register", stateful_register_udp)) {
 		return CU_get_error();
@@ -215,6 +280,9 @@ int cain_sip_register_test_suite(){
 		return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "stateless tls register", stateless_register_tls)) {
+			return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "Bad request tcp", test_bad_request)) {
 			return CU_get_error();
 	}
 	return 0;

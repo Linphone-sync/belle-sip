@@ -31,6 +31,14 @@
 typedef struct _cain_sip_header_address cain_sip_header_address_t;
 
 cain_sip_header_address_t* cain_sip_header_address_new();
+/*
+ * creates an address from a display name and an uri
+ * Note the uri not copied but only its ref count is incremented
+ * @param  display display name. May be null.
+ * @param uri uri set to the newly created header_address
+ * @return
+ * */
+cain_sip_header_address_t* cain_sip_header_address_create(const char* display, cain_sip_uri_t* uri);
 
 cain_sip_header_address_t* cain_sip_header_address_parse (const char* address) ;
 

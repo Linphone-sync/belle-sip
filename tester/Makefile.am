@@ -11,7 +11,8 @@ cain_sip_tester_SOURCES=	cain_sip_tester.c \
 				cain_sip_message_tester.c \
 				auth_helper_tester.c \
 				cast_test.c \
-				cain_sip_register_tester.c
+				cain_sip_register_tester.c \
+				cain_sip_dialog_tester.c
 
 cain_sip_tester_CFLAGS=$(CUNIT_CFLAGS) $(STRICT_OPTIONS)
 

@@ -33,6 +33,8 @@ const char *cain_sip_channel_state_to_string(cain_sip_channel_state_t state){
 			return "READY";
 		case CAIN_SIP_CHANNEL_ERROR:
 			return "ERROR";
+		case CAIN_SIP_CHANNEL_DISCONNECTED:
+			return "CAIN_SIP_CHANNEL_DISCONNECTED";
 	}
 	return "BAD";
 }
@@ -190,8 +192,11 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 			cain_sip_channel_process_data(obj,revents);
 		}
 		return;
+	} else if (num == 0) {
+		channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
 	} else {
 		cain_sip_error("Receive error on channel [%p]",obj);
+		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 	}
 	return;
 }

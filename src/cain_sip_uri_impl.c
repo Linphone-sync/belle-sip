@@ -107,7 +107,12 @@ cain_sip_uri_t* cain_sip_uri_new () {
 	l_object->header_list = cain_sip_parameters_new();
 	return l_object;
 }
-
+cain_sip_uri_t* cain_sip_uri_create (const char* username,const char* host) {
+	cain_sip_uri_t* uri = cain_sip_uri_new();
+	cain_sip_uri_set_user(uri,username);
+	cain_sip_uri_set_host(uri,host);
+	return uri;
+}
 
 
 char*	cain_sip_uri_to_string(cain_sip_uri_t* uri)  {
