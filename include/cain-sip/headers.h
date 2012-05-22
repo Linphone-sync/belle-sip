@@ -332,6 +332,10 @@ cain_sip_header_authorization_t* cain_sip_header_authorization_parse(const char*
 const char*	cain_sip_header_authorization_get_algorithm(const cain_sip_header_authorization_t* authorization );
 const char*	cain_sip_header_authorization_get_cnonce(const cain_sip_header_authorization_t* authorization );
 const char* cain_sip_header_authorization_get_nonce(const cain_sip_header_authorization_t* authorization);
+/*convert nonce count as string id present
+ * @return 0 in case of success
+ * */
+int cain_sip_header_authorization_get_nonce_count_as_string(const cain_sip_header_authorization_t* authorization,char nounce_count[9]);
 int	cain_sip_header_authorization_get_nonce_count(const cain_sip_header_authorization_t* authorization);
 const char*	cain_sip_header_authorization_get_opaque(const cain_sip_header_authorization_t* authorization);
 const char*	cain_sip_header_authorization_get_qop(const cain_sip_header_authorization_t* authorization);

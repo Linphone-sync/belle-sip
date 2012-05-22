@@ -39,6 +39,9 @@ cain_sip_header_proxy_authorization_t* cain_sip_auth_helper_create_proxy_authori
 /**
  * compute and set response value according to parameters
  * HA1=MD5(username:realm:passwd)
+ * fills cnonce if needed (qop=auth);
+ * fills qop
+ *
  * @return 0 if succeed
  */
 int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* authorization

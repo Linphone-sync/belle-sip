@@ -856,6 +856,7 @@ void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* auth
 	authorization->uri=uri;
 }
 int cain_sip_header_authorization_marshal(cain_sip_header_authorization_t* authorization, char* buff,unsigned int offset,unsigned int buff_size) {
+	char nonce_count[10];
 	AUTH_BASE_MARSHAL(authorization)
 	if (authorization->username) {
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%susername=\"%s\"",border,authorization->username);\
@@ -880,7 +881,8 @@ int cain_sip_header_authorization_marshal(cain_sip_header_authorization_t* autho
 		border=", ";
 		}
 	if (authorization->nonce_count>0) {
-		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%snc=%08i",border,authorization->nonce_count);
+		cain_sip_header_authorization_get_nonce_count_as_string(authorization,nonce_count);
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%snc=%s",border,nonce_count);
 		border=", ";
 	}
 	if (authorization->qop) {
@@ -900,6 +902,16 @@ GET_SET_STRING(cain_sip_header_authorization,cnonce);
 GET_SET_STRING(cain_sip_header_authorization,opaque);
 GET_SET_STRING(cain_sip_header_authorization,qop);
 GET_SET_INT(cain_sip_header_authorization,nonce_count,int)
+
+int cain_sip_header_authorization_get_nonce_count_as_string(const cain_sip_header_authorization_t* authorization,char nounce_count[9]) {
+	nounce_count[0]='\0';
+	if (authorization->nonce_count>0) {
+		snprintf(nounce_count,9,"%08x",authorization->nonce_count);
+		return 0;
+	} else {
+		return -1;
+	}
+}
 /**************************
 *Proxy-Authorization header object inherent from parameters
 ****************************

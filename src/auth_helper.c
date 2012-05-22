@@ -81,11 +81,15 @@ int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* aut
 
 	md5_byte_t out[16];
 	md5_state_t state;
+	int auth_mode=0;
 	char* uri;
 	char ha2[16*2 + 1];
 	char response[16*2 + 1];
 	response[33]=ha2[33]='\0';
 	int di;
+	char nonce_count[9];
+	char cnonce[9];
+
 	if (cain_sip_header_authorization_get_scheme(authorization) != NULL &&
 		strcmp("Digest",cain_sip_header_authorization_get_scheme(authorization))!=0) {
 		cain_sip_error("cain_sip_fill_authorization_header, unsupported schema [%s]"
@@ -93,14 +97,21 @@ int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* aut
 		return -1;
 	}
 	if (cain_sip_header_authorization_get_qop(authorization)
-		/*&& strcmp("auth",cain_sip_header_authorization_get_qop(authorization))!=0*/) {
-		cain_sip_error("cain_sip_fill_authorization_header, unsupported qop [%s], use auth instead"
+		&& !(auth_mode=strcmp("auth",cain_sip_header_authorization_get_qop(authorization))==0)) {
+		cain_sip_error("cain_sip_fill_authorization_header, unsupported qop [%s], use auth or nothing instead"
 								,cain_sip_header_authorization_get_qop(authorization));
 		return -1;
 	}
 	CHECK_IS_PRESENT(authorization,authorization,realm)
 	CHECK_IS_PRESENT(authorization,authorization,nonce)
 	CHECK_IS_PRESENT(authorization,authorization,uri)
+	if (auth_mode) {
+		CHECK_IS_PRESENT(authorization,authorization,nonce_count)
+		if (!cain_sip_header_authorization_get_cnonce(authorization)) {
+			snprintf(cnonce,sizeof(cnonce),"%08x",(short)(long)authorization);
+			cain_sip_header_authorization_set_cnonce(authorization,cnonce);
+		}
+	}
 	if (!method) {
 		 cain_sip_error("cain_sip_fill_authorization_header, method not found ");
 		 return -1;
@@ -117,7 +128,8 @@ int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* aut
 	cain_sip_free(uri);
 	for (di = 0; di < 16; ++di)
 				    sprintf(ha2 + di * 2, "%02x", out[di]);
-	/*response=MD5(HA1:nonce:HA2)*/
+
+
 	md5_init(&state);
 	md5_append(&state,(const md5_byte_t *)ha1,strlen(ha1));
 	md5_append(&state,(const md5_byte_t *)":",1);
@@ -125,6 +137,23 @@ int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* aut
 			,(const md5_byte_t *)cain_sip_header_authorization_get_nonce(authorization)
 			,strlen(cain_sip_header_authorization_get_nonce(authorization)));
 	md5_append(&state,(const md5_byte_t *)":",1);
+	if (auth_mode) {
+		/*response=MD5(HA1:nonce:nonce_count:cnonce:qop:HA2)*/
+		cain_sip_header_authorization_get_nonce_count_as_string(authorization,nonce_count);
+		md5_append(&state
+					,(const md5_byte_t *)nonce_count
+					,sizeof(nonce_count)-1);
+		md5_append(&state,(const md5_byte_t *)":",1);
+		md5_append(&state
+					,(const md5_byte_t *)cain_sip_header_authorization_get_cnonce(authorization)
+					,strlen(cain_sip_header_authorization_get_cnonce(authorization)));
+		md5_append(&state,(const md5_byte_t *)":",1);
+		md5_append(&state
+					,(const md5_byte_t *)cain_sip_header_authorization_get_qop(authorization)
+					,strlen(cain_sip_header_authorization_get_qop(authorization)));
+		md5_append(&state,(const md5_byte_t *)":",1);
+	} /*else response=MD5(HA1:nonce:HA2)*/
+
 	md5_append(&state,(const md5_byte_t *)ha2,strlen(ha2));
 	md5_finish(&state,out);
 	/*copy values*/
