@@ -442,6 +442,7 @@ struct _cain_sip_header {
 
 void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next);
 cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* headers);
+void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_request_t *req);
 void cain_sip_util_copy_headers(cain_sip_message_t *orig, cain_sip_message_t *dest, const char*header, int multiple);
 
 void cain_sip_header_init(cain_sip_header_t* obj);
@@ -494,6 +495,7 @@ struct cain_sip_provider{
 	cain_sip_list_t *listeners;
 	cain_sip_list_t *client_transactions;
 	cain_sip_list_t *server_transactions;
+	cain_sip_list_t *dialogs;
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
@@ -506,6 +508,9 @@ cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transacti
 void cain_sip_provider_remove_server_transaction(cain_sip_provider_t *prov, cain_sip_server_transaction_t *t);
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t);
 cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport);
+void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
+void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
+
 
 typedef struct listener_ctx{
 	cain_sip_listener_t *listener;
@@ -657,6 +662,9 @@ cain_sip_nist_t * cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_
  */ 
 struct cain_sip_dialog{
 	cain_sip_object_t base;
+	cain_sip_provider_t *provider;
+	cain_sip_request_t *last_out_invite;
+	cain_sip_request_t *last_out_ack; /*so that it can retransmitted when needed*/
 	cain_sip_dialog_state_t state;
 	void *appdata;
 	cain_sip_header_call_id_t *call_id;
@@ -671,10 +679,15 @@ struct cain_sip_dialog{
 	int is_server:1;
 	int is_secure:1;
 	int terminate_on_bye:1;
+	int needs_ack;
 };
 
 cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t);
-
+/*returns 1 if message belongs to the dialog, 0 otherwise */
+int _cain_sip_dialog_match(cain_sip_dialog_t *obj, const char *call_id, const char *local_tag, const char *remote_tag);
+int cain_sip_dialog_match(cain_sip_dialog_t *obj, cain_sip_message_t *msg, int as_uas);
+int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas);
+void cain_sip_dialog_check_ack_sent(cain_sip_dialog_t*obj);
 /*
  cain_sip_response_t
 */

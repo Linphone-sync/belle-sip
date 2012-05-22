@@ -226,9 +226,55 @@ cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_pro
 
 cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, cain_sip_transaction_t *t){
 	cain_sip_dialog_t *dialog=NULL;
+	
+	if (t->last_response){
+		int code=cain_sip_response_get_status_code(t->last_response);
+		if (code>=200 && code<300){
+			cain_sip_fatal("You must not create dialog after sending the response that establish the dialog.");
+		}
+		return NULL;
+	}
 	dialog=cain_sip_dialog_new(t);
-	t->dialog=(cain_sip_dialog_t*)cain_sip_object_ref(dialog);
+	if (dialog)
+		t->dialog=(cain_sip_dialog_t*)cain_sip_object_ref(dialog);
 	return dialog;
+}
+
+/*finds an existing dialog for an outgoing or incoming request */
+cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas){
+	cain_sip_list_t *elem;
+	cain_sip_dialog_t *dialog;
+	cain_sip_header_call_id_t *call_id=cain_sip_message_get_header_by_type(msg,cain_sip_header_call_id_t);
+	cain_sip_header_from_t *from=cain_sip_message_get_header_by_type(msg,cain_sip_header_from_t);
+	cain_sip_header_to_t *to=cain_sip_message_get_header_by_type(msg,cain_sip_header_to_t);
+	const char *from_tag;
+	const char *to_tag;
+	const char *call_id_value;
+	const char *local_tag,*remote_tag;
+
+	if (call_id==NULL || from==NULL || to==NULL) return NULL;
+
+	call_id_value=cain_sip_header_call_id_get_call_id(call_id);
+	from_tag=cain_sip_header_from_get_tag(from);
+	to_tag=cain_sip_header_to_get_tag(to);
+	local_tag=as_uas ? to_tag : from_tag;
+	remote_tag=as_uas ? from_tag : to_tag;
+	
+	for (elem=prov->dialogs;elem!=NULL;elem=elem->next){
+		dialog=(cain_sip_dialog_t*)elem->data;
+		if (_cain_sip_dialog_match(dialog,call_id_value,local_tag,remote_tag))
+			return dialog;
+	}
+	return NULL;
+}
+
+void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog){
+	prov->dialogs=cain_sip_list_prepend(prov->dialogs,cain_sip_object_ref(dialog));
+}
+
+void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog){
+	prov->dialogs=cain_sip_list_remove(prov->dialogs,dialog);
+	cain_sip_object_unref(dialog);
 }
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){

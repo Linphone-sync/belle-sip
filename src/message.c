@@ -479,6 +479,18 @@ cain_sip_response_t *cain_sip_response_create_from_request(cain_sip_request_t *r
 	return resp;
 }
 
+void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_request_t *req){
+	const cain_sip_list_t *rr=cain_sip_message_get_headers((cain_sip_message_t*)req,CAIN_SIP_RECORD_ROUTE);
+	cain_sip_header_contact_t *ct=cain_sip_message_get_header_by_type(obj,cain_sip_header_contact_t);
+	cain_sip_message_remove_header((cain_sip_message_t*)obj,CAIN_SIP_RECORD_ROUTE);
+	if (rr)
+		cain_sip_message_add_headers((cain_sip_message_t*)obj,rr);
+	if (!ct){
+		/*add a dummy contact to be filled by channel later*/
+		cain_sip_message_add_header((cain_sip_message_t*)obj,(cain_sip_header_t*)cain_sip_header_contact_new());
+	}	
+}
+
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
 	const char *host;
