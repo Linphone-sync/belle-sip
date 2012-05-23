@@ -34,7 +34,7 @@ const char *cain_sip_channel_state_to_string(cain_sip_channel_state_t state){
 		case CAIN_SIP_CHANNEL_ERROR:
 			return "ERROR";
 		case CAIN_SIP_CHANNEL_DISCONNECTED:
-			return "CAIN_SIP_CHANNEL_DISCONNECTED";
+			return "DISCONNECTED";
 	}
 	return "BAD";
 }
@@ -194,9 +194,11 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 		return;
 	} else if (num == 0) {
 		channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
+		cain_sip_channel_close(obj);
 	} else {
 		cain_sip_error("Receive error on channel [%p]",obj);
 		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+		cain_sip_channel_close(obj);
 	}
 	return;
 }
@@ -244,6 +246,7 @@ const char *cain_sip_channel_get_local_address(cain_sip_channel_t *obj, int *por
 int cain_sip_channel_is_reliable(const cain_sip_channel_t *obj){
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->reliable;
 }
+
 const char * cain_sip_channel_get_transport_name_lower_case(const cain_sip_channel_t *obj){
 	const char* transport = cain_sip_channel_get_transport_name(obj);
 	if (strcasecmp("udp",transport)==0) return "udp";
@@ -255,6 +258,7 @@ const char * cain_sip_channel_get_transport_name_lower_case(const cain_sip_chann
 		return transport;
 	}
 }
+
 const char * cain_sip_channel_get_transport_name(const cain_sip_channel_t *obj){
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->transport;
 }
@@ -265,6 +269,10 @@ int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t bufle
 
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->channel_recv(obj,buf,buflen);
+}
+
+void cain_sip_channel_close(cain_sip_channel_t *obj){
+	CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close(obj);
 }
 
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj){
@@ -300,6 +308,7 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 		int ret=cain_sip_channel_send(obj,buffer,len);
 		if (ret==-1){
 			channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+			cain_sip_channel_close(obj);
 		}else{
 			cain_sip_message("channel %p: message sent: \n%s",obj,buffer);
 		}

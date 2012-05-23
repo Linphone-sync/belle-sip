@@ -510,7 +510,7 @@ void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_s
 cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport);
 void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
 void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
-
+void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_t *chan);
 
 typedef struct listener_ctx{
 	cain_sip_listener_t *listener;
