@@ -459,8 +459,7 @@ cain_sip_response_t *cain_sip_response_create_from_request(cain_sip_request_t *r
 	cain_sip_header_t *h;
 	cain_sip_header_to_t *to;
 	cain_sip_response_init_default(resp,status_code,NULL);
-	if (status_code==100){
-		h=cain_sip_message_get_header((cain_sip_message_t*)req,"timestamp");
+	if (status_code==100 && (h=cain_sip_message_get_header((cain_sip_message_t*)req,"timestamp"))){
 		cain_sip_message_add_header((cain_sip_message_t*)resp,h);
 	}
 	cain_sip_message_add_headers((cain_sip_message_t*)resp,cain_sip_message_get_headers ((cain_sip_message_t*)req,"via"));
@@ -472,7 +471,7 @@ cain_sip_response_t *cain_sip_response_create_from_request(cain_sip_request_t *r
 	}else{
 		to=(cain_sip_header_to_t*)h;
 	}
-	cain_sip_message_add_header((cain_sip_message_t*)req,(cain_sip_header_t*)to);
+	cain_sip_message_add_header((cain_sip_message_t*)resp,(cain_sip_header_t*)to);
 	h=cain_sip_message_get_header((cain_sip_message_t*)req,"call-id");
 	cain_sip_message_add_header((cain_sip_message_t*)resp,h);
 	cain_sip_message_add_header((cain_sip_message_t*)resp,cain_sip_message_get_header((cain_sip_message_t*)req,"cseq"));
@@ -494,7 +493,7 @@ void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_reques
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
 	const char *host;
-	hop->transport=cain_sip_strdup(cain_sip_header_via_get_protocol(via));
+	hop->transport=cain_sip_strdup(cain_sip_header_via_get_transport(via));
 	host=cain_sip_header_via_get_received(via);
 	if (host==NULL)
 		host=cain_sip_header_via_get_host(via);

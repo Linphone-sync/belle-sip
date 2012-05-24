@@ -36,7 +36,8 @@ void cain_sip_transaction_set_application_data(cain_sip_transaction_t *t, void *
 const char *cain_sip_transaction_get_branch_id(const cain_sip_transaction_t *t);
 cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_transaction_t *t);
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t);
-cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t);
+cain_sip_request_t *cain_sip_transaction_get_request(const cain_sip_transaction_t *t);
+cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t);
 
 void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp);
 

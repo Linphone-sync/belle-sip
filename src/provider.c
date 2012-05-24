@@ -231,8 +231,8 @@ cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, 
 		int code=cain_sip_response_get_status_code(t->last_response);
 		if (code>=200 && code<300){
 			cain_sip_fatal("You must not create dialog after sending the response that establish the dialog.");
+			return NULL;
 		}
-		return NULL;
 	}
 	dialog=cain_sip_dialog_new(t);
 	if (dialog)

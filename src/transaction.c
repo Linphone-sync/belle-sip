@@ -85,7 +85,7 @@ void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
 	cain_sip_provider_set_transaction_terminated(t->provider,t);
 }
 
-cain_sip_request_t *cain_sip_transaction_get_request(cain_sip_transaction_t *t){
+cain_sip_request_t *cain_sip_transaction_get_request(const cain_sip_transaction_t *t){
 	return t->request;
 }
 
@@ -331,4 +331,7 @@ void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_s
 	cain_sip_transaction_init((cain_sip_transaction_t*)obj, prov,req);
 }
 
+cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t) {
+	return t->dialog;
+}
 
