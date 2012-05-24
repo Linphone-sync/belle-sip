@@ -74,6 +74,7 @@ typedef struct cain_sip_tls_channel cain_sip_tls_channel_t;
 
 struct cain_sip_channel{
 	cain_sip_source_t base;
+	cain_sip_listening_point_t *lp; /*the listening point that owns this channel*/
 	cain_sip_stack_t *stack;
 	cain_sip_channel_state_t state;
 	cain_sip_list_t *listeners;
@@ -103,6 +104,8 @@ void cain_sip_channel_resolve(cain_sip_channel_t *obj);
 void cain_sip_channel_connect(cain_sip_channel_t *obj);
 
 void cain_sip_channel_prepare(cain_sip_channel_t *obj);
+
+void cain_sip_channel_close(cain_sip_channel_t *obj);
 
 int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 
@@ -142,6 +145,7 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
 	int (*connect)(cain_sip_channel_t *obj, const struct sockaddr *, socklen_t socklen);
 	int (*channel_send)(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 	int (*channel_recv)(cain_sip_channel_t *obj, void *buf, size_t buflen);
+	void (*close)(cain_sip_channel_t *obj);
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 

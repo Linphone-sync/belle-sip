@@ -20,6 +20,14 @@
 #define STREAM_CHANNEL_H_
 #include "channel.h"
 
+struct cain_sip_stream_channel{
+	cain_sip_channel_t base;
+};
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_stream_channel_t,cain_sip_channel_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+void stream_channel_close(cain_sip_channel_t *obj);
 int stream_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t socklen);
 /*return 0 if succeed*/
 int finalize_stream_connection (cain_sip_fd_t fd, struct sockaddr *addr, socklen_t* slen);

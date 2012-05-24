@@ -25,14 +25,13 @@
 #include "stream_channel.h"
 #ifdef HAVE_GNUTLS
 #include <gnutls/gnutls.h>
-#else if HAVE_OPENSSL
+#elif HAVE_OPENSSL
 #include "openssl/ssl.h"
 #endif
 /*************tls********/
 
 struct cain_sip_tls_channel{
-	cain_sip_channel_t base;
-	cain_sip_tls_listening_point_t* lp;
+	cain_sip_stream_channel_t base;
 	int socket_connected;
 #ifdef HAVE_OPENSSL
 	SSL *ssl;
@@ -44,20 +43,19 @@ struct cain_sip_tls_channel{
 	struct sockaddr_storage ss;
 };
 
-
-static void tls_channel_uninit(cain_sip_tls_channel_t *obj){
-	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
+static void tls_channel_close(cain_sip_tls_channel_t *obj){
 #ifdef HAVE_GNUTLS
 	gnutls_bye (obj->session, GNUTLS_SHUT_RDWR);
 	gnutls_deinit (obj->session);
 	gnutls_certificate_free_credentials (obj->xcred);
-
 #endif
-	if (sock!=-1)
-		close_socket(sock);
+	stream_channel_close((cain_sip_channel_t*)obj);
+}
 
-	cain_sip_main_loop_remove_source(obj->base.stack->ml,(cain_sip_source_t*)obj);
-	 cain_sip_object_unref(obj->lp);
+static void tls_channel_uninit(cain_sip_tls_channel_t *obj){
+	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
+	if (sock!=-1)
+		tls_channel_close(obj);
 }
 
 static int tls_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
@@ -73,7 +71,12 @@ static int tls_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buf
 }
 
 static ssize_t tls_channel_pull_func(gnutls_transport_ptr_t obj, void* buff, size_t bufflen) {
-	return stream_channel_recv((cain_sip_channel_t *)obj, buff,bufflen);
+	int err=recv(
+		cain_sip_source_get_fd((cain_sip_source_t *)obj),buff,bufflen,0);
+	if (err==-1 && get_socket_error()!=EWOULDBLOCK){
+		cain_sip_error("tls_channel_pull_func: %s",cain_sip_get_socket_error_string());
+	}
+	return err;
 }
 static int tls_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	cain_sip_tls_channel_t* channel = (cain_sip_tls_channel_t*)obj;
@@ -90,7 +93,7 @@ int tls_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr, so
 	return stream_channel_connect(obj,addr,socklen);
 }
 
-CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_tls_channel_t,cain_sip_channel_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_tls_channel_t,cain_sip_stream_channel_t)
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_tls_channel_t);
@@ -99,16 +102,19 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_tls_channel_t)=
 {
 	{
 		{
-			CAIN_SIP_VPTR_INIT(cain_sip_tls_channel_t,cain_sip_channel_t,FALSE),
-			(cain_sip_object_destroy_t)tls_channel_uninit,
-			NULL,
-			NULL
-		},
-		"TLS",
-		1, /*is_reliable*/
-		tls_channel_connect,
-		tls_channel_send,
-		tls_channel_recv
+			{
+				CAIN_SIP_VPTR_INIT(cain_sip_tls_channel_t,cain_sip_stream_channel_t,FALSE),
+				(cain_sip_object_destroy_t)tls_channel_uninit,
+				NULL,
+				NULL
+			},
+			"TLS",
+			1, /*is_reliable*/
+			tls_channel_connect,
+			tls_channel_send,
+			tls_channel_recv,
+			(void (*)(cain_sip_channel_t*))tls_channel_close
+		}
 	}
 };
 
@@ -127,6 +133,7 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 			}
 			cain_sip_source_set_events((cain_sip_source_t*)channel,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
 			channel->socket_connected=1;
+			cain_sip_message("Connected at TCP level.");
 		}
 		/*connected, now establishing TLS connection*/
 #if HAVE_GNUTLS
@@ -142,7 +149,7 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 			cain_sip_channel_set_ready(obj,(struct sockaddr*)&channel->ss,addrlen);
 			return CAIN_SIP_CONTINUE;
 		}
-#else if HAVE_OPENSSL
+#elif HAVE_OPENSSL
 		if (!channel->ssl) {
 			channel->ssl=SSL_new(channel->lp->ssl_context);
 			if (!channel->ssl) {
@@ -181,6 +188,7 @@ static int process_data(cain_sip_channel_t *obj,unsigned int revents){
 	channel_process_queue(obj);
 	return CAIN_SIP_STOP;
 }
+
 cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp,const char *bindip, int localport, const char *dest, int port){
 	cain_sip_tls_channel_t *obj=cain_sip_object_new(cain_sip_tls_channel_t);
 	cain_sip_channel_t* channel=(cain_sip_channel_t*)obj;
@@ -217,7 +225,6 @@ cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp
 							,socket(AF_INET, SOCK_STREAM, 0)
 							,(cain_sip_source_func_t)process_data
 							,bindip,localport,dest,port);
-	cain_sip_object_ref(obj->lp=lp);
 	return (cain_sip_channel_t*)obj;
 error:
 	cain_sip_error("Cannot create tls channel to [%s://%s:%i]",cain_sip_channel_get_transport_name(channel),channel->peer_name,channel->peer_port);

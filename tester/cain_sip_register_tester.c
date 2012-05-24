@@ -181,7 +181,7 @@ cain_sip_request_t* register_user(cain_sip_stack_t * stack
 static void register_test(const char *transport, int use_transaction) {
 	cain_sip_request_t *req;
 	req=register_user(stack, prov, transport,use_transaction,"tester");
-	unregister_user(stack,prov,req,use_transaction);
+	if (req) unregister_user(stack,prov,req,use_transaction);
 }
 
 static void stateless_register_udp(void){

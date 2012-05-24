@@ -30,16 +30,12 @@
 
 /*************TCP********/
 
-struct cain_sip_stream_channel{
-	cain_sip_channel_t base;
-};
+
 
 
 static void stream_channel_uninit(cain_sip_stream_channel_t *obj){
 	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
-	if (sock!=-1)
-		close_socket(sock);
-	 cain_sip_main_loop_remove_source(obj->base.stack->ml,(cain_sip_source_t*)obj);
+	if (sock!=-1) stream_channel_close((cain_sip_channel_t*)obj);
 }
 
 int stream_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
@@ -47,7 +43,7 @@ int stream_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen)
 	int err;
 	err=send(sock,buf,buflen,0);
 	if (err==-1){
-		cain_sip_fatal("Could not send stream packet on channel [%p]: %s",obj,strerror(errno));
+		cain_sip_error("Could not send stream packet on channel [%p]: %s",obj,strerror(errno));
 		return -errno;
 	}
 	return err;
@@ -56,12 +52,21 @@ int stream_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen)
 int stream_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
 	int err;
-	err=recv(sock,buf,buflen,MSG_DONTWAIT);
-	if (err==-1 && errno!=EWOULDBLOCK){
+	err=recv(sock,buf,buflen,0);
+	if (err==-1){
 		cain_sip_error("Could not receive stream packet: %s",strerror(errno));
 		return -errno;
 	}
 	return err;
+}
+
+void stream_channel_close(cain_sip_channel_t *obj){
+	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
+	if (sock!=-1){
+		close_socket(sock);
+		cain_sip_main_loop_remove_source(obj->stack->ml,(cain_sip_source_t*)obj);
+		obj->base.fd=-1;
+	}
 }
 
 int stream_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t socklen){
@@ -86,9 +91,6 @@ int stream_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr,
 	return 0;
 }
 
-CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_stream_channel_t,cain_sip_channel_t)
-CAIN_SIP_DECLARE_CUSTOM_VPTR_END
-
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_stream_channel_t);
 
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_stream_channel_t)=
@@ -104,7 +106,8 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_stream_channel_t)=
 		1, /*is_reliable*/
 		stream_channel_connect,
 		stream_channel_send,
-		stream_channel_recv
+		stream_channel_recv,
+		stream_channel_close,
 	}
 };
 int finalize_stream_connection (cain_sip_fd_t fd, struct sockaddr *addr, socklen_t* slen) {
