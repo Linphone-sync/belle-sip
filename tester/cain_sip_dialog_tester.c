@@ -38,6 +38,27 @@ extern void unregister_user(cain_sip_stack_t * stack
 
 
 
+static const char* sdp = 		"v=0\r\n"\
+								"o=jehan-mac 1239 1239 IN IP4 192.168.0.18\r\n"\
+								"s=Talk\r\n"\
+								"c=IN IP4 192.168.0.18\r\n"\
+								"t=0 0\r\n"\
+								"m=audio 7078 RTP/AVP 111 110 3 0 8 101\r\n"\
+								"a=rtpmap:111 speex/16000\r\n"\
+								"a=fmtp:111 vbr=on\r\n"\
+								"a=rtpmap:110 speex/8000\r\n"\
+								"a=fmtp:110 vbr=on\r\n"\
+								"a=rtpmap:101 telephone-event/8000\r\n"\
+								"a=fmtp:101 0-11\r\n"\
+								"m=video 8078 RTP/AVP 99 97 98\r\n"\
+								"c=IN IP4 192.168.0.18\r\n"\
+								"b=AS:380\r\n"\
+								"a=rtpmap:99 MP4V-ES/90000\r\n"\
+								"a=fmtp:99 profile-level-id=3\r\n"\
+								"a=rtpmap:97 theora/90000\r\n"\
+								"a=rtpmap:98 H263-1998/90000\r\n"\
+								"a=fmtp:98 CIF=1;QCIF=1\r\n";
+
 static int init(void) {
 	register_init();
 	return 0;
@@ -84,6 +105,11 @@ cain_sip_request_t* build_request(cain_sip_stack_t * stack
 	return req;
 }
 
+static cain_sip_dialog_t* caller_dialog;
+static cain_sip_dialog_t* callee_dialog;
+static cain_sip_response_t* ok_response;
+static cain_sip_server_transaction_t* inserv_transaction;
+
 static void process_dialog_terminated(void *user_ctx, const cain_sip_dialog_terminated_event_t *event){
 	cain_sip_message("process_dialog_terminated not implemented yet");
 }
@@ -97,12 +123,23 @@ static void process_request_event(void *user_ctx, const cain_sip_request_event_t
 	}
 	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(server_transaction));
 	cain_sip_response_t* ringing_response;
+	cain_sip_header_content_type_t* content_type ;
+	cain_sip_header_content_length_t* content_length;
 	if (!dialog ) {
 		CU_ASSERT_STRING_EQUAL_FATAL("INVITE",cain_sip_request_get_method(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(server_transaction))))
 		dialog=cain_sip_provider_get_new_dialog(prov,CAIN_SIP_TRANSACTION(server_transaction));
+		inserv_transaction=server_transaction;
 	}
 	if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_NULL) {
 		ringing_response = cain_sip_response_create_from_request(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(server_transaction)),180);
+		/*prepare 200ok*/
+		ok_response = cain_sip_response_create_from_request(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(server_transaction)),200);
+		content_length= cain_sip_header_content_length_create(strlen(sdp));
+		content_type = cain_sip_header_content_type_create("application","sdp");
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(ok_response),CAIN_SIP_HEADER(content_type));
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(ok_response),CAIN_SIP_HEADER(content_length));
+		cain_sip_message_set_body(CAIN_SIP_MESSAGE(ok_response),sdp,strlen(sdp));
+		/*only send ringing*/
 		cain_sip_server_transaction_send_response(server_transaction,ringing_response);
 	}
 	cain_sip_message("process_request_event not implemented yet");
@@ -110,10 +147,21 @@ static void process_request_event(void *user_ctx, const cain_sip_request_event_t
 
 static void caller_process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
 	cain_sip_client_transaction_t* client_transaction = cain_sip_response_event_get_client_transaction(event);
+	int status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
+	cain_sip_message("caller_process_response_event [%i]",status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(client_transaction);
 	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(client_transaction));
 	CU_ASSERT_PTR_NOT_NULL_FATAL(dialog);
+	if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_NULL) {
+		CU_ASSERT_EQUAL(status,100);
+		callee_dialog=dialog;
+	} else if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_EARLY){
+		CU_ASSERT_EQUAL(status,180);
+		/*send 200ok from callee*/
+		cain_sip_server_transaction_send_response(inserv_transaction,ok_response);
+	}
 
-	cain_sip_message("caller_process_response_event");
+
 
 }
 static void callee_process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
@@ -140,26 +188,7 @@ static void process_transaction_terminated(void *user_ctx, const cain_sip_transa
 	}
 }
 
-static const char* sdp = 		"v=0\r\n"\
-								"o=jehan-mac 1239 1239 IN IP4 192.168.0.18\r\n"\
-								"s=Talk\r\n"\
-								"c=IN IP4 192.168.0.18\r\n"\
-								"t=0 0\r\n"\
-								"m=audio 7078 RTP/AVP 111 110 3 0 8 101\r\n"\
-								"a=rtpmap:111 speex/16000\r\n"\
-								"a=fmtp:111 vbr=on\r\n"\
-								"a=rtpmap:110 speex/8000\r\n"\
-								"a=fmtp:110 vbr=on\r\n"\
-								"a=rtpmap:101 telephone-event/8000\r\n"\
-								"a=fmtp:101 0-11\r\n"\
-								"m=video 8078 RTP/AVP 99 97 98\r\n"\
-								"c=IN IP4 192.168.0.18\r\n"\
-								"b=AS:380\r\n"\
-								"a=rtpmap:99 MP4V-ES/90000\r\n"\
-								"a=fmtp:99 profile-level-id=3\r\n"\
-								"a=rtpmap:97 theora/90000\r\n"\
-								"a=rtpmap:98 H263-1998/90000\r\n"\
-								"a=fmtp:98 CIF=1;QCIF=1\r\n";
+
 
 static void simple_call(void) {
 #define CALLER "marie"
@@ -167,7 +196,9 @@ static void simple_call(void) {
 	cain_sip_request_t *pauline_register_req;
 	cain_sip_request_t *marie_register_req;
 	cain_sip_listener_callbacks_t caller_listener_callbacks;
+	cain_sip_listener_t* caller_listener;
 	cain_sip_listener_callbacks_t callee_listener_callbacks;
+	cain_sip_listener_t* callee_listener;
 	cain_sip_request_t* req;
 	cain_sip_header_address_t* from;
 	cain_sip_header_address_t* to;
@@ -194,8 +225,8 @@ static void simple_call(void) {
 	pauline_register_req=register_user(stack, prov, "TCP" ,1 ,CALLER);
 	marie_register_req=register_user(stack, prov, "TLS" ,1 ,CALLEE);
 
-	cain_sip_provider_add_sip_listener(prov,cain_sip_listener_create_from_callbacks(&caller_listener_callbacks,NULL));
-	cain_sip_provider_add_sip_listener(prov,cain_sip_listener_create_from_callbacks(&callee_listener_callbacks,NULL));
+	cain_sip_provider_add_sip_listener(prov,caller_listener=cain_sip_listener_create_from_callbacks(&caller_listener_callbacks,NULL));
+	cain_sip_provider_add_sip_listener(prov,callee_listener=cain_sip_listener_create_from_callbacks(&callee_listener_callbacks,NULL));
 
 	from=cain_sip_header_address_create(NULL,cain_sip_uri_create(CALLER,test_domain));
 	to=cain_sip_header_address_create(NULL,cain_sip_uri_create(CALLEE,test_domain));
@@ -214,11 +245,14 @@ static void simple_call(void) {
 
 
 	client_transaction = cain_sip_provider_get_new_client_transaction(prov,req);
-	cain_sip_provider_get_new_dialog(prov,CAIN_SIP_TRANSACTION(client_transaction));
+	caller_dialog=cain_sip_provider_get_new_dialog(prov,CAIN_SIP_TRANSACTION(client_transaction));
 	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(client_transaction)));
 	//cain_sip_transaction_set_application_data(CAIN_SIP_TRANSACTION(client_transaction),op);
 	cain_sip_client_transaction_send_request(client_transaction);
 	cain_sip_stack_sleep(stack,3000);
+
+	cain_sip_provider_remove_sip_listener(prov,caller_listener);
+	cain_sip_provider_remove_sip_listener(prov,callee_listener);
 
 	unregister_user(stack, prov, pauline_register_req ,1);
 	unregister_user(stack, prov, marie_register_req ,1);

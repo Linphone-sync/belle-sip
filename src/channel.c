@@ -119,7 +119,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 	int num;
 	int offset;
 	int i;
-	size_t message_size;
+	size_t message_size=0;
 	cain_sip_header_content_length_t* content_length_header;
 	int content_length;
 
