@@ -314,11 +314,11 @@ void cain_sip_dialog_delete(cain_sip_dialog_t *obj){
 	
 }
 
-void *cain_sip_get_application_data(const cain_sip_dialog_t *dialog){
+void *cain_sip_dialog_get_application_data(const cain_sip_dialog_t *dialog){
 	return dialog->appdata;
 }
 
-void cain_sip_set_application_data(cain_sip_dialog_t *dialog, void *data){
+void cain_sip_dialog_set_application_data(cain_sip_dialog_t *dialog, void *data){
 	dialog->appdata=data;
 }
 

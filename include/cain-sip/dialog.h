@@ -37,9 +37,9 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *dialog, co
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *dialog);
 
-void *cain_sip_get_application_data(const cain_sip_dialog_t *dialog);
+void *cain_sip_dialog_get_application_data(const cain_sip_dialog_t *dialog);
 
-void cain_sip_set_application_data(cain_sip_dialog_t *dialog, void *data);
+void cain_sip_dialog_set_application_data(cain_sip_dialog_t *dialog, void *data);
 
 const char *cain_sip_dialog_get_dialog_id(const cain_sip_dialog_t *dialog);
 
