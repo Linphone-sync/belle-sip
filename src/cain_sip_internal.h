@@ -389,7 +389,7 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 									, cain_sip_##super_type##_t\
 									, cain_sip_##object_type##_destroy\
 									, cain_sip_##object_type##_clone\
-									, cain_sip_##object_type##_marshal, FALSE); \
+									, cain_sip_##object_type##_marshal, TRUE); \
 	cain_sip_##object_type##_t* cain_sip_##object_type##_new () { \
 		cain_sip_##object_type##_t* l_object = cain_sip_object_new(cain_sip_##object_type##_t);\
 		cain_sip_##super_type##_init((cain_sip_##super_type##_t*)l_object); \
@@ -634,6 +634,7 @@ struct cain_sip_ist{
 	cain_sip_source_t *timer_G;
 	cain_sip_source_t *timer_H;
 	cain_sip_source_t *timer_I;
+	cain_sip_source_t *timer_L;
 };
 
 typedef struct cain_sip_ist cain_sip_ist_t;
@@ -642,7 +643,8 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_ist_t,cain_sip_server_transaction_t)
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 cain_sip_ist_t * cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *req);
-void cain_sip_ist_process_ack(cain_sip_ist_t *obj, cain_sip_message_t *ack);
+/* returns 0 if the ack should be notified to TU, or -1 otherwise*/
+int cain_sip_ist_process_ack(cain_sip_ist_t *obj, cain_sip_message_t *ack);
 
 struct cain_sip_nist{
 	cain_sip_server_transaction_t base;
@@ -679,7 +681,7 @@ struct cain_sip_dialog{
 	int is_server:1;
 	int is_secure:1;
 	int terminate_on_bye:1;
-	int needs_ack;
+	int needs_ack:1;
 };
 
 cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t);
@@ -688,6 +690,7 @@ int _cain_sip_dialog_match(cain_sip_dialog_t *obj, const char *call_id, const ch
 int cain_sip_dialog_match(cain_sip_dialog_t *obj, cain_sip_message_t *msg, int as_uas);
 int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas);
 void cain_sip_dialog_check_ack_sent(cain_sip_dialog_t*obj);
+int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack);
 /*
  cain_sip_response_t
 */

@@ -73,7 +73,6 @@ static int cain_sip_dialog_init_as_uas(cain_sip_dialog_t *obj, cain_sip_request_
 	cain_sip_header_contact_t *ct=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t);
 	cain_sip_header_cseq_t *cseq=cain_sip_message_get_header_by_type(req,cain_sip_header_cseq_t);
 	cain_sip_header_to_t *to=cain_sip_message_get_header_by_type(resp,cain_sip_header_to_t);
-	cain_sip_header_call_id_t *call_id=cain_sip_message_get_header_by_type(req,cain_sip_header_call_id_t);
 	cain_sip_header_via_t *via=cain_sip_message_get_header_by_type(req,cain_sip_header_via_t);
 	cain_sip_uri_t *requri=cain_sip_request_get_uri(req);
 
@@ -87,10 +86,6 @@ static int cain_sip_dialog_init_as_uas(cain_sip_dialog_t *obj, cain_sip_request_
 	}
 	if (!cseq){
 		cain_sip_error("No cseq in request.");
-		return -1;
-	}
-	if (!call_id){
-		cain_sip_error("No call_id in request.");
 		return -1;
 	}
 	if (!via){
@@ -108,7 +103,7 @@ static int cain_sip_dialog_init_as_uas(cain_sip_dialog_t *obj, cain_sip_request_
 	check_route_set(obj->route_set);
 	obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
 	obj->remote_cseq=cain_sip_header_cseq_get_seq_number(cseq);
-	obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
+	/*call id already set */
 	/*remote party already set */
 	obj->local_party=(cain_sip_header_address_t*)cain_sip_object_ref(to);
 	return 0;
@@ -125,7 +120,6 @@ static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_
 	cain_sip_header_contact_t *ct=cain_sip_message_get_header_by_type(resp,cain_sip_header_contact_t);
 	cain_sip_header_cseq_t *cseq=cain_sip_message_get_header_by_type(req,cain_sip_header_cseq_t);
 	cain_sip_header_to_t *to=cain_sip_message_get_header_by_type(resp,cain_sip_header_to_t);
-	cain_sip_header_call_id_t *call_id=cain_sip_message_get_header_by_type(req,cain_sip_header_call_id_t);
 	cain_sip_header_via_t *via=cain_sip_message_get_header_by_type(req,cain_sip_header_via_t);
 	cain_sip_uri_t *requri=cain_sip_request_get_uri(req);
 
@@ -139,10 +133,6 @@ static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_
 	}
 	if (!cseq){
 		cain_sip_error("No cseq in request.");
-		return -1;
-	}
-	if (!call_id){
-		cain_sip_error("No call_id in request.");
 		return -1;
 	}
 	if (!via){
@@ -160,7 +150,7 @@ static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_
 	check_route_set(obj->route_set);
 	obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
 	obj->local_cseq=cain_sip_header_cseq_get_seq_number(cseq);
-	obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
+	/*call id is already set */
 	/*local_tag is already set*/
 	obj->remote_party=(cain_sip_header_address_t*)cain_sip_object_ref(to);
 	/*local party is already set*/
@@ -180,25 +170,47 @@ int cain_sip_dialog_establish_full(cain_sip_dialog_t *obj, cain_sip_request_t *r
 int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, cain_sip_response_t *resp){
 	int code=cain_sip_response_get_status_code(resp);
 	cain_sip_header_to_t *to=cain_sip_message_get_header_by_type(resp,cain_sip_header_to_t);
+	cain_sip_header_call_id_t *call_id=cain_sip_message_get_header_by_type(req,cain_sip_header_call_id_t);
 
 	if (!to){
 		cain_sip_error("No to in response.");
 		return -1;
 	}
+	if (!call_id){
+		cain_sip_error("No call-id in response.");
+		return -1;
+	}
+	
 	if (code>100 && code<200){
-		if (obj->state==CAIN_SIP_DIALOG_NULL)
+		if (obj->state==CAIN_SIP_DIALOG_NULL){
 			set_to_tag(obj,to);
-		obj->state=CAIN_SIP_DIALOG_EARLY;
+			obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
+			obj->state=CAIN_SIP_DIALOG_EARLY;
+		}
 		return -1;
 	}else if (code>=200 && code<300){
-		if (obj->state==CAIN_SIP_DIALOG_NULL)
+		if (obj->state==CAIN_SIP_DIALOG_NULL){
 			set_to_tag(obj,to);
+			obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
+		}
 		if (cain_sip_dialog_establish_full(obj,req,resp)==0){
 			obj->state=CAIN_SIP_DIALOG_CONFIRMED;
 			obj->needs_ack=TRUE;
 		}else return -1;
 	}
 	return 0;
+}
+
+int cain_sip_dialog_check_incoming_request_ordering(cain_sip_dialog_t *obj, cain_sip_request_t *req){
+	cain_sip_header_cseq_t *cseqh=cain_sip_message_get_header_by_type(req,cain_sip_header_cseq_t);
+	unsigned int cseq=cain_sip_header_cseq_get_seq_number(cseqh);
+	if (obj->remote_cseq==0){
+		obj->remote_cseq=cseq;
+	}else if (cseq>obj->remote_cseq){
+			return 0;
+	}
+	cain_sip_warning("Ignoring request because cseq is inconsistent.");
+	return -1;
 }
 
 int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas){
@@ -436,4 +448,14 @@ void cain_sip_dialog_handle_200Ok(cain_sip_dialog_t *obj, cain_sip_message_t *ms
 			}else cain_sip_warning("No ACK to retransmit matching 200Ok");
 		}
 	}
+}
+
+int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack){
+	cain_sip_header_cseq_t *cseq=cain_sip_message_get_header_by_type(ack,cain_sip_header_cseq_t);
+	if (obj->needs_ack && cain_sip_header_cseq_get_seq_number(cseq)==obj->remote_cseq){
+		cain_sip_message("Incoming INVITE has ACK, dialog is happy");
+		obj->needs_ack=FALSE;
+		return 0;
+	}
+	return -1;
 }

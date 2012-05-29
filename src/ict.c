@@ -52,6 +52,7 @@ static cain_sip_request_t *make_ack(cain_sip_ict_t *obj, cain_sip_response_t *re
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	if (obj->ack==NULL){
 		obj->ack=cain_sip_request_new();
+		cain_sip_object_ref(obj->ack);
 		cain_sip_request_set_method(obj->ack,"ACK");
 		cain_sip_request_set_uri(obj->ack,cain_sip_request_get_uri(base->request));
 		cain_sip_util_copy_headers((cain_sip_message_t*)base->request,(cain_sip_message_t*)obj->ack,CAIN_SIP_VIA,FALSE);

@@ -51,13 +51,15 @@ cain_sip_object_t * cain_sip_object_ref(void *obj){
 
 void cain_sip_object_unref(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
+	if (obj->ref==-1) cain_sip_fatal("Object freed twice !");
 	if (obj->ref==0){
-		/*might hide a double unref cain_sip_warning("Destroying unowed object");*/
+		obj->ref=-1;
 		cain_sip_object_delete(obj);
 		return;
 	}
 	obj->ref--;
 	if (obj->ref==0){
+		obj->ref=-1;
 		cain_sip_object_delete(obj);
 	}
 }
@@ -86,6 +88,7 @@ void cain_sip_object_weak_unref(void *obj, cain_sip_object_destroy_notify_t dest
 	for(ref=o->weak_refs;ref!=NULL;ref=next){
 		next=ref->next;
 		if (ref->notify==destroy_notify && ref->userpointer==userpointer){
+			cain_sip_message("cain_sip_object_weak_unref(): prefref=%p",prevref);
 			if (prevref==NULL) o->weak_refs=next;
 			else prevref->next=next;
 			cain_sip_free(ref);
@@ -135,10 +138,6 @@ void cain_sip_object_delete(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
 	cain_sip_object_vptr_t *vptr;
 	
-	if (obj->ref!=0){
-		cain_sip_error("Destroying referenced object !");
-	}
-	obj->ref=-1;
 	cain_sip_object_loose_weak_refs(obj);
 	vptr=obj->vptr;
 	while(vptr!=NULL){
@@ -158,7 +157,7 @@ static cain_sip_object_vptr_t *find_common_floor(cain_sip_object_vptr_t *vptr1, 
 		if (vptr1==it2)
 			return vptr1;
 	}
-	return NULL;
+	return find_common_floor(vptr1->parent,vptr2);
 }
 
 /*copy the content of ref object to new object, for the part they have in common in their inheritence diagram*/
