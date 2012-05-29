@@ -201,6 +201,18 @@ int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, c
 	return 0;
 }
 
+int cain_sip_dialog_check_incoming_request_ordering(cain_sip_dialog_t *obj, cain_sip_request_t *req){
+	cain_sip_header_cseq_t *cseqh=cain_sip_message_get_header_by_type(req,cain_sip_header_cseq_t);
+	unsigned int cseq=cain_sip_header_cseq_get_seq_number(cseqh);
+	if (obj->remote_cseq==0){
+		obj->remote_cseq=cseq;
+	}else if (cseq>obj->remote_cseq){
+			return 0;
+	}
+	cain_sip_warning("Ignoring request because cseq is inconsistent.");
+	return -1;
+}
+
 int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas){
 	int code;
 	switch (obj->state){
@@ -436,4 +448,14 @@ void cain_sip_dialog_handle_200Ok(cain_sip_dialog_t *obj, cain_sip_message_t *ms
 			}else cain_sip_warning("No ACK to retransmit matching 200Ok");
 		}
 	}
+}
+
+int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack){
+	cain_sip_header_cseq_t *cseq=cain_sip_message_get_header_by_type(ack,cain_sip_header_cseq_t);
+	if (obj->needs_ack && cain_sip_header_cseq_get_seq_number(cseq)==obj->remote_cseq){
+		cain_sip_message("Incoming INVITE has ACK, dialog is happy");
+		obj->needs_ack=FALSE;
+		return 0;
+	}
+	return -1;
 }

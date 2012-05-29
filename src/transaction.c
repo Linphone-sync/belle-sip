@@ -30,6 +30,8 @@ const char *cain_sip_transaction_state_to_string(cain_sip_transaction_state_t st
 			return "COMPLETED";
 		case CAIN_SIP_TRANSACTION_CONFIRMED:
 			return "CONFIRMED";
+		case CAIN_SIP_TRANSACTION_ACCEPTED:
+			return "ACCEPTED";
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			return "PROCEEDING";
 		case CAIN_SIP_TRANSACTION_TERMINATED:
@@ -158,25 +160,33 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 		cain_sip_dialog_update(dialog,base->request,resp,TRUE);
 }
 
+static void server_transaction_notify(cain_sip_server_transaction_t *t, cain_sip_request_t *req, cain_sip_dialog_t *dialog){
+	cain_sip_request_event_t event;
+
+	event.source=t->base.provider;
+	event.server_transaction=t;
+	event.dialog=dialog;
+	event.request=req;
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->base.provider,process_request_event,&event);
+}
+
 void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, cain_sip_request_t *req){
 	const char *method=cain_sip_request_get_method(req);
 	if (strcmp(method,"ACK")==0){
 		/*this must be for an INVITE server transaction */
 		if (CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_ist_t)){
 			cain_sip_ist_t *ist=(cain_sip_ist_t*)t;
-			cain_sip_ist_process_ack(ist,(cain_sip_message_t*)req);
+			if (cain_sip_ist_process_ack(ist,(cain_sip_message_t*)req)==0){
+				cain_sip_dialog_t *dialog=t->base.dialog;
+				if (dialog && cain_sip_dialog_handle_ack(dialog,req)==-1)
+					dialog=NULL;
+				server_transaction_notify(t,req,dialog);
+			}
 		}else{
 			cain_sip_warning("ACK received for non-invite server transaction ?");
 		}
 	}else if (strcmp(method,"CANCEL")==0){
-		/*just notify the application */
-		cain_sip_request_event_t event;
-
-		event.source=t->base.provider;
-		event.server_transaction=t;
-		event.dialog=t->base.dialog;
-		event.request=req;
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->base.provider,process_request_event,&event);
+		server_transaction_notify(t,req,t->base.dialog);
 	}else
 		CAIN_SIP_OBJECT_VPTR(t,cain_sip_server_transaction_t)->on_request_retransmission(t);
 }

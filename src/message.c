@@ -45,8 +45,9 @@ struct _cain_sip_message {
 };
 
 static void cain_sip_message_destroy(cain_sip_message_t *msg){
-	cain_sip_list_for_each (msg->header_list,(void (*)(void*))cain_sip_headers_container_delete);
-	cain_sip_list_free(msg->header_list);
+	cain_sip_list_free_with_data(msg->header_list,(void (*)(void*))cain_sip_headers_container_delete);
+	if (msg->body)
+		cain_sip_free(msg->body);
 }
 
 /*very sub-optimal clone method */
@@ -65,7 +66,7 @@ static void cain_sip_message_clone(cain_sip_message_t *obj, const cain_sip_messa
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_message_t);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,cain_sip_message_clone,NULL,FALSE);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_message_t,cain_sip_object_t,cain_sip_message_destroy,cain_sip_message_clone,NULL,TRUE);
 
 cain_sip_message_t* cain_sip_message_parse (const char* value) {
 	size_t message_length;

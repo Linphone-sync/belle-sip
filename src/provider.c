@@ -23,6 +23,8 @@
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_free(p->listeners);
 	cain_sip_list_free_with_data(p->lps,cain_sip_object_unref);
+	cain_sip_list_free_with_data(p->client_transactions,cain_sip_object_unref);
+	cain_sip_list_free_with_data(p->server_transactions,cain_sip_object_unref);
 }
 
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
@@ -127,7 +129,8 @@ static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_c
 */
 static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, unsigned int revents){
 	if (revents & CAIN_SIP_EVENT_READ){
-		cain_sip_provider_dispatch_message(CAIN_SIP_PROVIDER(obj),cain_sip_channel_pick_message(chan));
+		cain_sip_message_t *msg=(cain_sip_message_t*)cain_sip_object_ref(cain_sip_channel_pick_message(chan));
+		cain_sip_provider_dispatch_message(CAIN_SIP_PROVIDER(obj),msg);
 	}
 	return 0;
 }
@@ -245,19 +248,27 @@ cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, 
 cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas){
 	cain_sip_list_t *elem;
 	cain_sip_dialog_t *dialog;
-	cain_sip_header_call_id_t *call_id=cain_sip_message_get_header_by_type(msg,cain_sip_header_call_id_t);
-	cain_sip_header_from_t *from=cain_sip_message_get_header_by_type(msg,cain_sip_header_from_t);
+	cain_sip_header_call_id_t *call_id;
+	cain_sip_header_from_t *from;
 	cain_sip_header_to_t *to=cain_sip_message_get_header_by_type(msg,cain_sip_header_to_t);
 	const char *from_tag;
 	const char *to_tag;
 	const char *call_id_value;
 	const char *local_tag,*remote_tag;
+	
+	if (to==NULL || (to_tag=cain_sip_header_to_get_tag(to))==NULL){
+		/* a request without to tag cannot be part of a dialog */
+		return NULL;
+	}
+	
+	call_id=cain_sip_message_get_header_by_type(msg,cain_sip_header_call_id_t);
+	from=cain_sip_message_get_header_by_type(msg,cain_sip_header_from_t);
 
-	if (call_id==NULL || from==NULL || to==NULL) return NULL;
+	if (call_id==NULL || from==NULL) return NULL;
 
 	call_id_value=cain_sip_header_call_id_get_call_id(call_id);
 	from_tag=cain_sip_header_from_get_tag(from);
-	to_tag=cain_sip_header_to_get_tag(to);
+	
 	local_tag=as_uas ? to_tag : from_tag;
 	remote_tag=as_uas ? from_tag : to_tag;
 	
@@ -280,13 +291,16 @@ void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
 	const char *method=cain_sip_request_get_method(req);
+	cain_sip_client_transaction_t *t;
 	if (strcmp(method,"INVITE")==0)
-		return (cain_sip_client_transaction_t*)cain_sip_ict_new(prov,req);
+		t=(cain_sip_client_transaction_t*)cain_sip_ict_new(prov,req);
 	else if (strcmp(method,"ACK")==0){
 		cain_sip_error("cain_sip_provider_get_new_client_transaction() cannot be used for ACK requests.");
 		return NULL;
 	}
-	else return (cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
+	else t=(cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
+	t->base.dialog=cain_sip_provider_find_dialog(prov,req,FALSE);
+	return t;
 }
 
 cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
@@ -295,6 +309,7 @@ cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain
 		t=(cain_sip_server_transaction_t*)cain_sip_ist_new(prov,req);
 	else 
 		t=(cain_sip_server_transaction_t*)cain_sip_nist_new(prov,req);
+	t->base.dialog=cain_sip_provider_find_dialog(prov,req,TRUE);
 	cain_sip_provider_add_server_transaction(prov,t);
 	return t;
 }

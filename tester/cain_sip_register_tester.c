@@ -89,7 +89,7 @@ int register_init(void) {
 	stack=cain_sip_stack_new(NULL);
 	cain_sip_listening_point_t *lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
 	prov=cain_sip_stack_create_provider(stack,lp);
-	cain_sip_object_unref(lp);
+	
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"TCP");
 	cain_sip_provider_add_listening_point(prov,lp);
 	cain_sip_object_unref(lp);
@@ -136,7 +136,7 @@ cain_sip_request_t* register_user(cain_sip_stack_t * stack
 					,const char *transport
 					,int use_transaction
 					,const char* username) {
-	cain_sip_request_t *req;
+	cain_sip_request_t *req,*copy;
 	char identity[256];
 	char uri[256];
 
@@ -159,11 +159,11 @@ cain_sip_request_t* register_user(cain_sip_stack_t * stack
 	                    cain_sip_header_to_create2(identity,NULL),
 	                    cain_sip_header_via_new(),
 	                    70);
-
 	is_register_ok=0;
 	using_transaction=0;
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(600)));
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_contact_new()));
+	copy=(cain_sip_request_t*)cain_sip_object_clone((cain_sip_object_t*)req);
 	cain_sip_provider_add_sip_listener(prov,l=CAIN_SIP_LISTENER(listener));
 	if (use_transaction){
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
@@ -175,7 +175,7 @@ cain_sip_request_t* register_user(cain_sip_stack_t * stack
 
 	cain_sip_provider_remove_sip_listener(prov,l);
 
-	return req;
+	return copy;
 }
 
 static void register_test(const char *transport, int use_transaction) {

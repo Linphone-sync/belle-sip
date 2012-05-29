@@ -39,10 +39,22 @@ const char *cain_sip_channel_state_to_string(cain_sip_channel_state_t state){
 	return "BAD";
 }
 
+static cain_sip_list_t * for_each_weak_unref_free(cain_sip_list_t *l, cain_sip_object_destroy_notify_t notify, void *ptr){
+	cain_sip_list_t *elem,*next;
+	for(elem=l;elem!=NULL;elem=next){
+		next=elem->next;
+		cain_sip_object_weak_unref(elem->data,notify,ptr);
+		cain_sip_free(elem);
+	}
+	return NULL;
+}
+
 static void cain_sip_channel_destroy(cain_sip_channel_t *obj){
+	
 	if (obj->peer) freeaddrinfo(obj->peer);
 	cain_sip_free(obj->peer_name);
 	if (obj->local_ip) cain_sip_free(obj->local_ip);
+	obj->listeners=for_each_weak_unref_free(obj->listeners,(cain_sip_object_destroy_notify_t)cain_sip_channel_remove_listener,obj);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_channel_t);
