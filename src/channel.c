@@ -131,7 +131,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 	int num;
 	int offset;
 	int i;
-	size_t message_size;
+	size_t message_size=0;
 	cain_sip_header_content_length_t* content_length_header;
 	int content_length;
 
@@ -187,8 +187,9 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 
 		if (obj->input_stream.state==BODY_AQUISITION) {
 			content_length=cain_sip_header_content_length_get_content_length((cain_sip_header_content_length_t*)cain_sip_message_get_header(obj->input_stream.msg,CAIN_SIP_CONTENT_LENGTH));
-			if (content_length >= obj->input_stream.write_ptr-obj->input_stream.read_ptr) {
+			if (content_length <= obj->input_stream.write_ptr-obj->input_stream.read_ptr) {
 				/*great body completed*/
+				cain_sip_message("read body from %s:%i\n%s",obj->peer_name,obj->peer_port,obj->input_stream.read_ptr);
 				cain_sip_message_set_body(obj->input_stream.msg,obj->input_stream.read_ptr,content_length);
 				goto message_ready;
 

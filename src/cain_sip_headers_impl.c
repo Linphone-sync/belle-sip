@@ -207,7 +207,8 @@ CAIN_SIP_NEW_HEADER(header_contact,header_address,CAIN_SIP_CONTACT)
 CAIN_SIP_PARSE(header_contact)
 cain_sip_header_contact_t* cain_sip_header_contact_create (const cain_sip_header_address_t* contact) {
 	cain_sip_header_contact_t* header = cain_sip_header_contact_new();
-	cain_sip_header_address_clone(CAIN_SIP_HEADER_ADDRESS(header),contact);
+	_cain_sip_object_copy(CAIN_SIP_OBJECT(header),CAIN_SIP_OBJECT(contact));
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_CONTACT); /*restaure header name*/
 	return header;
 }
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_contact,expires,int,_)
@@ -269,7 +270,7 @@ cain_sip_header_from_t* cain_sip_header_from_create2(const char *address, const 
 cain_sip_header_from_t* cain_sip_header_from_create(const cain_sip_header_address_t* address, const char *tag) {
 	cain_sip_header_from_t* header= cain_sip_header_from_new();
 	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
-	/*cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_FROM);*/ /*restaure header name*/
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_FROM); /*restaure header name*/
 	if (tag) cain_sip_header_from_set_tag(header,tag);
 	return header;
 }
