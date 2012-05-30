@@ -116,17 +116,25 @@ static void process_dialog_terminated(void *user_ctx, const cain_sip_dialog_term
 static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *event){
 	cain_sip_message("process_io_error not implemented yet");
 }
-static void process_request_event(void *user_ctx, const cain_sip_request_event_t *event) {
+static void callee_process_request_event(void *user_ctx, const cain_sip_request_event_t *event) {
 	cain_sip_server_transaction_t* server_transaction = cain_sip_request_event_get_server_transaction(event);
+	cain_sip_header_to_t* to=cain_sip_message_get_header_by_type(cain_sip_request_event_get_request(event),cain_sip_header_to_t);
+	const char* method;
+	if (!cain_sip_uri_equals(CAIN_SIP_URI(user_ctx),cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(to)))) {
+		return; /*not for the callee*/
+	}
+
 	if (!server_transaction) {
 		server_transaction= cain_sip_provider_get_new_server_transaction(prov,cain_sip_request_event_get_request(event));
 	}
+	method = cain_sip_request_get_method(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(server_transaction)));
+	cain_sip_message("callee_process_request_event received [%s] message",method);
 	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(server_transaction));
 	cain_sip_response_t* ringing_response;
 	cain_sip_header_content_type_t* content_type ;
 	cain_sip_header_content_length_t* content_length;
 	if (!dialog ) {
-		CU_ASSERT_STRING_EQUAL_FATAL("INVITE",cain_sip_request_get_method(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(server_transaction))))
+		CU_ASSERT_STRING_EQUAL_FATAL("INVITE",method);
 		dialog=cain_sip_provider_get_new_dialog(prov,CAIN_SIP_TRANSACTION(server_transaction));
 		inserv_transaction=server_transaction;
 	}
@@ -142,11 +150,18 @@ static void process_request_event(void *user_ctx, const cain_sip_request_event_t
 		/*only send ringing*/
 		cain_sip_server_transaction_send_response(server_transaction,ringing_response);
 	}
-	cain_sip_message("process_request_event not implemented yet");
+
 }
 
 static void caller_process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
 	cain_sip_client_transaction_t* client_transaction = cain_sip_response_event_get_client_transaction(event);
+	cain_sip_header_from_t* from=cain_sip_message_get_header_by_type(cain_sip_response_event_get_response(event),cain_sip_header_from_t);
+	cain_sip_header_cseq_t* invite_cseq=cain_sip_message_get_header_by_type(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(client_transaction)),cain_sip_header_cseq_t);
+	cain_sip_request_t* ack;
+	if (!cain_sip_uri_equals(CAIN_SIP_URI(user_ctx),cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(from)))) {
+		return; /*not for the caller*/
+	}
+
 	int status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
 	cain_sip_message("caller_process_response_event [%i]",status);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(client_transaction);
@@ -159,6 +174,9 @@ static void caller_process_response_event(void *user_ctx, const cain_sip_respons
 		CU_ASSERT_EQUAL(status,180);
 		/*send 200ok from callee*/
 		cain_sip_server_transaction_send_response(inserv_transaction,ok_response);
+	} else if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_CONFIRMED) {
+		ack=cain_sip_dialog_create_ack(dialog,cain_sip_header_cseq_get_seq_number(invite_cseq));
+		cain_sip_dialog_send_ack(dialog,ack);
 	}
 
 
@@ -166,7 +184,13 @@ static void caller_process_response_event(void *user_ctx, const cain_sip_respons
 }
 static void callee_process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
 	/*cain_sip_client_transaction_t* server_transaction = cain_sip_response_event_get_client_transaction(event);*/
-	cain_sip_message("callee_process_response_event");
+	cain_sip_header_from_t* from=cain_sip_message_get_header_by_type(cain_sip_response_event_get_response(event),cain_sip_header_from_t);
+	int status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
+	if (!cain_sip_uri_equals(CAIN_SIP_URI(user_ctx),cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(from)))) {
+		return; /*not for the callee*/
+	}
+
+	cain_sip_message("callee_process_response_event [%i]",status);
 
 }
 static void process_timeout(void *user_ctx, const cain_sip_timeout_event_t *event) {
@@ -217,7 +241,7 @@ static void simple_call(void) {
 
 	callee_listener_callbacks.process_dialog_terminated=process_dialog_terminated;
 	callee_listener_callbacks.process_io_error=process_io_error;
-	callee_listener_callbacks.process_request_event=process_request_event;
+	callee_listener_callbacks.process_request_event=callee_process_request_event;
 	callee_listener_callbacks.process_response_event=callee_process_response_event;
 	callee_listener_callbacks.process_timeout=process_timeout;
 	callee_listener_callbacks.process_transaction_terminated=process_transaction_terminated;
@@ -225,11 +249,13 @@ static void simple_call(void) {
 	pauline_register_req=register_user(stack, prov, "TCP" ,1 ,CALLER);
 	marie_register_req=register_user(stack, prov, "TLS" ,1 ,CALLEE);
 
-	cain_sip_provider_add_sip_listener(prov,caller_listener=cain_sip_listener_create_from_callbacks(&caller_listener_callbacks,NULL));
-	cain_sip_provider_add_sip_listener(prov,callee_listener=cain_sip_listener_create_from_callbacks(&callee_listener_callbacks,NULL));
-
 	from=cain_sip_header_address_create(NULL,cain_sip_uri_create(CALLER,test_domain));
 	to=cain_sip_header_address_create(NULL,cain_sip_uri_create(CALLEE,test_domain));
+
+	cain_sip_provider_add_sip_listener(prov,caller_listener=cain_sip_listener_create_from_callbacks(&caller_listener_callbacks,cain_sip_object_ref(cain_sip_header_address_get_uri((cain_sip_header_address_t*)from))));
+	cain_sip_provider_add_sip_listener(prov,callee_listener=cain_sip_listener_create_from_callbacks(&callee_listener_callbacks,cain_sip_object_ref(cain_sip_header_address_get_uri((cain_sip_header_address_t*)to))));
+
+
 	route = cain_sip_header_address_create(NULL,cain_sip_uri_create(NULL,test_domain));
 	cain_sip_uri_set_transport_param(cain_sip_header_address_get_uri(route),"tcp");
 

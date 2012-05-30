@@ -191,6 +191,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 				/*great body completed*/
 				cain_sip_message("read body from %s:%i\n%s",obj->peer_name,obj->peer_port,obj->input_stream.read_ptr);
 				cain_sip_message_set_body(obj->input_stream.msg,obj->input_stream.read_ptr,content_length);
+				obj->input_stream.read_ptr+=content_length;
 				goto message_ready;
 
 			}
