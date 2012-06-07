@@ -56,9 +56,11 @@ void cain_sip_request_set_uri(cain_sip_request_t* request, cain_sip_uri_t* uri);
 const char* cain_sip_request_get_method(const cain_sip_request_t* request);
 void cain_sip_request_set_method(cain_sip_request_t* request,const char* method);
 /**
- * Guess the origin
+ * Guess the origin of the received sip message from VIA header (thanks to received/rport)
+ * @param req request to be annylized
+ * @ return a newly allocated uri
  * */
-cain_sip_uri_t* cain_sip_request_extract_origin(cain_sip_request_t* req);
+cain_sip_uri_t* cain_sip_request_extract_origin(const cain_sip_request_t* req);
 
 int cain_sip_message_is_response(const cain_sip_message_t *msg);
 
@@ -104,6 +106,7 @@ void cain_sip_response_set_reason_phrase(cain_sip_response_t *response,const cha
 cain_sip_response_t *cain_sip_response_new(void);
 
 cain_sip_response_t *cain_sip_response_create_from_request(cain_sip_request_t *req, int status_code);
+
 
 
 CAIN_SIP_END_DECLS

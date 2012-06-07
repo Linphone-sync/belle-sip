@@ -310,6 +310,14 @@ cain_sip_header_expires_t* cain_sip_header_expires_create(int expires);
 
  cain_sip_header_user_agent_t* cain_sip_header_user_agent_parse (const char* user_agent) ;
  cain_sip_list_t* cain_sip_header_user_agent_get_products(const cain_sip_header_user_agent_t* user_agent);
+ /**
+  * concatenates products
+  * @param user_agent [in] user agent header
+  * @param value [out]buffer where to put result in
+  * @param value_size [in] size of the buffer
+  * @return number of written characters or -1 inca se of error;
+  */
+ int cain_sip_header_user_agent_get_products_as_string(const cain_sip_header_user_agent_t* user_agent,char* value,unsigned int value_size);
  void cain_sip_header_user_agent_set_products(cain_sip_header_user_agent_t* user_agent,cain_sip_list_t* value);
  void cain_sip_header_user_agent_add_product(cain_sip_header_user_agent_t* user_agent,const char* product);
  #define CAIN_SIP_HEADER_USER_AGENT(t) CAIN_SIP_CAST(t,cain_sip_header_user_agent_t)

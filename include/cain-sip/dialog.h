@@ -31,6 +31,8 @@ typedef enum cain_sip_dialog_state cain_sip_dialog_state_t;
 
 CAIN_SIP_BEGIN_DECLS
 
+const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state);
+
 cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *dialog, unsigned int cseq);
 
 cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *dialog, const char *method);

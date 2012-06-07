@@ -291,6 +291,13 @@ void cain_sdp_version_set_version(cain_sdp_version_t* version, int value);
 typedef struct _cain_sdp_session_description cain_sdp_session_description_t;
 cain_sdp_session_description_t* cain_sdp_session_description_new();
 cain_sdp_session_description_t* cain_sdp_session_description_parse (const char* session_description);
+/*sdp managementy helper method*/
+/*
+ * create a session description object from a message
+ * @param message to get sdp from
+ * @returns cain_sdp_session_description_t or NULL if no sdp present
+ * */
+cain_sdp_session_description_t* cain_sdp_session_description_create(cain_sip_message_t* message);
 const char*	cain_sdp_session_description_get_attribute(const cain_sdp_session_description_t* session_description, const char* name);
 int	cain_sdp_session_description_get_bandwidth(const cain_sdp_session_description_t* session_description, const char* name);
 cain_sip_list_t*	cain_sdp_session_description_get_bandwidths(const cain_sdp_session_description_t* session_description);

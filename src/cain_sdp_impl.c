@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "cain-sip/cain-sdp.h"
+#include "cain-sip/cain-sip.h"
 #include "cain_sdpParser.h"
 #include "cain_sdpLexer.h"
 #include "cain_sip_internal.h"
@@ -871,6 +871,15 @@ int cain_sdp_session_description_marshal(cain_sdp_session_description_t* session
 CAIN_SDP_NEW(session_description,cain_sdp_base_description)
 CAIN_SDP_PARSE(session_description)
 
+cain_sdp_session_description_t* cain_sdp_session_description_create(cain_sip_message_t* message) {
+	cain_sdp_session_description_t* session_desc=NULL;
+	cain_sip_header_content_type_t* content_type=cain_sip_message_get_header_by_type(message,cain_sip_header_content_type_t);
+	if (strcmp("application",cain_sip_header_content_type_get_type(content_type))==0
+		&&	strcmp("sdp",cain_sip_header_content_type_get_subtype(content_type))==0) {
+		session_desc=cain_sdp_session_description_parse(cain_sip_message_get_body(message));
+	}
+	return session_desc;
+}
 const char*	cain_sdp_session_description_get_attribute(const cain_sdp_session_description_t* session_description, const char* name) {
 	return cain_sdp_base_description_get_attribute(CAIN_SIP_CAST(session_description,cain_sdp_base_description_t),name);
 }

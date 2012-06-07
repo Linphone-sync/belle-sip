@@ -331,7 +331,7 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 	type  object_type##_get_##func_name (const object_type##_t* obj) {\
 		const char* l_value = cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
 		if (l_value == NULL) { \
-			cain_sip_error("cannot find parameters [%s]",#attribute);\
+			/*cain_sip_error("cannot find parameters [%s]",#attribute);*/\
 			return -1;\
 		}\
 		return ATO_(type,l_value);\

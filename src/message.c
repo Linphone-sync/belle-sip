@@ -280,6 +280,27 @@ cain_sip_uri_t * cain_sip_request_get_uri(cain_sip_request_t *request){
 	return request->uri;
 }
 
+cain_sip_uri_t* cain_sip_request_extract_origin(const cain_sip_request_t* req) {
+	cain_sip_header_via_t* via_header = cain_sip_message_get_header_by_type(req,cain_sip_header_via_t);
+	cain_sip_uri_t* uri=NULL;
+	const char* received = cain_sip_header_via_get_received(via_header);
+	int rport = cain_sip_header_via_get_rport(via_header);
+	uri = cain_sip_uri_new();
+	if (received!=NULL) {
+		cain_sip_uri_set_host(uri,received);
+	} else {
+		cain_sip_uri_set_host(uri,cain_sip_header_via_get_host(via_header));
+	}
+	if (rport>0) {
+		cain_sip_uri_set_port(uri,rport);
+	} else if (cain_sip_header_via_get_port(via_header)) {
+		cain_sip_uri_set_port(uri,cain_sip_header_via_get_port(via_header));
+	}
+	if (cain_sip_header_via_get_transport(via_header)) {
+		cain_sip_uri_set_transport_param(uri,cain_sip_header_via_get_transport(via_header));
+	}
+	return uri;
+}
 int cain_sip_message_is_request(cain_sip_message_t *msg){
 	return CAIN_SIP_IS_INSTANCE_OF(CAIN_SIP_OBJECT(msg),cain_sip_request_t);
 }

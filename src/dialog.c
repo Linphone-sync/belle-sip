@@ -47,6 +47,15 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_dialog_t)={
 		NULL,
 		NULL
 };
+const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state) {
+	switch(state) {
+	case CAIN_SIP_DIALOG_NULL: return "CAIN_SIP_DIALOG_NULL";
+	case CAIN_SIP_DIALOG_EARLY: return "CAIN_SIP_DIALOG_EARLY";
+	case CAIN_SIP_DIALOG_CONFIRMED: return "CAIN_SIP_DIALOG_CONFIRMED";
+	case CAIN_SIP_DIALOG_TERMINATED: return "CAIN_SIP_DIALOG_TERMINATED";
+	default: return "Unknown state";
+	}
+}
 
 static void set_to_tag(cain_sip_dialog_t *obj, cain_sip_header_to_t *to){
 	const char *to_tag=cain_sip_header_to_get_tag(to);
