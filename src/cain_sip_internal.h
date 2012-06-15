@@ -284,8 +284,23 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 			strcpy((char*)(obj->attribute),value);\
 		} else obj->attribute=NULL;\
 	}
+/*#define GET_SET_STRING_PARAM_NULL_ALLOWED(object_type,attribute) \
+	GET_STRING_PARAM2(object_type,attribute,attribute) \
+	void object_type##_set_##func_name (object_type##_t* obj,const char* value) {\
+		cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(obj),#attribute,value);\
+	}
+*/
 #define GET_SET_STRING_PARAM(object_type,attribute) GET_SET_STRING_PARAM2(object_type,attribute,attribute)
 #define GET_SET_STRING_PARAM2(object_type,attribute,func_name) \
+	GET_STRING_PARAM2(object_type,attribute,func_name) \
+	void object_type##_set_##func_name (object_type##_t* obj,const char* value) {\
+	if (cain_sip_parameters_is_parameter(CAIN_SIP_PARAMETERS(obj),#attribute) && !value) {\
+		cain_sip_parameters_remove_parameter(CAIN_SIP_PARAMETERS(obj),#attribute); \
+	} else \
+		cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(obj),#attribute,value);\
+	}
+
+#define GET_STRING_PARAM2(object_type,attribute,func_name) \
 	const char* object_type##_get_##func_name (const object_type##_t* obj) {\
 	const char* l_value = cain_sip_parameters_get_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
 	if (l_value == NULL) { \
@@ -293,9 +308,6 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 		return NULL;\
 	}\
 	return l_value;\
-	}\
-	void object_type##_set_##func_name (object_type##_t* obj,const char* value) {\
-		cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(obj),#attribute,value);\
 	}
 
 #define DESTROY_STRING(object,attribute) if (object->attribute) cain_sip_free((void*)object->attribute);

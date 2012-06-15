@@ -27,7 +27,7 @@ int cain_sip_listening_point_get_port(const cain_sip_listening_point_t *lp);
 const char *cain_sip_listening_point_get_transport(const cain_sip_listening_point_t *ip);
 const char *cain_sip_listening_point_get_ip_address(const  cain_sip_listening_point_t *ip);
 int cain_sip_listening_point_is_reliable(const cain_sip_listening_point_t *lp);
-
+int cain_sip_listening_point_get_well_known_port(const char *transport);
 
 CAIN_SIP_END_DECLS
 

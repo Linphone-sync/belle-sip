@@ -327,7 +327,7 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const
 	                                                cain_sip_header_to_create(obj->remote_party,NULL),
 	                                                cain_sip_header_via_new(),
 	                                                0);
-	cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
+	if (obj->route_set) cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
 	if (strcmp(method,"ACK")!=0) obj->local_cseq++;
 	return req;
 }

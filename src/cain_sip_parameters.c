@@ -92,6 +92,12 @@ void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* params,const ch
 	/* first remove from header names list*/
 	if (lResult) {
 		params->paramnames_list=cain_sip_list_delete_link(params->paramnames_list,lResult);
+		/*next remove node*/
+		lResult = cain_sip_list_find_custom(params->param_list, (cain_sip_compare_func)cain_sip_param_pair_comp_func, name);
+		if (lResult) {
+			cain_sip_param_pair_destroy(lResult->data);
+			params->param_list=cain_sip_list_delete_link(params->param_list,lResult);
+		}
 	} else {
 		cain_sip_warning("cannot remove param \%s because not present",name);
 	}
