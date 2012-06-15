@@ -874,7 +874,8 @@ CAIN_SDP_PARSE(session_description)
 cain_sdp_session_description_t* cain_sdp_session_description_create(cain_sip_message_t* message) {
 	cain_sdp_session_description_t* session_desc=NULL;
 	cain_sip_header_content_type_t* content_type=cain_sip_message_get_header_by_type(message,cain_sip_header_content_type_t);
-	if (strcmp("application",cain_sip_header_content_type_get_type(content_type))==0
+	if (content_type
+		&& strcmp("application",cain_sip_header_content_type_get_type(content_type))==0
 		&&	strcmp("sdp",cain_sip_header_content_type_get_subtype(content_type))==0) {
 		session_desc=cain_sdp_session_description_parse(cain_sip_message_get_body(message));
 	}
