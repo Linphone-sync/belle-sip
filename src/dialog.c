@@ -47,15 +47,6 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_dialog_t)={
 		NULL,
 		NULL
 };
-const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state) {
-	switch(state) {
-	case CAIN_SIP_DIALOG_NULL: return "CAIN_SIP_DIALOG_NULL";
-	case CAIN_SIP_DIALOG_EARLY: return "CAIN_SIP_DIALOG_EARLY";
-	case CAIN_SIP_DIALOG_CONFIRMED: return "CAIN_SIP_DIALOG_CONFIRMED";
-	case CAIN_SIP_DIALOG_TERMINATED: return "CAIN_SIP_DIALOG_TERMINATED";
-	default: return "Unknown state";
-	}
-}
 
 static void set_to_tag(cain_sip_dialog_t *obj, cain_sip_header_to_t *to){
 	const char *to_tag=cain_sip_header_to_get_tag(to);
@@ -259,6 +250,7 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 	cain_sip_dialog_t *obj;
 	cain_sip_header_from_t *from;
 	const char *from_tag;
+	const cain_sip_list_t *predefined_routes=NULL;
 	
 	from=cain_sip_message_get_header_by_type(t->request,cain_sip_header_from_t);
 	if (from==NULL){
@@ -281,6 +273,10 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 	}else{
 		obj->local_tag=cain_sip_strdup(from_tag);
 		obj->local_party=(cain_sip_header_address_t*)cain_sip_object_ref(from);
+		for(predefined_routes=cain_sip_message_get_headers((cain_sip_message_t*)t->request,CAIN_SIP_ROUTE);
+			predefined_routes!=NULL;predefined_routes=predefined_routes->next){
+			obj->route_set=cain_sip_list_append(obj->route_set,cain_sip_object_ref(predefined_routes->data));	
+		}
 		obj->is_server=FALSE;
 	}
 	obj->state=CAIN_SIP_DIALOG_NULL;
@@ -335,11 +331,11 @@ void cain_sip_dialog_delete(cain_sip_dialog_t *obj){
 	
 }
 
-void *cain_sip_dialog_get_application_data(const cain_sip_dialog_t *dialog){
+void *cain_sip_get_application_data(const cain_sip_dialog_t *dialog){
 	return dialog->appdata;
 }
 
-void cain_sip_dialog_set_application_data(cain_sip_dialog_t *dialog, void *data){
+void cain_sip_set_application_data(cain_sip_dialog_t *dialog, void *data){
 	dialog->appdata=data;
 }
 
