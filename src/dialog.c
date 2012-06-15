@@ -279,9 +279,14 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 		obj->remote_party=(cain_sip_header_address_t*)cain_sip_object_ref(from);
 		obj->is_server=TRUE;
 	}else{
+		const cain_sip_list_t *predefined_routes=NULL;
 		obj->local_tag=cain_sip_strdup(from_tag);
 		obj->local_party=(cain_sip_header_address_t*)cain_sip_object_ref(from);
 		obj->is_server=FALSE;
+		for(predefined_routes=cain_sip_message_get_headers((cain_sip_message_t*)t->request,CAIN_SIP_ROUTE);
+			predefined_routes!=NULL;predefined_routes=predefined_routes->next){
+			obj->route_set=cain_sip_list_append(obj->route_set,cain_sip_object_ref(predefined_routes->data));	
+		}
 	}
 	obj->state=CAIN_SIP_DIALOG_NULL;
 	return obj;
