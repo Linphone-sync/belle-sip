@@ -26,6 +26,8 @@ typedef struct cain_sip_request_event cain_sip_request_event_t;
 typedef struct cain_sip_response_event cain_sip_response_event_t;
 typedef struct cain_sip_timeout_event cain_sip_timeout_event_t;
 typedef struct cain_sip_transaction_terminated_event cain_sip_transaction_terminated_event_t;
+typedef struct cain_sip_auth_event cain_sip_auth_event_t;
+
 
 CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_listener_t)
 	void (*process_dialog_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_dialog_terminated_event_t *event);
@@ -34,6 +36,7 @@ CAIN_SIP_DECLARE_INTERFACE_BEGIN(cain_sip_listener_t)
 	void (*process_response_event)(cain_sip_listener_t *user_ctx, const cain_sip_response_event_t *event);
 	void (*process_timeout)(cain_sip_listener_t *user_ctx, const cain_sip_timeout_event_t *event);
 	void (*process_transaction_terminated)(cain_sip_listener_t *user_ctx, const cain_sip_transaction_terminated_event_t *event);
+	void (*process_auth_requested)(cain_sip_listener_t *user_ctx, cain_sip_auth_event_t *event);
 CAIN_SIP_DECLARE_INTERFACE_END
 
 #define CAIN_SIP_LISTENER(obj) CAIN_SIP_INTERFACE_CAST(obj,cain_sip_listener_t)
@@ -47,6 +50,22 @@ cain_sip_request_t* cain_sip_request_event_get_request(const cain_sip_request_ev
 cain_sip_server_transaction_t *cain_sip_request_event_get_server_transaction(const cain_sip_request_event_t* event);
 cain_sip_dialog_t *cain_sip_request_event_get_dialog(const cain_sip_request_event_t* event);
 
+/*auth event*/
+const char* cain_sip_auth_event_get_username(const cain_sip_auth_event_t* event);
+void cain_sip_auth_event_set_username(cain_sip_auth_event_t* event, const char* value);
+
+const char* cain_sip_auth_event_get_userid(const cain_sip_auth_event_t* event);
+void cain_sip_auth_event_set_userid(cain_sip_auth_event_t* event, const char* value);
+
+const char* cain_sip_auth_event_get_realm(const cain_sip_auth_event_t* event);
+void cain_sip_auth_event_set_realm(cain_sip_auth_event_t* event, const char* value);
+
+const char* cain_sip_auth_event_get_passwd(const cain_sip_auth_event_t* event);
+void cain_sip_auth_event_set_passwd(cain_sip_auth_event_t* event, const char* value);
+
+const char* cain_sip_auth_event_get_ha1(const cain_sip_auth_event_t* event);
+void cain_sip_auth_event_set_ha1(cain_sip_auth_event_t* event, const char* value);
+
 
 struct cain_sip_listener_callbacks{
 	void (*process_dialog_terminated)(void *user_ctx, const cain_sip_dialog_terminated_event_t *event);
@@ -55,6 +74,7 @@ struct cain_sip_listener_callbacks{
 	void (*process_response_event)(void *user_ctx, const cain_sip_response_event_t *event);
 	void (*process_timeout)(void *user_ctx, const cain_sip_timeout_event_t *event);
 	void (*process_transaction_terminated)(void *user_ctx, const cain_sip_transaction_terminated_event_t *event);
+	void (*process_auth_requested)(void *user_ctx, cain_sip_auth_event_t *auth_event);
 };
 
 typedef struct cain_sip_listener_callbacks cain_sip_listener_callbacks_t;

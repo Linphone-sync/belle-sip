@@ -137,6 +137,7 @@ typedef struct _cain_sip_response cain_sip_response_t;
 
 #include "cain-sip/utils.h"
 #include "cain-sip/list.h"
+#include "cain-sip/auth-info.h"
 #include "cain-sip/listener.h"
 #include "cain-sip/mainloop.h"
 #include "cain-sip/uri.h"

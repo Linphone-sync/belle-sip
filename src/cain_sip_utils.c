@@ -164,7 +164,8 @@ cain_sip_list_t* cain_sip_list_new(void *data){
 
 cain_sip_list_t*  cain_sip_list_append_link(cain_sip_list_t* elem,cain_sip_list_t *new_elem){
 	cain_sip_list_t* it=elem;
-	if (elem==NULL) return new_elem;
+	if (elem==NULL)  return new_elem;
+	if (new_elem==NULL)  return elem;
 	while (it->next!=NULL) it=cain_sip_list_next(it);
 	it->next=new_elem;
 	new_elem->prev=it;

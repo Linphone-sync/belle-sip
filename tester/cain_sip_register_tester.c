@@ -22,7 +22,9 @@
 #include "pthread.h"
 
 const char *test_domain="test.linphone.org";
+const char *auth_domain="sip.linphone.org";
 static int is_register_ok;
+static int number_of_challange;
 static int using_transaction;
 cain_sip_stack_t * stack;
 cain_sip_provider_t *prov;
@@ -39,13 +41,31 @@ static void process_io_error(cain_sip_listener_t *obj, const cain_sip_io_error_e
 static void process_request_event(cain_sip_listener_t *obj, const cain_sip_request_event_t *event){
 	cain_sip_message("process_request_event");
 }
+cain_sip_request_t* authorized_request;
 static void process_response_event(cain_sip_listener_t *obj, const cain_sip_response_event_t *event){
-	cain_sip_message("process_response_event");
+	int status;
+	cain_sip_request_t* request;
 	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_response_event_get_response(event));
-	CU_ASSERT_EQUAL(cain_sip_response_get_status_code(cain_sip_response_event_get_response(event)),200);
-	is_register_ok=1;
-	using_transaction=cain_sip_response_event_get_client_transaction(event)!=NULL;
-	cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
+	cain_sip_message("process_response_event [%i] [%s]"
+					,status=cain_sip_response_get_status_code(cain_sip_response_event_get_response(event))
+					,cain_sip_response_get_reason_phrase(cain_sip_response_event_get_response(event)));
+	if (status==401) {
+		CU_ASSERT_NOT_EQUAL_FATAL(number_of_challange,2);
+		CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_response_event_get_client_transaction(event)); /*require transaction mode*/
+		request=cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(cain_sip_response_event_get_client_transaction(event)));
+		cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_CSEQ);
+		cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
+		CU_ASSERT_TRUE_FATAL(cain_sip_provider_add_authorization(prov,request,cain_sip_response_event_get_response(event)));
+		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,request);
+		cain_sip_client_transaction_send_request(t);
+		number_of_challange++;
+		authorized_request=request;
+	}  else {
+		CU_ASSERT_EQUAL(status,200);
+		is_register_ok=1;
+		using_transaction=cain_sip_response_event_get_client_transaction(event)!=NULL;
+		cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
+	}
 }
 static void process_timeout(cain_sip_listener_t *obj, const cain_sip_timeout_event_t *event){
 	cain_sip_message("process_timeout");
@@ -53,7 +73,12 @@ static void process_timeout(cain_sip_listener_t *obj, const cain_sip_timeout_eve
 static void process_transaction_terminated(cain_sip_listener_t *obj, const cain_sip_transaction_terminated_event_t *event){
 	cain_sip_message("process_transaction_terminated");
 }
-
+static void process_auth_requested(cain_sip_listener_t *obj, cain_sip_auth_event_t *event){
+	cain_sip_message("process_auth_requested requested for [%s@%s]"
+			,cain_sip_auth_event_get_username(event)
+			,cain_sip_auth_event_get_realm(event));
+	cain_sip_auth_event_set_passwd(event,"secret");
+}
 /*this would normally go to a .h file*/
 struct test_listener{
 	cain_sip_object_t base;
@@ -76,7 +101,8 @@ CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(test_listener_t,cain_sip_listener_t)
 	process_request_event,
 	process_response_event,
 	process_timeout,
-	process_transaction_terminated
+	process_transaction_terminated,
+	process_auth_requested
 CAIN_SIP_IMPLEMENT_INTERFACE_END
 
 CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(test_listener_t,cain_sip_listener_t);
@@ -123,6 +149,9 @@ void unregister_user(cain_sip_stack_t * stack
 	cain_sip_header_expires_t* expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_EXPIRES);
 	cain_sip_header_expires_set_expires(expires_header,0);
 	if (use_transaction){
+		cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_AUTHORIZATION);
+		cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_PROXY_AUTHORIZATION);
+		cain_sip_provider_add_authorization(prov,req,NULL); /*just in case*/
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
 		cain_sip_client_transaction_send_request(t);
 	}else cain_sip_provider_send_request(prov,req);
@@ -131,25 +160,26 @@ void unregister_user(cain_sip_stack_t * stack
 	CU_ASSERT_EQUAL(using_transaction,use_transaction);
 	cain_sip_provider_remove_sip_listener(prov,l);
 }
-cain_sip_request_t* register_user(cain_sip_stack_t * stack
+cain_sip_request_t* register_user_at_domain(cain_sip_stack_t * stack
 					,cain_sip_provider_t *prov
 					,const char *transport
 					,int use_transaction
-					,const char* username) {
+					,const char* username
+					,const char* domain) {
 	cain_sip_request_t *req,*copy;
 	char identity[256];
 	char uri[256];
 
 	if (transport)
-		snprintf(uri,sizeof(uri),"sip:%s;transport=%s",test_domain,transport);
-	else snprintf(uri,sizeof(uri),"sip:%s",test_domain);
+		snprintf(uri,sizeof(uri),"sip:%s;transport=%s",domain,transport);
+	else snprintf(uri,sizeof(uri),"sip:%s",domain);
 
 	if (transport && strcasecmp("tls",transport)==0 && cain_sip_provider_get_listening_point(prov,"tls")==NULL){
 		cain_sip_error("No TLS support, test skipped.");
 		return NULL;
 	}
 
-	snprintf(identity,sizeof(identity),"Tester <sip:%s@%s>",username,test_domain);
+	snprintf(identity,sizeof(identity),"Tester <sip:%s@%s>",username,domain);
 	req=cain_sip_request_create(
 	                    cain_sip_uri_parse(uri),
 	                    "REGISTER",
@@ -177,7 +207,13 @@ cain_sip_request_t* register_user(cain_sip_stack_t * stack
 
 	return copy;
 }
-
+cain_sip_request_t* register_user(cain_sip_stack_t * stack
+					,cain_sip_provider_t *prov
+					,const char *transport
+					,int use_transaction
+					,const char* username) {
+	return register_user_at_domain(stack,prov,transport,use_transaction,username,test_domain);
+}
 static void register_test(const char *transport, int use_transaction) {
 	cain_sip_request_t *req;
 	req=register_user(stack, prov, transport,use_transaction,"tester");
@@ -257,14 +293,20 @@ static void test_bad_request() {
 	cain_sip_stack_sleep(stack,100);
 	cain_sip_provider_remove_sip_listener(prov,bad_req_listener);
 }
+static void test_register_authenticate() {
+	number_of_challange=0;
+	authorized_request=NULL;
+	register_user_at_domain(stack, prov, "udp",1,"cainsip",auth_domain);
+	if (authorized_request) unregister_user(stack,prov,authorized_request,1);
+}
 
 int cain_sip_register_test_suite(){
 	CU_pSuite pSuite = CU_add_suite("Register", register_init, register_uninit);
 
-	if (NULL == CU_add_test(pSuite, "stateful udp register", stateful_register_udp)) {
+	if (NULL == CU_add_test(pSuite, "stateful-udp-register", stateful_register_udp)) {
 		return CU_get_error();
 	}
-	if (NULL == CU_add_test(pSuite, "stateful udp register with network delay", stateful_register_udp_delayed)) {
+	if (NULL == CU_add_test(pSuite, "stateful-udp-register-with-network-delay", stateful_register_udp_delayed)) {
 		return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "stateful tcp register", stateful_register_tcp)) {
@@ -283,6 +325,9 @@ int cain_sip_register_test_suite(){
 			return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "Bad request tcp", test_bad_request)) {
+			return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "authenticate", test_register_authenticate)) {
 			return CU_get_error();
 	}
 	return 0;

@@ -50,6 +50,16 @@ void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp);
 
+/*
+ * Add auth info the the request if found
+ * @param p object
+ * @param request to be updated
+ * @param resp response to take authentication values from, might be NULL
+ * @returns 0 in case of success,
+ *
+ * */
+int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp);
+
 CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_PROVIDER(obj) CAIN_SIP_CAST(obj,cain_sip_provider_t)

@@ -194,6 +194,11 @@ cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, co
 cain_sip_header_via_t* cain_sip_header_via_parse (const char* via) ;
 const char*	cain_sip_header_via_get_branch(const cain_sip_header_via_t* via);
 const char*	cain_sip_header_via_get_transport(const cain_sip_header_via_t* via);
+/**
+ * Get lower case version of the transport
+ * @return the lower case version of the transport if from tcp,udp,tls or dtls else, return the value from #cain_sip_header_via_get_transport
+ */
+const char*	cain_sip_header_via_get_transport_lowercase(const cain_sip_header_via_t* via);
 const char*	cain_sip_header_via_get_host(const cain_sip_header_via_t* via);
 int cain_sip_header_via_get_port(const cain_sip_header_via_t* via);
 int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via);
@@ -226,7 +231,8 @@ cain_sip_header_call_id_t* cain_sip_header_call_id_new();
 
 cain_sip_header_call_id_t* cain_sip_header_call_id_parse (const char* call_id) ;
 const char*	cain_sip_header_call_id_get_call_id(const cain_sip_header_call_id_t* call_id);
-void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* via,const char* call_id);
+void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* call_id,const char* id);
+unsigned int cain_sip_header_call_id_equals(const cain_sip_header_call_id_t* a,const cain_sip_header_call_id_t* b);
 #define CAIN_SIP_HEADER_CALL_ID(t) CAIN_SIP_CAST(t,cain_sip_header_call_id_t)
 #define CAIN_SIP_CALL_ID "Call-ID"
 /******************************
@@ -374,6 +380,7 @@ void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* auth
 void cain_sip_header_authorization_set_username(cain_sip_header_authorization_t* authorization, const char* username);
 
 #define CAIN_SIP_HEADER_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_authorization_t)
+#define CAIN_SIP_AUTHORIZATION "Authorization"
 
 /*******************************
  * proxy_authorization inherit from Authorization
@@ -382,6 +389,7 @@ typedef struct _cain_sip_header_proxy_authorization cain_sip_header_proxy_author
 cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_new();
 cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_parse(const char* proxy_authorization);
 #define CAIN_SIP_HEADER_PROXY_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_proxy_authorization_t)
+#define CAIN_SIP_PROXY_AUTHORIZATION "Proxy-Authorization"
 
 /*******************************
  * www_authenticate inherit from parameters
@@ -393,6 +401,7 @@ const char*	cain_sip_header_www_authenticate_get_algorithm(const cain_sip_header
 const char* cain_sip_header_www_authenticate_get_nonce(const cain_sip_header_www_authenticate_t* www_authenticate);
 const char*	cain_sip_header_www_authenticate_get_opaque(const cain_sip_header_www_authenticate_t* www_authenticate);
 cain_sip_list_t* cain_sip_header_www_authenticate_get_qop(const cain_sip_header_www_authenticate_t* www_authetication);
+const char* cain_sip_header_www_authenticate_get_qop_first(const cain_sip_header_www_authenticate_t* www_authetication);
 const char*	cain_sip_header_www_authenticate_get_realm(const cain_sip_header_www_authenticate_t* www_authenticate);
 const char*	cain_sip_header_www_authenticate_get_scheme(const cain_sip_header_www_authenticate_t* www_authenticate);
 const char*	cain_sip_header_www_authenticate_get_domain(const cain_sip_header_www_authenticate_t* www_authenticate);

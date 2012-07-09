@@ -108,7 +108,7 @@ int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* aut
 	if (auth_mode) {
 		CHECK_IS_PRESENT(authorization,authorization,nonce_count)
 		if (!cain_sip_header_authorization_get_cnonce(authorization)) {
-			snprintf(cnonce,sizeof(cnonce),"%08x",(short)(long)authorization);
+			snprintf(cnonce,sizeof(cnonce),"%08x",(short)(long)authorization^0x5555555);
 			cain_sip_header_authorization_set_cnonce(authorization,cnonce);
 		}
 	}

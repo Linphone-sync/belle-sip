@@ -297,7 +297,7 @@ cain_sip_uri_t* cain_sip_request_extract_origin(const cain_sip_request_t* req) {
 		cain_sip_uri_set_port(uri,cain_sip_header_via_get_port(via_header));
 	}
 	if (cain_sip_header_via_get_transport(via_header)) {
-		cain_sip_uri_set_transport_param(uri,cain_sip_header_via_get_transport(via_header));
+		cain_sip_uri_set_transport_param(uri,cain_sip_header_via_get_transport_lowercase(via_header));
 	}
 	return uri;
 }
@@ -515,7 +515,7 @@ void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_reques
 void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
 	const char *host;
-	hop->transport=cain_sip_strdup(cain_sip_header_via_get_transport(via));
+	hop->transport=cain_sip_strdup(cain_sip_header_via_get_transport_lowercase(via));
 	host=cain_sip_header_via_get_received(via);
 	if (host==NULL)
 		host=cain_sip_header_via_get_host(via);

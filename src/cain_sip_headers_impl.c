@@ -510,7 +510,16 @@ int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via){
 	if (ret==-1) ret=cain_sip_listening_point_get_well_known_port(via->protocol);
 	return ret;
 }
-
+const char*	cain_sip_header_via_get_transport_lowercase(const cain_sip_header_via_t* via) {
+	if (strcasecmp("udp",via->transport)==0) return "udp";
+	else if (strcasecmp("tcp",via->transport)==0) return "tcp";
+	else if (strcasecmp("tls",via->transport)==0) return "tls";
+	else if (strcasecmp("dtls",via->transport)==0) return "dtls";
+	else {
+		cain_sip_warning("Cannot convert [%s] to lower case",via->transport);
+		return via->transport;
+	}
+}
 /**************************
 * call_id header object inherits from object
 ****************************
@@ -533,7 +542,9 @@ int cain_sip_header_call_id_marshal(cain_sip_header_call_id_t* call_id, char* bu
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",call_id->call_id);
 	return current_offset-offset;
 }
-
+unsigned int cain_sip_header_call_id_equals(const cain_sip_header_call_id_t* a,const cain_sip_header_call_id_t* b) {
+	return strcasecmp(a->call_id,b->call_id) == 0;
+}
 CAIN_SIP_NEW_HEADER(header_call_id,header,CAIN_SIP_CALL_ID)
 CAIN_SIP_PARSE(header_call_id)
 GET_SET_STRING(cain_sip_header_call_id,call_id);
@@ -917,7 +928,7 @@ int cain_sip_header_authorization_marshal(cain_sip_header_authorization_t* autho
 	}
 	return current_offset-offset;
 }
-CAIN_SIP_NEW_HEADER(header_authorization,parameters,"Authorization")
+CAIN_SIP_NEW_HEADER(header_authorization,parameters,CAIN_SIP_AUTHORIZATION)
 CAIN_SIP_PARSE(header_authorization)
 GET_SET_STRING(cain_sip_header_authorization,scheme);
 GET_SET_STRING(cain_sip_header_authorization,username);
@@ -957,7 +968,7 @@ static void cain_sip_header_proxy_authorization_clone(cain_sip_header_proxy_auth
 int cain_sip_header_proxy_authorization_marshal(cain_sip_header_proxy_authorization_t* proxy_authorization, char* buff,unsigned int offset,unsigned int buff_size) {
 	return cain_sip_header_authorization_marshal(&proxy_authorization->authorization,buff,offset,buff_size);
 }
-CAIN_SIP_NEW_HEADER(header_proxy_authorization,header_authorization,"Proxy-Authorization")
+CAIN_SIP_NEW_HEADER(header_proxy_authorization,header_authorization,CAIN_SIP_PROXY_AUTHORIZATION)
 CAIN_SIP_PARSE(header_proxy_authorization)
 /**************************
 *WWW-Authenticate header object inherent from parameters
@@ -1032,6 +1043,9 @@ GET_SET_STRING(cain_sip_header_www_authenticate,domain)
 GET_SET_BOOL(cain_sip_header_www_authenticate,stale,is)
 cain_sip_list_t* cain_sip_header_www_authenticate_get_qop(const cain_sip_header_www_authenticate_t* www_authetication) {
 	return www_authetication->qop;
+}
+const char* cain_sip_header_www_authenticate_get_qop_first(const cain_sip_header_www_authenticate_t* www_authetication) {
+	return www_authetication->qop?(const char*)www_authetication->qop->data:NULL;
 }
 
 /**************************

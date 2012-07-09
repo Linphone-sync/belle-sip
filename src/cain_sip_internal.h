@@ -508,6 +508,7 @@ struct cain_sip_provider{
 	cain_sip_list_t *client_transactions;
 	cain_sip_list_t *server_transactions;
 	cain_sip_list_t *dialogs;
+	cain_sip_list_t *auth_contexts;
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
@@ -803,7 +804,15 @@ struct cain_sip_transaction_terminated_event{
 	int is_server_transaction;
 };
 
-
+struct cain_sip_auth_event {
+	char* username;
+	char* userid;
+	char* realm;
+	char* passwd;
+	char* ha1;
+};
+cain_sip_auth_event_t* cain_sip_auth_event_create(const char* realm,const char* username);
+void cain_sip_auth_event_destroy(cain_sip_auth_event_t* event);
 
 #ifdef __cplusplus
 }
