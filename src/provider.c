@@ -48,6 +48,7 @@ static void cain_sip_authorization_destroy(authorization_context_t* object) {
 	DESTROY_STRING(object,realm);
 	DESTROY_STRING(object,nonce);
 	DESTROY_STRING(object,qop);
+	DESTROY_STRING(object,opaque);
 	cain_sip_object_unref(object->callid);
 	cain_sip_free(object);
 }
@@ -572,6 +573,7 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 	cain_sip_header_call_id_t* call_id;
 	cain_sip_list_t* auth_context_lst;
 	cain_sip_list_t* authenticate_lst;
+	cain_sip_list_t* head;
 	cain_sip_header_www_authenticate_t* authenticate;
 	cain_sip_header_authorization_t* authorization;
 
@@ -593,7 +595,7 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 
 		call_id = cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(resp),cain_sip_header_call_id_t);
 		/*searching for authentication headers*/
-		authenticate_lst = cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_WWW_AUTHENTICATE));
+		head=authenticate_lst = cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_WWW_AUTHENTICATE));
 		/*search for proxy authenticate*/
 		authenticate_lst=cain_sip_list_append_link(authenticate_lst,cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_PROXY_AUTHENTICATE)));
 		/*update auth contexts with authenticate headers from response*/
@@ -601,13 +603,14 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 			authenticate=CAIN_SIP_HEADER_WWW_AUTHENTICATE(authenticate_lst->data);
 			cain_sip_provider_update_or_create_auth_context(p,call_id,authenticate);
 		}
+		cain_sip_list_free(head);
 	}
 
 	/*put authorization header if passwd found*/
 	call_id = cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(request),cain_sip_header_call_id_t);
 	from = CAIN_SIP_HEADER_ADDRESS(cain_sip_message_get_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_FROM));
 	from_uri = cain_sip_header_address_get_uri(from);
-	if ((auth_context_lst = cain_sip_provider_get_auth_context_by_call_id(p,call_id))) {
+	if ((head=auth_context_lst = cain_sip_provider_get_auth_context_by_call_id(p,call_id))) {
 		/*we assume there no existing auth headers*/
 		for (;auth_context_lst!=NULL;auth_context_lst=auth_context_lst->next) {
 			/*clear auth info*/
@@ -634,8 +637,7 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 				cain_sip_header_authorization_set_nonce(authorization,auth_context->nonce);
 				cain_sip_header_authorization_set_qop(authorization,auth_context->qop);
 				cain_sip_header_authorization_set_opaque(authorization,auth_context->opaque);
-				cain_sip_header_authorization_set_uri(authorization,cain_sip_request_get_uri(request)/*cain_sip_uri_create(cain_sip_uri_get_user(cain_sip_request_get_uri(request))
-																						,cain_sip_uri_get_host(cain_sip_request_get_uri(request)))*/);
+				cain_sip_header_authorization_set_uri(authorization,(cain_sip_uri_t*)cain_sip_object_ref(cain_sip_request_get_uri(request)));
 				cain_sip_header_authorization_set_nonce_count(authorization,++auth_context->nonce_count);
 				if (auth_event->ha1) {
 					ha1=auth_event->ha1;
@@ -653,9 +655,9 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 		} else {
 			cain_sip_message("No auth info found for call id [%s]",cain_sip_header_call_id_get_call_id(call_id));
 		}
-
+			cain_sip_auth_event_destroy(auth_event);
 		}
-		cain_sip_list_free(auth_context_lst);
+		cain_sip_list_free(head);
 	} else {
 		/*nothing to do*/
 	}

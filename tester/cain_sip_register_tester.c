@@ -155,7 +155,9 @@ void unregister_user(cain_sip_stack_t * stack
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
 		cain_sip_client_transaction_send_request(t);
 	}else cain_sip_provider_send_request(prov,req);
-	cain_sip_stack_sleep(stack,33000);
+	int i;
+	for(i=0;!is_register_ok && i<2 ;i++)
+		cain_sip_stack_sleep(stack,5000);
 	CU_ASSERT_EQUAL(is_register_ok,1);
 	CU_ASSERT_EQUAL(using_transaction,use_transaction);
 	cain_sip_provider_remove_sip_listener(prov,l);
@@ -199,7 +201,9 @@ cain_sip_request_t* register_user_at_domain(cain_sip_stack_t * stack
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
 		cain_sip_client_transaction_send_request(t);
 	}else cain_sip_provider_send_request(prov,req);
-	cain_sip_stack_sleep(stack,33000);
+	int i;
+	for(i=0;!is_register_ok && i<2 ;i++)
+		cain_sip_stack_sleep(stack,5000);
 	CU_ASSERT_EQUAL(is_register_ok,1);
 	CU_ASSERT_EQUAL(using_transaction,use_transaction);
 
