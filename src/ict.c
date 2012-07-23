@@ -89,8 +89,8 @@ static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			if (code>=300){
 				base->state=CAIN_SIP_TRANSACTION_COMPLETED;
-				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)make_ack(obj,resp));
+				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 				obj->timer_D=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_D,obj,32000);
 				cain_sip_transaction_start_timer(base,obj->timer_D);
 			}else if (code>=200){

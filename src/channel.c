@@ -135,7 +135,11 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 	cain_sip_header_content_length_t* content_length_header;
 	int content_length;
 
-	num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_lenght(&obj->input_stream)-1);
+	if (revents)
+		num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_lenght(&obj->input_stream)-1);
+	else
+		num=obj->input_stream.write_ptr-obj->input_stream.read_ptr;
+
 	if (num>0){
 		/*first null terminate the buff*/
 		obj->input_stream.write_ptr[num]='\0';
@@ -203,7 +207,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 		CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_event,obj,revents);
 		if (obj->input_stream.write_ptr-obj->input_stream.read_ptr>0) {
 			/*process residu*/
-			cain_sip_channel_process_data(obj,revents);
+			cain_sip_channel_process_data(obj,0);
 		}
 		return;
 	} else if (num == 0) {

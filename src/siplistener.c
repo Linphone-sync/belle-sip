@@ -88,6 +88,11 @@ static void process_transaction_terminated(cain_sip_listener_t *l, const cain_si
 	if (obj->cbs.process_transaction_terminated)
 		obj->cbs.process_transaction_terminated(obj->user_ctx,event);
 }
+static void process_auth_requested(cain_sip_listener_t *l, cain_sip_auth_event_t *event){
+	cain_sip_callbacks_t *obj=(cain_sip_callbacks_t*)l;
+	if (obj->cbs.process_auth_requested)
+		obj->cbs.process_auth_requested(obj->user_ctx,event);
+}
 
 CAIN_SIP_DECLARE_VPTR(cain_sip_callbacks_t);
 
@@ -97,7 +102,8 @@ CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(cain_sip_callbacks_t,cain_sip_listener_t)
 	process_request_event,
 	process_response_event,
 	process_timeout,
-	process_transaction_terminated
+	process_transaction_terminated,
+	process_auth_requested
 CAIN_SIP_IMPLEMENT_INTERFACE_END
 
 CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(cain_sip_callbacks_t,cain_sip_listener_t);

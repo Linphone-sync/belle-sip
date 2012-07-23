@@ -18,6 +18,7 @@
 
 #include "cain_sip_internal.h"
 #include "listeningpoint_internal.h"
+cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas);
 
 typedef struct authorization_context {
 	cain_sip_header_call_id_t* callid;
@@ -75,16 +76,20 @@ static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_cha
 
 static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_sip_request_t *req){
 	cain_sip_server_transaction_t *t;
+	cain_sip_request_event_t ev;
 	t=cain_sip_provider_find_matching_server_transaction(prov,req);
 	if (t){
 		cain_sip_object_ref(t);
 		cain_sip_server_transaction_on_request(t,req);
 		cain_sip_object_unref(t);
 	}else{
-		cain_sip_request_event_t ev;
+		ev.dialog=NULL;
+		/* Should we limit to ACK ? if (strcmp("ACK",cain_sip_request_get_method(req))==0) */
+		/*Search for a dialog if exist */
+			ev.dialog=cain_sip_provider_find_dialog(prov,req,0);
+
 		ev.source=prov;
 		ev.server_transaction=NULL;
-		ev.dialog=NULL;
 		ev.request=req;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_request_event,&ev);
 	}
@@ -273,8 +278,10 @@ cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, 
 		}
 	}
 	dialog=cain_sip_dialog_new(t);
-	if (dialog)
+	if (dialog) {
 		t->dialog=(cain_sip_dialog_t*)cain_sip_object_ref(dialog);
+		cain_sip_provider_add_dialog(prov,(cain_sip_dialog_t*)cain_sip_object_ref(dialog));
+	}
 	return dialog;
 }
 

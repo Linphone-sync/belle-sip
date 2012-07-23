@@ -59,14 +59,17 @@ static int nist_send_new_response(cain_sip_nist_t *obj, cain_sip_response_t *res
 		case CAIN_SIP_TRANSACTION_TRYING:
 			if (code<200){
 				base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
-				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->last_response);
+				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
+				break;
 			}
-		break;
+			/* no break nist can directly pass from TRYING to PROCEEDING*/
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			if (code>=200){
 				nist_set_completed(obj);
 			}
-			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->last_response);
+			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
+			/*FIXME*/
+			cain_sip_warning("nist_send_new_response(): FIX ME what about retransmision timers ??");
 		break;
 		case CAIN_SIP_TRANSACTION_COMPLETED:
 			cain_sip_warning("nist_send_new_response(): not allowed to send a response while transaction is completed.");
