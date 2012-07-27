@@ -711,7 +711,7 @@ void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *
 
 #define IS_TOKEN(token) \
 		(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars ?\
-		strcmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars)) == 0:0)
+		strcasecmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars)) == 0:0)
 char* _cain_sip_str_dup_and_unquote_string(const char* quoted_string);
 
 /*********************************************************

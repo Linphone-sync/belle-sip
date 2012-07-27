@@ -288,6 +288,11 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 			obj->route_set=cain_sip_list_append(obj->route_set,cain_sip_object_ref(predefined_routes->data));	
 		}
 	}
+	cain_sip_message("New %s dialog [%x] , local tag [%s], remote tag [%s]"
+			,obj->is_server?"server":"client"
+			,obj
+			,obj->local_tag
+			,obj->remote_tag);
 	obj->state=CAIN_SIP_DIALOG_NULL;
 	return obj;
 }
@@ -327,15 +332,18 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const
 	                                                cain_sip_header_to_create(obj->remote_party,NULL),
 	                                                cain_sip_header_via_new(),
 	                                                0);
-	if (obj->route_set) cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
+	if (obj->route_set) {
+		cain_sip_list_for_each(obj->route_set,(void (*)(void *) )cain_sip_object_ref);/*don't forget to inc ref count*/
+		cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
+	}
 	if (strcmp(method,"ACK")!=0) obj->local_cseq++;
 	return req;
 }
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *obj){
-	cain_sip_dialog_state_t prevstate=obj->state;
+	/*cain_sip_dialog_state_t prevstate=obj->state;*/
 	obj->state=CAIN_SIP_DIALOG_TERMINATED;
-	if (prevstate!=CAIN_SIP_DIALOG_NULL)
+	/*if (prevstate!=CAIN_SIP_DIALOG_NULL) why only removing non NULL dialog*/
 		cain_sip_provider_remove_dialog(obj->provider,obj);
 	
 }
@@ -435,8 +443,9 @@ int cain_sip_dialog_match(cain_sip_dialog_t *obj, cain_sip_message_t *msg, int a
 }
 
 int _cain_sip_dialog_match(cain_sip_dialog_t *obj, const char *call_id, const char *local_tag, const char *remote_tag){
-	const char *dcid=cain_sip_header_call_id_get_call_id(obj->call_id);
+	const char *dcid;
 	if (obj->state==CAIN_SIP_DIALOG_NULL) cain_sip_fatal("_cain_sip_dialog_match() must not be used for dialog in null state.");
+	dcid=cain_sip_header_call_id_get_call_id(obj->call_id);
 	return strcmp(dcid,call_id)==0 && strcmp(obj->local_tag,local_tag)==0 && strcmp(obj->remote_tag,remote_tag)==0;
 }
 

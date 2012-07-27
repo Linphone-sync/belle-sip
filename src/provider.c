@@ -86,7 +86,7 @@ static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_s
 		ev.dialog=NULL;
 		/* Should we limit to ACK ? if (strcmp("ACK",cain_sip_request_get_method(req))==0) */
 		/*Search for a dialog if exist */
-			ev.dialog=cain_sip_provider_find_dialog(prov,req,0);
+			ev.dialog=cain_sip_provider_find_dialog(prov,req,1/*request=uas*/);
 
 		ev.source=prov;
 		ev.server_transaction=NULL;
@@ -289,6 +289,7 @@ cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, 
 cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas){
 	cain_sip_list_t *elem;
 	cain_sip_dialog_t *dialog;
+	cain_sip_dialog_t *returned_dialog=NULL;
 	cain_sip_header_call_id_t *call_id;
 	cain_sip_header_from_t *from;
 	cain_sip_header_to_t *to=cain_sip_message_get_header_by_type(msg,cain_sip_header_to_t);
@@ -315,10 +316,15 @@ cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain
 	
 	for (elem=prov->dialogs;elem!=NULL;elem=elem->next){
 		dialog=(cain_sip_dialog_t*)elem->data;
-		if (_cain_sip_dialog_match(dialog,call_id_value,local_tag,remote_tag))
-			return dialog;
+		/*ignore dialog in state CAIN_SIP_DIALOG_NULL, is it really the correct things to do*/
+		if (cain_sip_dialog_get_state(dialog) != CAIN_SIP_DIALOG_NULL && _cain_sip_dialog_match(dialog,call_id_value,local_tag,remote_tag)) {
+			if (!returned_dialog)
+				returned_dialog=dialog;
+			else
+				cain_sip_fatal("More than 1 dialog is matching, check your app");
+		}
 	}
-	return NULL;
+	return returned_dialog;
 }
 
 void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog){

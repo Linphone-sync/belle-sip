@@ -51,7 +51,7 @@ cain_sip_object_t * cain_sip_object_ref(void *obj){
 
 void cain_sip_object_unref(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
-	if (obj->ref==-1) cain_sip_fatal("Object freed twice !");
+	if (obj->ref==-1) cain_sip_fatal("Object of type [%s] freed twice !",obj->name);
 	if (obj->ref==0){
 		obj->ref=-1;
 		cain_sip_object_delete(obj);

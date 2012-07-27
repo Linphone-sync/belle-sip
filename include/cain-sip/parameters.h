@@ -28,6 +28,10 @@
 typedef struct _cain_sip_parameters cain_sip_parameters_t;
 
 cain_sip_parameters_t* cain_sip_parameters_new();
+/*
+ * remove all parameters */
+void cain_sip_parameters_clean(cain_sip_parameters_t* params);
+
 
 const char*	cain_sip_parameters_get_parameter(const cain_sip_parameters_t* obj,const char* name);
 /**

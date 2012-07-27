@@ -23,9 +23,14 @@
 void cain_sip_parameters_init(cain_sip_parameters_t *obj){
 }
 
-static void cain_sip_parameters_destroy(cain_sip_parameters_t* params) {
+void cain_sip_parameters_clean(cain_sip_parameters_t* params) {
 	if (params->param_list) cain_sip_list_free_with_data (params->param_list, (void (*)(void*))cain_sip_param_pair_destroy);
 	if (params->paramnames_list) cain_sip_list_free(params->paramnames_list);
+	params->paramnames_list=NULL;
+	params->param_list=NULL;
+}
+static void cain_sip_parameters_destroy(cain_sip_parameters_t* params) {
+	cain_sip_parameters_clean(params);
 }
 
 static void cain_sip_parameters_clone(cain_sip_parameters_t *params, const cain_sip_parameters_t *orig){
