@@ -97,7 +97,7 @@ void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds);
 /**
  * Break out the main loop.
 **/
-void cain_sip_main_loop_quit(cain_sip_main_loop_t *ml);
+int cain_sip_main_loop_quit(cain_sip_main_loop_t *ml);
 
 /**
  * Cancel (removes) a source. It is not freed.

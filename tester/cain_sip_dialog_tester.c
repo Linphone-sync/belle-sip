@@ -171,6 +171,8 @@ static void callee_process_request_event(void *user_ctx, const cain_sip_request_
 		/*time to send bye*/
 		cain_sip_client_transaction_t* client_transaction = cain_sip_provider_get_new_client_transaction(prov,cain_sip_dialog_create_request(dialog,"BYE"));
 		cain_sip_client_transaction_send_request(client_transaction);
+	} else {
+		cain_sip_warning("Unexpected state [%s] for dialog [%p]",cain_sip_dialog_state_to_string(cain_sip_dialog_get_state(dialog)),dialog );
 	}
 
 }
@@ -205,14 +207,23 @@ static void caller_process_response_event(void *user_ctx, const cain_sip_respons
 
 }
 static void callee_process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
-	/*cain_sip_client_transaction_t* server_transaction = cain_sip_response_event_get_client_transaction(event);*/
+	cain_sip_client_transaction_t* client_transaction = cain_sip_response_event_get_client_transaction(event);
 	cain_sip_header_from_t* from=cain_sip_message_get_header_by_type(cain_sip_response_event_get_response(event),cain_sip_header_from_t);
 	int status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
 	if (!cain_sip_uri_equals(CAIN_SIP_URI(user_ctx),cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(from)))) {
 		return; /*not for the callee*/
 	}
-
-	cain_sip_message("callee_process_response_event [%i]",status);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(client_transaction);
+	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(client_transaction));
+	CU_ASSERT_PTR_NOT_NULL_FATAL(dialog);
+	CU_ASSERT_PTR_EQUAL(callee_dialog,dialog);
+	if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_TERMINATED) {
+		call_endeed=1;
+		cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
+	}
+	cain_sip_message("callee_process_response_event [%i] on dialog [%p] for state [%s]",status
+																						,dialog
+																						,cain_sip_dialog_state_to_string(cain_sip_dialog_get_state(dialog)));
 
 }
 static void process_timeout(void *user_ctx, const cain_sip_timeout_event_t *event) {
@@ -298,9 +309,11 @@ static void simple_call(void) {
 	//cain_sip_transaction_set_application_data(CAIN_SIP_TRANSACTION(client_transaction),op);
 	call_endeed=0;
 	cain_sip_client_transaction_send_request(client_transaction);
-	int i=0;
-	for(i=0;i<10 &&!call_endeed;i++)
-		cain_sip_stack_sleep(stack,3000);
+	//int i=0;
+	//for(i=0;i<10 &&!call_endeed;i++)
+		cain_sip_stack_sleep(stack,30000);
+
+	CU_ASSERT_EQUAL(call_endeed,1);
 
 	cain_sip_provider_remove_sip_listener(prov,caller_listener);
 	cain_sip_provider_remove_sip_listener(prov,callee_listener);
@@ -311,7 +324,7 @@ static void simple_call(void) {
 int cain_sip_dialog_test_suite(){
 	CU_pSuite pSuite = CU_add_suite("Dialog", init, uninit);
 
-	if (NULL == CU_add_test(pSuite, "simple call", simple_call)) {
+	if (NULL == CU_add_test(pSuite, "simple-call", simple_call)) {
 		return CU_get_error();
 	}
 	return 0;

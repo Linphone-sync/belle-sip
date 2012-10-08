@@ -244,7 +244,7 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_
 					obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
 				}
 				obj->needs_ack=TRUE;
-			}else if (strcmp(cain_sip_request_get_method(req),"INVITE")==0 && code>=200 && code<300){
+			}else if (strcmp(cain_sip_request_get_method(req),"BYE")==0 && code>=200 && code<300){
 				if (obj->terminate_on_bye) cain_sip_dialog_delete(obj);
 			}
 		break;
