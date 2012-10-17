@@ -237,7 +237,7 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 
@@ -563,7 +563,7 @@ static inline const cain_sip_timer_config_t * cain_sip_transaction_get_timer_con
 static inline void cain_sip_transaction_start_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
 	cain_sip_main_loop_add_source(obj->provider->stack->ml,timer);
 }
-
+/** */
 static inline void cain_sip_transaction_stop_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
 	cain_sip_main_loop_remove_source(obj->provider->stack->ml,timer);
 }

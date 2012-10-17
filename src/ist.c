@@ -28,21 +28,26 @@ static void ist_destroy(cain_sip_ist_t *obj){
 
 static void ist_on_terminate(cain_sip_ist_t *obj){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	/*timer pointers are set to NULL because they can be released later*/
 	if (obj->timer_G){
 		cain_sip_transaction_stop_timer(base,obj->timer_G);
 		cain_sip_object_unref(obj->timer_G);
+		obj->timer_G=NULL;
 	}
 	if (obj->timer_H){
 		cain_sip_transaction_stop_timer(base,obj->timer_H);
 		cain_sip_object_unref(obj->timer_H);
+		obj->timer_H=NULL;
 	}
 	if (obj->timer_I){
 		cain_sip_transaction_stop_timer(base,obj->timer_I);
 		cain_sip_object_unref(obj->timer_I);
+		obj->timer_I=NULL;
 	}
 	if (obj->timer_L){
 		cain_sip_transaction_stop_timer(base,obj->timer_L);
 		cain_sip_object_unref(obj->timer_L);
+		obj->timer_L=NULL;
 	}
 }
 

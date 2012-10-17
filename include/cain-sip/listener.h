@@ -41,14 +41,18 @@ CAIN_SIP_DECLARE_INTERFACE_END
 
 #define CAIN_SIP_LISTENER(obj) CAIN_SIP_INTERFACE_CAST(obj,cain_sip_listener_t)
 
-
+/*Response event*/
 cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_response_event_t* event);
 cain_sip_client_transaction_t *cain_sip_response_event_get_client_transaction(const cain_sip_response_event_t* event);
 cain_sip_dialog_t *cain_sip_response_event_get_dialog(const cain_sip_response_event_t* event);
 
+/*Request event*/
 cain_sip_request_t* cain_sip_request_event_get_request(const cain_sip_request_event_t* event);
 cain_sip_server_transaction_t *cain_sip_request_event_get_server_transaction(const cain_sip_request_event_t* event);
 cain_sip_dialog_t *cain_sip_request_event_get_dialog(const cain_sip_request_event_t* event);
+
+/*Dialog terminated event*/
+cain_sip_dialog_t* cain_sip_dialog_terminated_get_dialog(const cain_sip_dialog_terminated_event_t *event);
 
 /*auth event*/
 const char* cain_sip_auth_event_get_username(const cain_sip_auth_event_t* event);

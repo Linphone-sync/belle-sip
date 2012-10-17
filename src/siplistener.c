@@ -42,7 +42,9 @@ cain_sip_dialog_t *cain_sip_request_event_get_dialog(const cain_sip_request_even
 	return event->dialog;
 }
 
-
+cain_sip_dialog_t* cain_sip_dialog_terminated_get_dialog(const cain_sip_dialog_terminated_event_t *event) {
+	return event->dialog;
+}
 
 typedef struct cain_sip_callbacks cain_sip_callbacks_t;
 

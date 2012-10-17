@@ -94,6 +94,7 @@ static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_s
 		ev.request=req;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_request_event,&ev);
 	}
+	cain_sip_object_unref(req);
 }
 
 static void cain_sip_provider_dispatch_response(cain_sip_provider_t* prov, cain_sip_response_t *msg){
@@ -117,6 +118,7 @@ static void cain_sip_provider_dispatch_response(cain_sip_provider_t* prov, cain_
 		event.response=msg;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
 	}
+	cain_sip_object_unref(msg);
 }
 
 static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_sip_message_t *msg){
@@ -333,7 +335,11 @@ void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *
 }
 
 void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog){
+	cain_sip_dialog_terminated_event_t ev;
+	ev.source=prov;
+	ev.dialog=dialog;
 	prov->dialogs=cain_sip_list_remove(prov->dialogs,dialog);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_dialog_terminated,&ev);
 	cain_sip_object_unref(dialog);
 }
 
@@ -493,7 +499,7 @@ struct server_transaction_matcher{
 	const char *branchid;
 	const char *method;
 	const char *sentby;
-	int is_ack;
+	int is_ack_or_cancel;
 };
 
 static int rfc3261_server_transaction_match(const void *p_tr, const void *p_matcher){
@@ -502,7 +508,7 @@ static int rfc3261_server_transaction_match(const void *p_tr, const void *p_matc
 	const char *req_method=cain_sip_request_get_method(tr->base.request);
 	if (strcmp(matcher->branchid,tr->base.branch_id)==0){
 		if (strcmp(matcher->method,req_method)==0) return 0;
-		if (matcher->is_ack && strcmp(req_method,"INVITE")==0) return 0;
+		if (matcher->is_ack_or_cancel && strcmp(req_method,"INVITE")==0) return 0;
 	}
 	return -1;
 }
@@ -518,10 +524,10 @@ cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transacti
 	}
 	matcher.branchid=cain_sip_header_via_get_branch(via);
 	matcher.method=cain_sip_request_get_method(req);
-	matcher.is_ack=(strcmp(matcher.method,"ACK")==0);
+	matcher.is_ack_or_cancel=(strcmp(matcher.method,"ACK")==0 || strcmp(matcher.method,"CANCEL")==0);
 	if (strncmp(matcher.branchid,CAIN_SIP_BRANCH_MAGIC_COOKIE,strlen(CAIN_SIP_BRANCH_MAGIC_COOKIE))==0){
 		/*compliant to RFC3261*/
-		elem=cain_sip_list_find_custom(prov->client_transactions,rfc3261_server_transaction_match,&matcher);
+		elem=cain_sip_list_find_custom(prov->server_transactions,rfc3261_server_transaction_match,&matcher);
 	}else{
 		//FIXME
 	}
@@ -598,18 +604,24 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 	const char* ha1;
 	char computed_ha1[33];
 	int result=0;
-
+	const char* request_method;
 	/*check params*/
 	if (!p || !request) {
 		cain_sip_error("cain_sip_provider_add_authorization bad parameters");
 		return-1;
+	}
+	request_method=cain_sip_request_get_method(request);
+
+	if (strcmp("CANCEL",request_method)==0 || strcmp("ACK",request_method)==0) {
+		cain_sip_debug("no authorization header needed for method [%s]",request_method);
+		return 0;
 	}
 	/*get authenticates value from response*/
 	if (resp) {
 
 		call_id = cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(resp),cain_sip_header_call_id_t);
 		/*searching for authentication headers*/
-		head=authenticate_lst = cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_WWW_AUTHENTICATE));
+		authenticate_lst = cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_WWW_AUTHENTICATE));
 		/*search for proxy authenticate*/
 		authenticate_lst=cain_sip_list_append_link(authenticate_lst,cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_PROXY_AUTHENTICATE)));
 		/*update auth contexts with authenticate headers from response*/
@@ -617,7 +629,7 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 			authenticate=CAIN_SIP_HEADER_WWW_AUTHENTICATE(authenticate_lst->data);
 			cain_sip_provider_update_or_create_auth_context(p,call_id,authenticate);
 		}
-		cain_sip_list_free(head);
+		cain_sip_list_free(authenticate_lst);
 	}
 
 	/*put authorization header if passwd found*/

@@ -206,6 +206,13 @@ int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, c
 			obj->state=CAIN_SIP_DIALOG_CONFIRMED;
 			obj->needs_ack=TRUE;
 		}else return -1;
+	} else if (code>=300 && obj->state!=CAIN_SIP_DIALOG_CONFIRMED) {
+		/*12.3 Termination of a Dialog
+   	   	   Independent of the method, if a request outside of a dialog generates
+   	   	   a non-2xx final response, any early dialogs created through
+   	   	   provisional responses to that request are terminated.  The mechanism
+   	   	   for terminating confirmed dialogs is method specific.*/
+		cain_sip_dialog_delete(obj);
 	}
 	return 0;
 }

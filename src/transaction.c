@@ -121,6 +121,8 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_server_transaction_t)={
 };
 
 void cain_sip_server_transaction_init(cain_sip_server_transaction_t *t, cain_sip_provider_t *prov,cain_sip_request_t *req){
+	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header((cain_sip_message_t*)req,"via"));
+	t->base.branch_id=cain_sip_strdup(cain_sip_header_via_get_branch(via));
 	cain_sip_transaction_init((cain_sip_transaction_t*)t,prov,req);
 	cain_sip_random_token(t->to_tag,sizeof(t->to_tag));
 }
@@ -205,9 +207,10 @@ cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_t
 		cain_sip_error("cain_sip_client_transaction_create_cancel() cannot be used for ACK or non-INVITE transactions.");
 		return NULL;
 	}
-	if (t->base.state==CAIN_SIP_TRANSACTION_PROCEEDING){
+	if (t->base.state!=CAIN_SIP_TRANSACTION_PROCEEDING){
 		cain_sip_error("cain_sip_client_transaction_create_cancel() can only be used in state CAIN_SIP_TRANSACTION_PROCEEDING"
 		               " but current transaction state is %s",cain_sip_transaction_state_to_string(t->base.state));
+		return NULL;
 	}
 	req=cain_sip_request_new();
 	cain_sip_request_set_method(req,"CANCEL");
@@ -225,14 +228,14 @@ cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_t
 }
 
 
-void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
+int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 	cain_sip_hop_t hop={0};
 	cain_sip_channel_t *chan;
 	cain_sip_provider_t *prov=t->base.provider;
 	
 	if (t->base.state!=CAIN_SIP_TRANSACTION_INIT){
 		cain_sip_error("cain_sip_client_transaction_send_request: bad state.");
-		return;
+		return -1;
 	}
 	cain_sip_stack_get_next_hop(prov->stack,t->base.request,&hop);
 	chan=cain_sip_provider_get_channel(prov,hop.host, hop.port, hop.transport);
@@ -250,19 +253,21 @@ void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 		}
 	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
 	cain_sip_hop_free(&hop);
+	return 0;
 }
 
 void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
 	cain_sip_response_event_t event;
 	cain_sip_dialog_t *dialog=base->dialog;
-		
+	int status_code =  cain_sip_response_get_status_code(resp);
 	if (base->last_response)
 		cain_sip_object_unref(base->last_response);
 	base->last_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
 
 	if (dialog){
-		if (dialog->state==CAIN_SIP_DIALOG_EARLY || dialog->state==CAIN_SIP_DIALOG_CONFIRMED){
+		if (status_code>=200 && status_code<300
+				&& (dialog->state==CAIN_SIP_DIALOG_EARLY || dialog->state==CAIN_SIP_DIALOG_CONFIRMED)){
 			/*make sure this response matches the current dialog, or creates a new one*/
 			if (!cain_sip_dialog_match(dialog,(cain_sip_message_t*)resp,FALSE)){
 				dialog=cain_sip_dialog_new(base);

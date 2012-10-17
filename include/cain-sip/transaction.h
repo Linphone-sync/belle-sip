@@ -43,7 +43,7 @@ cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t
 void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp);
 
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t);
-void cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);
+int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);
 /**
  * Create an authenticated request based on an existing terminated transaction
  * */
