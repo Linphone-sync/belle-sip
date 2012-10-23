@@ -94,7 +94,6 @@ static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_s
 		ev.request=req;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_request_event,&ev);
 	}
-	cain_sip_object_unref(req);
 }
 
 static void cain_sip_provider_dispatch_response(cain_sip_provider_t* prov, cain_sip_response_t *msg){
@@ -118,7 +117,6 @@ static void cain_sip_provider_dispatch_response(cain_sip_provider_t* prov, cain_
 		event.response=msg;
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
 	}
-	cain_sip_object_unref(msg);
 }
 
 static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_sip_message_t *msg){
