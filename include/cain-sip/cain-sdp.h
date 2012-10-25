@@ -155,7 +155,8 @@ cain_sdp_media_description_t* cain_sdp_media_description_create(const char* medi
                          	 	 	 	 	 	 	 	 	 	 ,const char* protocol
                          	 	 	 	 	 	 	 	 	 	 ,cain_sip_list_t* static_media_formats);
 void cain_sdp_media_description_add_dynamic_payloads(cain_sdp_media_description_t* media_description, cain_sip_list_t* payloadNames, cain_sip_list_t* payloadValues);
-const char*	cain_sdp_media_description_get_attribute(const cain_sdp_media_description_t* media_description, const char* name);
+const char*	cain_sdp_media_description_get_attribute_value(const cain_sdp_media_description_t* media_description, const char* name);
+const cain_sdp_attribute_t*	cain_sdp_media_description_get_attribute(const cain_sdp_media_description_t* media_description, const char* name);
 cain_sip_list_t* cain_sdp_media_description_get_attributes(const cain_sdp_media_description_t* media_description);
 int	cain_sdp_media_description_get_bandwidth(const cain_sdp_media_description_t* media_description, const char* name);
 cain_sip_list_t* cain_sdp_media_description_get_bandwidths(const cain_sdp_media_description_t* media_description);
@@ -167,7 +168,7 @@ cain_sip_list_t* cain_sdp_media_description_build_mime_parameters(const cain_sdp
 /*cain_sip_list_t* cain_sdp_media_description_get_mime_types(const cain_sdp_media_description_t* media_description);*/
 void cain_sdp_media_description_remove_attribute(cain_sdp_media_description_t* media_description,const char* attribute);
 void cain_sdp_media_description_remove_bandwidth(cain_sdp_media_description_t* media_description,const char* bandwidth);
-void cain_sdp_media_description_set_attribute(cain_sdp_media_description_t* media_description, const char* name, const char* value);
+void cain_sdp_media_description_set_attribute_value(cain_sdp_media_description_t* media_description, const char* name, const char* value);
 void cain_sdp_media_description_add_attribute(cain_sdp_media_description_t* media_description, const cain_sdp_attribute_t* attr);
 void cain_sdp_media_description_set_attributes(cain_sdp_media_description_t* media_description, cain_sip_list_t* Attributes);
 void cain_sdp_media_description_set_bandwidth(cain_sdp_media_description_t* media_description, const char* name, int value);
@@ -298,7 +299,7 @@ cain_sdp_session_description_t* cain_sdp_session_description_parse (const char* 
  * @returns cain_sdp_session_description_t or NULL if no sdp present
  * */
 cain_sdp_session_description_t* cain_sdp_session_description_create(cain_sip_message_t* message);
-const char*	cain_sdp_session_description_get_attribute(const cain_sdp_session_description_t* session_description, const char* name);
+const char*	cain_sdp_session_description_get_attribute_value(const cain_sdp_session_description_t* session_description, const char* name);
 int	cain_sdp_session_description_get_bandwidth(const cain_sdp_session_description_t* session_description, const char* name);
 cain_sip_list_t*	cain_sdp_session_description_get_bandwidths(const cain_sdp_session_description_t* session_description);
 cain_sdp_connection_t*	cain_sdp_session_description_get_connection(const cain_sdp_session_description_t* session_description);
@@ -315,7 +316,7 @@ cain_sdp_version_t*	cain_sdp_session_description_get_version(const cain_sdp_sess
 cain_sdp_uri_t* cain_sdp_session_description_get_zone_adjustments(const cain_sdp_session_description_t* session_description);
 void cain_sdp_session_description_remove_attribute(cain_sdp_session_description_t* session_description, const char* name);
 void cain_sdp_session_description_remove_bandwidth(cain_sdp_session_description_t* session_description, const char* name);
-void cain_sdp_session_description_set_attribute(cain_sdp_session_description_t* session_description, const char* name, const char* value);
+void cain_sdp_session_description_set_attribute_value(cain_sdp_session_description_t* session_description, const char* name, const char* value);
 void cain_sdp_session_description_add_attribute(cain_sdp_session_description_t* session_description, const cain_sdp_attribute_t* attribute);
 void cain_sdp_session_description_set_attributes(cain_sdp_session_description_t* session_description, cain_sip_list_t* Attributes);
 void cain_sdp_session_description_set_bandwidth(cain_sdp_session_description_t* session_description, const char* name, int value);

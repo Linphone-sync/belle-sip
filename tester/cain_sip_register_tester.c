@@ -145,7 +145,7 @@ void unregister_user(cain_sip_stack_t * stack
 	using_transaction=0;
 	req=(cain_sip_request_t*)cain_sip_object_clone((cain_sip_object_t*)initial_request);
 	cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)req,CAIN_SIP_CSEQ);
-	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
+	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+2); /*+2 if initial reg was challenged*/
 	cain_sip_header_expires_t* expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_EXPIRES);
 	cain_sip_header_expires_set_expires(expires_header,0);
 	if (use_transaction){
@@ -171,7 +171,7 @@ cain_sip_request_t* register_user_at_domain(cain_sip_stack_t * stack
 	cain_sip_request_t *req,*copy;
 	char identity[256];
 	char uri[256];
-
+	number_of_challange=0;
 	if (transport)
 		snprintf(uri,sizeof(uri),"sip:%s;transport=%s",domain,transport);
 	else snprintf(uri,sizeof(uri),"sip:%s",domain);

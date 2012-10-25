@@ -345,6 +345,7 @@ cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *obj, unsigned 
 
 cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const char *method){
 	if (obj->local_cseq==0) obj->local_cseq=110;
+	if (strcmp(method,"ACK")!=0) obj->local_cseq++;
 	cain_sip_request_t *req=cain_sip_request_create(cain_sip_header_address_get_uri(obj->remote_target),
 	                                                method,
 	                                                obj->call_id,
@@ -357,7 +358,6 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const
 		cain_sip_list_for_each(obj->route_set,(void (*)(void *) )cain_sip_object_ref);/*don't forget to inc ref count*/
 		cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
 	}
-	if (strcmp(method,"ACK")!=0) obj->local_cseq++;
 	return req;
 }
 
