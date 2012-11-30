@@ -331,7 +331,12 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 			channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 			cain_sip_channel_close(obj);
 		}else{
-			cain_sip_message("channel %p: message sent: \n%s",obj,buffer);
+			cain_sip_message("channel %p: message sent to [%s://%s:%i] \n%s"
+								,obj
+								,cain_sip_channel_get_transport_name(obj)
+								,obj->peer_name
+								,obj->peer_port
+								,buffer);
 		}
 	}
 }

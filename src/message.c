@@ -524,3 +524,38 @@ void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *
 	if (hop->port==-1)
 		hop->port=cain_sip_header_via_get_listening_port(via);
 }
+int cain_sip_response_fix_contact(const cain_sip_response_t* response,cain_sip_header_contact_t* contact) {
+	cain_sip_header_via_t* via_header;
+	cain_sip_uri_t* contact_uri;
+	const char* received;
+	int rport;
+	int contact_port;
+	/*first check received/rport*/
+	via_header= (cain_sip_header_via_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(response),CAIN_SIP_VIA);
+	received = cain_sip_header_via_get_received(via_header);
+	rport = cain_sip_header_via_get_rport(via_header);
+	if (received!=NULL || rport>0) {
+		contact_uri=cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(contact));
+		if (received && strcmp(received,cain_sip_uri_get_host(contact_uri))!=0) {
+			/*need to update host*/
+			cain_sip_uri_set_host(contact_uri,received);
+		}
+		contact_port =  cain_sip_uri_get_port(contact_uri);
+		if (rport>0 && rport!=contact_port && (contact_port+rport)!=5060) {
+			/*need to update port*/
+			cain_sip_uri_set_port(contact_uri,rport);
+		}
+		/*try to fix transport if needed (very unlikely)*/
+		if (strcasecmp(cain_sip_header_via_get_transport(via_header),"UDP")!=0) {
+			if (!cain_sip_uri_get_transport_param(contact_uri)
+					||strcasecmp(cain_sip_uri_get_transport_param(contact_uri),cain_sip_header_via_get_transport(via_header))!=0) {
+				cain_sip_uri_set_transport_param(contact_uri,cain_sip_header_via_get_transport_lowercase(via_header));
+			}
+		} else {
+			if (cain_sip_uri_get_transport_param(contact_uri)) {
+				cain_sip_uri_set_transport_param(contact_uri,NULL);
+			}
+		}
+	}
+	return 0;
+}

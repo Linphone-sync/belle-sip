@@ -135,6 +135,12 @@ cain_sip_header_contact_t* cain_sip_header_contact_create (const cain_sip_header
  *
  */
  void cain_sip_header_contact_set_wildcard(cain_sip_header_contact_t* contact,unsigned int is_wildcard);
+ /** Contact heaader equality function
+  * @return 0 if not equals
+  *
+  * */
+ unsigned int cain_sip_header_contact_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b);
+
 #define CAIN_SIP_RANDOM_TAG ((const char*)-1)
 #define CAIN_SIP_HEADER_CONTACT(t) CAIN_SIP_CAST(t,cain_sip_header_contact_t)
 #define CAIN_SIP_CONTACT "Contact"

@@ -28,7 +28,10 @@ static void cain_sip_stream_listening_point_uninit(cain_sip_stream_listening_poi
 }
 
 static cain_sip_channel_t *stream_create_channel(cain_sip_listening_point_t *lp, const char *dest_ip, int port){
-	cain_sip_channel_t *chan=cain_sip_channel_new_tcp(lp->stack,lp->addr,lp->port,dest_ip,port);
+	cain_sip_channel_t *chan=cain_sip_channel_new_tcp(lp->stack
+														,cain_sip_uri_get_host(lp->listening_uri)
+														,cain_sip_uri_get_port(lp->listening_uri)
+														,dest_ip,port);
 	return chan;
 }
 

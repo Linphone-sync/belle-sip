@@ -235,6 +235,11 @@ int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float
 float	cain_sip_header_contact_get_qvalue(const cain_sip_header_contact_t* contact) {
 	return cain_sip_header_contact_get_q(contact);
 }
+unsigned int cain_sip_header_contact_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b) {
+	if (!a | !b) return 0;
+	return !cain_sip_uri_equals(cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(a))
+								,cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(b)));
+}
 /**************************
 * From header object inherent from header_address
 ****************************

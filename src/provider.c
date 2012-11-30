@@ -56,6 +56,7 @@ static void cain_sip_authorization_destroy(authorization_context_t* object) {
 
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_free(p->listeners);
+	cain_sip_list_free(p->internal_listeners);
 	cain_sip_list_free_with_data(p->lps,cain_sip_object_unref);
 	cain_sip_list_free_with_data(p->client_transactions,cain_sip_object_unref);
 	cain_sip_list_free_with_data(p->server_transactions,cain_sip_object_unref);
@@ -70,7 +71,7 @@ static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_cha
 		ev.source=(cain_sip_provider_t*)obj;
 		ev.port=chan->peer_port;
 		ev.host=chan->peer_name;
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(ev.source,process_io_error,&ev);
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(ev.source->listeners,process_io_error,&ev);
 	}
 }
 
@@ -92,7 +93,7 @@ static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_s
 		ev.source=prov;
 		ev.server_transaction=NULL;
 		ev.request=req;
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_request_event,&ev);
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_request_event,&ev);
 	}
 }
 
@@ -115,7 +116,7 @@ static void cain_sip_provider_dispatch_response(cain_sip_provider_t* prov, cain_
 		event.client_transaction=NULL;
 		event.dialog=NULL;
 		event.response=msg;
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_response_event,&event);
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_response_event,&event);
 	}
 }
 
@@ -229,6 +230,7 @@ int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_liste
 		cain_sip_error("Cannot add NULL lp to provider [%p]",p);
 		return -1;
 	}
+	cain_sip_listener_set_channel_listener(lp,CAIN_SIP_CHANNEL_LISTENER(p));
 	p->lps=cain_sip_list_append(p->lps,cain_sip_object_ref(lp));
 	return 0;
 }
@@ -251,6 +253,14 @@ cain_sip_listening_point_t *cain_sip_provider_get_listening_point(cain_sip_provi
 
 const cain_sip_list_t *cain_sip_provider_get_listening_points(cain_sip_provider_t *p){
 	return p->lps;
+}
+
+void cain_sip_provider_add_internal_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l){
+	p->internal_listeners=cain_sip_list_append(p->internal_listeners,l);
+}
+
+void cain_sip_provider_remove_internal_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l){
+	p->internal_listeners=cain_sip_list_remove(p->internal_listeners,l);
 }
 
 void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l){
@@ -337,7 +347,7 @@ void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_
 	ev.source=prov;
 	ev.dialog=dialog;
 	prov->dialogs=cain_sip_list_remove(prov->dialogs,dialog);
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov,process_dialog_terminated,&ev);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_dialog_terminated,&ev);
 	cain_sip_object_unref(dialog);
 }
 
@@ -388,7 +398,6 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 	if (candidate){
 		chan=cain_sip_listening_point_create_channel(candidate,name,port);
 		if (chan==NULL) cain_sip_error("Could not create channel to %s:%s:%i",transport,name,port);
-		else cain_sip_channel_add_listener(chan,CAIN_SIP_CHANNEL_LISTENER(p));
 		return chan;
 	}
 	cain_sip_error("No listening point matching for transport %s",transport);
@@ -434,7 +443,7 @@ void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_s
 	ev.source=t->provider;
 	ev.transaction=t;
 	ev.is_server_transaction=CAIN_SIP_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->provider,process_transaction_terminated,&ev);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(t,process_transaction_terminated,&ev);
 	if (!ev.is_server_transaction){
 		cain_sip_provider_remove_client_transaction(p,(cain_sip_client_transaction_t*)t);
 	}else{
@@ -642,7 +651,7 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 			auth_event = cain_sip_auth_event_create(auth_context->realm,cain_sip_uri_get_user(from_uri));
 			/*put data*/
 			/*call listener*/
-			CAIN_SIP_PROVIDER_INVOKE_LISTENERS(p,process_auth_requested,auth_event);
+			CAIN_SIP_PROVIDER_INVOKE_LISTENERS(p->listeners,process_auth_requested,auth_event);
 			if (auth_event->passwd || auth_event->ha1) {
 				if (!auth_event->userid) {
 					/*if no userid, username = userid*/

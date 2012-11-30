@@ -33,6 +33,7 @@ extern int cain_sip_authentication_helper_suite ();
 extern int cain_sip_cast_test_suite();
 extern int cain_sip_register_test_suite();
 extern int cain_sip_dialog_test_suite();
+extern int cain_sip_refresher_test_suite();
 
 int main (int argc, char *argv[]) {
 	int i;
@@ -83,6 +84,8 @@ int main (int argc, char *argv[]) {
 	cain_sip_register_test_suite();
 
 	cain_sip_dialog_test_suite ();
+
+	cain_sip_refresher_test_suite();
 
 	/* Run all tests using the CUnit Basic interface */
 	CU_basic_set_mode(CU_BRM_VERBOSE);

@@ -51,6 +51,7 @@ static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->last_response) cain_sip_object_unref(t->last_response);
 	if (t->channel) cain_sip_object_unref(t->channel);
 	if (t->branch_id) cain_sip_free(t->branch_id);
+
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_transaction_t);
@@ -96,7 +97,11 @@ void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
 	ev.source=t->provider;
 	ev.transaction=t;
 	ev.is_server_transaction=CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->provider,process_timeout,&ev);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(t,process_timeout,&ev);
+}
+
+cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t) {
+	return t->dialog;
 }
 
 /*
@@ -169,7 +174,7 @@ static void server_transaction_notify(cain_sip_server_transaction_t *t, cain_sip
 	event.server_transaction=t;
 	event.dialog=dialog;
 	event.request=req;
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(t->base.provider,process_request_event,&event);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*) t),process_request_event,&event);
 }
 
 void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, cain_sip_request_t *req){
@@ -237,6 +242,10 @@ int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 		cain_sip_error("cain_sip_client_transaction_send_request: bad state.");
 		return -1;
 	}
+	/*store preset route for futur use by refresher*/
+	t->preset_route=CAIN_SIP_HEADER_ROUTE(cain_sip_message_get_header(CAIN_SIP_MESSAGE(t->base.request),"route"));
+	if (t->preset_route) cain_sip_object_ref(t->preset_route);
+
 	cain_sip_stack_get_next_hop(prov->stack,t->base.request,&hop);
 	chan=cain_sip_provider_get_channel(prov,hop.host, hop.port, hop.transport);
 	if (chan){
@@ -282,7 +291,7 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 	event.client_transaction=t;
 	event.dialog=dialog;
 	event.response=(cain_sip_response_t*)resp;
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(base->provider,process_response_event,&event);
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*)t),process_response_event,&event);
 	/*check that 200Ok for INVITEs have been acknoledged by listener*/
 	if (dialog) cain_sip_dialog_check_ack_sent(dialog);
 }
@@ -293,6 +302,7 @@ void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, 
 }
 
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
+	if (t->preset_route) cain_sip_object_unref(t->preset_route);
 }
 
 static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
@@ -346,8 +356,12 @@ void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_s
 	cain_sip_transaction_init((cain_sip_transaction_t*)obj, prov,req);
 }
 
-cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t) {
-	return t->dialog;
+cain_sip_refresher_t* cain_sip_client_transaction_create_refresher(cain_sip_client_transaction_t *t) {
+	cain_sip_refresher_t* refresher = cain_sip_refresher_new(t);
+	if (refresher) {
+		cain_sip_refresher_start(refresher);
+	}
+	return refresher;
 }
 
 

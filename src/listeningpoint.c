@@ -21,9 +21,10 @@
 
 
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s, const char *address, int port){
-	lp->port=port;
-	lp->addr=cain_sip_strdup(address);
 	lp->stack=s;
+	lp->listening_uri=cain_sip_uri_create(NULL,address);
+	cain_sip_uri_set_port(lp->listening_uri,port);
+	cain_sip_uri_set_transport_param(lp->listening_uri,CAIN_SIP_OBJECT_VPTR(lp,cain_sip_listening_point_t)->transport);
 }
 
 static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
@@ -32,7 +33,8 @@ static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
 		cain_sip_warning("Listening point destroying [%i] channels",existing_channels);
 	}
 	cain_sip_list_free_with_data(lp->channels,(void (*)(void*))cain_sip_object_unref);
-	cain_sip_free(lp->addr);
+	cain_sip_object_unref(lp->listening_uri);
+	if (lp->channel_listener)cain_sip_object_unref(lp->channel_listener);
 }
 
 
@@ -44,6 +46,7 @@ cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_p
 	cain_sip_channel_t *chan=CAIN_SIP_OBJECT_VPTR(obj,cain_sip_listening_point_t)->create_channel(obj,dest,port);
 	if (chan){
 		chan->lp=obj;
+		cain_sip_channel_add_listener(chan,obj->channel_listener);
 		cain_sip_listening_point_add_channel(obj,chan);
 	}
 	return chan;
@@ -69,18 +72,20 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_listening_point_t)={
 };
 
 const char *cain_sip_listening_point_get_ip_address(const cain_sip_listening_point_t *lp){
-	return lp->addr;
+	return cain_sip_uri_get_host(lp->listening_uri);
 }
 
 int cain_sip_listening_point_get_port(const cain_sip_listening_point_t *lp){
-	return lp->port;
+	return cain_sip_uri_get_listening_port(lp->listening_uri);
 }
 
 const char *cain_sip_listening_point_get_transport(const cain_sip_listening_point_t *lp){
-	return CAIN_SIP_OBJECT_VPTR(lp,cain_sip_listening_point_t)->transport;
+	return cain_sip_uri_get_transport_param(lp->listening_uri);
 }
 
-
+const cain_sip_uri_t* cain_sip_listening_point_get_uri(const  cain_sip_listening_point_t *lp) {
+	return lp->listening_uri;
+}
 int cain_sip_listening_point_get_well_known_port(const char *transport){
 	if (strcasecmp(transport,"UDP")==0 || strcasecmp(transport,"TCP")==0 ) return 5060;
 	if (strcasecmp(transport,"DTLS")==0 || strcasecmp(transport,"TLS")==0 ) return 5061;
@@ -115,6 +120,9 @@ cain_sip_channel_t *cain_sip_listening_point_get_channel(cain_sip_listening_poin
 	return chan;
 }
 
-
+void cain_sip_listener_set_channel_listener(cain_sip_listening_point_t *lp,cain_sip_channel_listener_t* channel_listener) {
+	lp->channel_listener=channel_listener;
+	cain_sip_object_ref(lp->channel_listener);
+}
 
 

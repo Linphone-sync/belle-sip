@@ -32,6 +32,8 @@ typedef enum cain_sip_transaction_state{
 
 CAIN_SIP_BEGIN_DECLS
 
+const char *cain_sip_transaction_state_to_string(cain_sip_transaction_state_t state);
+
 void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t);
 void cain_sip_transaction_set_application_data(cain_sip_transaction_t *t, void *data);
 const char *cain_sip_transaction_get_branch_id(const cain_sip_transaction_t *t);
@@ -44,6 +46,11 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 
 cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t);
 int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);
+/**
+ * Creates an a sip refresher for transaction like REGISTER/SUBSCRIBE or INVITE which could be refreshed.
+ * Transaction must in be in stated CAIN_SIP_TRANSACTION_COMPLETED. Refresher is created and started
+ * */
+cain_sip_refresher_t* cain_sip_client_transaction_create_refresher(cain_sip_client_transaction_t *t);
 /**
  * Create an authenticated request based on an existing terminated transaction
  * */

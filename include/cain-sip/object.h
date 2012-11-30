@@ -123,6 +123,7 @@ int cain_sip_object_is_unowed(const cain_sip_object_t *obj);
 **/
 cain_sip_object_t * cain_sip_object_ref(void *obj);
 
+/*#define CAIN_SIP_REF(object,type) (type*)cain_sip_object_ref(object);*/
 /**
  * Decrements the reference counter. When it drops to zero, the object is destroyed.
 **/

@@ -31,17 +31,17 @@ struct cain_sip_listening_point{
 	cain_sip_object_t base;
 	cain_sip_stack_t *stack;
 	cain_sip_list_t *channels;
-	char *addr;
-	int port;
+	cain_sip_channel_listener_t* channel_listener; /*inital chennel listener used for channel creation*/
+	cain_sip_uri_t* listening_uri;
 };
 
-void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s, const char *address, int port);
+void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s,  const char *address, int port);
 cain_sip_channel_t *_cain_sip_listening_point_get_channel(cain_sip_listening_point_t *lp,const char *peer_name, int peer_port, const struct addrinfo *addr);
-cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *ip, const char *dest, int port);
+cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *ip,const char *dest, int port);
 int cain_sip_listening_point_get_well_known_port(const char *transport);
 cain_sip_channel_t *cain_sip_listening_point_get_channel(cain_sip_listening_point_t *lp,const char *peer_name, int peer_port);
 void cain_sip_listening_point_add_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
-
+void cain_sip_listener_set_channel_listener(cain_sip_listening_point_t *lp,cain_sip_channel_listener_t* channel_listener);
 
 
 /**udp*/

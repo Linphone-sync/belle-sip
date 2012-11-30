@@ -204,7 +204,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sdp_uri_t);
 CAIN_SIP_DECLARE_VPTR(cain_sdp_version_t);
 CAIN_SIP_DECLARE_VPTR(cain_sdp_base_description_t);
 CAIN_SIP_DECLARE_VPTR(cain_sdp_mime_parameter_t);
-
+CAIN_SIP_DECLARE_VPTR(cain_sip_refresher_t);
 
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
@@ -505,6 +505,7 @@ struct cain_sip_provider{
 	cain_sip_stack_t *stack;
 	cain_sip_list_t *lps; /*listening points*/
 	cain_sip_list_t *listeners;
+	cain_sip_list_t *internal_listeners; /*for transaction internaly managed by cain-sip. I.E by refreshers*/
 	cain_sip_list_t *client_transactions;
 	cain_sip_list_t *server_transactions;
 	cain_sip_list_t *dialogs;
@@ -524,14 +525,18 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
 void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
 void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_t *chan);
+void cain_sip_provider_add_internal_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
 typedef struct listener_ctx{
 	cain_sip_listener_t *listener;
 	void *data;
 }listener_ctx_t;
 
-#define CAIN_SIP_PROVIDER_INVOKE_LISTENERS(provider,callback,event) \
-	CAIN_SIP_INVOKE_LISTENERS_ARG(((provider)->listeners),cain_sip_listener_t,callback,(event))
+#define CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(t,callback,event) \
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS((t)->is_internal?t->provider->internal_listeners:t->provider->listeners,callback,event)
+
+#define CAIN_SIP_PROVIDER_INVOKE_LISTENERS(listeners,callback,event) \
+	CAIN_SIP_INVOKE_LISTENERS_ARG((listeners),cain_sip_listener_t,callback,(event))
 
 
 /*
@@ -549,6 +554,7 @@ struct cain_sip_transaction{
 	cain_sip_transaction_state_t state;
 	uint64_t start_time;
 	void *appdata;
+	unsigned int  is_internal;
 };
 
 
@@ -580,6 +586,7 @@ void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t);
 
 struct cain_sip_client_transaction{
 	cain_sip_transaction_t base;
+	cain_sip_header_route_t* preset_route; /*use to store first remove route header, will be helpful for refresher*/
 };
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_client_transaction_t,cain_sip_transaction_t)
@@ -814,6 +821,10 @@ struct cain_sip_auth_event {
 cain_sip_auth_event_t* cain_sip_auth_event_create(const char* realm,const char* username);
 void cain_sip_auth_event_destroy(cain_sip_auth_event_t* event);
 
+/*
+ * refresher
+ * */
+cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction);
 #ifdef __cplusplus
 }
 #endif

@@ -103,6 +103,7 @@ CAIN_SIP_DECLARE_TYPES_BEGIN(cain_sip,1)
 	CAIN_SIP_TYPE_ID(cain_sdp_base_description_t),
 	CAIN_SIP_TYPE_ID(cain_sdp_mime_parameter_t),
 	CAIN_SIP_TYPE_ID(cain_sip_callbacks_t),
+	CAIN_SIP_TYPE_ID(cain_sip_refresher_t),
 CAIN_SIP_DECLARE_TYPES_END
 
 
@@ -143,12 +144,14 @@ typedef struct _cain_sip_response cain_sip_response_t;
 #include "cain-sip/headers.h"
 #include "cain-sip/parameters.h"
 #include "cain-sip/message.h"
+#include "cain-sip/refresher-helper.h"
 #include "cain-sip/transaction.h"
 #include "cain-sip/dialog.h"
 #include "cain-sip/sipstack.h"
 #include "cain-sip/listeningpoint.h"
 #include "cain-sip/provider.h"
 #include "cain-sip/auth-helper.h"
+
 
 
 #undef TRUE

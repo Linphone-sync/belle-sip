@@ -52,6 +52,7 @@ static int udp_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	struct sockaddr_storage addr;
 	socklen_t addrlen=sizeof(addr);
 	err=recvfrom(chan->sock,buf,buflen,MSG_DONTWAIT,(struct sockaddr*)&addr,&addrlen);
+
 	if (err==-1 && errno!=EWOULDBLOCK){
 		cain_sip_error("Could not receive UDP packet: %s",strerror(errno));
 		return -errno;
@@ -118,6 +119,10 @@ cain_sip_channel_t * cain_sip_channel_new_udp_with_addr(cain_sip_stack_t *stack,
 		return NULL;
 	}
 	cain_sip_channel_init((cain_sip_channel_t*)obj,stack,sock,NULL,bindip,localport,name,atoi(serv));
+	err=getaddrinfo(name,serv,ai,&obj->base.peer); /*might be optimized someway ?*/
+	if (err!=0){
+		cain_sip_error("getaddrinfo() failed for channel [%p] error [%s]",obj,gai_strerror(err));
+	}
 	return (cain_sip_channel_t*)obj;
 }
 
