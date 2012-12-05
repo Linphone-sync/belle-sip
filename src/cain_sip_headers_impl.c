@@ -955,6 +955,7 @@ int cain_sip_header_authorization_get_nonce_count_as_string(const cain_sip_heade
 		return -1;
 	}
 }
+
 /**************************
 *Proxy-Authorization header object inherent from parameters
 ****************************
@@ -982,7 +983,7 @@ CAIN_SIP_PARSE(header_proxy_authorization)
 struct _cain_sip_header_www_authenticate  {
 	AUTH_BASE
 	const char* domain;
-	unsigned int stale;
+	int stale;
 	cain_sip_list_t* qop;
 };
 
@@ -1031,7 +1032,7 @@ void header##_set_##name(header##_t* obj, cain_sip_list_t*  value) {\
 	} \
 	obj->name=value;\
 }\
-void header##_add_name(header##_t* obj, const char*  value) {\
+void header##_add_##name(header##_t* obj, const char*  value) {\
 	obj->name=cain_sip_list_append(obj->name,strdup(value));\
 }
 

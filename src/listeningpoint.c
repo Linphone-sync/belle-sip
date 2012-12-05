@@ -34,7 +34,7 @@ static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
 	}
 	cain_sip_list_free_with_data(lp->channels,(void (*)(void*))cain_sip_object_unref);
 	cain_sip_object_unref(lp->listening_uri);
-	if (lp->channel_listener)cain_sip_object_unref(lp->channel_listener);
+	lp->channel_listener=NULL; /*does not unref provider*/
 }
 
 
@@ -122,7 +122,6 @@ cain_sip_channel_t *cain_sip_listening_point_get_channel(cain_sip_listening_poin
 
 void cain_sip_listener_set_channel_listener(cain_sip_listening_point_t *lp,cain_sip_channel_listener_t* channel_listener) {
 	lp->channel_listener=channel_listener;
-	cain_sip_object_ref(lp->channel_listener);
 }
 
 

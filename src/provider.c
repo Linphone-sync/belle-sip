@@ -671,7 +671,8 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 				cain_sip_header_authorization_set_qop(authorization,auth_context->qop);
 				cain_sip_header_authorization_set_opaque(authorization,auth_context->opaque);
 				cain_sip_header_authorization_set_uri(authorization,(cain_sip_uri_t*)cain_sip_object_ref(cain_sip_request_get_uri(request)));
-				cain_sip_header_authorization_set_nonce_count(authorization,++auth_context->nonce_count);
+				if (auth_context->qop)
+					cain_sip_header_authorization_set_nonce_count(authorization,++auth_context->nonce_count);
 				if (auth_event->ha1) {
 					ha1=auth_event->ha1;
 				} else {

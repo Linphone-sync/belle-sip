@@ -20,6 +20,10 @@
 #include "CUnit/Basic.h"
 #include "cain-sip/cain-sip.h"
 #include "cain_sip_internal.h"
+#include <sys/time.h>
+#define USERNAME "toto"
+#define SIPDOMAIN "sip.linphone.org"
+#define PASSWD "secret"
 
 typedef enum auth_mode {
 	none
@@ -29,6 +33,7 @@ typedef enum auth_mode {
 
 typedef struct _stat {
 	int twoHundredOk;
+	int fourHundredOne;
 	int refreshOk;
 }stat_t;
 typedef struct endpoint {
@@ -39,6 +44,8 @@ typedef struct endpoint {
 	auth_mode_t auth;
 	stat_t stat;
 	unsigned char expire_in_contact;
+	char nonce[32];
+	unsigned int nonce_count;
 } endpoint_t;
 
 static unsigned int  wait_for(cain_sip_stack_t*s1, cain_sip_stack_t*s2,int* counter,int value,int timeout) {
@@ -60,22 +67,119 @@ static unsigned int  wait_for(cain_sip_stack_t*s1, cain_sip_stack_t*s2,int* coun
 //	/*cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));*/
 //	/*CU_ASSERT(CU_FALSE);*/
 //}
+static void compute_response(const char* username
+									,const char* realm
+									,const char* passwd
+									,const char* nonce
+									,const char* method
+									,const char* uri
+									,char response[33] ) {
+	char ha1[33],ha2[33];
+	cain_sip_auth_helper_compute_ha1(username,realm,passwd,ha1);
+	cain_sip_auth_helper_compute_ha2(method,uri,ha2);
+	cain_sip_auth_helper_compute_response(ha1,nonce,ha2,response);
+}
+static void compute_response_auth_qop(const char* username
+										,const char* realm
+										,const char* passwd
+										,const char* nonce
+										,unsigned int nonce_count
+										,const char* cnonce
+										,const char* qop
+										,const char* method
+										,const char* uri
+										,char response[33] ) {
+	char ha1[33],ha2[33];
+	cain_sip_auth_helper_compute_ha1(username,realm,passwd,ha1);
+	cain_sip_auth_helper_compute_ha2(method,uri,ha2);
+	cain_sip_auth_helper_compute_response_qop_auth(ha1, nonce,nonce_count, cnonce,qop,ha2,response);
+}
+
 static void server_process_request_event(void *obj, const cain_sip_request_event_t *event){
 	endpoint_t* endpoint = (endpoint_t*)obj;
 	cain_sip_server_transaction_t* server_transaction =cain_sip_provider_get_new_server_transaction(endpoint->provider,cain_sip_request_event_get_request(event));
 	cain_sip_request_t* req = cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(server_transaction));
 	cain_sip_response_t* resp;
+	cain_sip_header_contact_t* contact;
+	cain_sip_header_expires_t* expires;
+	cain_sip_header_authorization_t* authorization;
+	const char* raw_authenticate_digest = "WWW-Authenticate: Digest "
+			"algorithm=MD5, realm=\"" SIPDOMAIN "\", opaque=\"1bc7f9097684320\"";
+
+	cain_sip_header_www_authenticate_t* www_authenticate=NULL;
+	const char* auth_uri;
+	const char* qop;
+	unsigned char auth_ok=0;
+	char local_resp[33];
+
 	cain_sip_message("caller_process_request_event received [%s] message",cain_sip_request_get_method(cain_sip_request_event_get_request(event)));
 
 	switch (endpoint->auth) {
 	case none: {
-		resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),200);
+		auth_ok=1;
 		break;
 	}
+	case digest_auth:
+	case digest: {
+		if ((authorization=cain_sip_message_get_header_by_type(req,cain_sip_header_authorization_t))){
+			qop=cain_sip_header_authorization_get_qop(authorization);
+
+			if (qop && strcmp(qop,"auth")==0) {
+				compute_response_auth_qop(	cain_sip_header_authorization_get_username(authorization)
+											,cain_sip_header_authorization_get_realm(authorization)
+											,PASSWD
+											,endpoint->nonce
+											,endpoint->nonce_count
+											,cain_sip_header_authorization_get_cnonce(authorization)
+											,cain_sip_header_authorization_get_qop(authorization)
+											,cain_sip_request_get_method(req)
+											,auth_uri=cain_sip_uri_to_string(cain_sip_header_authorization_get_uri(authorization))
+											,local_resp);
+			} else {
+				/*digest*/
+				compute_response(cain_sip_header_authorization_get_username(authorization)
+						,cain_sip_header_authorization_get_realm(authorization)
+						,PASSWD
+						,endpoint->nonce
+						,cain_sip_request_get_method(req)
+						,auth_uri=cain_sip_uri_to_string(cain_sip_header_authorization_get_uri(authorization))
+						,local_resp);
+
+			}
+			cain_sip_free((void*)auth_uri);
+			auth_ok=strcmp(cain_sip_header_authorization_get_response(authorization),local_resp)==0;
+		}
+		if (auth_ok) {
+			if (endpoint->auth == digest) {
+			sprintf(endpoint->nonce,"%p",authorization); //*change the nonce for next auth*/
+			} else {
+				endpoint->nonce_count++;
+			}
+		} else {
+			www_authenticate=cain_sip_header_www_authenticate_parse(raw_authenticate_digest);
+			cain_sip_header_www_authenticate_set_nonce(www_authenticate,endpoint->nonce);
+			if (endpoint->auth == digest_auth) {
+				cain_sip_header_www_authenticate_add_qop(www_authenticate,"auth");
+			}
+		}
+	}
+	break;
 	default:
 		break;
 	}
-	cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(cain_sip_message_get_header_by_type(req,cain_sip_header_expires_t)));
+	if (auth_ok) {
+		resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),200);
+		if (!endpoint->expire_in_contact) {
+			cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(expires=cain_sip_message_get_header_by_type(req,cain_sip_header_expires_t)));
+			cain_sip_object_ref(expires); /*to be usable in an other message*/
+		}
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(contact=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t)));
+		cain_sip_object_ref(contact);/*to be usable in an other message*/
+	} else {
+		resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),401);
+		if (www_authenticate)
+			cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(www_authenticate));
+	}
 	cain_sip_server_transaction_send_response(server_transaction,resp);
 }
 static void client_process_response_event(void *obj, const cain_sip_response_event_t *event){
@@ -85,6 +189,7 @@ static void client_process_response_event(void *obj, const cain_sip_response_eve
 	cain_sip_message("caller_process_response_event [%i]",status);
 	switch (status) {
 	case 200:endpoint->stat.twoHundredOk++; break;
+	case 401:endpoint->stat.fourHundredOne++; break;
 	default: break;
 	}
 
@@ -96,12 +201,12 @@ static void client_process_response_event(void *obj, const cain_sip_response_eve
 //static void process_transaction_terminated(void *obj, const cain_sip_transaction_terminated_event_t *event){
 //	cain_sip_message("process_transaction_terminated");
 //}
-//static void process_auth_requested(void *obj, cain_sip_auth_event_t *event){
-//	cain_sip_message("process_auth_requested requested for [%s@%s]"
-//			,cain_sip_auth_event_get_username(event)
-//			,cain_sip_auth_event_get_realm(event));
-//	cain_sip_auth_event_set_passwd(event,"secret");
-//}
+static void client_process_auth_requested(void *obj, cain_sip_auth_event_t *event){
+	cain_sip_message("process_auth_requested requested for [%s@%s]"
+			,cain_sip_auth_event_get_username(event)
+			,cain_sip_auth_event_get_realm(event));
+	cain_sip_auth_event_set_passwd(event,PASSWD);
+}
 
 static void cain_sip_refresher_listener ( const cain_sip_refresher_t* refresher
 		,void* user_pointer
@@ -122,25 +227,41 @@ static endpoint_t* create_endpoint(int port,const char* transport,cain_sip_liste
 	endpoint->lp=cain_sip_stack_create_listening_point(endpoint->stack,"0.0.0.0",port,transport);
 	endpoint->provider=cain_sip_stack_create_provider(endpoint->stack,endpoint->lp);
 	cain_sip_provider_add_sip_listener(endpoint->provider,cain_sip_listener_create_from_callbacks(endpoint->listener_callbacks,endpoint));
+	sprintf(endpoint->nonce,"%p",endpoint); /*initial nonce*/
+	endpoint->nonce_count=1;
 	return endpoint;
+}
+static void destroy_endpoint(endpoint_t* endpoint) {
+	cain_sip_object_unref(endpoint->lp);
+	cain_sip_object_unref(endpoint->provider);
+	cain_sip_object_unref(endpoint->stack);
+	cain_sip_free(endpoint);
 }
 static endpoint_t* create_udp_endpoint(int port,cain_sip_listener_callbacks_t* listener_callbacks) {
 	return create_endpoint(port,"udp",listener_callbacks);
 }
-static void register_test() {
+static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t auth_mode) {
 	cain_sip_listener_callbacks_t client_callbacks;
 	cain_sip_listener_callbacks_t server_callbacks;
 	cain_sip_request_t* req;
 	cain_sip_client_transaction_t* trans;
 	cain_sip_header_route_t* destination_route;
-	const char* identity="sip:toto@sip.linphone.org";
-	const char* domain="sip:sip.linphone.org";
-	client_callbacks.process_response_event=client_process_response_event;
+	const char* identity = "sip:" USERNAME "@" SIPDOMAIN ;
+	const char* domain="sip:" SIPDOMAIN ;
+	cain_sip_header_contact_t* contact=cain_sip_header_contact_new();
+	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
 
+	if (expire_in_contact) cain_sip_header_contact_set_expires(contact,1);
+
+	client_callbacks.process_response_event=client_process_response_event;
+	client_callbacks.process_auth_requested=client_process_auth_requested;
 	server_callbacks.process_request_event=server_process_request_event;
 
 	endpoint_t* client = create_udp_endpoint(3452,&client_callbacks);
 	endpoint_t* server = create_udp_endpoint(6788,&server_callbacks);
+	server->expire_in_contact=expire_in_contact;
+	server->auth=auth_mode;
 	destination_route=cain_sip_header_route_create(cain_sip_header_address_create(NULL,(cain_sip_uri_t*)cain_sip_listening_point_get_uri(server->lp)));
 
 
@@ -153,34 +274,73 @@ static void register_test() {
 		                    cain_sip_header_to_create2(identity,NULL),
 		                    cain_sip_header_via_new(),
 		                    70);
-	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(1)));
-	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_contact_new()));
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(contact));
+	if (!expire_in_contact)
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(1)));
+
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(destination_route));
 	trans=cain_sip_provider_get_new_client_transaction(client->provider,req);
+	cain_sip_object_ref(trans);/*to avoid trans from being deleted before refresher can use it*/
 	cain_sip_client_transaction_send_request(trans);
 
-
-	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.twoHundredOk,1,1000));
-
+	if (server->auth == none) {
+		CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.twoHundredOk,1,1000));
+	} else {
+		CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.fourHundredOne,1,1000));
+		/*update cseq*/
+		req=cain_sip_client_transaction_create_authenticated_request(trans);
+		cain_sip_object_unref(trans);
+		trans=cain_sip_provider_get_new_client_transaction(client->provider,req);
+		cain_sip_object_ref(trans);
+		cain_sip_client_transaction_send_request(trans);
+		CU_ASSERT_TRUE_FATAL(wait_for(server->stack,client->stack,&client->stat.twoHundredOk,1,1000));
+	}
 	cain_sip_refresher_t* refresher = cain_sip_client_transaction_create_refresher(trans);
-
+	cain_sip_object_unref(trans);
 	cain_sip_refresher_set_listener(refresher,cain_sip_refresher_listener,client);
 
-	/*fixme mesure time*/
-	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,3,3500));
-
-
+	struct timeval begin;
+	gettimeofday(&begin, NULL);
+	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,3,4000));
+	struct timeval end;
+	gettimeofday(&end, NULL);
+	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec>=3);
+	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec<5);
+	cain_sip_refresher_stop(refresher);
+	cain_sip_object_unref(refresher);
+	destroy_endpoint(client);
+	destroy_endpoint(server);
 }
 
+static void register_expires_header() {
+	register_test_with_param(0,none);
+}
+static void register_expires_in_contact() {
+	register_test_with_param(1,none);
+}
+static void register_expires_header_digest() {
+	register_test_with_param(0,digest);
+}
 
+static void register_expires_in_contact_header_digest_auth() {
+	register_test_with_param(1,digest_auth);
+}
 
 int cain_sip_refresher_test_suite(){
 	CU_pSuite pSuite = CU_add_suite("Refresher", NULL, NULL);
 
-	if (NULL == CU_add_test(pSuite, "simple_register", register_test)) {
+	if (NULL == CU_add_test(pSuite, "register_expires_header", register_expires_header)) {
 		return CU_get_error();
 	}
-
+	if (NULL == CU_add_test(pSuite, "register_expires_in_contact", register_expires_in_contact)) {
+		return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "register_expires_header_digest", register_expires_header_digest)) {
+		return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "register_expires_in_contact_header_digest_auth", register_expires_in_contact_header_digest_auth)) {
+		return CU_get_error();
+	}
 	return 0;
 }
 

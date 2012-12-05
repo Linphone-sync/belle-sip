@@ -364,4 +364,26 @@ cain_sip_refresher_t* cain_sip_client_transaction_create_refresher(cain_sip_clie
 	return refresher;
 }
 
+cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cain_sip_client_transaction_t *t) {
+	cain_sip_request_t* req=CAIN_SIP_REQUEST(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(t)))));
+	cain_sip_header_cseq_t* cseq=cain_sip_message_get_header_by_type(req,cain_sip_header_cseq_t);
+	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
+	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)) != CAIN_SIP_TRANSACTION_COMPLETED) {
+		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED"
+					,cain_sip_transaction_state_to_string(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)))
+					,t);
+		return NULL;
+	}
+	/*remove auth headers*/
+	cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_AUTHORIZATION);
+	cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_PROXY_AUTHORIZATION);
+	/*add preset route if any*/
+	if (t->preset_route) {
+		cain_sip_object_ref(t->preset_route);
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(t->preset_route));
+	}
+	/*put auth header*/
+	cain_sip_provider_add_authorization(t->base.provider,req,t->base.last_response);
+	return req;
+}
 

@@ -48,13 +48,15 @@ cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_t
 int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);
 /**
  * Creates an a sip refresher for transaction like REGISTER/SUBSCRIBE or INVITE which could be refreshed.
- * Transaction must in be in stated CAIN_SIP_TRANSACTION_COMPLETED. Refresher is created and started
+ * Transaction must in be in stated CAIN_SIP_TRANSACTION_COMPLETED. Refresher is created and started. A ref is taken on object transaction
  * */
 cain_sip_refresher_t* cain_sip_client_transaction_create_refresher(cain_sip_client_transaction_t *t);
 /**
- * Create an authenticated request based on an existing terminated transaction
+ * Create an authenticated request based on an existing terminated transaction.
+ * <br>This function, update cseq, put route set and try to fill authorization headers. Initial request is not cloned.
+ * @param transaction . must be in state completed
  * */
-cain_sip_request_t* cain_sip_client_create_authenticated_request(cain_sip_client_transaction_t *t);
+cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cain_sip_client_transaction_t *t);
 
 #define CAIN_SIP_TRANSACTION(t) CAIN_SIP_CAST(t,cain_sip_transaction_t)
 #define CAIN_SIP_SERVER_TRANSACTION(t) CAIN_SIP_CAST(t,cain_sip_server_transaction_t)
