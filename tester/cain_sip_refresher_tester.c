@@ -173,8 +173,14 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 			cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(expires=cain_sip_message_get_header_by_type(req,cain_sip_header_expires_t)));
 			cain_sip_object_ref(expires); /*to be usable in an other message*/
 		}
-		cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(contact=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t)));
-		cain_sip_object_ref(contact);/*to be usable in an other message*/
+		if (strcmp(cain_sip_request_get_method(req),"REGISTER")==0) {
+			contact=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t);
+			cain_sip_object_ref(contact);/*to be usable in an other message*/
+		} else {
+			contact=cain_sip_header_contact_new();
+		}
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(contact));
+
 	} else {
 		resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),401);
 		if (www_authenticate)
@@ -312,6 +318,74 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	destroy_endpoint(server);
 }
 
+static void subscribe_test() {
+	cain_sip_listener_callbacks_t client_callbacks;
+	cain_sip_listener_callbacks_t server_callbacks;
+	cain_sip_request_t* req;
+	cain_sip_client_transaction_t* trans;
+	cain_sip_header_route_t* destination_route;
+	const char* identity = "sip:" USERNAME "@" SIPDOMAIN ;
+	const char* domain="sip:" SIPDOMAIN ;
+	cain_sip_header_contact_t* contact=cain_sip_header_contact_new();
+	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+
+	client_callbacks.process_response_event=client_process_response_event;
+	client_callbacks.process_auth_requested=client_process_auth_requested;
+	server_callbacks.process_request_event=server_process_request_event;
+
+	endpoint_t* client = create_udp_endpoint(3452,&client_callbacks);
+	endpoint_t* server = create_udp_endpoint(6788,&server_callbacks);
+	server->expire_in_contact=0;
+	server->auth=digest_auth;
+	destination_route=cain_sip_header_route_create(cain_sip_header_address_create(NULL,(cain_sip_uri_t*)cain_sip_listening_point_get_uri(server->lp)));
+
+
+	req=cain_sip_request_create(
+		                    cain_sip_uri_parse(domain),
+		                    "SUBSCRIBE",
+		                    cain_sip_provider_get_new_call_id(client->provider),
+		                    cain_sip_header_cseq_create(20,"SUBSCRIBE"),
+		                    cain_sip_header_from_create2(identity,CAIN_SIP_RANDOM_TAG),
+		                    cain_sip_header_to_create2(identity,NULL),
+		                    cain_sip_header_via_new(),
+		                    70);
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(contact));
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(1)));
+
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(destination_route));
+	trans=cain_sip_provider_get_new_client_transaction(client->provider,req);
+	cain_sip_object_ref(trans);/*to avoid trans from being deleted before refresher can use it*/
+	cain_sip_client_transaction_send_request(trans);
+
+	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.fourHundredOne,1,1000));
+
+	req=cain_sip_client_transaction_create_authenticated_request(trans);
+	cain_sip_object_unref(trans);
+	trans=cain_sip_provider_get_new_client_transaction(client->provider,req);
+	cain_sip_object_ref(trans);
+	cain_sip_client_transaction_send_request(trans);
+	CU_ASSERT_TRUE_FATAL(wait_for(server->stack,client->stack,&client->stat.twoHundredOk,1,1000));
+	 /*maybe dialog should be automatically created*/
+	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(trans)))
+
+	cain_sip_refresher_t* refresher = cain_sip_client_transaction_create_refresher(trans);
+	cain_sip_object_unref(trans);
+	cain_sip_refresher_set_listener(refresher,cain_sip_refresher_listener,client);
+
+	struct timeval begin;
+	gettimeofday(&begin, NULL);
+	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,3,4000));
+	struct timeval end;
+	gettimeofday(&end, NULL);
+	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec>=3);
+	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec<5);
+	cain_sip_refresher_stop(refresher);
+	cain_sip_object_unref(refresher);
+	destroy_endpoint(client);
+	destroy_endpoint(server);
+}
+
 static void register_expires_header() {
 	register_test_with_param(0,none);
 }
@@ -339,6 +413,9 @@ int cain_sip_refresher_test_suite(){
 		return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "register_expires_in_contact_header_digest_auth", register_expires_in_contact_header_digest_auth)) {
+		return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "subscribe_test", subscribe_test)) {
 		return CU_get_error();
 	}
 	return 0;

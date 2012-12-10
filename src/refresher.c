@@ -122,6 +122,11 @@ static int refresh(cain_sip_refresher_t* refresher) {
 		request=cain_sip_client_transaction_create_authenticated_request(refresher->transaction);
 	} else if (dialog && cain_sip_dialog_get_state(dialog)==CAIN_SIP_DIALOG_CONFIRMED) {
 		request=cain_sip_dialog_create_request(dialog,cain_sip_request_get_method(old_request));
+		if (strcmp(cain_sip_request_get_method(request),"SUBSCRIBE")==0) {
+			/*put expire header*/
+			cain_sip_message_add_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_HEADER(cain_sip_header_expires_create(refresher->expires)));
+		}
+		cain_sip_provider_add_authorization(prov,request,NULL);
 	} else {
 		cain_sip_error("Unexpected dialog state [%s] for dialog [%p], cannot refresh [%s]"
 				,cain_sip_dialog_state_to_string(cain_sip_dialog_get_state(dialog))

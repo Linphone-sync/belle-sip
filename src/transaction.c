@@ -264,7 +264,12 @@ int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 	cain_sip_hop_free(&hop);
 	return 0;
 }
-
+static unsigned int should_dialog_be_created(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
+	cain_sip_request_t* req = cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(t));
+	const char* method = cain_sip_request_get_method(req);
+	int status_code = cain_sip_response_get_status_code(resp);
+	return status_code>=200 && status_code<300 && (strcmp(method,"INVITE")==0 || strcmp(method,"SUBSCRIBE")==0);
+}
 void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
 	cain_sip_response_event_t event;
@@ -272,7 +277,6 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 	int status_code =  cain_sip_response_get_status_code(resp);
 	if (base->last_response)
 		cain_sip_object_unref(base->last_response);
-	base->last_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
 
 	if (dialog){
 		if (status_code>=200 && status_code<300
@@ -285,8 +289,13 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 				}
 			}
 		}
-		if (dialog) cain_sip_dialog_update(dialog,base->request,resp,FALSE);
+	} else if (should_dialog_be_created(t,resp)) {
+		dialog=cain_sip_provider_get_new_dialog(t->base.provider,CAIN_SIP_TRANSACTION(t));
 	}
+	base->last_response=(cain_sip_response_t*)cain_sip_object_ref(resp);
+	if (dialog)
+		cain_sip_dialog_update(dialog,base->request,resp,FALSE);
+
 	event.source=base->provider;
 	event.client_transaction=t;
 	event.dialog=dialog;
