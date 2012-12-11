@@ -92,6 +92,7 @@ cain_sip_header_allow_t* cain_sip_header_allow_create (const char* methods) ;
 const char* cain_sip_header_allow_get_method(const cain_sip_header_allow_t* allow);
 void cain_sip_header_allow_set_method(cain_sip_header_allow_t* allow,const char* method);
 #define CAIN_SIP_HEADER_ALLOW(t) CAIN_SIP_CAST(t,cain_sip_header_allow_t)
+#define CAIN_SIP_ALLOW "Allow"
 
 /***********************
  * Contact header object
@@ -461,6 +462,35 @@ int cain_sip_header_max_forwards_get_max_forwards(const cain_sip_header_max_forw
 void cain_sip_header_max_forwards_set_max_forwards(cain_sip_header_max_forwards_t* max_forwards,int value);
 int cain_sip_header_max_forwards_decrement_max_forwards(cain_sip_header_max_forwards_t* max_forwards);
 #define CAIN_SIP_HEADER_MAX_FORWARDS(t) CAIN_SIP_CAST(t,cain_sip_header_max_forwards_t)
+#define CAIN_SIP_MAX_FORWARDS "Max-Forwards"
+
+/******************************
+ *
+ * Subscription state  inherit from parameters
+ *
+ ******************************/
+typedef struct _cain_sip_header_subscription_state cain_sip_header_subscription_state_t;
+
+cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_new();
+
+cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_parse (const char* subscription_state) ;
+
+const char* cain_sip_header_subscription_state_get_state(const cain_sip_header_subscription_state_t* subscription_state);
+int cain_sip_header_subscription_state_get_expires(const cain_sip_header_subscription_state_t* subscription_state);
+const char* cain_sip_header_subscription_state_get_reason(const cain_sip_header_subscription_state_t* subscription_state);
+int cain_sip_header_subscription_state_get_retry_after(const cain_sip_header_subscription_state_t* subscription_state);
+
+void cain_sip_header_subscription_state_set_state(cain_sip_header_subscription_state_t* subscription_state,const char* state);
+void cain_sip_header_subscription_state_set_expires(cain_sip_header_subscription_state_t* subscription_state,int expire);
+void cain_sip_header_subscription_state_set_reason(cain_sip_header_subscription_state_t* subscription_state, const char* reason);
+void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscription_state_t* subscription_state, int retry_after );
+
+
+#define CAIN_SIP_HEADER_SUBSCRIPTION_STATE(t) CAIN_SIP_CAST(t,cain_sip_header_subscription_state_t)
+#define CAIN_SIP_SUBSCRIPTION_STATE "Subscription-State"
+#define CAIN_SIP_SUBSCRIPTION_STATE_ACTIVE  "active"
+#define CAIN_SIP_SUBSCRIPTION_STATE_PENDING "pending"
+#define CAIN_SIP_SUBSCRIPTION_STATE_TERMINATED "terminated"
 
 
 #endif /* HEADERS_H_ */

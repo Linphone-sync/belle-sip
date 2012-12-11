@@ -352,6 +352,7 @@ static void subscribe_test() {
 		                    70);
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(contact));
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(1)));
+	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_create("Event","Presence")));
 
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(destination_route));
 	trans=cain_sip_provider_get_new_client_transaction(client->provider,req);

@@ -205,7 +205,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sdp_version_t);
 CAIN_SIP_DECLARE_VPTR(cain_sdp_base_description_t);
 CAIN_SIP_DECLARE_VPTR(cain_sdp_mime_parameter_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_refresher_t);
-
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_subscription_state_t);
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 

@@ -1104,3 +1104,34 @@ GET_SET_INT(cain_sip_header_max_forwards,max_forwards,int)
 int cain_sip_header_max_forwards_decrement_max_forwards(cain_sip_header_max_forwards_t* max_forwards) {
 	return max_forwards->max_forwards--;
 }
+/**************************
+* Subscription state header object inherent from parameters
+****************************
+*/
+struct _cain_sip_header_subscription_state  {
+	cain_sip_parameters_t parameters;
+	const char* state;
+};
+
+static void cain_sip_header_subscription_state_destroy(cain_sip_header_subscription_state_t* subscription_state) {
+	DESTROY_STRING(subscription_state,state);
+}
+
+static void cain_sip_header_subscription_state_clone(cain_sip_header_subscription_state_t* subscription_state,
+                                                 const cain_sip_header_subscription_state_t *orig ) {
+	CLONE_STRING(cain_sip_header_subscription_state,state,subscription_state,orig)
+}
+
+int cain_sip_header_subscription_state_marshal(cain_sip_header_subscription_state_t* subscription_state, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(subscription_state), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset," %s",subscription_state->state);
+	current_offset+=cain_sip_parameters_marshal(CAIN_SIP_PARAMETERS(subscription_state), buff,current_offset, buff_size);
+	return current_offset-offset;
+}
+CAIN_SIP_NEW_HEADER(header_subscription_state,parameters,CAIN_SIP_SUBSCRIPTION_STATE)
+CAIN_SIP_PARSE(header_subscription_state)
+GET_SET_STRING(cain_sip_header_subscription_state,state);
+GET_SET_STRING_PARAM(cain_sip_header_subscription_state,reason);
+GET_SET_INT_PARAM2(cain_sip_header_subscription_state,retry-after,int,retry_after);
+GET_SET_INT_PARAM(cain_sip_header_subscription_state,expires,int)

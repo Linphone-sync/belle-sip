@@ -360,6 +360,38 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const
 	}
 	return req;
 }
+static unsigned int is_system_header(cain_sip_header_t* header) {
+	const char* name=cain_sip_header_get_name(header);
+	return strcasecmp(CAIN_SIP_VIA,name) ==0
+			|| strcasecmp(CAIN_SIP_FROM,name) ==0
+			|| strcasecmp(CAIN_SIP_TO,name) ==0
+			|| strcasecmp(CAIN_SIP_CSEQ,name) ==0
+			|| strcasecmp(CAIN_SIP_CALL_ID,name) ==0
+			|| strcasecmp(CAIN_SIP_PROXY_AUTHORIZATION,name) == 0
+			|| strcasecmp(CAIN_SIP_AUTHORIZATION,name) == 0
+			|| strcasecmp(CAIN_SIP_MAX_FORWARDS,name) == 0
+			|| strcasecmp(CAIN_SIP_ALLOW,name) ==0
+			|| strcasecmp(CAIN_SIP_ROUTE,name) ==0;
+}
+static void copy_non_system_headers(cain_sip_header_t* header,cain_sip_request_t* req ) {
+	if (!is_system_header(header)) {
+		cain_sip_object_ref(header);
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),header);
+	}
+}
+cain_sip_request_t *cain_sip_dialog_create_request_from(cain_sip_dialog_t *obj, const cain_sip_request_t *initial_req){
+	cain_sip_request_t* req = cain_sip_dialog_create_request(obj, cain_sip_request_get_method(initial_req));
+	cain_sip_header_content_length_t* content_lenth = cain_sip_message_get_header_by_type(initial_req,cain_sip_header_content_length_t);
+	/*first copy non system headers*/
+	cain_sip_list_t* headers = cain_sip_message_get_all_headers(CAIN_SIP_MESSAGE(initial_req));
+	cain_sip_list_for_each2(headers,(void (*)(void *, void *))copy_non_system_headers,req);
+	cain_sip_list_free(headers);
+	/*copy body*/
+	if (content_lenth && cain_sip_header_content_length_get_content_length(content_lenth)>0) {
+		cain_sip_message_set_body(CAIN_SIP_MESSAGE(req),cain_sip_message_get_body(CAIN_SIP_MESSAGE(initial_req)),cain_sip_header_content_length_get_content_length(content_lenth));
+	}
+	return req;
+}
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *obj){
 	/*cain_sip_dialog_state_t prevstate=obj->state;*/

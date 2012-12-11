@@ -218,8 +218,31 @@ int cain_sip_message_named_headers_marshal(cain_sip_message_t *message, const ch
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","\r\n");\
 		}
 */
+typedef void (*heach_header_cb)(const cain_sip_header_t* header,void* userdata);
+
+static void cain_sip_message_for_each_header(const cain_sip_message_t *message,heach_header_cb cb,void* user_data) {
+	cain_sip_list_t* headers_list;
+	cain_sip_list_t* header_list;
+	for(headers_list=message->header_list;headers_list!=NULL;headers_list=headers_list->next){
+		for(header_list=((headers_container_t*)(headers_list->data))->header_list
+				;header_list!=NULL
+				;header_list=header_list->next)	{
+			cb(CAIN_SIP_HEADER(header_list->data),user_data);
+		}
+	}
+	return;
+}
+static void append_header(const cain_sip_header_t* header,void* user_data) {
+	*(cain_sip_list_t**)user_data=cain_sip_list_append((*(cain_sip_list_t**)user_data),(void*)header);
+}
+cain_sip_list_t* cain_sip_message_get_all_headers(const cain_sip_message_t *message) {
+	cain_sip_list_t* headers=NULL;
+	cain_sip_message_for_each_header(message,append_header,&headers);
+	return headers;
+}
 int cain_sip_headers_marshal(cain_sip_message_t *message, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
+	/*FIXME, replace this code by cain_sip_message_for_each_header*/
 	cain_sip_list_t* headers_list;
 	cain_sip_list_t* header_list;
 	for(headers_list=message->header_list;headers_list!=NULL;headers_list=headers_list->next){

@@ -488,6 +488,21 @@ static void test_header_address() {
 	CU_ASSERT_EQUAL(cain_sip_uri_get_port(L_uri), 5060);
 	cain_sip_object_unref(CAIN_SIP_OBJECT(laddress));
 }
+void test_header_subscription_state(void) {
+	cain_sip_header_subscription_state_t* L_tmp;
+	cain_sip_header_subscription_state_t* L_subscription_state = cain_sip_header_subscription_state_parse("Subscription-State: terminated;expires=600");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_subscription_state));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_subscription_state));
+	L_tmp = cain_sip_header_subscription_state_parse(l_raw_header);
+	L_subscription_state = CAIN_SIP_HEADER_SUBSCRIPTION_STATE(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
+	cain_sip_free(l_raw_header);
+
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_subscription_state_get_state(L_subscription_state), "terminated");
+	CU_ASSERT_EQUAL(cain_sip_header_subscription_state_get_expires(L_subscription_state), 600);
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_subscription_state));
+}
+
 int cain_sip_headers_test_suite() {
 	
 	   CU_pSuite pSuite = NULL;
@@ -560,6 +575,9 @@ int cain_sip_headers_test_suite() {
 	   	  return CU_get_error();
 	   	}
 	   if (NULL == CU_add_test(pSuite, "test-header-address",test_header_address )) {
+	   	  return CU_get_error();
+	   }
+	   if (NULL == CU_add_test(pSuite, "test_header_subscription_state",test_header_subscription_state )) {
 	   	  return CU_get_error();
 	   }
 	   return 0;

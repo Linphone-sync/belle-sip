@@ -36,6 +36,13 @@ const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state)
 cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *dialog, unsigned int cseq);
 
 cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *dialog, const char *method);
+/**
+ * Create a request within a dialog keeping non system header from an initial request. This function is very usefull to resend request after expiration or chalange.
+ * @param obj dialog associated to the request
+ * @param initial_req, all headers + body are re-used from this request except: Via,From, To, Allows, CSeq, Call-ID, Max-Forwards
+ *
+ */
+cain_sip_request_t * cain_sip_dialog_create_request_from(cain_sip_dialog_t *obj, const cain_sip_request_t *initial_req);
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *dialog);
 

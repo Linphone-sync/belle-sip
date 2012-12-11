@@ -17,6 +17,7 @@ cainsip_HEADERS=\
 				utils.h \
 				auth-helper.h \
 				cain-sdp.h \
-				cain-sip.h
+				cain-sip.h \
+				refresher-helper.h
 
 EXTRA_DIST=$(cainsip_HEADERS)

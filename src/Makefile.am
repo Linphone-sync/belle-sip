@@ -58,7 +58,7 @@ libcainsip_la_SOURCES=				\
 									transports/stream_channel.h \
 									transports/stream_listeningpoint.c \
 									transports/tls_listeningpoint.c \
-									refresher.c
+									refresher.c refresher-helper.h
 if BUILD_TLS
 libcainsip_la_SOURCES+=transports/tls_channel.c 
 endif
