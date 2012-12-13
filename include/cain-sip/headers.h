@@ -474,6 +474,7 @@ typedef struct _cain_sip_header_subscription_state cain_sip_header_subscription_
 cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_new();
 
 cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_parse (const char* subscription_state) ;
+cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_create (const char* subscription_state,int expires);
 
 const char* cain_sip_header_subscription_state_get_state(const cain_sip_header_subscription_state_t* subscription_state);
 int cain_sip_header_subscription_state_get_expires(const cain_sip_header_subscription_state_t* subscription_state);
