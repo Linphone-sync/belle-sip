@@ -266,7 +266,7 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_
 				}
 				obj->needs_ack=TRUE;
 			}else if (strcmp(cain_sip_request_get_method(req),"BYE")==0 && code>=200 && code<300){
-				if (obj->terminate_on_bye) cain_sip_dialog_delete(obj);
+				if (obj->terminate_on_bye && as_uas /*only when receive 200ok from BYE*/) cain_sip_dialog_delete(obj);
 			}
 		break;
 		case CAIN_SIP_DIALOG_TERMINATED:
@@ -345,7 +345,7 @@ cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *obj, unsigned 
 
 cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const char *method){
 	if (obj->state != CAIN_SIP_DIALOG_CONFIRMED && obj->state != CAIN_SIP_DIALOG_EARLY) {
-		cain_sip_error("Cannot create method [%s] from dialog [%p] in state [%s]",method,obj,cain_sip_dialog_state_to_string(obj->dialog));
+		cain_sip_error("Cannot create method [%s] from dialog [%p] in state [%s]",method,obj,cain_sip_dialog_state_to_string(obj->state));
 		return NULL;
 	}
 	if (obj->local_cseq==0) obj->local_cseq=110;

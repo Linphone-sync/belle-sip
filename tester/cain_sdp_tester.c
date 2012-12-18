@@ -46,6 +46,7 @@ static int clean_suite_sdp(void) {
 //a=rtpmap:98 H263-1998/90000
 //a=fmtp:98 CIF=1;QCIF=1
 
+
 static void test_attribute(void) {
 	cain_sdp_attribute_t* lTmp;
 	cain_sdp_attribute_t* lAttribute = cain_sdp_attribute_parse("a=rtpmap:101 telephone-event/8000");
@@ -57,6 +58,20 @@ static void test_attribute(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_attribute_get_name(lAttribute), "rtpmap");
 	CU_ASSERT_STRING_EQUAL(cain_sdp_attribute_get_value(lAttribute), "101 telephone-event/8000");
+	CU_ASSERT_TRUE(cain_sdp_attribute_as_value(lAttribute));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lAttribute));
+}
+static void test_attribute_2(void) {
+	cain_sdp_attribute_t* lTmp;
+	cain_sdp_attribute_t* lAttribute = cain_sdp_attribute_parse("a=ice-pwd:31ec21eb38b2ec6d36e8dc7b\r\n");
+	char* l_raw_attribute = cain_sip_object_to_string(CAIN_SIP_OBJECT(lAttribute));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lAttribute));
+	lTmp = cain_sdp_attribute_parse(l_raw_attribute);
+	cain_sip_free(l_raw_attribute);
+	lAttribute = CAIN_SDP_ATTRIBUTE(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
+	CU_ASSERT_STRING_EQUAL(cain_sdp_attribute_get_name(lAttribute), "ice-pwd");
+	CU_ASSERT_STRING_EQUAL(cain_sdp_attribute_get_value(lAttribute), "31ec21eb38b2ec6d36e8dc7b");
 	CU_ASSERT_TRUE(cain_sdp_attribute_as_value(lAttribute));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lAttribute));
 }
@@ -198,7 +213,7 @@ static void test_media_description(void) {
 	cain_sip_free(l_raw_media_description);
 	return;
 }
-static void test_session_description(void) {
+static void simple_session_description(void) {
 	const char* l_src = "v=0\r\n"\
 						"o=jehan-mac 1239 1239 IN IP4 192.168.0.18\r\n"\
 						"s=Talk\r\n"\
@@ -241,6 +256,68 @@ static void test_session_description(void) {
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_session_name(l_session_description));
 	CU_ASSERT_STRING_EQUAL(cain_sdp_session_name_get_value(cain_sdp_session_description_get_session_name(l_session_description)),"Talk");
+
+	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_connection(l_session_description));
+	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_time_descriptions(l_session_description));
+	CU_ASSERT_EQUAL(cain_sdp_time_get_start(cain_sdp_time_description_get_time((cain_sdp_time_description_t*)(cain_sdp_session_description_get_time_descriptions(l_session_description)->data))),0);
+	CU_ASSERT_EQUAL(cain_sdp_time_get_stop(cain_sdp_time_description_get_time((cain_sdp_time_description_t*)(cain_sdp_session_description_get_time_descriptions(l_session_description)->data))),0);
+
+	cain_sip_list_t* media_descriptions = cain_sdp_session_description_get_media_descriptions(l_session_description);
+	CU_ASSERT_PTR_NOT_NULL(media_descriptions);
+	CU_ASSERT_STRING_EQUAL (cain_sdp_media_get_media_type(cain_sdp_media_description_get_media((cain_sdp_media_description_t*)(media_descriptions->data))),"audio");
+	media_descriptions=media_descriptions->next;
+	CU_ASSERT_PTR_NOT_NULL(media_descriptions);
+
+	test_media_description_base((cain_sdp_media_description_t*)(media_descriptions->data));
+	cain_sip_object_unref(l_session_description);
+	return;
+}
+
+static void test_session_description(void) {
+	const char* l_src = "v=0\r\n"\
+						"o=jehan-mac 1239 1239 IN IP4 192.168.0.18\r\n"\
+						"s=SIP Talk\r\n"\
+						"c=IN IP4 192.168.0.18\r\n"\
+						"b=AS:380\r\n"\
+						"t=0 0\r\n"\
+						"a=ice-pwd:31ec21eb38b2ec6d36e8dc7b\r\n"\
+						"m=audio 7078 RTP/AVP 111 110 3 0 8 101\r\n"\
+						"a=rtpmap:111 speex/16000\r\n"\
+						"a=fmtp:111 vbr=on\r\n"\
+						"a=rtpmap:110 speex/8000\r\n"\
+						"a=fmtp:110 vbr=on\r\n"\
+						"a=rtpmap:101 telephone-event/8000\r\n"\
+						"a=fmtp:101 0-11\r\n"\
+						"m=video 8078 RTP/AVP 99 97 98\r\n"\
+						"c=IN IP4 192.168.0.18\r\n"\
+						"b=AS:380\r\n"\
+						"a=rtpmap:99 MP4V-ES/90000\r\n"\
+						"a=fmtp:99 profile-level-id=3\r\n"\
+						"a=rtpmap:97 theora/90000\r\n"\
+						"a=rtpmap:98 H263-1998/90000\r\n"\
+						"a=fmtp:98 CIF=1;QCIF=1\r\n";
+	cain_sdp_session_description_t* lTmp;
+	cain_sdp_session_description_t* l_session_description = cain_sdp_session_description_parse(l_src);
+	char* l_raw_session_description = cain_sip_object_to_string(CAIN_SIP_OBJECT(l_session_description));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(l_session_description));
+	lTmp = cain_sdp_session_description_parse(l_raw_session_description);
+	cain_sip_free(l_raw_session_description);
+	l_session_description = CAIN_SDP_SESSION_DESCRIPTION(cain_sip_object_clone(CAIN_SIP_OBJECT(lTmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(lTmp));
+
+	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_version(l_session_description));
+	CU_ASSERT_EQUAL(cain_sdp_version_get_version(cain_sdp_session_description_get_version(l_session_description)),0);
+
+	cain_sdp_origin_t* l_origin = cain_sdp_session_description_get_origin(l_session_description);
+	CU_ASSERT_PTR_NOT_NULL(l_origin);
+	CU_ASSERT_STRING_EQUAL(cain_sdp_origin_get_address(l_origin),"192.168.0.18")
+	CU_ASSERT_STRING_EQUAL(cain_sdp_origin_get_address_type(l_origin),"IP4")
+	CU_ASSERT_STRING_EQUAL(cain_sdp_origin_get_network_type(l_origin),"IN")
+	CU_ASSERT_EQUAL(cain_sdp_origin_get_session_id(l_origin),1239)
+	CU_ASSERT_EQUAL(cain_sdp_origin_get_session_version(l_origin),1239)
+
+	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_session_name(l_session_description));
+	CU_ASSERT_STRING_EQUAL(cain_sdp_session_name_get_value(cain_sdp_session_description_get_session_name(l_session_description)),"SIP Talk");
 
 	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_connection(l_session_description));
 	CU_ASSERT_PTR_NOT_NULL(cain_sdp_session_description_get_time_descriptions(l_session_description));
@@ -352,7 +429,7 @@ int cain_sdp_test_suite () {
 
 	CU_pSuite pSuite = NULL;
 	/* add a suite to the registry */
-	pSuite = CU_add_suite("sdp_suite", init_suite_sdp, clean_suite_sdp);
+	pSuite = CU_add_suite("SDP", init_suite_sdp, clean_suite_sdp);
 
 	/* add the tests to the suite */
 	/* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
@@ -360,6 +437,9 @@ int cain_sdp_test_suite () {
 		return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "attribute", test_attribute)) {
+		return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "test_attribute_2", test_attribute_2)) {
 		return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "bandwidth", test_bandwidth)) {
@@ -380,7 +460,11 @@ int cain_sdp_test_suite () {
 	if (NULL == CU_add_test(pSuite, "mime_parameter", test_mime_parameter)) {
 			return CU_get_error();
 	}
+	if (NULL == CU_add_test(pSuite, "simple_session_description", simple_session_description)) {
+			return CU_get_error();
+	}
 	if (NULL == CU_add_test(pSuite, "session_description", test_session_description)) {
 			return CU_get_error();
-	}	return 0;
+	}
+	return 0;
 }

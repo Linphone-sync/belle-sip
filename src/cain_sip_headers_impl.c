@@ -128,7 +128,10 @@ GET_SET_STRING(cain_sip_header_address,displayname);
 
 void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value) {
 		if (address->displayname != NULL) cain_sip_free((void*)(address->displayname));
-		address->displayname=_cain_sip_str_dup_and_unquote_string(value);
+		if (strlen(value)>2)
+			address->displayname=_cain_sip_str_dup_and_unquote_string(value);
+		else
+			address->displayname=NULL;
 }
 cain_sip_uri_t* cain_sip_header_address_get_uri(const cain_sip_header_address_t* address) {
 	return address->uri;

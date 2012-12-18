@@ -125,7 +125,10 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 			}
 			if (chan){
 				/*notify the channel*/
-				cain_sip_message("Notifying channel.");
+				cain_sip_message("Notifying udp channel, local [%s:%i]  remote [%s:%i], [%i]",chan->local_ip
+																											,chan->local_port
+																											,chan->peer_name
+																											,chan->peer_port);
 				cain_sip_channel_process_data(chan,events);
 			}
 		}
