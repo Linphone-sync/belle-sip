@@ -616,7 +616,7 @@ int cain_sip_header_content_type_marshal(cain_sip_header_content_type_t* content
 	current_offset+=cain_sip_parameters_marshal(&content_type->params_list, buff,current_offset, buff_size);
 	return current_offset-offset;
 }
-CAIN_SIP_NEW_HEADER(header_content_type,parameters,"Content-Type")
+CAIN_SIP_NEW_HEADER(header_content_type,parameters,CAIN_SIP_CONTENT_TYPE)
 CAIN_SIP_PARSE(header_content_type)
 cain_sip_header_content_type_t* cain_sip_header_content_type_create (const char* type,const char* sub_type) {
 	cain_sip_header_content_type_t* header = cain_sip_header_content_type_new();

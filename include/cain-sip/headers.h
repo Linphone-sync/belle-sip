@@ -273,6 +273,7 @@ void cain_sip_header_content_type_set_type(cain_sip_header_content_type_t* conte
 const char*	cain_sip_header_content_type_get_subtype(const cain_sip_header_content_type_t* content_type);
 void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* content_type,const char* sub_type);
 #define CAIN_SIP_HEADER_CONTENT_TYPE(t) CAIN_SIP_CAST(t,cain_sip_header_content_type_t)
+#define CAIN_SIP_CONTENT_TYPE "Content-Type"
 /******************************
  *
  * Expires inherit from header

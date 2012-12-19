@@ -283,8 +283,10 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 				&& (dialog->state==CAIN_SIP_DIALOG_EARLY || dialog->state==CAIN_SIP_DIALOG_CONFIRMED)){
 			/*make sure this response matches the current dialog, or creates a new one*/
 			if (!cain_sip_dialog_match(dialog,(cain_sip_message_t*)resp,FALSE)){
-				dialog=cain_sip_dialog_new(base);
+				dialog=cain_sip_provider_get_new_dialog(t->base.provider,CAIN_SIP_TRANSACTION(t));/*cain_sip_dialog_new(base);*/
 				if (dialog){
+					/*copy userdata to avoid application from being lost*/
+					cain_sip_dialog_set_application_data(dialog,cain_sip_dialog_get_application_data(base->dialog));
 					cain_sip_message("Handling response creating a new dialog !");
 				}
 			}
