@@ -74,6 +74,13 @@ const cain_sip_header_address_t *cain_sip_dialog_get_remote_target(cain_sip_dial
 const cain_sip_list_t* cain_sip_dialog_get_route_set(cain_sip_dialog_t *dialog);
 
 cain_sip_dialog_state_t cain_sip_dialog_get_state(const cain_sip_dialog_t *dialog);
+/*
+ * return the dialog state before last transition. Can be usefull to detect early avorted dialogs
+ * @param dialog
+ * @returns state
+ * */
+cain_sip_dialog_state_t cain_sip_dialog_get_previous_state(const cain_sip_dialog_t *dialog);
+
 
 int cain_sip_dialog_is_server(const cain_sip_dialog_t *dialog);
 

@@ -57,6 +57,10 @@ const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state)
 	}
 }
 
+static set_state(cain_sip_dialog_t *obj,cain_sip_dialog_state_t state) {
+	obj->previous_state=obj->state;
+	obj->state=state;
+}
 static void set_to_tag(cain_sip_dialog_t *obj, cain_sip_header_to_t *to){
 	const char *to_tag=cain_sip_header_to_get_tag(to);
 	if (obj->is_server){
@@ -208,7 +212,7 @@ int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, c
 		if (obj->state==CAIN_SIP_DIALOG_NULL){
 			set_to_tag(obj,to);
 			obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
-			obj->state=CAIN_SIP_DIALOG_EARLY;
+			set_state(obj,CAIN_SIP_DIALOG_EARLY);
 		}
 		return -1;
 	}else if (code>=200 && code<300){
@@ -217,7 +221,7 @@ int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, c
 			obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
 		}
 		if (cain_sip_dialog_establish_full(obj,req,resp)==0){
-			obj->state=CAIN_SIP_DIALOG_CONFIRMED;
+			set_state(obj,CAIN_SIP_DIALOG_CONFIRMED);
 			obj->needs_ack=(strcmp("INVITE",cain_sip_request_get_method(req))==0); /*only for invite*/
 		}else return -1;
 	} else if (code>=300 && obj->state!=CAIN_SIP_DIALOG_CONFIRMED) {
@@ -330,7 +334,7 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 			,obj
 			,obj->local_tag
 			,obj->remote_tag);
-	obj->state=CAIN_SIP_DIALOG_NULL;
+	set_state(obj,CAIN_SIP_DIALOG_NULL);
 	return obj;
 }
 
@@ -414,11 +418,8 @@ cain_sip_request_t *cain_sip_dialog_create_request_from(cain_sip_dialog_t *obj, 
 }
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *obj){
-	/*cain_sip_dialog_state_t prevstate=obj->state;*/
-	obj->state=CAIN_SIP_DIALOG_TERMINATED;
-	/*if (prevstate!=CAIN_SIP_DIALOG_NULL) why only removing non NULL dialog*/
-		cain_sip_provider_remove_dialog(obj->provider,obj);
-	
+	set_state(obj,CAIN_SIP_DIALOG_TERMINATED);
+	cain_sip_provider_remove_dialog(obj->provider,obj);
 }
 
 void *cain_sip_dialog_get_application_data(const cain_sip_dialog_t *dialog){
@@ -473,6 +474,9 @@ cain_sip_dialog_state_t cain_sip_dialog_get_state(const cain_sip_dialog_t *dialo
 	return dialog->state;
 }
 
+cain_sip_dialog_state_t cain_sip_dialog_get_previous_state(const cain_sip_dialog_t *dialog) {
+	return dialog->previous_state;
+}
 int cain_sip_dialog_is_server(const cain_sip_dialog_t *dialog){
 	return dialog->is_server;
 }
