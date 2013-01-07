@@ -689,6 +689,7 @@ struct cain_sip_dialog{
 	cain_sip_request_t *last_out_invite;
 	cain_sip_request_t *last_out_ack; /*so that it can retransmitted when needed*/
 	cain_sip_dialog_state_t state;
+	cain_sip_dialog_state_t previous_state;
 	void *appdata;
 	cain_sip_header_call_id_t *call_id;
 	cain_sip_header_address_t *local_party;

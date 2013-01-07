@@ -57,7 +57,7 @@ const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state)
 	}
 }
 
-static set_state(cain_sip_dialog_t *obj,cain_sip_dialog_state_t state) {
+static void set_state(cain_sip_dialog_t *obj,cain_sip_dialog_state_t state) {
 	obj->previous_state=obj->state;
 	obj->state=state;
 }
