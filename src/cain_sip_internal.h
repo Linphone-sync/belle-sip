@@ -489,6 +489,7 @@ struct cain_sip_stack{
 	cain_sip_object_t base;
 	cain_sip_main_loop_t *ml;
 	cain_sip_timer_config_t timer_config;
+	int transport_timeout;
 	int tx_delay; /*used to simulate network transmission delay, for tests*/
 };
 

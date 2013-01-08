@@ -30,7 +30,7 @@
 
 /*************TCP********/
 
-
+static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
 
 
 static void stream_channel_uninit(cain_sip_stream_channel_t *obj){
@@ -69,19 +69,28 @@ void stream_channel_close(cain_sip_channel_t *obj){
 	}
 }
 
-int stream_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t socklen){
+int stream_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 	int err;
 	int tmp;
-	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
+	cain_sip_fd_t sock;
 	tmp=1;
+	
+	sock=socket(ai->ai_family, SOCK_STREAM, ai->ai_protocol);
+	
+	if (sock==-1){
+		cain_sip_error("Could not create socket: %s",cain_sip_get_socket_error_string());
+		return -1;
+	}
+	
 	err=setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,(char*)&tmp,sizeof(tmp));
 	if (err!=0){
 		cain_sip_error("setsockopt TCP_NODELAY failed: [%s]",cain_sip_get_socket_error_string());
 	}
 	fcntl(sock,F_SETFL,fcntl(sock,F_GETFL) | O_NONBLOCK);
+	cain_sip_channel_set_fd(obj,sock,(cain_sip_source_func_t)stream_channel_process_data);
 	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
 	cain_sip_main_loop_add_source(obj->stack->ml,(cain_sip_source_t*)obj);
-	err = connect(sock,addr,socklen);
+	err = connect(sock,ai->ai_addr,ai->ai_addrlen);
 	if (err != 0 && get_socket_error()!=EINPROGRESS) {
 		cain_sip_error("stream connect failed %s",cain_sip_get_socket_error_string());
 		close_socket(sock);
@@ -110,6 +119,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_stream_channel_t)=
 		stream_channel_close,
 	}
 };
+
 int finalize_stream_connection (cain_sip_fd_t fd, struct sockaddr *addr, socklen_t* slen) {
 	int err, errnum;
 	socklen_t optlen=sizeof(errnum);
@@ -163,8 +173,6 @@ cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char
 	cain_sip_stream_channel_t *obj=cain_sip_object_new(cain_sip_stream_channel_t);
 	cain_sip_channel_init((cain_sip_channel_t*)obj
 							,stack
-							,socket(AF_INET, SOCK_STREAM, 0)
-							,(cain_sip_source_func_t)stream_channel_process_data
 							,bindip,localport,dest,port);
 	return (cain_sip_channel_t*)obj;
 }

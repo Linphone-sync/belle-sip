@@ -125,7 +125,7 @@ static void cain_sip_channel_input_stream_reset(cain_sip_channel_input_stream_t*
 	input_stream->state=WAITING_MESSAGE_START;
 	input_stream->msg=NULL;
 }
-static size_t cain_sip_channel_input_stream_get_buff_lenght(cain_sip_channel_input_stream_t* input_stream) {
+static size_t cain_sip_channel_input_stream_get_buff_length(cain_sip_channel_input_stream_t* input_stream) {
 	return MAX_CHANNEL_BUFF_SIZE - (input_stream->write_ptr-input_stream->read_ptr);
 }
 
@@ -138,16 +138,16 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 	int content_length;
 
 	if (revents) {
-		num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_lenght(&obj->input_stream)-1);
+		num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_length(&obj->input_stream)-1);
 		/*write ptr is only incremented if data were acquired from the transport*/
 		obj->input_stream.write_ptr+=num;
+		/*first null terminate the read buff*/
+		*obj->input_stream.write_ptr='\0';
 	}
 	else
 		num=obj->input_stream.write_ptr-obj->input_stream.read_ptr;
 
 	if (num>0){
-		/*first null terminate the buff*/
-		obj->input_stream.write_ptr[num]='\0';
 
 
 		if (obj->input_stream.state == WAITING_MESSAGE_START) {
@@ -227,7 +227,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 }
 
 
-void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, int fd, cain_sip_source_func_t process_data,const char *bindip,int localport,const char *peername, int peer_port){
+void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,const char *bindip,int localport,const char *peername, int peer_port){
 	obj->peer_name=cain_sip_strdup(peername);
 	obj->peer_port=peer_port;
 	obj->peer=NULL;
@@ -236,10 +236,11 @@ void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, int
 		obj->local_ip=cain_sip_strdup(bindip);
 	obj->local_port=localport;
 
-	if (process_data) {
-		cain_sip_fd_source_init((cain_sip_source_t*)obj,(cain_sip_source_func_t)process_data,obj,fd,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR,-1);
-	}
 	cain_sip_channel_input_stream_reset(&obj->input_stream,0);
+}
+
+void cain_sip_channel_set_fd(cain_sip_channel_t *obj, int fd, cain_sip_source_func_t datafunc){
+	cain_sip_fd_source_init((cain_sip_source_t*)obj, datafunc, obj, fd, CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_WRITE, cain_sip_stack_get_transport_timeout(obj->stack));
 }
 
 void cain_sip_channel_add_listener(cain_sip_channel_t *obj, cain_sip_channel_listener_t *l){
@@ -441,7 +442,7 @@ void cain_sip_channel_resolve(cain_sip_channel_t *obj){
 
 void cain_sip_channel_connect(cain_sip_channel_t *obj){
 	channel_set_state(obj,CAIN_SIP_CHANNEL_CONNECTING);
-	if(CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->connect(obj,obj->peer->ai_addr,obj->peer->ai_addrlen)) {
+	if(CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->connect(obj,obj->peer)) {
 		cain_sip_error("Cannot connect to [%s://%s:%i]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
 		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 		channel_process_queue(obj);

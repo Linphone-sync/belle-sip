@@ -64,11 +64,11 @@ static int udp_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	return err;
 }
 
-int udp_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t socklen){
+int udp_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 	struct sockaddr_storage laddr;
 	socklen_t lslen=sizeof(laddr);
 	if (obj->local_ip==NULL){
-		cain_sip_get_src_addr_for(addr,socklen,(struct sockaddr*)&laddr,&lslen);
+		cain_sip_get_src_addr_for(ai->ai_addr,ai->ai_addrlen,(struct sockaddr*)&laddr,&lslen);
 		if (lslen==sizeof(struct sockaddr_in6)){
 			struct sockaddr_in6 *sin6=(struct sockaddr_in6*)&laddr;
 			sin6->sin6_port=htons(obj->local_port);
@@ -102,7 +102,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_udp_channel_t)=
 
 cain_sip_channel_t * cain_sip_channel_new_udp(cain_sip_stack_t *stack, int sock, const char *bindip, int localport, const char *dest, int port){
 	cain_sip_udp_channel_t *obj=cain_sip_object_new(cain_sip_udp_channel_t);
-	cain_sip_channel_init((cain_sip_channel_t*)obj,stack,sock,NULL,bindip,localport,dest,port);
+	cain_sip_channel_init((cain_sip_channel_t*)obj,stack,bindip,localport,dest,port);
 	obj->sock=sock;
 	return (cain_sip_channel_t*)obj;
 }
@@ -122,7 +122,7 @@ cain_sip_channel_t * cain_sip_channel_new_udp_with_addr(cain_sip_stack_t *stack,
 		cain_sip_object_unref(obj);
 		return NULL;
 	}
-	cain_sip_channel_init((cain_sip_channel_t*)obj,stack,sock,NULL,bindip,localport,name,atoi(serv));
+	cain_sip_channel_init((cain_sip_channel_t*)obj,stack,bindip,localport,name,atoi(serv));
 	err=getaddrinfo(name,serv,ai,&obj->base.peer); /*might be optimized someway ?*/
 	if (err!=0){
 		cain_sip_error("getaddrinfo() failed for channel [%p] error [%s]",obj,gai_strerror(err));

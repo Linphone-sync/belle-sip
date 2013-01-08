@@ -30,6 +30,8 @@
 #endif
 /*************tls********/
 
+static int tls_process_data(cain_sip_channel_t *obj,unsigned int revents);
+
 struct cain_sip_tls_channel{
 	cain_sip_stream_channel_t base;
 	int socket_connected;
@@ -89,8 +91,14 @@ static int tls_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	return err;
 }
 
-int tls_channel_connect(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t socklen){
-	return stream_channel_connect(obj,addr,socklen);
+int tls_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
+	int err= stream_channel_connect(obj,ai);
+	if (err==0){
+		cain_sip_fd_t sock=cain_sip_source_get_fd((cain_sip_source_t*)obj);
+		cain_sip_channel_set_fd(obj,sock,(cain_sip_source_func_t)tls_process_data);
+		return 0;
+	}
+	return -1;
 }
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_tls_channel_t,cain_sip_stream_channel_t)
@@ -118,7 +126,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_tls_channel_t)=
 	}
 };
 
-static int process_data(cain_sip_channel_t *obj,unsigned int revents){
+static int tls_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	cain_sip_tls_channel_t* channel=(cain_sip_tls_channel_t*)obj;
 	socklen_t addrlen=sizeof(channel->ss);
 	int result;
@@ -222,8 +230,6 @@ cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp
 #endif
 	cain_sip_channel_init(channel
 							,((cain_sip_listening_point_t*)lp)->stack
-							,socket(AF_INET, SOCK_STREAM, 0)
-							,(cain_sip_source_func_t)process_data
 							,bindip,localport,dest,port);
 	return (cain_sip_channel_t*)obj;
 error:

@@ -112,7 +112,8 @@ int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t bufle
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);
 /*only used by channels implementation*/
 void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t slen);
-void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, int fd, cain_sip_source_func_t process_data, const char *bindip,int localport,const char *peername, int peer_port);
+void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const char *bindip,int localport,const char *peername, int peer_port);
+void cain_sip_channel_set_fd(cain_sip_channel_t *obj, int fd, cain_sip_source_func_t datafunc);
 /*end of channel implementations*/
 /**
  * pickup last received message. This method take the ownership of the message.
@@ -142,7 +143,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
 	const char *transport;
 	int reliable;
-	int (*connect)(cain_sip_channel_t *obj, const struct sockaddr *, socklen_t socklen);
+	int (*connect)(cain_sip_channel_t *obj, const struct addrinfo *ai);
 	int (*channel_send)(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 	int (*channel_recv)(cain_sip_channel_t *obj, void *buf, size_t buflen);
 	void (*close)(cain_sip_channel_t *obj);

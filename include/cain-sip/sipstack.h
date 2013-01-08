@@ -53,6 +53,8 @@ void cain_sip_stack_main(cain_sip_stack_t *stack);
 
 void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
 
+int cain_sip_stack_get_transport_timeout(const cain_sip_stack_t *stack);
+
 void cain_sip_hop_free(cain_sip_hop_t *hop);
 
 /**

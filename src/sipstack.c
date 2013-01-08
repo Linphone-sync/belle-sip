@@ -51,6 +51,7 @@ cain_sip_stack_t * cain_sip_stack_new(const char *properties){
 	stack->timer_config.T1=500;
 	stack->timer_config.T2=4000;
 	stack->timer_config.T4=5000;
+	stack->transport_timeout=30000;
 #ifdef HAVE_OPENSSL
 	SSL_library_init();
 	SSL_load_error_strings();
@@ -69,6 +70,10 @@ cain_sip_stack_t * cain_sip_stack_new(const char *properties){
 
 const cain_sip_timer_config_t *cain_sip_stack_get_timer_config(const cain_sip_stack_t *stack){
 	return &stack->timer_config;
+}
+
+int cain_sip_stack_get_transport_timeout(const cain_sip_stack_t *stack){
+	return stack->transport_timeout;
 }
 
 cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport){
