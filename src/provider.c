@@ -277,11 +277,13 @@ cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_pro
 	cain_sip_header_call_id_set_call_id(cid,cain_sip_random_token(tmp,sizeof(tmp)));
 	return cid;
 }
-
-cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, cain_sip_transaction_t *t){
+cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, cain_sip_transaction_t *t) {
+	return cain_sip_provider_get_new_dialog_internal(prov,t,TRUE);
+}
+cain_sip_dialog_t * cain_sip_provider_get_new_dialog_internal(cain_sip_provider_t *prov, cain_sip_transaction_t *t,unsigned int check_last_resp){
 	cain_sip_dialog_t *dialog=NULL;
 	
-	if (t->last_response){
+	if (check_last_resp && t->last_response){
 		int code=cain_sip_response_get_status_code(t->last_response);
 		if (code>=200 && code<300){
 			cain_sip_fatal("You must not create dialog after sending the response that establish the dialog.");

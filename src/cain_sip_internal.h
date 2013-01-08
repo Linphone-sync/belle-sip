@@ -707,12 +707,14 @@ struct cain_sip_dialog{
 };
 
 cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t);
+cain_sip_dialog_t * cain_sip_provider_get_new_dialog_internal(cain_sip_provider_t *prov, cain_sip_transaction_t *t,unsigned int check_last_resp);
 /*returns 1 if message belongs to the dialog, 0 otherwise */
 int _cain_sip_dialog_match(cain_sip_dialog_t *obj, const char *call_id, const char *local_tag, const char *remote_tag);
 int cain_sip_dialog_match(cain_sip_dialog_t *obj, cain_sip_message_t *msg, int as_uas);
 int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas);
 void cain_sip_dialog_check_ack_sent(cain_sip_dialog_t*obj);
 int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack);
+
 /*
  cain_sip_response_t
 */

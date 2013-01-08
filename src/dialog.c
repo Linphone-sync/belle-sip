@@ -300,7 +300,9 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 	cain_sip_dialog_t *obj;
 	cain_sip_header_from_t *from;
 	const char *from_tag;
-	
+	cain_sip_header_to_t *to;
+	const char *to_tag=NULL;
+
 	from=cain_sip_message_get_header_by_type(t->request,cain_sip_header_from_t);
 	if (from==NULL){
 		cain_sip_error("cain_sip_dialog_new(): no from!");
@@ -311,17 +313,28 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 		cain_sip_error("cain_sip_dialog_new(): no from tag!");
 		return NULL;
 	}
+
+	if (t->last_response) {
+		to=cain_sip_message_get_header_by_type(t->last_response,cain_sip_header_to_t);
+		if (to==NULL){
+			cain_sip_error("cain_sip_dialog_new(): no to!");
+			return NULL;
+		}
+		to_tag=cain_sip_header_to_get_tag(to);
+	}
 	obj=cain_sip_object_new(cain_sip_dialog_t);
 	obj->terminate_on_bye=1;
 	obj->provider=t->provider;
 	
 	if (CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_server_transaction_t)){
 		obj->remote_tag=cain_sip_strdup(from_tag);
+		obj->local_tag=to_tag?cain_sip_strdup(to_tag):NULL; /*might be null at dialog creation*/
 		obj->remote_party=(cain_sip_header_address_t*)cain_sip_object_ref(from);
 		obj->is_server=TRUE;
 	}else{
 		const cain_sip_list_t *predefined_routes=NULL;
 		obj->local_tag=cain_sip_strdup(from_tag);
+		obj->remote_tag=to_tag?cain_sip_strdup(to_tag):NULL; /*might be null at dialog creation*/
 		obj->local_party=(cain_sip_header_address_t*)cain_sip_object_ref(from);
 		obj->is_server=FALSE;
 		for(predefined_routes=cain_sip_message_get_headers((cain_sip_message_t*)t->request,CAIN_SIP_ROUTE);
