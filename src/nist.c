@@ -25,7 +25,6 @@
 static void nist_destroy(cain_sip_nist_t *obj){
 }
 
-
 static void nist_on_terminate(cain_sip_nist_t *obj){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	if (obj->timer_J){
@@ -68,8 +67,6 @@ static int nist_send_new_response(cain_sip_nist_t *obj, cain_sip_response_t *res
 				nist_set_completed(obj);
 			}
 			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
-			/*FIXME*/
-			cain_sip_warning("nist_send_new_response(): FIX ME what about retransmision timers ??");
 		break;
 		case CAIN_SIP_TRANSACTION_COMPLETED:
 			cain_sip_warning("nist_send_new_response(): not allowed to send a response while transaction is completed.");

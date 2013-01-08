@@ -253,23 +253,26 @@ int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 		cain_sip_object_ref(chan);
 		cain_sip_channel_add_listener(chan,CAIN_SIP_CHANNEL_LISTENER(t));
 		t->base.channel=chan;
-		if (cain_sip_channel_get_state(chan)==CAIN_SIP_CHANNEL_INIT)
-			cain_sip_channel_prepare(chan);
-		if (cain_sip_channel_get_state(chan)!=CAIN_SIP_CHANNEL_READY){
+		if (cain_sip_channel_get_state(chan)==CAIN_SIP_CHANNEL_INIT){
 			cain_sip_message("cain_sip_client_transaction_send_request(): waiting channel to be ready");
+			cain_sip_channel_prepare(chan);
+			/*the channel will notify us when it is ready*/
 		} else {
+			/*otherwise we can send immediately*/
 			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
 		}
 	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
 	cain_sip_hop_free(&hop);
 	return 0;
 }
+
 static unsigned int should_dialog_be_created(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_request_t* req = cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(t));
 	const char* method = cain_sip_request_get_method(req);
 	int status_code = cain_sip_response_get_status_code(resp);
 	return status_code>=180 && status_code<300 && (strcmp(method,"INVITE")==0 || strcmp(method,"SUBSCRIBE")==0);
 }
+
 void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
 	cain_sip_response_event_t event;

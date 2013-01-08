@@ -47,7 +47,13 @@ int main (int argc, char *argv[]) {
 	
 	for(i=1;i<argc;++i){
 		if (strcmp(argv[i],"--help")==0){
-				fprintf(stderr,"%s \t--help\n\t\t\t--verbose",argv[0]);
+				fprintf(stderr,"%s \t--help\n"
+						"\t\t\t--verbose\n"
+						"\t\t\t--domain <test sip domain>\n"
+						"\t\t\t---auth-domain <test auth domain>\n"
+						"\t\t\t--suite <suite name>\n"
+						"\t\t\t--test <test name>\n",
+						argv[0]);
 				return 0;
 		}else if (strcmp(argv[i],"--verbose")==0){
 			cain_sip_set_log_level(CAIN_SIP_LOG_DEBUG);
