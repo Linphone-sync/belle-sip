@@ -32,6 +32,7 @@ const char *cain_sip_listening_point_get_ip_address(const  cain_sip_listening_po
  */
 const cain_sip_uri_t* cain_sip_listening_point_get_uri(const  cain_sip_listening_point_t *ip);
 int cain_sip_listening_point_is_reliable(const cain_sip_listening_point_t *lp);
+void cain_sip_listening_point_clean_channels(cain_sip_listening_point_t *lp);
 int cain_sip_listening_point_get_well_known_port(const char *transport);
 
 CAIN_SIP_END_DECLS

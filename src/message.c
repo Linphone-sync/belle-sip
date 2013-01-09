@@ -235,11 +235,13 @@ static void cain_sip_message_for_each_header(const cain_sip_message_t *message,h
 static void append_header(const cain_sip_header_t* header,void* user_data) {
 	*(cain_sip_list_t**)user_data=cain_sip_list_append((*(cain_sip_list_t**)user_data),(void*)header);
 }
+
 cain_sip_list_t* cain_sip_message_get_all_headers(const cain_sip_message_t *message) {
 	cain_sip_list_t* headers=NULL;
 	cain_sip_message_for_each_header(message,append_header,&headers);
 	return headers;
 }
+
 int cain_sip_headers_marshal(cain_sip_message_t *message, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	/*FIXME, replace this code by cain_sip_message_for_each_header*/

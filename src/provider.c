@@ -89,7 +89,12 @@ static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_s
 		/*Search for a dialog if exist */
 
 		ev.dialog=cain_sip_provider_find_dialog(prov,req,1/*request=uas*/);
-		if (strcmp("ACK",cain_sip_request_get_method(req))==0 && ev.dialog) cain_sip_dialog_handle_ack(ev.dialog,req);
+		if (strcmp("ACK",cain_sip_request_get_method(req))==0 && ev.dialog){
+			if (cain_sip_dialog_handle_ack(ev.dialog,req)==-1){
+				/*absorbed ACK retransmission, ignore */
+				return;
+			}
+		}
 		ev.source=prov;
 		ev.server_transaction=NULL;
 		ev.request=req;
@@ -369,9 +374,12 @@ cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain
 
 cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
 	cain_sip_server_transaction_t* t;
-	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0)
+	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0){
 		t=(cain_sip_server_transaction_t*)cain_sip_ist_new(prov,req);
-	else 
+	}else if (strcmp(cain_sip_request_get_method(req),"ACK")==0){
+		cain_sip_error("Creating a server transaction for an ACK is not a good idea, probably");
+		return NULL;
+	}else 
 		t=(cain_sip_server_transaction_t*)cain_sip_nist_new(prov,req);
 	t->base.dialog=cain_sip_provider_find_dialog(prov,req,TRUE);
 	cain_sip_provider_add_server_transaction(prov,t);
@@ -408,6 +416,16 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 
 void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_t *chan){
 	cain_sip_listening_point_remove_channel(chan->lp,chan);
+}
+
+void cain_sip_provider_clean_channels(cain_sip_provider_t *p){
+	cain_sip_list_t *l;
+	cain_sip_listening_point_t *lp;
+
+	for(l=p->lps;l!=NULL;l=l->next){
+		lp=(cain_sip_listening_point_t*)l->data;
+		cain_sip_listening_point_clean_channels(lp);
+	}
 }
 
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){

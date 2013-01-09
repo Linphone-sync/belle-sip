@@ -18,6 +18,9 @@
 
 #include "cain_sip_internal.h"
 
+static void cain_sip_dialog_init_200Ok_retrans(cain_sip_dialog_t *obj, cain_sip_response_t *resp);
+static void cain_sip_dialog_stop_200Ok_retrans(cain_sip_dialog_t *obj);
+static void cain_sip_dialog_handle_200Ok(cain_sip_dialog_t *obj, cain_sip_response_t *msg);
 
 static void cain_sip_dialog_uninit(cain_sip_dialog_t *obj){
 	if (obj->route_set)
@@ -126,6 +129,10 @@ static int cain_sip_dialog_init_as_uas(cain_sip_dialog_t *obj, cain_sip_request_
 	/*call id already set */
 	/*remote party already set */
 	obj->local_party=(cain_sip_header_address_t*)cain_sip_object_ref(to);
+	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0){
+		cain_sip_dialog_init_200Ok_retrans(obj,resp);
+		obj->needs_ack=TRUE;
+	}
 	return 0;
 }
 
@@ -183,15 +190,19 @@ static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_
 	/*local party is already set*/
 	if (strcmp(cain_sip_request_get_method(req),"INVITE")==0){
 		set_last_out_invite(obj,req);
+		obj->needs_ack=TRUE;
 	}
 	return 0;
 }
 
 int cain_sip_dialog_establish_full(cain_sip_dialog_t *obj, cain_sip_request_t *req, cain_sip_response_t *resp){
+	int err;
 	if (obj->is_server)
-		return cain_sip_dialog_init_as_uas(obj,req,resp);
+		err= cain_sip_dialog_init_as_uas(obj,req,resp);
 	else
-		return cain_sip_dialog_init_as_uac(obj,req,resp);
+		err= cain_sip_dialog_init_as_uac(obj,req,resp);
+	if (err==0) set_state(obj,CAIN_SIP_DIALOG_CONFIRMED);
+	return err;
 }
 
 int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, cain_sip_response_t *resp){
@@ -220,10 +231,9 @@ int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, c
 			set_to_tag(obj,to);
 			obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
 		}
-		if (cain_sip_dialog_establish_full(obj,req,resp)==0){
-			set_state(obj,CAIN_SIP_DIALOG_CONFIRMED);
-			obj->needs_ack=(strcmp("INVITE",cain_sip_request_get_method(req))==0); /*only for invite*/
-		}else return -1;
+		if (cain_sip_dialog_establish_full(obj,req,resp)==-1){
+			return -1;
+		}
 	} else if (code>=300 && obj->state!=CAIN_SIP_DIALOG_CONFIRMED) {
 		/*12.3 Termination of a Dialog
    	   	   Independent of the method, if a request outside of a dialog generates
@@ -247,6 +257,59 @@ int cain_sip_dialog_check_incoming_request_ordering(cain_sip_dialog_t *obj, cain
 	return -1;
 }
 
+static int dialog_on_200Ok_timer(cain_sip_dialog_t *dialog){
+	/*reset the timer */
+	const cain_sip_timer_config_t *cfg=cain_sip_stack_get_timer_config(dialog->provider->stack);
+	unsigned int prev_timeout=cain_sip_source_get_timeout(dialog->timer_200Ok);
+	cain_sip_source_set_timeout(dialog->timer_200Ok,MIN(2*prev_timeout,cfg->T2));
+	cain_sip_message("Dialog sending retransmission of 200Ok");
+	cain_sip_provider_send_response(dialog->provider,dialog->last_200Ok);
+	return CAIN_SIP_CONTINUE;
+}
+
+static int dialog_on_200Ok_end(cain_sip_dialog_t *dialog){
+	cain_sip_request_t *bye;
+	cain_sip_client_transaction_t *trn;
+	cain_sip_dialog_stop_200Ok_retrans(dialog);
+	cain_sip_error("Dialog was not ACK'd within T1*64 seconds, it is going to be terminated.");
+	dialog->state=CAIN_SIP_DIALOG_CONFIRMED;
+	bye=cain_sip_dialog_create_request(dialog,"BYE");
+	trn=cain_sip_provider_get_new_client_transaction(dialog->provider,bye);
+	cain_sip_client_transaction_send_request(trn);
+	return CAIN_SIP_STOP;
+}
+
+static void cain_sip_dialog_init_200Ok_retrans(cain_sip_dialog_t *obj, cain_sip_response_t *resp){
+	const cain_sip_timer_config_t *cfg=cain_sip_stack_get_timer_config(obj->provider->stack);
+	obj->timer_200Ok=cain_sip_timeout_source_new((cain_sip_source_func_t)dialog_on_200Ok_timer,obj,cfg->T1);
+	cain_sip_object_set_name((cain_sip_object_t*)obj->timer_200Ok,"dialog_200Ok_timer");
+	cain_sip_main_loop_add_source(obj->provider->stack->ml,obj->timer_200Ok);
+	
+	obj->timer_200Ok_end=cain_sip_timeout_source_new((cain_sip_source_func_t)dialog_on_200Ok_end,obj,cfg->T1*64);
+	cain_sip_object_set_name((cain_sip_object_t*)obj->timer_200Ok_end,"dialog_200Ok_timer_end");
+	cain_sip_main_loop_add_source(obj->provider->stack->ml,obj->timer_200Ok_end);
+	
+	obj->last_200Ok=(cain_sip_response_t*)cain_sip_object_ref(resp);
+}
+
+static void cain_sip_dialog_stop_200Ok_retrans(cain_sip_dialog_t *obj){
+	cain_sip_main_loop_t *ml=obj->provider->stack->ml;
+	if (obj->timer_200Ok){
+		cain_sip_main_loop_remove_source(ml,obj->timer_200Ok);
+		cain_sip_object_unref(obj->timer_200Ok);
+		obj->timer_200Ok=NULL;
+	}
+	if (obj->timer_200Ok_end){
+		cain_sip_main_loop_remove_source(ml,obj->timer_200Ok_end);
+		cain_sip_object_unref(obj->timer_200Ok_end);
+		obj->timer_200Ok_end=NULL;
+	}
+	if (obj->last_200Ok){
+		cain_sip_object_unref(obj->last_200Ok);
+		obj->last_200Ok=NULL;
+	}
+}
+
 int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas){
 	int code;
 	switch (obj->state){
@@ -256,19 +319,25 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_
 		case CAIN_SIP_DIALOG_CONFIRMED:
 			code=cain_sip_response_get_status_code(resp);
 			if (strcmp(cain_sip_request_get_method(req),"INVITE")==0 && code>=200 && code<300){
-				/*refresh the remote_target*/
-				cain_sip_header_contact_t *ct;
-				if (as_uas){
-					ct=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t);
-				}else{
-					set_last_out_invite(obj,req);
-					ct=cain_sip_message_get_header_by_type(resp,cain_sip_header_contact_t);
+				if (!obj->needs_ack){
+					/*case of a target refresh request */
+					/*refresh the remote_target*/
+					cain_sip_header_contact_t *ct;
+					if (as_uas){
+						ct=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t);
+					}else{
+						set_last_out_invite(obj,req);
+						ct=cain_sip_message_get_header_by_type(resp,cain_sip_header_contact_t);
+					}
+					if (ct){
+						cain_sip_object_unref(obj->remote_target);
+						obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
+					}
+					obj->needs_ack=TRUE;
+				} else {
+					/*retransmission of 200Ok */
+					if (!as_uas) cain_sip_dialog_handle_200Ok(obj,resp);
 				}
-				if (ct){
-					cain_sip_object_unref(obj->remote_target);
-					obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
-				}
-				obj->needs_ack=TRUE;
 			}else if (strcmp(cain_sip_request_get_method(req),"BYE")==0 && ((code>=200 && code<300) || code==481 || code==408)){
 				/*15.1.1 UAC Behavior
 
@@ -412,10 +481,10 @@ static unsigned int is_system_header(cain_sip_header_t* header) {
 }
 static void copy_non_system_headers(cain_sip_header_t* header,cain_sip_request_t* req ) {
 	if (!is_system_header(header)) {
-		cain_sip_object_ref(header);
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),header);
 	}
 }
+
 cain_sip_request_t *cain_sip_dialog_create_request_from(cain_sip_dialog_t *obj, const cain_sip_request_t *initial_req){
 	cain_sip_request_t* req = cain_sip_dialog_create_request(obj, cain_sip_request_get_method(initial_req));
 	cain_sip_header_content_length_t* content_lenth = cain_sip_message_get_header_by_type(initial_req,cain_sip_header_content_length_t);
@@ -431,6 +500,7 @@ cain_sip_request_t *cain_sip_dialog_create_request_from(cain_sip_dialog_t *obj, 
 }
 
 void cain_sip_dialog_delete(cain_sip_dialog_t *obj){
+	cain_sip_dialog_stop_200Ok_retrans(obj); /*if any*/
 	set_state(obj,CAIN_SIP_DIALOG_TERMINATED);
 	cain_sip_provider_remove_dialog(obj->provider,obj);
 }
@@ -552,7 +622,7 @@ void cain_sip_dialog_check_ack_sent(cain_sip_dialog_t*obj){
 	}
 }
 
-void cain_sip_dialog_handle_200Ok(cain_sip_dialog_t *obj, cain_sip_message_t *msg){
+static void cain_sip_dialog_handle_200Ok(cain_sip_dialog_t *obj, cain_sip_response_t *msg){
 	if (obj->last_out_ack){
 		cain_sip_header_cseq_t *cseq=cain_sip_message_get_header_by_type(msg,cain_sip_header_cseq_t);
 		if (cseq){
@@ -571,7 +641,9 @@ int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack){
 	if (obj->needs_ack && cain_sip_header_cseq_get_seq_number(cseq)==obj->remote_cseq){
 		cain_sip_message("Incoming INVITE has ACK, dialog is happy");
 		obj->needs_ack=FALSE;
+		cain_sip_dialog_stop_200Ok_retrans(obj);
 		return 0;
 	}
+	cain_sip_message("Dialog ignoring incoming ACK (surely a retransmission)");
 	return -1;
 }

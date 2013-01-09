@@ -50,7 +50,9 @@ void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp);
 
-/*
+void cain_sip_provider_clean_channels(cain_sip_provider_t *p);
+
+/**
  * Add auth info to the request if found
  * @param p object
  * @param request to be updated
@@ -59,7 +61,7 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
  * a newly allocated cain_sip_auth_info_t object is added to this list. These object contains useful information like realm and username.
  * @returns 0 in case of success,
  *
- * */
+ **/
 int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp,cain_sip_list_t** auth_infos);
 
 CAIN_SIP_END_DECLS

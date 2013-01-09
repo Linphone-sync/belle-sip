@@ -605,6 +605,7 @@ struct cain_sip_ict{
 	cain_sip_source_t *timer_A;
 	cain_sip_source_t *timer_B;
 	cain_sip_source_t *timer_D;
+	cain_sip_source_t *timer_M;
 	cain_sip_request_t *ack;
 };
 
@@ -686,12 +687,15 @@ cain_sip_nist_t * cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_
  */ 
 struct cain_sip_dialog{
 	cain_sip_object_t base;
+	void *appdata;
 	cain_sip_provider_t *provider;
 	cain_sip_request_t *last_out_invite;
-	cain_sip_request_t *last_out_ack; /*so that it can retransmitted when needed*/
+	cain_sip_request_t *last_out_ack; /*so that it can be retransmitted when needed*/
+	cain_sip_response_t *last_200Ok;
+	cain_sip_source_t *timer_200Ok;
+	cain_sip_source_t *timer_200Ok_end;
 	cain_sip_dialog_state_t state;
 	cain_sip_dialog_state_t previous_state;
-	void *appdata;
 	cain_sip_header_call_id_t *call_id;
 	cain_sip_header_address_t *local_party;
 	cain_sip_header_address_t *remote_party;

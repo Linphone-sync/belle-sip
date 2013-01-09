@@ -42,6 +42,11 @@ static void on_ict_terminate(cain_sip_ict_t *obj){
 		cain_sip_object_unref(obj->timer_D);
 		obj->timer_D=NULL;
 	}
+	if (obj->timer_M){
+		cain_sip_transaction_stop_timer(base,obj->timer_M);
+		cain_sip_object_unref(obj->timer_M);
+		obj->timer_M=NULL;
+	}
 	if (obj->ack){
 		cain_sip_object_unref(obj->ack);
 		obj->ack=NULL;
@@ -78,9 +83,18 @@ static int ict_on_timer_D(cain_sip_ict_t *obj){
 	return CAIN_SIP_STOP;
 }
 
+static int ict_on_timer_M(cain_sip_ict_t *obj){
+	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
+	if (base->state==CAIN_SIP_TRANSACTION_ACCEPTED){
+		cain_sip_transaction_terminate(base);
+	}
+	return CAIN_SIP_STOP;
+}
+
 static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	int code=cain_sip_response_get_status_code(resp);
+	const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
 
 	switch (base->state){
 		case CAIN_SIP_TRANSACTION_CALLING:
@@ -91,12 +105,19 @@ static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
 				base->state=CAIN_SIP_TRANSACTION_COMPLETED;
 				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)make_ack(obj,resp));
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
-				obj->timer_D=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_D,obj,32000);
+				obj->timer_D=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_D,obj,cfg->T1*64);
 				cain_sip_transaction_start_timer(base,obj->timer_D);
 			}else if (code>=200){
-				cain_sip_transaction_terminate(base);
+				obj->timer_M=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_M,obj,cfg->T1*64);
+				cain_sip_transaction_start_timer(base,obj->timer_M);
+				base->state=CAIN_SIP_TRANSACTION_ACCEPTED;
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 			}else if (code>=100){
+				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
+			}
+		break;
+		case CAIN_SIP_TRANSACTION_ACCEPTED:
+			if (code>=200 && code<300){
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 			}
 		break;

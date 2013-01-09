@@ -72,7 +72,7 @@ cain_sip_object_t *_cain_sip_message_get_header_by_type_id(const cain_sip_messag
 	(header_type*)_cain_sip_message_get_header_by_type_id(CAIN_SIP_MESSAGE(msg),CAIN_SIP_TYPE_ID(header_type))
 
 const cain_sip_list_t* cain_sip_message_get_headers(const cain_sip_message_t *message,const char* header_name);
-/*
+/**
  * Get list of all headers present in the message.
  * @param message
  * @return a newly allocated list of cain_sip_header_t

@@ -140,13 +140,13 @@ static void callee_process_request_event(void *user_ctx, const cain_sip_request_
 	if (!cain_sip_uri_equals(CAIN_SIP_URI(user_ctx),cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(to)))) {
 		return; /*not for the callee*/
 	}
-
-	if (!server_transaction) {
+	method = cain_sip_request_get_method(cain_sip_request_event_get_request(event));
+	if (!server_transaction && strcmp(method,"ACK")!=0) {
 		server_transaction= cain_sip_provider_get_new_server_transaction(prov,cain_sip_request_event_get_request(event));
 	}
-	method = cain_sip_request_get_method(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(server_transaction)));
+	
 	cain_sip_message("callee_process_request_event received [%s] message",method);
-	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(server_transaction));
+	cain_sip_dialog_t* dialog =  cain_sip_request_event_get_dialog(event);
 	cain_sip_response_t* ringing_response;
 	cain_sip_header_content_type_t* content_type ;
 	cain_sip_header_content_length_t* content_length;
@@ -247,7 +247,7 @@ static void process_transaction_terminated(void *user_ctx, const cain_sip_transa
 
 
 
-static void simple_call(void) {
+static void do_simple_call(void) {
 #define CALLER "marie"
 #define CALLEE "pauline"
 	cain_sip_request_t *pauline_register_req;
@@ -322,10 +322,24 @@ static void simple_call(void) {
 	unregister_user(stack, prov, marie_register_req ,1);
 }
 
+static void simple_call(void){
+	cain_sip_stack_set_tx_delay(stack,0);
+	do_simple_call();
+}
+
+static void simple_call_with_delay(){
+	cain_sip_stack_set_tx_delay(stack,2000);
+	do_simple_call();
+	cain_sip_stack_set_tx_delay(stack,0);
+}
+
 int cain_sip_dialog_test_suite(){
 	CU_pSuite pSuite = CU_add_suite("Dialog", init, uninit);
 
 	if (NULL == CU_add_test(pSuite, "simple-call", simple_call)) {
+		return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "simple-call-with-delay", simple_call_with_delay)) {
 		return CU_get_error();
 	}
 	return 0;
