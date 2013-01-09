@@ -598,7 +598,7 @@ static void  cain_sip_provider_update_or_create_auth_context(cain_sip_provider_t
 	 if (auth_context_lst) cain_sip_free(auth_context_lst);
 	 return;
 }
-int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp) {
+int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp,cain_sip_list_t** auth_infos) {
 	cain_sip_header_call_id_t* call_id;
 	cain_sip_list_t* auth_context_lst;
 	cain_sip_list_t* authenticate_lst;
@@ -688,10 +688,17 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 				} else
 					cain_sip_message_add_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_HEADER(authorization));
 				result=1;
+				cain_sip_auth_event_destroy(auth_event);
 		} else {
 			cain_sip_message("No auth info found for call id [%s]",cain_sip_header_call_id_get_call_id(call_id));
+			if (auth_infos) {
+				/*stored to give user information on realm/username which requires authentications*/
+				*auth_infos=cain_sip_list_append(*auth_infos,auth_event);
+			} else {
+				cain_sip_auth_event_destroy(auth_event);
+			}
 		}
-			cain_sip_auth_event_destroy(auth_event);
+
 		}
 		cain_sip_list_free(head);
 	} else {

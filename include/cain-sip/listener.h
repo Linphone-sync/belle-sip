@@ -55,6 +55,7 @@ cain_sip_dialog_t *cain_sip_request_event_get_dialog(const cain_sip_request_even
 cain_sip_dialog_t* cain_sip_dialog_terminated_get_dialog(const cain_sip_dialog_terminated_event_t *event);
 
 /*auth event*/
+void cain_sip_auth_event_destroy(cain_sip_auth_event_t* event);
 const char* cain_sip_auth_event_get_username(const cain_sip_auth_event_t* event);
 void cain_sip_auth_event_set_username(cain_sip_auth_event_t* event, const char* value);
 

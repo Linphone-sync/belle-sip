@@ -398,7 +398,7 @@ cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cai
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(t->preset_route));
 	}
 	/*put auth header*/
-	cain_sip_provider_add_authorization(t->base.provider,req,t->base.last_response);
+	cain_sip_provider_add_authorization(t->base.provider,req,t->base.last_response,NULL);
 	return req;
 }
 

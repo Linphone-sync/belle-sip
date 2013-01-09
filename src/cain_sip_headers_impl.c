@@ -240,8 +240,11 @@ float	cain_sip_header_contact_get_qvalue(const cain_sip_header_contact_t* contac
 }
 unsigned int cain_sip_header_contact_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b) {
 	if (!a | !b) return 0;
-	return !cain_sip_uri_equals(cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(a))
+	return cain_sip_uri_equals(cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(a))
 								,cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(b)));
+}
+unsigned int cain_sip_header_contact_not_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b) {
+	return !cain_sip_header_contact_equals(a,b);
 }
 /**************************
 * From header object inherent from header_address

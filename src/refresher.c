@@ -129,7 +129,7 @@ static int refresh(cain_sip_refresher_t* refresher) {
 			cain_sip_header_expires_set_expires(expires_header,refresher->expires);
 
 		}
-		cain_sip_provider_add_authorization(prov,request,NULL);
+		cain_sip_provider_add_authorization(prov,request,NULL,NULL);
 	} else {
 		cain_sip_error("Unexpected dialog state [%s] for dialog [%p], cannot refresh [%s]"
 				,cain_sip_dialog_state_to_string(cain_sip_dialog_get_state(dialog))
@@ -175,7 +175,7 @@ static cain_sip_header_contact_t* get_matching_contact(const cain_sip_transactio
 	contact_header_list = cain_sip_message_get_headers(CAIN_SIP_MESSAGE(response),CAIN_SIP_CONTACT);
 	if (contact_header_list) {
 		contact_header_list = cain_sip_list_find_custom((cain_sip_list_t*)contact_header_list
-				,(cain_sip_compare_func)cain_sip_header_contact_equals
+				,(cain_sip_compare_func)cain_sip_header_contact_not_equals
 				, (const void*)local_contact);
 		if (!contact_header_list) {
 			char* contact_string=cain_sip_object_to_string(CAIN_SIP_OBJECT(local_contact));

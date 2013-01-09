@@ -55,10 +55,12 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
  * @param p object
  * @param request to be updated
  * @param resp response to take authentication values from, might be NULL
+ * @param auth_infos  if auth infos cannot be added for an authenticate header, (I.E case where this method return TRUE),
+ * a newly allocated cain_sip_auth_info_t object is added to this list. These object contains useful information like realm and username.
  * @returns 0 in case of success,
  *
  * */
-int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp);
+int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp,cain_sip_list_t** auth_infos);
 
 CAIN_SIP_END_DECLS
 

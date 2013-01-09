@@ -55,7 +55,7 @@ static void process_response_event(cain_sip_listener_t *obj, const cain_sip_resp
 		request=cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(cain_sip_response_event_get_client_transaction(event)));
 		cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_CSEQ);
 		cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
-		CU_ASSERT_TRUE_FATAL(cain_sip_provider_add_authorization(prov,request,cain_sip_response_event_get_response(event)));
+		CU_ASSERT_TRUE_FATAL(cain_sip_provider_add_authorization(prov,request,cain_sip_response_event_get_response(event),NULL));
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,request);
 		cain_sip_client_transaction_send_request(t);
 		number_of_challange++;
@@ -151,7 +151,7 @@ void unregister_user(cain_sip_stack_t * stack
 	if (use_transaction){
 		cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_AUTHORIZATION);
 		cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_PROXY_AUTHORIZATION);
-		cain_sip_provider_add_authorization(prov,req,NULL); /*just in case*/
+		cain_sip_provider_add_authorization(prov,req,NULL,NULL); /*just in case*/
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
 		cain_sip_client_transaction_send_request(t);
 	}else cain_sip_provider_send_request(prov,req);

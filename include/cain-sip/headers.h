@@ -142,6 +142,13 @@ cain_sip_header_contact_t* cain_sip_header_contact_create (const cain_sip_header
   * */
  unsigned int cain_sip_header_contact_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b);
 
+ /** Contact heaader equality function, same as #cain_sip_header_contact_equals but return 0 if equals, very useful with #cain_sip_list
+   * @return 0 if equals
+   *
+   * */
+ unsigned int cain_sip_header_contact_not_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b);
+
+
 #define CAIN_SIP_RANDOM_TAG ((const char*)-1)
 #define CAIN_SIP_HEADER_CONTACT(t) CAIN_SIP_CAST(t,cain_sip_header_contact_t)
 #define CAIN_SIP_CONTACT "Contact"
