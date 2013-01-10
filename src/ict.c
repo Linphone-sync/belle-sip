@@ -22,8 +22,6 @@
 
 #include "cain_sip_internal.h"
 
-static void ict_destroy(cain_sip_ict_t *obj){
-}
 
 static void on_ict_terminate(cain_sip_ict_t *obj){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
@@ -51,6 +49,10 @@ static void on_ict_terminate(cain_sip_ict_t *obj){
 		cain_sip_object_unref(obj->ack);
 		obj->ack=NULL;
 	}
+}
+
+static void ict_destroy(cain_sip_ict_t *obj){
+	on_ict_terminate(obj);
 }
 
 static cain_sip_request_t *make_ack(cain_sip_ict_t *obj, cain_sip_response_t *resp){

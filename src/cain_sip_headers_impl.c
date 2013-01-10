@@ -650,7 +650,7 @@ CAIN_SIP_PARSE(header_route)
 cain_sip_header_route_t* cain_sip_header_route_create(const cain_sip_header_address_t* route) {
 	cain_sip_header_route_t* header= cain_sip_header_route_new();
 	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)route);
-	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_ROUTE); /*restaure header name*/
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_ROUTE); /*restore header name*/
 	return header;
 }
 /**************************

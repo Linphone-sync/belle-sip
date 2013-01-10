@@ -23,6 +23,7 @@
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s, const char *address, int port){
 	lp->stack=s;
 	lp->listening_uri=cain_sip_uri_create(NULL,address);
+	cain_sip_object_ref(lp->listening_uri);
 	cain_sip_uri_set_port(lp->listening_uri,port);
 	cain_sip_uri_set_transport_param(lp->listening_uri,CAIN_SIP_OBJECT_VPTR(lp,cain_sip_listening_point_t)->transport);
 }

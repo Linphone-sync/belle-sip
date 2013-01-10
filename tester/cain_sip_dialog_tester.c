@@ -165,6 +165,7 @@ static void callee_process_request_event(void *user_ctx, const cain_sip_request_
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(ok_response),CAIN_SIP_HEADER(content_type));
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(ok_response),CAIN_SIP_HEADER(content_length));
 		cain_sip_message_set_body(CAIN_SIP_MESSAGE(ok_response),sdp,strlen(sdp));
+		cain_sip_object_ref(ok_response);
 		/*only send ringing*/
 		cain_sip_server_transaction_send_response(server_transaction,ringing_response);
 	} else if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_CONFIRMED) {
@@ -198,6 +199,8 @@ static void caller_process_response_event(void *user_ctx, const cain_sip_respons
 		CU_ASSERT_EQUAL(status,180);
 		/*send 200ok from callee*/
 		cain_sip_server_transaction_send_response(inserv_transaction,ok_response);
+		cain_sip_object_unref(ok_response);
+		ok_response=NULL;
 	} else if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_CONFIRMED) {
 		ack=cain_sip_dialog_create_ack(dialog,cain_sip_header_cseq_get_seq_number(invite_cseq));
 		cain_sip_dialog_send_ack(dialog,ack);

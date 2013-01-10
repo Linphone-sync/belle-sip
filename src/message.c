@@ -276,7 +276,7 @@ static void cain_sip_request_init(cain_sip_request_t *message){
 
 static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_request_t *orig){
 	if (orig->method) request->method=cain_sip_strdup(orig->method);
-	if (orig->uri) request->uri=(cain_sip_uri_t*)cain_sip_object_clone((cain_sip_object_t*)orig->uri);
+	if (orig->uri) request->uri=(cain_sip_uri_t*)cain_sip_object_ref(cain_sip_object_clone((cain_sip_object_t*)orig->uri));
 }
 int cain_sip_request_marshal(cain_sip_request_t* request, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -326,6 +326,7 @@ cain_sip_uri_t* cain_sip_request_extract_origin(const cain_sip_request_t* req) {
 	}
 	return uri;
 }
+
 int cain_sip_message_is_request(cain_sip_message_t *msg){
 	return CAIN_SIP_IS_INSTANCE_OF(CAIN_SIP_OBJECT(msg),cain_sip_request_t);
 }

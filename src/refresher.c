@@ -43,6 +43,10 @@ static int timer_cb(void *user_data, unsigned int events) ;
 
 static void schedule_timer(cain_sip_refresher_t* refresher) {
 	if (refresher->expires>0) {
+		if (refresher->timer){
+			cain_sip_main_loop_remove_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
+			cain_sip_object_unref(refresher->timer);
+		}
 		refresher->timer=cain_sip_timeout_source_new(timer_cb,refresher,refresher->expires*1000);
 		cain_sip_object_set_name((cain_sip_object_t*)refresher->timer,"Refresher timeout");
 		cain_sip_main_loop_add_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
@@ -156,7 +160,8 @@ static int refresh(cain_sip_refresher_t* refresher) {
 
 static int timer_cb(void *user_data, unsigned int events) {
 	cain_sip_refresher_t* refresher = (cain_sip_refresher_t*)user_data;
-	return refresh(refresher);
+	refresh(refresher);
+	return CAIN_SIP_STOP;
 }
 /*return 0 if succeeded*/
 static cain_sip_header_contact_t* get_matching_contact(const cain_sip_transaction_t* transaction) {
@@ -181,6 +186,7 @@ static cain_sip_header_contact_t* get_matching_contact(const cain_sip_transactio
 			char* contact_string=cain_sip_object_to_string(CAIN_SIP_OBJECT(local_contact));
 			cain_sip_error("no matching contact for  [%s]",contact_string);
 			cain_sip_free(contact_string);
+			cain_sip_object_unref(local_contact);
 			return NULL;
 		} else {
 			return CAIN_SIP_HEADER_CONTACT(local_contact);
@@ -205,12 +211,13 @@ static int set_expires_from_trans(cain_sip_refresher_t* refresher) {
 		*  a SUBSCRIBE request or response.
 		*/
 		if (strcmp("REGISTER",cain_sip_request_get_method(request))==0
-				&& (contact_header=get_matching_contact(transaction))
-				&& (refresher->expires=cain_sip_header_contact_get_expires(CAIN_SIP_HEADER_CONTACT(contact_header)))>=0)  {
+				&& (contact_header=get_matching_contact(transaction))!=NULL){
+			refresher->expires=cain_sip_header_contact_get_expires(CAIN_SIP_HEADER_CONTACT(contact_header));
 			/*great, we have an expire param from contact header*/
 			cain_sip_object_unref(contact_header);
 			contact_header=NULL;
-		} else {
+		}
+		if (refresher->expires==-1){
 			/*no contact with expire or not relevant, looking for Expires header*/
 			if ((expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(response),CAIN_SIP_EXPIRES))) {
 				refresher->expires = cain_sip_header_expires_get_expires(expires_header);
@@ -245,11 +252,11 @@ int cain_sip_refresher_start(cain_sip_refresher_t* refresher) {
 }
 
 void cain_sip_refresher_stop(cain_sip_refresher_t* refresher) {
-	if (refresher->timer)
-		cain_sip_main_loop_cancel_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer->id);
-	refresher->timer=NULL;
-
-
+	if (refresher->timer){
+		cain_sip_main_loop_remove_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack), refresher->timer);
+		cain_sip_object_unref(refresher->timer);
+		refresher->timer=NULL;
+	}
 }
 cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction) {
 

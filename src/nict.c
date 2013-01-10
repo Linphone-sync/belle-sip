@@ -23,9 +23,6 @@
 
 #include "cain_sip_internal.h"
 
-static void nict_destroy(cain_sip_nict_t *obj){
-}
-
 static int nict_on_timer_K(cain_sip_nict_t *obj){
 	cain_sip_transaction_terminate((cain_sip_transaction_t*)obj);
 	return CAIN_SIP_STOP;
@@ -145,6 +142,10 @@ static void nict_send_request(cain_sip_nict_t *obj){
 		cain_sip_object_set_name((cain_sip_object_t*)obj->timer_E,"timer_E");
 		cain_sip_transaction_start_timer(base,obj->timer_E);
 	}
+}
+
+static void nict_destroy(cain_sip_nict_t *obj){
+	nict_on_terminate(obj);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_nict_t);

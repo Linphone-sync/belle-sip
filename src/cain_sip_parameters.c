@@ -91,6 +91,7 @@ void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* params,const char*
 const cain_sip_list_t*	cain_sip_parameters_get_parameter_names(const cain_sip_parameters_t* params) {
 	return params?params->paramnames_list:NULL;
 }
+
 void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* params,const char* name) {
 	/*1 check if present*/
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->paramnames_list, (cain_sip_compare_func)strcmp, name);

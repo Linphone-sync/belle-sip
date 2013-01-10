@@ -18,6 +18,8 @@
 
 #include "cain_sip_internal.h"
 
+static cain_sip_list_t *unowned_objects=NULL;
+
 static int has_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
 	cain_sip_object_vptr_t *vptr=obj->vptr;
 	
@@ -37,7 +39,24 @@ cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t 
 	obj->ref=vptr->initially_unowned ? 0 : 1;
 	obj->vptr=vptr;
 	obj->size=objsize;
+	if (obj->ref==0){
+		unowned_objects=cain_sip_list_prepend(unowned_objects,obj);
+	}
 	return obj;
+}
+
+void cain_sip_object_delete_unowned(void){
+	cain_sip_list_t *elem,*next;
+	for(elem=unowned_objects;elem!=NULL;elem=next){
+		cain_sip_object_t *obj=(cain_sip_object_t*)elem->data;
+		if (obj->ref==0){
+			cain_sip_message("Garbage collecting unowned object of type %s",obj->vptr->type_name);
+			obj->ref=-1;
+			cain_sip_object_delete(obj);
+			next=elem->next;
+			unowned_objects=cain_sip_list_delete_link(unowned_objects,elem);
+		}else next=elem->next;
+	}
 }
 
 int cain_sip_object_is_initially_unowned(const cain_sip_object_t *obj){
@@ -45,7 +64,11 @@ int cain_sip_object_is_initially_unowned(const cain_sip_object_t *obj){
 }
 
 cain_sip_object_t * cain_sip_object_ref(void *obj){
-	CAIN_SIP_OBJECT(obj)->ref++;
+	cain_sip_object_t *o=CAIN_SIP_OBJECT(obj);
+	if (o->ref==0){
+		unowned_objects=cain_sip_list_remove(unowned_objects,obj);
+	}
+	o->ref++;
 	return obj;
 }
 
@@ -53,6 +76,7 @@ void cain_sip_object_unref(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
 	if (obj->ref==-1) cain_sip_fatal("Object of type [%s] freed twice !",obj->name);
 	if (obj->ref==0){
+		unowned_objects=cain_sip_list_remove(unowned_objects,obj);
 		obj->ref=-1;
 		cain_sip_object_delete(obj);
 		return;
@@ -183,9 +207,10 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 	newobj->ref=obj->vptr->initially_unowned ? 0 : 1;
 	newobj->vptr=obj->vptr;
 	newobj->size=obj->size;
-	
 	_cain_sip_object_copy(newobj,obj);
-	
+	if (newobj->ref==0){
+		unowned_objects=cain_sip_list_prepend(unowned_objects,newobj);
+	}
 	return newobj;
 }
 

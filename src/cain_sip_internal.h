@@ -144,6 +144,7 @@ typedef struct weak_ref{
 
 
 void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_interface_id_t ifid);
+void cain_sip_object_delete_unowned(void);
 
 
 #define CAIN_SIP_OBJECT_VPTR(obj,object_type) ((CAIN_SIP_OBJECT_VPTR_TYPE(object_type)*)(((cain_sip_object_t*)obj)->vptr))

@@ -64,13 +64,14 @@ static void set_state(cain_sip_dialog_t *obj,cain_sip_dialog_state_t state) {
 	obj->previous_state=obj->state;
 	obj->state=state;
 }
+
 static void set_to_tag(cain_sip_dialog_t *obj, cain_sip_header_to_t *to){
 	const char *to_tag=cain_sip_header_to_get_tag(to);
 	if (obj->is_server){
-		if (to_tag)
+		if (to_tag && !obj->local_tag)
 			obj->local_tag=cain_sip_strdup(to_tag);
 	}else{
-		if (to_tag)
+		if (to_tag && !obj->remote_tag)
 			obj->remote_tag=cain_sip_strdup(to_tag);
 	}
 }
@@ -120,8 +121,8 @@ static int cain_sip_dialog_init_as_uas(cain_sip_dialog_t *obj, cain_sip_request_
 	*/
 	obj->route_set=cain_sip_list_free_with_data(obj->route_set,cain_sip_object_unref);
 	for(elem=cain_sip_message_get_headers((cain_sip_message_t*)req,CAIN_SIP_RECORD_ROUTE);elem!=NULL;elem=elem->next){
-		obj->route_set=cain_sip_list_append(obj->route_set,cain_sip_header_route_create(
-		                                     (cain_sip_header_address_t*)elem->data));
+		obj->route_set=cain_sip_list_append(obj->route_set,cain_sip_object_ref(cain_sip_header_route_create(
+		                                     (cain_sip_header_address_t*)elem->data)));
 	}
 	check_route_set(obj->route_set);
 	obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
@@ -178,8 +179,8 @@ static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_
    	 **/
 	obj->route_set=cain_sip_list_free_with_data(obj->route_set,cain_sip_object_unref);
 	for(elem=cain_sip_message_get_headers((cain_sip_message_t*)resp,CAIN_SIP_RECORD_ROUTE);elem!=NULL;elem=elem->next){
-		obj->route_set=cain_sip_list_prepend(obj->route_set,cain_sip_header_route_create(
-		                                     (cain_sip_header_address_t*)elem->data));
+		obj->route_set=cain_sip_list_prepend(obj->route_set,cain_sip_object_ref(cain_sip_header_route_create(
+		                                     (cain_sip_header_address_t*)elem->data)));
 	}
 	check_route_set(obj->route_set);
 	obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
@@ -461,7 +462,6 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const
 	                                                cain_sip_header_via_new(),
 	                                                0);
 	if (obj->route_set) {
-		cain_sip_list_for_each(obj->route_set,(void (*)(void *) )cain_sip_object_ref);/*don't forget to inc ref count*/
 		cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
 	}
 	return req;

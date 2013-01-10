@@ -61,6 +61,7 @@ static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_free_with_data(p->client_transactions,cain_sip_object_unref);
 	cain_sip_list_free_with_data(p->server_transactions,cain_sip_object_unref);
 	cain_sip_list_free_with_data(p->auth_contexts,(void(*)(void*))cain_sip_authorization_destroy);
+	cain_sip_list_free_with_data(p->dialogs,cain_sip_object_unref);
 }
 
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
@@ -175,7 +176,7 @@ static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_c
 */
 static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, unsigned int revents){
 	if (revents & CAIN_SIP_EVENT_READ){
-		cain_sip_message_t *msg=(cain_sip_message_t*)cain_sip_object_ref(cain_sip_channel_pick_message(chan));
+		cain_sip_message_t *msg=cain_sip_channel_pick_message(chan);
 		cain_sip_provider_dispatch_message(CAIN_SIP_PROVIDER(obj),msg);
 	}
 	return 0;
@@ -282,9 +283,11 @@ cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_pro
 	cain_sip_header_call_id_set_call_id(cid,cain_sip_random_token(tmp,sizeof(tmp)));
 	return cid;
 }
+
 cain_sip_dialog_t * cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, cain_sip_transaction_t *t) {
 	return cain_sip_provider_get_new_dialog_internal(prov,t,TRUE);
 }
+
 cain_sip_dialog_t * cain_sip_provider_get_new_dialog_internal(cain_sip_provider_t *prov, cain_sip_transaction_t *t,unsigned int check_last_resp){
 	cain_sip_dialog_t *dialog=NULL;
 	
@@ -586,6 +589,7 @@ static void authorization_context_fill_from_auth(authorization_context_t* auth_c
 		auth_context->is_proxy=1;
 	}
 }
+
 static cain_sip_list_t*  cain_sip_provider_get_auth_context_by_call_id(cain_sip_provider_t *p,cain_sip_header_call_id_t* call_id) {
 	cain_sip_list_t* auth_context_lst=NULL;
 	cain_sip_list_t* result=NULL;
@@ -598,6 +602,7 @@ static cain_sip_list_t*  cain_sip_provider_get_auth_context_by_call_id(cain_sip_
 	}
 	return result;
 }
+
 static void  cain_sip_provider_update_or_create_auth_context(cain_sip_provider_t *p,cain_sip_header_call_id_t* call_id,cain_sip_header_www_authenticate_t* authenticate) {
 	 cain_sip_list_t* auth_context_lst =  cain_sip_provider_get_auth_context_by_call_id(p,call_id);
 	 authorization_context_t* auth_context;
@@ -616,6 +621,7 @@ static void  cain_sip_provider_update_or_create_auth_context(cain_sip_provider_t
 	 if (auth_context_lst) cain_sip_free(auth_context_lst);
 	 return;
 }
+
 int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp,cain_sip_list_t** auth_infos) {
 	cain_sip_header_call_id_t* call_id;
 	cain_sip_list_t* auth_context_lst;
@@ -645,15 +651,15 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 	}
 	/*get authenticates value from response*/
 	if (resp) {
-
+		cain_sip_list_t *it;
 		call_id = cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(resp),cain_sip_header_call_id_t);
 		/*searching for authentication headers*/
 		authenticate_lst = cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_WWW_AUTHENTICATE));
 		/*search for proxy authenticate*/
-		authenticate_lst=cain_sip_list_append_link(authenticate_lst,cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_PROXY_AUTHENTICATE)));
+		authenticate_lst=cain_sip_list_concat(authenticate_lst,cain_sip_list_copy(cain_sip_message_get_headers(CAIN_SIP_MESSAGE(resp),CAIN_SIP_PROXY_AUTHENTICATE)));
 		/*update auth contexts with authenticate headers from response*/
-		for (;authenticate_lst!=NULL;authenticate_lst=authenticate_lst->next) {
-			authenticate=CAIN_SIP_HEADER_WWW_AUTHENTICATE(authenticate_lst->data);
+		for (it=authenticate_lst;it!=NULL;it=it->next) {
+			authenticate=CAIN_SIP_HEADER_WWW_AUTHENTICATE(it->data);
 			cain_sip_provider_update_or_create_auth_context(p,call_id,authenticate);
 		}
 		cain_sip_list_free(authenticate_lst);

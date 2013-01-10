@@ -197,6 +197,7 @@ cain_sip_list_t * cain_sip_list_last_elem(const cain_sip_list_t *l){
 cain_sip_list_t*  cain_sip_list_concat(cain_sip_list_t* first, cain_sip_list_t* second){
 	cain_sip_list_t* it=first;
 	if (it==NULL) return second;
+	if (second==NULL) return first;
 	while(it->next!=NULL) it=cain_sip_list_next(it);
 	it->next=second;
 	second->prev=it;

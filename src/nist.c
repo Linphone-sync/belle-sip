@@ -22,9 +22,6 @@
 
 #include "cain_sip_internal.h"
 
-static void nist_destroy(cain_sip_nist_t *obj){
-}
-
 static void nist_on_terminate(cain_sip_nist_t *obj){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	if (obj->timer_J){
@@ -32,6 +29,10 @@ static void nist_on_terminate(cain_sip_nist_t *obj){
 		cain_sip_object_unref(obj->timer_J);
 		obj->timer_J=NULL;
 	}
+}
+
+static void nist_destroy(cain_sip_nist_t *obj){
+	nist_on_terminate(obj);
 }
 
 static int nist_on_timer_J(cain_sip_nist_t *obj){

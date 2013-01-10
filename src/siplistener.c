@@ -110,7 +110,7 @@ CAIN_SIP_IMPLEMENT_INTERFACE_END
 
 CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(cain_sip_callbacks_t,cain_sip_listener_t);
 
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_callbacks_t,cain_sip_object_t,NULL,NULL,NULL,TRUE);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_callbacks_t,cain_sip_object_t,NULL,NULL,NULL,FALSE);
 
 
 cain_sip_listener_t *cain_sip_listener_create_from_callbacks(const cain_sip_listener_callbacks_t *callbacks, void *user_ctx){

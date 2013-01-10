@@ -62,7 +62,11 @@ static void cain_sip_uri_clone(cain_sip_uri_t* uri, const cain_sip_uri_t *orig){
 	uri->user=orig->user?cain_sip_strdup(orig->user):NULL;
 	uri->host=orig->host?cain_sip_strdup(orig->host):NULL;
 	uri->port=orig->port;
-	uri->header_list=orig->header_list?(cain_sip_parameters_t*)cain_sip_object_clone(CAIN_SIP_OBJECT(orig->header_list)):NULL;
+	if (orig->header_list){
+		uri->header_list=(cain_sip_parameters_t*)cain_sip_object_clone(CAIN_SIP_OBJECT(orig->header_list));
+		cain_sip_object_ref(uri->header_list);
+	}
+	
 }
 
 int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offset,unsigned int buff_size) {
@@ -105,8 +109,10 @@ cain_sip_uri_t* cain_sip_uri_new () {
 	cain_sip_uri_t* l_object = (cain_sip_uri_t*)cain_sip_object_new(cain_sip_uri_t);
 	cain_sip_parameters_init((cain_sip_parameters_t*)l_object); /*super*/
 	l_object->header_list = cain_sip_parameters_new();
+	cain_sip_object_ref(l_object->header_list);
 	return l_object;
 }
+
 cain_sip_uri_t* cain_sip_uri_create (const char* username,const char* host) {
 	cain_sip_uri_t* uri = cain_sip_uri_new();
 	cain_sip_uri_set_user(uri,username);
@@ -115,15 +121,16 @@ cain_sip_uri_t* cain_sip_uri_create (const char* username,const char* host) {
 }
 
 
-char*	cain_sip_uri_to_string(cain_sip_uri_t* uri)  {
+char* cain_sip_uri_to_string(cain_sip_uri_t* uri)  {
 	return cain_sip_object_to_string(CAIN_SIP_OBJECT(uri));
 }
 
 
-const char*	cain_sip_uri_get_header(const cain_sip_uri_t* uri,const char* name) {
+const char* cain_sip_uri_get_header(const cain_sip_uri_t* uri,const char* name) {
 	return cain_sip_parameters_get_parameter(uri->header_list,name);
 }
-void	cain_sip_uri_set_header(cain_sip_uri_t* uri,const char* name,const char* value) {
+
+void cain_sip_uri_set_header(cain_sip_uri_t* uri,const char* name,const char* value) {
 	cain_sip_parameters_set_parameter(uri->header_list,name,value);
 }
 
@@ -308,5 +315,5 @@ int cain_sip_uri_equals(const cain_sip_uri_t* uri_a,const cain_sip_uri_t* uri_b)
          to match.  The matching rules are defined for each header field
          in Section 20.
  */
-return 1;
+	return 1;
 }
