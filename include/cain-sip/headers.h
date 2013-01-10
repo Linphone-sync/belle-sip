@@ -321,6 +321,17 @@ cain_sip_header_expires_t* cain_sip_header_expires_create(int expires);
 #define CAIN_SIP_HEADER_RECORD_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_record_route_t)
 #define CAIN_SIP_RECORD_ROUTE	"Record-route"
  /******************************
+  * Service route header object inherent from header_address
+  *
+  ******************************/
+  typedef struct _cain_sip_header_service_route cain_sip_header_service_route_t;
+
+  cain_sip_header_service_route_t* cain_sip_header_service_route_new();
+  cain_sip_header_service_route_t* cain_sip_header_service_route_parse (const char* route) ;
+
+ #define CAIN_SIP_HEADER_SERVICE_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_service_route_t)
+ #define CAIN_SIP_SERVICE_ROUTE	"Service-route"
+ /******************************
   *
   * user-Agent header inherit from header
   *

@@ -670,8 +670,27 @@ static void cain_sip_header_record_route_clone(cain_sip_header_record_route_t* r
 int cain_sip_header_record_route_marshal(cain_sip_header_record_route_t* record_route, char* buff,unsigned int offset,unsigned int buff_size) {
 	CAIN_SIP_FROM_LIKE_MARSHAL(record_route)
 }
-CAIN_SIP_NEW_HEADER(header_record_route,header_address,"Record-Route")
+CAIN_SIP_NEW_HEADER(header_record_route,header_address,CAIN_SIP_RECORD_ROUTE)
 CAIN_SIP_PARSE(header_record_route)
+/**************************
+* Service route header object inherent from header_address
+****************************
+*/
+struct _cain_sip_header_service_route  {
+	cain_sip_header_address_t address;
+};
+
+static void cain_sip_header_service_route_destroy(cain_sip_header_service_route_t* service_route) {
+}
+
+static void cain_sip_header_service_route_clone(cain_sip_header_service_route_t* service_route,
+                                const cain_sip_header_service_route_t* orig               ) {
+}
+int cain_sip_header_service_route_marshal(cain_sip_header_service_route_t* service_route, char* buff,unsigned int offset,unsigned int buff_size) {
+	CAIN_SIP_FROM_LIKE_MARSHAL(service_route)
+}
+CAIN_SIP_NEW_HEADER(header_service_route,header_address,CAIN_SIP_SERVICE_ROUTE)
+CAIN_SIP_PARSE(header_service_route)
 /**************************
 * content length header object inherent from object
 ****************************
