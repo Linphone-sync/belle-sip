@@ -75,7 +75,7 @@ int stream_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 	cain_sip_fd_t sock;
 	tmp=1;
 	
-	sock=socket(ai->ai_family, SOCK_STREAM, ai->ai_protocol);
+	sock=socket(ai->ai_family, SOCK_STREAM, IPPROTO_TCP);
 	
 	if (sock==-1){
 		cain_sip_error("Could not create socket: %s",cain_sip_get_socket_error_string());
