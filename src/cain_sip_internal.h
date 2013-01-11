@@ -145,6 +145,8 @@ typedef struct weak_ref{
 
 void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_interface_id_t ifid);
 void cain_sip_object_delete_unowned(void);
+/*used internally by unref()*/
+void cain_sip_object_delete(void *obj);
 
 
 #define CAIN_SIP_OBJECT_VPTR(obj,object_type) ((CAIN_SIP_OBJECT_VPTR_TYPE(object_type)*)(((cain_sip_object_t*)obj)->vptr))
@@ -580,6 +582,8 @@ static inline void cain_sip_transaction_stop_timer(cain_sip_transaction_t *obj, 
 
 void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t);
 
+void cain_sip_transaction_set_dialog(cain_sip_transaction_t *t, cain_sip_dialog_t *dialog);
+
 /*
  *
  *
@@ -845,5 +849,9 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 #include "cain_sip_resolver.h"
 
 #define CAIN_SIP_SOCKET_TIMEOUT 30000
+
+#define CAIN_SIP_BRANCH_ID_LENGTH 10
+/*Shall not be less than 32bit */
+#define CAIN_SIP_TAG_LENGTH 6
 
 #endif

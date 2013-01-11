@@ -18,6 +18,8 @@
 
 #include "cain_sip_internal.h"
 #include "listeningpoint_internal.h"
+#include "md5.h"
+
 cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas);
 
 typedef struct authorization_context {
@@ -135,10 +137,40 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 	cain_sip_object_unref(msg);
 }
 
+/*
+ * takes example on 16.11 of RFC3261
+ */
+static void compute_branch(cain_sip_message_t *msg, char *branchid, size_t branchid_size){
+	md5_state_t ctx;
+	unsigned int cseq=cain_sip_header_cseq_get_seq_number(cain_sip_message_get_header_by_type(msg,cain_sip_header_cseq_t));
+	char tmp[256]={0};
+	uint8_t digest[16];
+	const char*callid=cain_sip_header_call_id_get_call_id(cain_sip_message_get_header_by_type(msg,cain_sip_header_call_id_t));
+	const char *from_tag=cain_sip_header_from_get_tag(cain_sip_message_get_header_by_type(msg,cain_sip_header_from_t));
+	const char *to_tag=cain_sip_header_to_get_tag(cain_sip_message_get_header_by_type(msg,cain_sip_header_to_t));
+	cain_sip_header_via_t *prev_via=(cain_sip_header_via_t*)cain_sip_message_get_headers(msg,"via")->next;
+	
+	md5_init(&ctx);
+	cain_sip_object_marshal((cain_sip_object_t*)cain_sip_request_get_uri(CAIN_SIP_REQUEST(msg)),tmp,0,sizeof(tmp)-1);
+	md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+	if (from_tag)
+		md5_append(&ctx,(uint8_t*)from_tag,strlen(from_tag));
+	if (to_tag)
+		md5_append(&ctx,(uint8_t*)to_tag,strlen(to_tag));
+	md5_append(&ctx,(uint8_t*)callid,strlen(callid));
+	md5_append(&ctx,(uint8_t*)&cseq,sizeof(cseq));
+	if (prev_via){
+		cain_sip_object_marshal((cain_sip_object_t*)prev_via,tmp,0,sizeof(tmp)-1);
+		md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+	}
+	md5_finish(&ctx,digest);
+	cain_sip_octets_to_text(digest,sizeof(digest),branchid,branchid_size);
+}
+
 static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, cain_sip_message_t *msg){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(msg,"via"));
 	cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(via),"rport",NULL);
-	char token[7]="fixme";
+
 	if (cain_sip_header_via_get_host(via)==NULL){
 		const char *local_ip;
 		int local_port;
@@ -149,10 +181,13 @@ static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, c
 		cain_sip_header_via_set_transport(via,cain_sip_channel_get_transport_name(chan));
 	}
 	if (cain_sip_header_via_get_branch(via)==NULL){
-		/*FIXME: should not be set random here: but rather a hash of message invariants*/
-		char *branchid=cain_sip_strdup_printf(CAIN_SIP_BRANCH_MAGIC_COOKIE ".%s",token);
+		/*branch id should not be set random here (stateless forwarding): but rather a hash of message invariants*/
+		char branchid[24];
+		char token[CAIN_SIP_BRANCH_ID_LENGTH];
+		compute_branch(msg,token,sizeof(token));
+		snprintf(branchid,sizeof(branchid)-1,CAIN_SIP_BRANCH_MAGIC_COOKIE ".%s",token);
 		cain_sip_header_via_set_branch(via,branchid);
-		cain_sip_free(branchid);
+		cain_sip_message("Computing branch id %s for message sent statelessly", branchid);
 	}
 }
 /*
@@ -300,8 +335,8 @@ cain_sip_dialog_t * cain_sip_provider_get_new_dialog_internal(cain_sip_provider_
 	}
 	dialog=cain_sip_dialog_new(t);
 	if (dialog) {
-		t->dialog=(cain_sip_dialog_t*)cain_sip_object_ref(dialog);
-		cain_sip_provider_add_dialog(prov,(cain_sip_dialog_t*)cain_sip_object_ref(dialog));
+		cain_sip_transaction_set_dialog(t,dialog);
+		cain_sip_provider_add_dialog(prov,dialog);
 	}
 	return dialog;
 }
@@ -371,7 +406,7 @@ cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain
 		return NULL;
 	}
 	else t=(cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
-	t->base.dialog=cain_sip_provider_find_dialog(prov,req,FALSE);
+	cain_sip_transaction_set_dialog((cain_sip_transaction_t*)t,cain_sip_provider_find_dialog(prov,req,FALSE));
 	return t;
 }
 
@@ -384,7 +419,7 @@ cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain
 		return NULL;
 	}else 
 		t=(cain_sip_server_transaction_t*)cain_sip_nist_new(prov,req);
-	t->base.dialog=cain_sip_provider_find_dialog(prov,req,TRUE);
+	cain_sip_transaction_set_dialog((cain_sip_transaction_t*)t,cain_sip_provider_find_dialog(prov,req,TRUE));
 	cain_sip_provider_add_server_transaction(prov,t);
 	return t;
 }
@@ -696,7 +731,7 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 				cain_sip_header_authorization_set_nonce(authorization,auth_context->nonce);
 				cain_sip_header_authorization_set_qop(authorization,auth_context->qop);
 				cain_sip_header_authorization_set_opaque(authorization,auth_context->opaque);
-				cain_sip_header_authorization_set_uri(authorization,(cain_sip_uri_t*)cain_sip_object_ref(cain_sip_request_get_uri(request)));
+				cain_sip_header_authorization_set_uri(authorization,(cain_sip_uri_t*)cain_sip_request_get_uri(request));
 				if (auth_context->qop)
 					cain_sip_header_authorization_set_nonce_count(authorization,++auth_context->nonce_count);
 				if (auth_event->ha1) {

@@ -80,6 +80,7 @@ struct cain_sip_listener_callbacks{
 	void (*process_timeout)(void *user_ctx, const cain_sip_timeout_event_t *event);
 	void (*process_transaction_terminated)(void *user_ctx, const cain_sip_transaction_terminated_event_t *event);
 	void (*process_auth_requested)(void *user_ctx, cain_sip_auth_event_t *auth_event);
+	void (*listener_destroyed)(void *user_ctx);
 };
 
 typedef struct cain_sip_listener_callbacks cain_sip_listener_callbacks_t;

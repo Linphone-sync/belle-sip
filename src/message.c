@@ -218,9 +218,9 @@ int cain_sip_message_named_headers_marshal(cain_sip_message_t *message, const ch
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","\r\n");\
 		}
 */
-typedef void (*heach_header_cb)(const cain_sip_header_t* header,void* userdata);
+typedef void (*each_header_cb)(const cain_sip_header_t* header,void* userdata);
 
-static void cain_sip_message_for_each_header(const cain_sip_message_t *message,heach_header_cb cb,void* user_data) {
+static void cain_sip_message_for_each_header(const cain_sip_message_t *message,each_header_cb cb,void* user_data) {
 	cain_sip_list_t* headers_list;
 	cain_sip_list_t* header_list;
 	for(headers_list=message->header_list;headers_list!=NULL;headers_list=headers_list->next){
@@ -262,12 +262,12 @@ int cain_sip_headers_marshal(cain_sip_message_t *message, char* buff,unsigned in
 
 struct _cain_sip_request {
 	cain_sip_message_t message;
-	const char* method;
+	char* method;
 	cain_sip_uri_t* uri;
 };
 
 static void cain_sip_request_destroy(cain_sip_request_t* request) {
-	if (request->method) cain_sip_free((void*)(request->method));
+	if (request->method) cain_sip_free(request->method);
 	if (request->uri) cain_sip_object_unref(request->uri);
 }
 
@@ -278,6 +278,7 @@ static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_r
 	if (orig->method) request->method=cain_sip_strdup(orig->method);
 	if (orig->uri) request->uri=(cain_sip_uri_t*)cain_sip_object_ref(cain_sip_object_clone((cain_sip_object_t*)orig->uri));
 }
+
 int cain_sip_request_marshal(cain_sip_request_t* request, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s ",cain_sip_request_get_method(request));
@@ -295,10 +296,11 @@ CAIN_SIP_PARSE(request)
 GET_SET_STRING(cain_sip_request,method);
 
 void cain_sip_request_set_uri(cain_sip_request_t* request,cain_sip_uri_t* uri) {
+	cain_sip_object_ref(uri);
 	if (request->uri) {
 		cain_sip_object_unref(request->uri);
 	}
-	request->uri=CAIN_SIP_URI(cain_sip_object_ref(uri));
+	request->uri=uri;
 }
 
 cain_sip_uri_t * cain_sip_request_get_uri(cain_sip_request_t *request){

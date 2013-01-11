@@ -51,6 +51,7 @@ static void transaction_destroy(cain_sip_transaction_t *t){
 	if (t->last_response) cain_sip_object_unref(t->last_response);
 	if (t->channel) cain_sip_object_unref(t->channel);
 	if (t->branch_id) cain_sip_free(t->branch_id);
+	if (t->dialog) cain_sip_object_unref(t->dialog);
 
 }
 
@@ -102,6 +103,11 @@ void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
 
 cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t) {
 	return t->dialog;
+}
+
+void cain_sip_transaction_set_dialog(cain_sip_transaction_t *t, cain_sip_dialog_t *dialog){
+	if (dialog) cain_sip_object_ref(dialog);
+	t->dialog=dialog;
 }
 
 /*
@@ -242,7 +248,7 @@ int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 		cain_sip_error("cain_sip_client_transaction_send_request: bad state.");
 		return -1;
 	}
-	/*store preset route for futur use by refresher*/
+	/*store preset route for future use by refresher*/
 	t->preset_route=CAIN_SIP_HEADER_ROUTE(cain_sip_message_get_header(CAIN_SIP_MESSAGE(t->base.request),"route"));
 	if (t->preset_route) cain_sip_object_ref(t->preset_route);
 
@@ -356,7 +362,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_client_transaction_t)={
 
 void cain_sip_client_transaction_init(cain_sip_client_transaction_t *obj, cain_sip_provider_t *prov, cain_sip_request_t *req){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header((cain_sip_message_t*)req,"via"));
-	char token[10];
+	char token[CAIN_SIP_BRANCH_ID_LENGTH];
 
 	if (!via){
 		cain_sip_fatal("cain_sip_client_transaction_init(): No via in request.");
@@ -394,7 +400,6 @@ cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cai
 	cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_PROXY_AUTHORIZATION);
 	/*add preset route if any*/
 	if (t->preset_route) {
-		cain_sip_object_ref(t->preset_route);
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(t->preset_route));
 	}
 	/*put auth header*/

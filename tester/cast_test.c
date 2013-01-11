@@ -58,7 +58,6 @@ static void cast_test(){
 	cain_sip_object_unref(req);
 	cain_sip_object_unref(resp);
 	cain_sip_object_unref(provider);
-	cain_sip_object_unref(lp);
 	cain_sip_object_unref(stack);
 }
 

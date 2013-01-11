@@ -92,6 +92,9 @@ void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_
 
 static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
 	cain_sip_main_loop_remove_source(ml,ml->control);
+	while (ml->sources){
+		cain_sip_main_loop_remove_source(ml,(cain_sip_source_t*)ml->sources->data);
+	}
 	close(ml->control_fds[0]);
 	close(ml->control_fds[1]);
 	cain_sip_object_unref(ml->control);
@@ -289,7 +292,7 @@ int cain_sip_main_loop_quit(cain_sip_main_loop_t *ml){
 	//if (write(ml->control_fds[1],"a",1)==-1){
 	//	cain_sip_error("Fail to write to main loop control fd.");
 	//}
-	return 0;
+	return CAIN_SIP_STOP;
 }
 
 void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){

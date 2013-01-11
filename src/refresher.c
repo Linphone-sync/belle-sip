@@ -27,6 +27,7 @@ struct cain_sip_refresher {
 	int expires;
 	unsigned int started;
 	cain_sip_listener_callbacks_t listener_callbacks;
+	cain_sip_listener_t *sip_listener;
 	void* user_data;
 };
 
@@ -100,6 +101,7 @@ static void process_transaction_terminated(void *user_ctx, const cain_sip_transa
 
 static void destroy(cain_sip_refresher_t *refresher){
 	if (refresher->transaction) cain_sip_object_unref(refresher->transaction);
+	if (refresher->sip_listener) cain_sip_object_unref(refresher->sip_listener);
 
 }
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_refresher_t);
@@ -112,7 +114,6 @@ void cain_sip_refresher_set_listener(cain_sip_refresher_t* refresher, cain_sip_r
 }
 
 static int refresh(cain_sip_refresher_t* refresher) {
-
 	cain_sip_request_t*old_request=cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(refresher->transaction));
 	cain_sip_dialog_t* dialog = cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(refresher->transaction));
 	cain_sip_client_transaction_t* client_transaction;
@@ -153,7 +154,7 @@ static int refresh(cain_sip_refresher_t* refresher) {
 		cain_sip_error("Cannot send refresh method [%s] for refresher [%p]"
 				,cain_sip_request_get_method(old_request)
 				,refresher);
-	return -1;
+		return -1;
 	}
 	return 0;
 }
@@ -273,8 +274,9 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 	refresher->listener_callbacks.process_timeout=process_timeout;
 	refresher->listener_callbacks.process_io_error=process_io_error;
 	refresher->listener_callbacks.process_dialog_terminated=process_dialog_terminated;
-	refresher->listener_callbacks.process_transaction_terminated=process_transaction_terminated;
-	cain_sip_provider_add_internal_sip_listener(transaction->base.provider,cain_sip_listener_create_from_callbacks(&(refresher->listener_callbacks),refresher));
+	refresher->listener_callbacks.process_transaction_terminated=process_transaction_terminated;;
+	refresher->sip_listener=cain_sip_listener_create_from_callbacks(&(refresher->listener_callbacks),refresher);
+	cain_sip_provider_add_internal_sip_listener(transaction->base.provider,refresher->sip_listener);
 	if (set_expires_from_trans(refresher)){
 		cain_sip_error("Unable to extract refresh value from transaction [%p]",transaction);
 	}

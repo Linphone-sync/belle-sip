@@ -76,7 +76,7 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_header_t,cain_sip_object_t,cain_sip_header_de
  ***********************/
 struct _cain_sip_header_address {
 	cain_sip_parameters_t base;
-	const char* displayname;
+	char* displayname;
 	cain_sip_uri_t* uri;
 };
 
@@ -85,8 +85,8 @@ static void cain_sip_header_address_init(cain_sip_header_address_t* object){
 }
 
 static void cain_sip_header_address_destroy(cain_sip_header_address_t* address) {
-	if (address->displayname) cain_sip_free((void*)(address->displayname));
-	if (address->uri) cain_sip_object_unref(CAIN_SIP_OBJECT(address->uri));
+	if (address->displayname) cain_sip_free(address->displayname);
+	if (address->uri) cain_sip_object_unref(address->uri);
 }
 
 static void cain_sip_header_address_clone(cain_sip_header_address_t *addr, const cain_sip_header_address_t *orig){
@@ -127,18 +127,23 @@ CAIN_SIP_PARSE(header_address)
 GET_SET_STRING(cain_sip_header_address,displayname);
 
 void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* address,const char* value) {
-		if (address->displayname != NULL) cain_sip_free((void*)(address->displayname));
+		if (address->displayname != NULL) cain_sip_free(address->displayname);
 		if (strlen(value)>2)
 			address->displayname=_cain_sip_str_dup_and_unquote_string(value);
 		else
 			address->displayname=NULL;
 }
+
 cain_sip_uri_t* cain_sip_header_address_get_uri(const cain_sip_header_address_t* address) {
 	return address->uri;
 }
 
 void cain_sip_header_address_set_uri(cain_sip_header_address_t* address, cain_sip_uri_t* uri) {
-	address->uri=(cain_sip_uri_t*)cain_sip_object_ref(uri);
+	cain_sip_object_ref(uri);
+	if (address->uri){
+		cain_sip_object_unref(address->uri);
+	}
+	address->uri=uri;
 }
 
 cain_sip_header_address_t* cain_sip_header_address_create(const char* display, cain_sip_uri_t* uri) {
@@ -265,6 +270,7 @@ static void cain_sip_header_from_destroy(cain_sip_header_from_t* from) {
 
 static void cain_sip_header_from_clone(cain_sip_header_from_t* from, const cain_sip_header_from_t* cloned) {
 }
+
 int cain_sip_header_from_marshal(cain_sip_header_from_t* from, char* buff,unsigned int offset,unsigned int buff_size) {
 	CAIN_SIP_FROM_LIKE_MARSHAL(from);
 }
@@ -281,7 +287,7 @@ cain_sip_header_from_t* cain_sip_header_from_create2(const char *address, const 
 cain_sip_header_from_t* cain_sip_header_from_create(const cain_sip_header_address_t* address, const char *tag) {
 	cain_sip_header_from_t* header= cain_sip_header_from_new();
 	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
-	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_FROM); /*restaure header name*/
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_FROM); /*restore header name*/
 	if (tag) cain_sip_header_from_set_tag(header,tag);
 	return header;
 }
@@ -290,8 +296,7 @@ CAIN_SIP_PARSE(header_from)
 GET_SET_STRING_PARAM2(cain_sip_header_from,tag,raw_tag);
 
 void cain_sip_header_from_set_random_tag(cain_sip_header_from_t *obj){
-	char tmp[8];
-	/*not less than 32bit */
+	char tmp[CAIN_SIP_TAG_LENGTH];
 	cain_sip_header_from_set_raw_tag(obj,cain_sip_random_token(tmp,sizeof(tmp)));
 }
 

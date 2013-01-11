@@ -106,7 +106,7 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_uri_t,cain_sip_parameters_t,cain_sip_uri_dest
 
 
 cain_sip_uri_t* cain_sip_uri_new () {
-	cain_sip_uri_t* l_object = (cain_sip_uri_t*)cain_sip_object_new(cain_sip_uri_t);
+	cain_sip_uri_t* l_object = cain_sip_object_new(cain_sip_uri_t);
 	cain_sip_parameters_init((cain_sip_parameters_t*)l_object); /*super*/
 	l_object->header_list = cain_sip_parameters_new();
 	cain_sip_object_ref(l_object->header_list);

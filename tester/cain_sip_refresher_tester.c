@@ -41,6 +41,7 @@ typedef struct endpoint {
 	cain_sip_listener_callbacks_t* listener_callbacks;
 	cain_sip_provider_t* provider;
 	cain_sip_listening_point_t *lp;
+	cain_sip_listener_t *listener;
 	auth_mode_t auth;
 	stat_t stat;
 	unsigned char expire_in_contact;
@@ -171,11 +172,9 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 		resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),200);
 		if (!endpoint->expire_in_contact) {
 			cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(expires=cain_sip_message_get_header_by_type(req,cain_sip_header_expires_t)));
-			cain_sip_object_ref(expires); /*to be usable in an other message*/
 		}
 		if (strcmp(cain_sip_request_get_method(req),"REGISTER")==0) {
 			contact=cain_sip_message_get_header_by_type(req,cain_sip_header_contact_t);
-			cain_sip_object_ref(contact);/*to be usable in an other message*/
 		} else {
 			contact=cain_sip_header_contact_new();
 		}
@@ -231,8 +230,9 @@ static endpoint_t* create_endpoint(int port,const char* transport,cain_sip_liste
 	endpoint->stack=cain_sip_stack_new(NULL);
 	endpoint->listener_callbacks=listener_callbacks;
 	endpoint->lp=cain_sip_stack_create_listening_point(endpoint->stack,"0.0.0.0",port,transport);
+	cain_sip_object_ref(endpoint->lp);
 	endpoint->provider=cain_sip_stack_create_provider(endpoint->stack,endpoint->lp);
-	cain_sip_provider_add_sip_listener(endpoint->provider,cain_sip_listener_create_from_callbacks(endpoint->listener_callbacks,endpoint));
+	cain_sip_provider_add_sip_listener(endpoint->provider,(endpoint->listener=cain_sip_listener_create_from_callbacks(endpoint->listener_callbacks,endpoint)));
 	sprintf(endpoint->nonce,"%p",endpoint); /*initial nonce*/
 	endpoint->nonce_count=1;
 	return endpoint;
@@ -241,6 +241,7 @@ static void destroy_endpoint(endpoint_t* endpoint) {
 	cain_sip_object_unref(endpoint->lp);
 	cain_sip_object_unref(endpoint->provider);
 	cain_sip_object_unref(endpoint->stack);
+	cain_sip_object_unref(endpoint->listener);
 	cain_sip_free(endpoint);
 }
 static endpoint_t* create_udp_endpoint(int port,cain_sip_listener_callbacks_t* listener_callbacks) {

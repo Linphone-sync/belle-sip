@@ -50,7 +50,6 @@ static cain_sip_list_t * for_each_weak_unref_free(cain_sip_list_t *l, cain_sip_o
 }
 
 static void cain_sip_channel_destroy(cain_sip_channel_t *obj){
-	
 	if (obj->peer) freeaddrinfo(obj->peer);
 	cain_sip_free(obj->peer_name);
 	if (obj->local_ip) cain_sip_free(obj->local_ip);
