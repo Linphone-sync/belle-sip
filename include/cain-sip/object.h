@@ -196,6 +196,13 @@ void _cain_sip_object_copy(cain_sip_object_t *newobj, const cain_sip_object_t *r
 cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj);
 
 /**
+ * Same as #cain_sip_object_clone but with ref count set to 1
+ *
+**/
+cain_sip_object_t *cain_sip_object_clone_and_ref(const cain_sip_object_t *obj);
+
+
+/**
  * Returns a string describing the inheritance diagram and implemented interfaces of object obj.
 **/
 char *cain_sip_object_describe(void *obj);

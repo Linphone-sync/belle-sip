@@ -279,7 +279,7 @@ static void cain_sip_object_freefunc(void* obj) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(obj));
 }
 static void* cain_sip_object_copyfunc(void* obj) {
-	return cain_sip_object_clone(CAIN_SIP_OBJECT(obj));
+	return cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(obj));
 }
 
 typedef struct _cain_sdp_base_description {
@@ -299,8 +299,8 @@ static void cain_sdp_base_description_destroy(cain_sdp_base_description_t* base_
 static void cain_sdp_base_description_init(cain_sdp_base_description_t* base_description) {
 }
 static void cain_sdp_base_description_clone(cain_sdp_base_description_t *base_description, const cain_sdp_base_description_t *orig){
-	if (orig->info) base_description->info = CAIN_SDP_INFO(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->info)));
-	if (orig->connection) base_description->connection = CAIN_SDP_CONNECTION(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->connection)));
+	if (orig->info) base_description->info = CAIN_SDP_INFO(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->info)));
+	if (orig->connection) base_description->connection = CAIN_SDP_CONNECTION(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->connection)));
 	base_description->bandwidths = cain_sip_list_copy_with_data(orig->bandwidths,cain_sip_object_copyfunc);
 	base_description->attributes = cain_sip_list_copy_with_data(orig->attributes,cain_sip_object_copyfunc);
 
@@ -393,10 +393,10 @@ void cain_sdp_base_description_set_attribute_value(cain_sdp_base_description_t* 
 	cain_sdp_attribute_t* attribute = cain_sdp_attribute_new();
 	cain_sdp_attribute_set_name(attribute,name);
 	cain_sdp_attribute_set_value(attribute,value);
-	base_description->attributes = cain_sip_list_append(base_description->attributes,attribute);
+	base_description->attributes = cain_sip_list_append(base_description->attributes,cain_sip_object_ref(attribute));
 }
 void cain_sdp_base_description_add_attribute(cain_sdp_base_description_t* base_description, const cain_sdp_attribute_t* attribute) {
-	base_description->attributes = cain_sip_list_append(base_description->attributes,(void*)attribute);
+	base_description->attributes = cain_sip_list_append(base_description->attributes,(void*)cain_sip_object_ref(CAIN_SIP_OBJECT(attribute)));
 }
 
 #define SET_LIST(list_name,value) \
@@ -407,6 +407,9 @@ void cain_sdp_base_description_add_attribute(cain_sdp_base_description_t* base_d
 			}\
 			cain_sip_list_free(list_name); \
 		} \
+		for (list=value;list !=NULL; list=list->next) {\
+						cain_sip_object_ref(CAIN_SIP_OBJECT(list->data));\
+		}\
 		list_name=value;
 
 
@@ -417,10 +420,10 @@ void cain_sdp_base_description_set_bandwidth(cain_sdp_base_description_t* base_d
 	cain_sdp_bandwidth_t* bandwidth = cain_sdp_bandwidth_new();
 	cain_sdp_bandwidth_set_type(bandwidth,type);
 	cain_sdp_bandwidth_set_value(bandwidth,value);
-	base_description->bandwidths = cain_sip_list_append(base_description->bandwidths,bandwidth);
+	base_description->bandwidths = cain_sip_list_append(base_description->bandwidths,cain_sip_object_ref(bandwidth));
 }
 void cain_sdp_base_description_add_bandwidth(cain_sdp_base_description_t* base_description, const cain_sdp_bandwidth_t* bandwidth) {
-	base_description->bandwidths = cain_sip_list_append(base_description->bandwidths,(void *)bandwidth);
+	base_description->bandwidths = cain_sip_list_append(base_description->bandwidths,(void *)cain_sip_object_ref((void *)bandwidth));
 }
 void cain_sdp_base_description_set_bandwidths(cain_sdp_base_description_t* base_description, cain_sip_list_t* bandwidths) {
 	SET_LIST(base_description->bandwidths,bandwidths)
@@ -438,7 +441,7 @@ void cain_sdp_media_description_destroy(cain_sdp_media_description_t* media_desc
 }
 
 void cain_sdp_media_description_clone(cain_sdp_media_description_t *media_description, const cain_sdp_media_description_t *orig){
-	if (orig->media) media_description->media = CAIN_SDP_MEDIA(cain_sip_object_clone(CAIN_SIP_OBJECT((orig->media))));
+	if (orig->media) media_description->media = CAIN_SDP_MEDIA(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT((orig->media))));
 }
 int cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_description, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -674,28 +677,24 @@ void cain_sdp_media_description_add_bandwidth(cain_sdp_media_description_t* medi
 void cain_sdp_media_description_set_bandwidths(cain_sdp_media_description_t* media_description, cain_sip_list_t* bandwidths) {
 	cain_sdp_base_description_set_bandwidths(CAIN_SIP_CAST(media_description,cain_sdp_base_description_t),bandwidths);
 }
+#define SET_OBJECT(object,param,param_type) \
+		param_type** current = &object->param; \
+		if (param) cain_sip_object_ref(param); \
+		if (*current) { \
+			cain_sip_object_unref(CAIN_SIP_OBJECT(*current)); \
+		} \
+		*current=param; \
 
-void cain_sdp_media_description_set_connection(cain_sdp_media_description_t* media_description, cain_sdp_connection_t* conn) {
-	cain_sdp_connection_t** current = &CAIN_SIP_CAST(media_description,cain_sdp_base_description_t)->connection;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=conn;
+
+void cain_sdp_media_description_set_connection(cain_sdp_media_description_t* media_description, cain_sdp_connection_t* connection) {
+	SET_OBJECT(CAIN_SIP_CAST(media_description,cain_sdp_base_description_t),connection,cain_sdp_connection_t)
 }
-void cain_sdp_media_description_set_info(cain_sdp_media_description_t* media_description,cain_sdp_info_t* i) {
-	cain_sdp_info_t** current = &CAIN_SIP_CAST(media_description,cain_sdp_base_description_t)->info;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=i;
+void cain_sdp_media_description_set_info(cain_sdp_media_description_t* media_description,cain_sdp_info_t* info) {
+	SET_OBJECT(CAIN_SIP_CAST(media_description,cain_sdp_base_description_t),info,cain_sdp_info_t)
 }
 /*void cain_sdp_media_description_set_key(cain_sdp_media_description_t* media_description,cain_sdp_key_t* key);*/
 void cain_sdp_media_description_set_media(cain_sdp_media_description_t* media_description, cain_sdp_media_t* media) {
-	cain_sdp_media_t** current = &media_description->media;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=media;
+	SET_OBJECT(media_description,media,cain_sdp_media_t)
 }
 
 /************************
@@ -825,14 +824,14 @@ void cain_sdp_session_description_destroy(cain_sdp_session_description_t* sessio
 }
 
 void cain_sdp_session_description_clone(cain_sdp_session_description_t *session_description, const cain_sdp_session_description_t *orig){
-	if (orig->version) session_description->version = CAIN_SDP_VERSION(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->version)));
+	if (orig->version) session_description->version = CAIN_SDP_VERSION(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->version)));
 	session_description->emails = cain_sip_list_copy_with_data(orig->emails,cain_sip_object_copyfunc);
-	if (orig->origin) session_description->origin = CAIN_SDP_ORIGIN(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->origin)));
-	if (orig->session_name) session_description->session_name = CAIN_SDP_SESSION_NAME(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->session_name)));
+	if (orig->origin) session_description->origin = CAIN_SDP_ORIGIN(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->origin)));
+	if (orig->session_name) session_description->session_name = CAIN_SDP_SESSION_NAME(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->session_name)));
 	session_description->phones = cain_sip_list_copy_with_data(orig->phones,cain_sip_object_copyfunc);
 	session_description->times = cain_sip_list_copy_with_data(orig->times,cain_sip_object_copyfunc);
-	if (orig->uri) session_description->uri = CAIN_SDP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->uri)));
-	if (orig->zone_adjustments) session_description->zone_adjustments = CAIN_SDP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->zone_adjustments)));
+	if (orig->uri) session_description->uri = CAIN_SDP_URI(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->uri)));
+	if (orig->zone_adjustments) session_description->zone_adjustments = CAIN_SDP_URI(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->zone_adjustments)));
 	session_description->media_descriptions = cain_sip_list_copy_with_data(orig->media_descriptions,cain_sip_object_copyfunc);
 }
 int cain_sdp_session_description_marshal(cain_sdp_session_description_t* session_description, char* buff,unsigned int offset,unsigned int buff_size) {
@@ -959,47 +958,31 @@ void cain_sdp_session_description_set_bandwidths(cain_sdp_session_description_t*
 void cain_sdp_session_description_add_bandwidth(cain_sdp_session_description_t* session_description, const cain_sdp_bandwidth_t* bandwidth) {
 	cain_sdp_base_description_add_bandwidth(CAIN_SIP_CAST(session_description,cain_sdp_base_description_t),bandwidth);
 }
-void cain_sdp_session_description_set_connection(cain_sdp_session_description_t* session_description, cain_sdp_connection_t* conn) {
-	cain_sdp_connection_t** current = &CAIN_SIP_CAST(session_description,cain_sdp_base_description_t)->connection;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=conn;
+void cain_sdp_session_description_set_connection(cain_sdp_session_description_t* session_description, cain_sdp_connection_t* connection) {
+	SET_OBJECT(CAIN_SIP_CAST(session_description,cain_sdp_base_description_t),connection,cain_sdp_connection_t)
 }
 void cain_sdp_session_description_set_emails(cain_sdp_session_description_t* session_description, cain_sip_list_t* emails) {
 	SET_LIST(session_description->emails,emails)
 }
-void cain_sdp_session_description_set_info(cain_sdp_session_description_t* session_description, cain_sdp_info_t* i) {
-	cain_sdp_info_t** current = &CAIN_SIP_CAST(session_description,cain_sdp_base_description_t)->info;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=i;
+void cain_sdp_session_description_set_info(cain_sdp_session_description_t* session_description, cain_sdp_info_t* info) {
+	SET_OBJECT(CAIN_SIP_CAST(session_description,cain_sdp_base_description_t),info,cain_sdp_info_t)
 }
 /*void cain_sdp_session_description_set_key(cain_sdp_session_description_t* session_description, cain_sdp_key_t* key);*/
 void cain_sdp_session_description_set_media_descriptions(cain_sdp_session_description_t* session_description, cain_sip_list_t* media_descriptions) {
 	SET_LIST(session_description->media_descriptions,media_descriptions)
 }
 void cain_sdp_session_description_add_media_description(cain_sdp_session_description_t* session_description, cain_sdp_media_description_t* media_description) {
-	session_description->media_descriptions = cain_sip_list_append(session_description->media_descriptions,media_description);
+	session_description->media_descriptions = cain_sip_list_append(session_description->media_descriptions,cain_sip_object_ref(media_description));
 }
 
 void cain_sdp_session_description_set_origin(cain_sdp_session_description_t* session_description, cain_sdp_origin_t* origin) {
-	cain_sdp_origin_t** current = &session_description->origin;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=origin;
+	SET_OBJECT(session_description,origin,cain_sdp_origin_t)
 }
 void cain_sdp_session_description_set_phones(cain_sdp_session_description_t* session_description, cain_sip_list_t* phones) {
 	SET_LIST(session_description->phones,phones)
 }
 void cain_sdp_session_description_set_session_name(cain_sdp_session_description_t* session_description, cain_sdp_session_name_t* session_name) {
-	cain_sdp_session_name_t** current = &session_description->session_name;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=session_name;
+	SET_OBJECT(session_description,session_name,cain_sdp_session_name_t)
 }
 void cain_sdp_session_description_set_time_descriptions(cain_sdp_session_description_t* session_description, cain_sip_list_t* times) {
 	SET_LIST(session_description->times,times)
@@ -1008,25 +991,13 @@ void cain_sdp_session_description_set_time_description(cain_sdp_session_descript
 	cain_sdp_session_description_set_time_descriptions(session_description,cain_sip_list_new(time_desc));
 }
 void cain_sdp_session_description_set_uri(cain_sdp_session_description_t* session_description, cain_sdp_uri_t* uri) {
-	cain_sdp_uri_t** current = &session_description->uri;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=uri;
+	SET_OBJECT(session_description,uri,cain_sdp_uri_t)
 }
 void cain_sdp_session_description_set_version(cain_sdp_session_description_t* session_description, cain_sdp_version_t* version) {
-	cain_sdp_version_t** current = &session_description->version;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=version;
+	SET_OBJECT(session_description,version,cain_sdp_version_t)
 }
 void cain_sdp_session_description_set_zone_adjustments(cain_sdp_session_description_t* session_description, cain_sdp_uri_t* zone_adjustments) {
-	cain_sdp_uri_t** current = &session_description->zone_adjustments;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=zone_adjustments;
+	SET_OBJECT(session_description,zone_adjustments,cain_sdp_uri_t)
 }
 /************************
  * time
@@ -1073,7 +1044,7 @@ void cain_sdp_time_description_destroy(cain_sdp_time_description_t* time_descrip
 }
 
 void cain_sdp_time_description_clone(cain_sdp_time_description_t *time_description, const cain_sdp_time_description_t *orig){
-	if (orig->time) time_description->time = CAIN_SDP_TIME(cain_sip_object_clone(CAIN_SIP_OBJECT(orig->time)));
+	if (orig->time) time_description->time = CAIN_SDP_TIME(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->time)));
 }
 int cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_description, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
@@ -1099,12 +1070,8 @@ cain_sdp_time_t* cain_sdp_time_description_get_time(const cain_sdp_time_descript
 void cain_sdp_time_description_set_repeate_times(cain_sdp_time_description_t* time_description, cain_sip_list_t* times) {
 	cain_sip_error("time description repeat time not implemented");
 }
-void cain_sdp_time_description_set_time(cain_sdp_time_description_t* time_description, cain_sdp_time_t* value) {
-	cain_sdp_time_t** current = &time_description->time;
-	if (*current) {
-		cain_sip_object_unref(CAIN_SIP_OBJECT(*current));
-	}
-	*current=value;
+void cain_sdp_time_description_set_time(cain_sdp_time_description_t* time_description, cain_sdp_time_t* time) {
+	SET_OBJECT(time_description,time,cain_sdp_time_t)
 }
 #define CAIN_SDP_TIME_DESCRIPTION(t) CAIN_SDP_CAST(t,cain_sdp_time_description_t);
 

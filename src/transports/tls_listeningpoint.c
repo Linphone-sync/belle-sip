@@ -71,6 +71,7 @@ static void check_tls_deinit(void){
 }
 
 static void cain_sip_tls_listening_point_uninit(cain_sip_tls_listening_point_t *lp){
+	cain_sip_listening_point_clean_channels(CAIN_SIP_LISTENING_POINT(lp)); /*make sure all channels are cleaned before deiniting gnu tls*/
 	check_tls_deinit();
 }
 

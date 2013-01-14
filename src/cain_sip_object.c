@@ -214,7 +214,9 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 	return newobj;
 }
 
-
+cain_sip_object_t *cain_sip_object_clone_and_ref(const cain_sip_object_t *obj) {
+	return cain_sip_object_ref(cain_sip_object_clone(obj));
+}
 
 void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno){
 	if (obj!=NULL){

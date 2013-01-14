@@ -59,11 +59,11 @@ static void cain_sip_authorization_destroy(authorization_context_t* object) {
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 	cain_sip_list_free(p->listeners);
 	cain_sip_list_free(p->internal_listeners);
-	cain_sip_list_free_with_data(p->lps,cain_sip_object_unref);
 	cain_sip_list_free_with_data(p->client_transactions,cain_sip_object_unref);
 	cain_sip_list_free_with_data(p->server_transactions,cain_sip_object_unref);
 	cain_sip_list_free_with_data(p->auth_contexts,(void(*)(void*))cain_sip_authorization_destroy);
 	cain_sip_list_free_with_data(p->dialogs,cain_sip_object_unref);
+	cain_sip_list_free_with_data(p->lps,cain_sip_object_unref);
 }
 
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){

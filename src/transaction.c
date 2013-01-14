@@ -107,6 +107,7 @@ cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t
 
 void cain_sip_transaction_set_dialog(cain_sip_transaction_t *t, cain_sip_dialog_t *dialog){
 	if (dialog) cain_sip_object_ref(dialog);
+	if (t->dialog) cain_sip_object_unref(t->dialog); /*to avoid keeping unexpected ref*/
 	t->dialog=dialog;
 }
 

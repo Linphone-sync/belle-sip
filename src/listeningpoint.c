@@ -30,8 +30,13 @@ void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stac
 
 static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
 	cain_sip_listening_point_clean_channels(lp);
+	cain_sip_message("Listening [%p] on [%s://%s:%i] destroyed"	,lp
+															,cain_sip_uri_get_transport_param(CAIN_SIP_LISTENING_POINT(lp)->listening_uri)
+															,cain_sip_uri_get_host(CAIN_SIP_LISTENING_POINT(lp)->listening_uri)
+															,cain_sip_uri_get_port(CAIN_SIP_LISTENING_POINT(lp)->listening_uri));
 	cain_sip_object_unref(lp->listening_uri);
 	lp->channel_listener=NULL; /*does not unref provider*/
+
 }
 
 
@@ -55,12 +60,17 @@ void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cai
 	cain_sip_object_unref(chan);
 }
 
+
 void cain_sip_listening_point_clean_channels(cain_sip_listening_point_t *lp){
 	int existing_channels;
+	cain_sip_list_t* iterator;
 	if ((existing_channels=cain_sip_list_size(lp->channels)) > 0) {
 		cain_sip_warning("Listening point destroying [%i] channels",existing_channels);
 	}
-	cain_sip_list_free_with_data(lp->channels,(void (*)(void*))cain_sip_object_unref);
+	for (iterator=lp->channels;iterator!=NULL;iterator=iterator->next) {
+		cain_sip_main_loop_remove_source(lp->stack->ml,(cain_sip_source_t*)(iterator->data));
+	}
+	lp->channels=cain_sip_list_free_with_data(lp->channels,(void (*)(void*))cain_sip_object_unref);
 }
 
 

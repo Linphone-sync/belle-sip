@@ -64,7 +64,6 @@ void stream_channel_close(cain_sip_channel_t *obj){
 	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
 	if (sock!=-1){
 		close_socket(sock);
-		cain_sip_main_loop_remove_source(obj->stack->ml,(cain_sip_source_t*)obj);
 		obj->base.fd=-1;
 	}
 }
