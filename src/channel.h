@@ -106,7 +106,10 @@ void cain_sip_channel_connect(cain_sip_channel_t *obj);
 void cain_sip_channel_prepare(cain_sip_channel_t *obj);
 
 void cain_sip_channel_close(cain_sip_channel_t *obj);
-
+/**
+ *
+ * returns number of send byte or <0 in case of error
+ */
 int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen);
 
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);

@@ -117,6 +117,9 @@ void cain_sip_hop_free(cain_sip_hop_t *hop){
 void cain_sip_stack_set_tx_delay(cain_sip_stack_t *stack, int delay_ms){
 	stack->tx_delay=delay_ms;
 }
+void cain_sip_stack_set_send_error(cain_sip_stack_t *stack, int send_error){
+	stack->send_error=send_error;
+}
 
 const char* cain_sip_version_to_string() {
 	return PACKAGE_VERSION;

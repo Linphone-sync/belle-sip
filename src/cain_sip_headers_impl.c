@@ -43,7 +43,7 @@ void cain_sip_header_init(cain_sip_header_t *header) {
 static void cain_sip_header_clone(cain_sip_header_t *header, const cain_sip_header_t *orig){
 	CLONE_STRING(cain_sip_header,name,header,orig)
 	if (cain_sip_header_get_next(orig)) {
-		cain_sip_header_set_next(header,CAIN_SIP_HEADER(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(cain_sip_header_get_next(orig))))) ;
+		cain_sip_header_set_next(header,CAIN_SIP_HEADER(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_header_get_next(orig))))) ;
 	}
 }
 static void cain_sip_header_destroy(cain_sip_header_t *header){
@@ -51,6 +51,8 @@ static void cain_sip_header_destroy(cain_sip_header_t *header){
 	if (header->next) cain_sip_object_unref(CAIN_SIP_OBJECT(header->next));
 }
 void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next) {
+	if (next) cain_sip_object_ref(next);
+	if(header->next) cain_sip_object_unref(header->next);
 	header->next = next;
 }
 cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* header) {

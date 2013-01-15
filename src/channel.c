@@ -297,7 +297,8 @@ int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 }
 
 void cain_sip_channel_close(cain_sip_channel_t *obj){
-	CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close(obj);
+	if (CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close)
+		CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close(obj); /*udp channel don't have close function*/
 }
 
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj){
@@ -327,15 +328,28 @@ void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) 
 static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 	char buffer[cain_sip_network_buffer_size];
 	int len;
+	int ret=0;
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_sending,obj,msg);
 	len=cain_sip_object_marshal((cain_sip_object_t*)msg,buffer,0,sizeof(buffer));
 	if (len>0){
-		int ret=cain_sip_channel_send(obj,buffer,len);
-		if (ret==-1){
+		if (!obj->stack->send_error)
+			ret=cain_sip_channel_send(obj,buffer,len);
+		else
+			/*debug case*/
+			ret=obj->stack->send_error;
+
+		if (ret<0){
+			cain_sip_error("channel [%p]: could not send [%i] bytes from [%s://%s:%i]  to [%s:%i]"	,obj
+																									,len
+																									,cain_sip_channel_get_transport_name(obj)
+																									,obj->local_ip
+																									,obj->local_port
+																									,obj->peer_name
+																									,obj->peer_port);
 			channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 			cain_sip_channel_close(obj);
 		}else{
-			cain_sip_message("channel %p: message sent to [%s://%s:%i] \n%s"
+			cain_sip_message("channel [%p]: message sent to [%s://%s:%i] \n%s"
 								,obj
 								,cain_sip_channel_get_transport_name(obj)
 								,obj->peer_name
