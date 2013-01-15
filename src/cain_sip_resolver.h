@@ -22,12 +22,6 @@
 
 #include "cain_sip_internal.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-
 #define CAIN_SIP_RESOLVER_HINT_IPV6		(1)
 #define CAIN_SIP_RESOLVER_HINT_SRV			(1<<1)
 

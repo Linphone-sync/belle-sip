@@ -117,9 +117,7 @@ void cain_sip_logv(int level, const char *fmt, va_list args)
 {
         if (cain_sip_logv_out!=NULL && cain_sip_log_level_enabled(level))
                 cain_sip_logv_out(level,fmt,args);
-#if !defined(_WIN32_WCE)
-        if ((level)==CAIN_SIP_FATAL) abort();
-#endif
+        if ((level)==CAIN_SIP_LOG_FATAL) abort();
 }
 #endif
 
@@ -470,6 +468,7 @@ char * cain_sip_strdup(const char *s){
 	return strdup(s);
 }
 
+#ifndef WIN32
 uint64_t cain_sip_time_ms(void){
 	struct timespec ts;
 	static int clock_id=CLOCK_MONOTONIC;
@@ -482,9 +481,13 @@ uint64_t cain_sip_time_ms(void){
 		return 0;
 	}
 	return (ts.tv_sec*1000LL) + (ts.tv_nsec/1000000LL);
-
 }
-
+#else
+uint64_t cain_sip_time_ms(void){
+	return GetTickCount();
+	/* note use GetTickCount64 on windows phone 8*/
+}
+#endif
 
 /**
  * parser parameter pair
@@ -526,8 +529,16 @@ unsigned int cain_sip_random(void){
 			cain_sip_error("Reading /dev/urandom failed.");
 		}else return tmp;
 	}else cain_sip_error("Could not open /dev/urandom");
-#endif
+#elif defined(WIN32)
+	static int initd=0;
+	if (!initd) {
+		srand(cain_sip_time_ms());
+		initd=1;
+	}
+	return rand()<<16 | rand();
+#else
 	return (unsigned int) random();
+#endif
 }
 
 static const char *symbols="aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789-~";

@@ -18,10 +18,6 @@
 
 #ifndef CAIN_SIP_MAINLOOP_H
 #define CAIN_SIP_MAINLOOP_H
-#include <errno.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
 
 
 #define CAIN_SIP_EVENT_READ 1

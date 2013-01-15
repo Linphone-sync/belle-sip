@@ -329,6 +329,8 @@ char *cain_sip_object_describe(void *obj){
 	return _cain_sip_object_describe_type(o->vptr);
 }
 
+#if !defined(WIN32)
+
 #include <dlfcn.h>
 
 char *cain_sip_object_describe_type_from_name(const char *name){
@@ -351,3 +353,13 @@ char *cain_sip_object_describe_type_from_name(const char *name){
 	}
 	return _cain_sip_object_describe_type((cain_sip_object_vptr_t*)symbol);
 }
+
+#else
+
+char *cain_sip_object_describe_type_from_name(const char *name){
+	return cain_sip_strdup_printf("Sorry cain_sip_object_describe_type_from_name() is not implemented on this platform.");
+}
+
+#endif
+
+
