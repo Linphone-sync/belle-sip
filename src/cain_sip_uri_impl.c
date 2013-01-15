@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "cain_sip_internal.h"
 #include "cain-sip/uri.h"
 #include "cain-sip/parameters.h"
 #include <stdlib.h>
@@ -24,6 +23,7 @@
 #include <stdarg.h>
 #include "cain_sip_messageParser.h"
 #include "cain_sip_messageLexer.h"
+#include "cain_sip_internal.h"
 #include "listeningpoint_internal.h"
 
 
