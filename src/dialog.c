@@ -182,6 +182,7 @@ static int cain_sip_dialog_init_as_uac(cain_sip_dialog_t *obj, cain_sip_request_
 		obj->route_set=cain_sip_list_prepend(obj->route_set,cain_sip_object_ref(cain_sip_header_route_create(
 		                                     (cain_sip_header_address_t*)elem->data)));
 	}
+
 	check_route_set(obj->route_set);
 	obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
 	obj->local_cseq=cain_sip_header_cseq_get_seq_number(cseq);
