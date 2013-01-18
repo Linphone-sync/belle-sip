@@ -22,9 +22,6 @@
 
 #include "cain_sip_internal.h"
 
-#define CAIN_SIP_RESOLVER_HINT_IPV6		(1)
-#define CAIN_SIP_RESOLVER_HINT_SRV			(1<<1)
-
 
 typedef struct cain_sip_resolver_context cain_sip_resolver_context_t;
 
@@ -43,8 +40,12 @@ struct cain_sip_resolver_context{
 	int port;
 	struct addrinfo *ai;
 	unsigned int hints;
-	pthread_t thread;
+	cain_sip_thread_t thread;
+#ifndef WIN32
 	int ctlpipe[2];
+#else
+	HANDLE ctlevent;
+#endif
 	uint8_t cancelled;
 	uint8_t exited;
 };

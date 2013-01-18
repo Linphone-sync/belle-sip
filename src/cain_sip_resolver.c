@@ -51,17 +51,21 @@ void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 	if (ctx->thread!=0){
 		if (!ctx->exited){
 			ctx->cancelled=1;
-			pthread_cancel(ctx->thread);
+			cain_sip_thread_cancel(ctx->thread);
 		}
-		pthread_join(ctx->thread,NULL);
+		cain_sip_thread_join(ctx->thread,NULL);
 	}
 	if (ctx->name)
 		cain_sip_free(ctx->name);
 	if (ctx->ai){
 		freeaddrinfo(ctx->ai);
 	}
+#ifndef WIN32
 	close(ctx->ctlpipe[0]);
 	close(ctx->ctlpipe[1]);
+#else
+	CloseEvent(ctx->ctlevent);
+#endif
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_resolver_context_t);
@@ -71,17 +75,23 @@ static int resolver_callback(cain_sip_resolver_context_t *ctx){
 	char tmp;
 	ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
 	ctx->ai=NULL;
+#ifndef WIN32
 	if (read(ctx->source.fd,&tmp,1)!=1){
 		cain_sip_fatal("Unexpected read from resolver_callback");
 	}
+#else
+#endif
 	return CAIN_SIP_STOP;
 }
 
 cain_sip_resolver_context_t *cain_sip_resolver_context_new(){
 	cain_sip_resolver_context_t *ctx=cain_sip_object_new(cain_sip_resolver_context_t);
+#ifndef WIN32
 	if (pipe(ctx->ctlpipe)==-1){
 		cain_sip_fatal("pipe() failed: %s",strerror(errno));
 	}
+#else
+#endif
 	cain_sip_fd_source_init(&ctx->source,(cain_sip_source_func_t)resolver_callback,ctx,ctx->ctlpipe[0],CAIN_SIP_EVENT_READ,-1);
 	return ctx;
 }
@@ -106,10 +116,13 @@ static void *cain_sip_resolver_thread(void *ptr){
 		cain_sip_message("%s has address %s.",ctx->name,host);
 		ctx->ai=res;
 	}
-	
+#ifndef WIN32
 	if (write(ctx->ctlpipe[1],"q",1)==-1){
 		cain_sip_error("cain_sip_resolver_thread(): Fail to write on pipe.");
 	}
+#else
+	SetEvent(ctx->ctlevent);
+#endif
 	return NULL;
 }
 
@@ -125,7 +138,7 @@ unsigned long cain_sip_resolve(const char *name, int port, unsigned int hints, c
 		ctx->hints=hints;
 		cain_sip_main_loop_add_source(ml,(cain_sip_source_t*)ctx);
 		cain_sip_object_unref(ctx);
-		pthread_create(&ctx->thread,NULL,cain_sip_resolver_thread,ctx);
+		cain_sip_thread_create(&ctx->thread,NULL,cain_sip_resolver_thread,ctx);
 		return ctx->source.id;
 	}else{
 		cb(data,name,res);

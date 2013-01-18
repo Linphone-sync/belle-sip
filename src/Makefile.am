@@ -29,6 +29,7 @@ lib_LTLIBRARIES=libcainsip.la
 
 libcainsip_la_SOURCES=				\
 									clock_gettime.c clock_gettime.h \
+									port.c port.h \
 									cain_sip_uri_impl.c \
 									cain_sip_headers_impl.c \
 									cain_sip_utils.c cain_sip_internal.h \
