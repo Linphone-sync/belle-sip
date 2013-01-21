@@ -178,7 +178,7 @@ struct cain_sip_source{
 	cain_sip_object_t base;
 	cain_sip_list_t node;
 	unsigned long id;
-	cain_sip_socket_t fd;
+	cain_sip_fd_t fd;
 	unsigned int events;
 	int timeout;
 	void *data;
@@ -188,12 +188,11 @@ struct cain_sip_source{
 	cain_sip_source_remove_callback_t on_remove;
 	unsigned char cancelled;
 	unsigned char expired;
-#ifdef WIN32
-	WSAEVENT wsaevent;
-#endif
+	cain_sip_socket_t sock;
 };
 
 void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms);
+void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms);
 #define cain_list_next(elem) ((elem)->next)
 
 /* include private headers */

@@ -148,8 +148,10 @@ const char* cain_sip_version_to_string();
 #include <winsock2.h>
 
 typedef SOCKET cain_sip_socket_t;
+typedef HANDLE cain_sip_fd_t;
 #else
 typedef int cain_sip_socket_t;
+typedef int cain_sip_fd_t;
 
 #endif
 

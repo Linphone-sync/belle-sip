@@ -80,6 +80,8 @@ cain_sip_source_t * cain_sip_socket_source_new(cain_sip_source_func_t func, void
 
 unsigned long cain_sip_source_get_id(cain_sip_source_t *s);
 
+cain_sip_source_t *cain_sip_main_loop_find_source(cain_sip_main_loop_t *ml, unsigned long id);
+
 /**
  * Executes the main loop forever (or until cain_sip_main_loop_quit() is called)
 **/

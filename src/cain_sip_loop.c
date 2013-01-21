@@ -77,12 +77,35 @@ static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_po
 typedef HANDLE cain_sip_pollfd_t;
 
 static void cain_sip_source_to_poll(cain_sip_source_t *s, cain_sip_pollfd_t *pfd,int i){
-	pfd[i]=s->wsaevent;
+	int err;
+	long events=0;
+	pfd[i]=s->fd;
 	s->index=i;
+	
+	if (s->events & CAIN_SIP_EVENT_READ)
+		events|=FD_READ;
+	if (s->events & CAIN_SIP_EVENT_WRITE)
+		events|=FD_WRITE;
+	
+	err=WSAEventSelect(s->sock,s->fd,events);
+	if (err!=0) cain_sip_error("WSAEventSelect() failed: %i",err);
 }
 
 static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_pollfd_t *pfd){
-	return 0;
+	WSANETWORKEVENTS revents={0};
+	int err;
+	unsigned int ret=0;
+	
+	err=WSAEnumNetworkEvents(s->sock,NULL,&revents);
+	if (err!=0){
+		cain_sip_error("WSAEnumNetworkEvents() failed: %i",err);
+		return 0;
+	}
+	if (revents.lNetworkEvents & FD_READ)
+		ret|=CAIN_SIP_EVENT_READ;
+	if (revents.lNetworkEvents & FD_WRITE)
+		ret|=CAIN_SIP_EVENT_WRITE;
+	return ret;
 }
 
 static int cain_sip_poll(cain_sip_pollfd_t *pfd, int count, int duration){
@@ -104,14 +127,14 @@ static void cain_sip_source_destroy(cain_sip_source_t *obj){
 		cain_sip_fatal("Destroying source currently used in main loop !");
 	}
 #ifdef WIN32
-	if (obj->wsaevent!=(WSAEVENT)-1){
-		WSACloseEvent(obj->wsaevent);
-		obj->wsaevent=(WSAEVENT)-1;
+	if (obj->sock!=(cain_sip_socket_t)-1){
+		WSACloseEvent(obj->fd);
+		obj->fd=(WSAEVENT)-1;
 	}
 #endif
 }
 
-void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms){
+static void cain_sip_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){
 	static unsigned long global_id=1;
 	s->node.data=s;
 	s->id=global_id++;
@@ -120,20 +143,40 @@ void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t fu
 	s->timeout=timeout_value_ms;
 	s->data=data;
 	s->notify=func;
+}
+
+void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t sock, unsigned int events, unsigned int timeout_value_ms){
+	s->sock=sock;
 #ifdef WIN32
-	if (fd!=(cain_sip_socket_t)-1)
-		s->wsaevent=WSACreateEvent();
+	/*on windows, the fd to poll is not the socket */
+	cain_sip_fd_t fd=(cain_sip_fd_t)-1;
+	if (sock!=(cain_sip_socket_t)-1)
+		fd=WSACreateEvent();
 	else
-		s->wsaevent=(WSAEVENT)-1;
+		fd=(WSAEVENT)-1;
+	cain_sip_source_init(s,func,data,fd,events,timeout_value_ms);
+	
+#else
+	cain_sip_source_init(s,func,data,sock,events,timeout_value_ms);
 #endif
+}
+
+void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){
+	cain_sip_source_init(s,func,data,fd,events,timeout_value_ms);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_source_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_source_t,cain_sip_object_t,cain_sip_source_destroy,NULL,NULL,FALSE);
 
-cain_sip_source_t * cain_sip_socket_source_new(cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms){
+cain_sip_source_t * cain_sip_socket_source_new(cain_sip_source_func_t func, void *data, cain_sip_socket_t sock, unsigned int events, unsigned int timeout_value_ms){
 	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t);
-	cain_sip_socket_source_init(s,func,data,fd,events,timeout_value_ms);
+	cain_sip_socket_source_init(s,func,data,sock,events,timeout_value_ms);
+	return s;
+}
+
+cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){
+	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t);
+	cain_sip_fd_source_init(s,func,data,fd,events,timeout_value_ms);
 	return s;
 }
 
@@ -151,7 +194,7 @@ int cain_sip_source_set_events(cain_sip_source_t* source, int event_mask) {
 }
 
 cain_sip_socket_t cain_sip_source_get_socket(const cain_sip_source_t* source) {
-	return source->fd;
+	return source->sock;
 }
 
 
@@ -230,12 +273,17 @@ static int match_source_id(const void *s, const void *pid){
 	return -1;
 }
 
-void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id){
+cain_sip_source_t *cain_sip_main_loop_find_source(cain_sip_main_loop_t *ml, unsigned long id){
 	cain_sip_list_t *elem=cain_sip_list_find_custom(ml->sources,match_source_id,(const void*)id);
 	if (elem!=NULL){
-		cain_sip_source_t *s=(cain_sip_source_t*)elem->data;
-		s->cancelled=TRUE;
+		return (cain_sip_source_t*)elem->data;
 	}
+	return NULL;
+}
+
+void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id){
+	cain_sip_source_t *s=cain_sip_main_loop_find_source(ml,id);
+	if (s) s->cancelled=TRUE;
 }
 
 void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
@@ -254,7 +302,7 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		next=elem->next;
 		s=(cain_sip_source_t*)elem->data;
 		if (!s->cancelled){
-			if (s->fd!=(cain_sip_socket_t)-1){
+			if (s->fd!=(cain_sip_fd_t)-1){
 				cain_sip_source_to_poll(s,pfd,i);
 				++i;
 			}
@@ -288,7 +336,7 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		s=(cain_sip_source_t*)elem->data;
 
 		if (!s->cancelled){
-			if (s->fd!=(cain_sip_socket_t)-1){
+			if (s->fd!=(cain_sip_fd_t)-1){
 				revents=cain_sip_source_get_revents(s,pfd);		
 			}
 			if (revents!=0 || (s->timeout>=0 && cur>=s->expire_ms)){
