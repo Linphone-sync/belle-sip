@@ -16,13 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "cain_sip_internal.h"
-#include "listeningpoint_internal.h"
 
 
 struct cain_sip_stream_listening_point{
 	cain_sip_listening_point_t base;
 };
-
 
 static void cain_sip_stream_listening_point_uninit(cain_sip_stream_listening_point_t *lp){
 }
@@ -55,3 +53,4 @@ cain_sip_listening_point_t * cain_sip_stream_listening_point_new(cain_sip_stack_
 	cain_sip_listening_point_init((cain_sip_listening_point_t*)lp,s,ipaddress,port);
 	return CAIN_SIP_LISTENING_POINT(lp);
 }
+

@@ -19,10 +19,19 @@
 #ifndef LISTENINGPOINT_INTERNAL_H_
 #define LISTENINGPOINT_INTERNAL_H_
 
-#include "cain_sip_internal.h"
 #ifdef HAVE_TLS
 #include "gnutls/openssl.h"
 #endif
+
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_listening_point_t,cain_sip_object_t)
+const char *transport;
+cain_sip_channel_t * (*create_channel)(cain_sip_listening_point_t *,const char *dest_ip, int port);
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+
+
+#define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
+
+
 /*
  Listening points: base, udp
 */
@@ -38,6 +47,7 @@ struct cain_sip_listening_point{
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s,  const char *address, int port);
 cain_sip_channel_t *_cain_sip_listening_point_get_channel(cain_sip_listening_point_t *lp,const char *peer_name, int peer_port, const struct addrinfo *addr);
 cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *ip,const char *dest, int port);
+void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
 int cain_sip_listening_point_get_well_known_port(const char *transport);
 cain_sip_channel_t *cain_sip_listening_point_get_channel(cain_sip_listening_point_t *lp,const char *peer_name, int peer_port);
 void cain_sip_listening_point_add_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
@@ -80,3 +90,4 @@ cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t* lp
 
 
 #endif /* LISTENINGPOINT_INTERNAL_H_ */
+

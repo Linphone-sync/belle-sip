@@ -126,12 +126,7 @@ static void cain_sip_source_destroy(cain_sip_source_t *obj){
 	if (obj->node.next || obj->node.prev){
 		cain_sip_fatal("Destroying source currently used in main loop !");
 	}
-#ifdef WIN32
-	if (obj->sock!=(cain_sip_socket_t)-1){
-		WSACloseEvent(obj->fd);
-		obj->fd=(WSAEVENT)-1;
-	}
-#endif
+	cain_sip_source_uninit(obj);
 }
 
 static void cain_sip_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){
@@ -143,6 +138,17 @@ static void cain_sip_source_init(cain_sip_source_t *s, cain_sip_source_func_t fu
 	s->timeout=timeout_value_ms;
 	s->data=data;
 	s->notify=func;
+}
+
+void cain_sip_source_uninit(cain_sip_source_t *obj){
+#ifdef WIN32
+	if (obj->sock!=(cain_sip_socket_t)-1){
+		WSACloseEvent(obj->fd);
+		obj->fd=(WSAEVENT)-1;
+	}
+#endif
+	obj->fd=(cain_sip_fd_t)-1;
+	obj->sock=(cain_sip_socket_t)-1;
 }
 
 void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t sock, unsigned int events, unsigned int timeout_value_ms){

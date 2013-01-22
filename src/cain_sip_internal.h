@@ -193,6 +193,8 @@ struct cain_sip_source{
 
 void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms);
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms);
+void cain_sip_source_uninit(cain_sip_source_t *s);
+
 #define cain_list_next(elem) ((elem)->next)
 
 /* include private headers */
@@ -434,16 +436,7 @@ void cain_sip_parameters_init(cain_sip_parameters_t *obj);
  * Listening points
 */
 
-
-CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_listening_point_t,cain_sip_object_t)
-const char *transport;
-cain_sip_channel_t * (*create_channel)(cain_sip_listening_point_t *,const char *dest_ip, int port);
-CAIN_SIP_DECLARE_CUSTOM_VPTR_END
-
-
-#define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
-void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
-
+#include "listeningpoint_internal.h"
 
 /*
  cain_sip_stack_t
