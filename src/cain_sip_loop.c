@@ -79,18 +79,22 @@ static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_po
 typedef HANDLE cain_sip_pollfd_t;
 
 static void cain_sip_source_to_poll(cain_sip_source_t *s, cain_sip_pollfd_t *pfd,int i){
-	int err;
-	long events=0;
-	pfd[i]=s->fd;
 	s->index=i;
+	pfd[i]=s->fd;
 	
-	if (s->events & CAIN_SIP_EVENT_READ)
-		events|=FD_READ;
-	if (s->events & CAIN_SIP_EVENT_WRITE)
-		events|=FD_WRITE;
-	
-	err=WSAEventSelect(s->sock,s->fd,events);
-	if (err!=0) cain_sip_error("WSAEventSelect() failed: %i",err);
+	/*special treatments for windows sockets*/
+	if (s->sock!=(cain_sip_socket_t)-1){
+		int err;
+		long events=0;
+		
+		if (s->events & CAIN_SIP_EVENT_READ)
+			events|=FD_READ;
+		if (s->events & CAIN_SIP_EVENT_WRITE)
+			events|=FD_WRITE;
+		
+		err=WSAEventSelect(s->sock,s->fd,events);
+		if (err!=0) cain_sip_error("WSAEventSelect() failed: %s",cain_sip_get_socket_error_string());
+	}
 }
 
 static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_pollfd_t *pfd){
@@ -98,15 +102,18 @@ static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_po
 	int err;
 	unsigned int ret=0;
 	
-	err=WSAEnumNetworkEvents(s->sock,NULL,&revents);
-	if (err!=0){
-		cain_sip_error("WSAEnumNetworkEvents() failed: %i",err);
-		return 0;
-	}
-	if (revents.lNetworkEvents & FD_READ)
-		ret|=CAIN_SIP_EVENT_READ;
-	if (revents.lNetworkEvents & FD_WRITE)
-		ret|=CAIN_SIP_EVENT_WRITE;
+	/*special treatments for windows sockets*/
+	if (s->sock!=(cain_sip_socket_t)-1){
+		err=WSAEnumNetworkEvents(s->sock,NULL,&revents);
+		if (err!=0){
+			cain_sip_error("WSAEnumNetworkEvents() failed: %s socket=%x",cain_sip_get_socket_error_string(),(unsigned int)s->sock);
+			return 0;
+		}
+		if (revents.lNetworkEvents & FD_READ)
+			ret|=CAIN_SIP_EVENT_READ;
+		if (revents.lNetworkEvents & FD_WRITE)
+			ret|=CAIN_SIP_EVENT_WRITE;
+	}else ret=CAIN_SIP_EVENT_READ;
 	return ret;
 }
 
@@ -140,6 +147,7 @@ static void cain_sip_source_init(cain_sip_source_t *s, cain_sip_source_func_t fu
 	s->timeout=timeout_value_ms;
 	s->data=data;
 	s->notify=func;
+	s->sock=(cain_sip_socket_t)-1;
 }
 
 void cain_sip_source_uninit(cain_sip_source_t *obj){
@@ -154,7 +162,6 @@ void cain_sip_source_uninit(cain_sip_source_t *obj){
 }
 
 void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t sock, unsigned int events, unsigned int timeout_value_ms){
-	s->sock=sock;
 #ifdef WIN32
 	/*on windows, the fd to poll is not the socket */
 	cain_sip_fd_t fd=(cain_sip_fd_t)-1;
@@ -167,6 +174,7 @@ void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t fu
 #else
 	cain_sip_source_init(s,func,data,sock,events,timeout_value_ms);
 #endif
+	s->sock=sock;
 }
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){

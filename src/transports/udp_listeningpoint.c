@@ -95,7 +95,7 @@ static cain_sip_socket_t create_udp_socket(const char *addr, int port){
  * If the channel does not exist, create it */
 static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 	int err;
-	unsigned char buf[1];
+	unsigned char buf[4096];
 	struct sockaddr_storage addr;
 	socklen_t addrlen=sizeof(addr);
 
@@ -103,7 +103,7 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 		cain_sip_message("udp_listening_point: data to read.");
 		err=recvfrom(lp->sock,(void*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
 		if (err==-1){
-			cain_sip_error("udp_listening_point: recvfrom() failed: %s",strerror(errno));
+			cain_sip_error("udp_listening_point: recvfrom() failed: %s",cain_sip_get_socket_error_string());
 		}else{
 			cain_sip_channel_t *chan;
 			struct addrinfo ai={0};
