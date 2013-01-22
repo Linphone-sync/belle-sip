@@ -16,11 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "listeningpoint_internal.h"
-
+#include "cain_sip_internal.h"
 
 
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s, const char *address, int port){
+	cain_sip_init_sockets();
 	lp->stack=s;
 	lp->listening_uri=cain_sip_uri_create(NULL,address);
 	cain_sip_object_ref(lp->listening_uri);
@@ -29,6 +29,7 @@ void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stac
 }
 
 static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
+	
 	cain_sip_listening_point_clean_channels(lp);
 	cain_sip_message("Listening [%p] on [%s://%s:%i] destroyed"	,lp
 															,cain_sip_uri_get_transport_param(CAIN_SIP_LISTENING_POINT(lp)->listening_uri)
@@ -36,7 +37,7 @@ static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
 															,cain_sip_uri_get_port(CAIN_SIP_LISTENING_POINT(lp)->listening_uri));
 	cain_sip_object_unref(lp->listening_uri);
 	lp->channel_listener=NULL; /*does not unref provider*/
-
+	cain_sip_uninit_sockets();
 }
 
 

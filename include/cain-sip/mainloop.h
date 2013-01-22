@@ -28,7 +28,7 @@
 typedef struct cain_sip_source cain_sip_source_t;
 
 int cain_sip_source_set_events(cain_sip_source_t* source, int event_mask);
-cain_sip_fd_t cain_sip_source_get_fd(const cain_sip_source_t* source);
+cain_sip_socket_t cain_sip_source_get_socket(const cain_sip_source_t* source);
 
 /**
  * Callback function prototype for main loop notifications.
@@ -76,9 +76,11 @@ void cain_sip_source_set_timeout(cain_sip_source_t *s, unsigned int value_ms);
 
 unsigned int cain_sip_source_get_timeout(const cain_sip_source_t *s);
 
-cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms);
+cain_sip_source_t * cain_sip_socket_source_new(cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms);
 
 unsigned long cain_sip_source_get_id(cain_sip_source_t *s);
+
+cain_sip_source_t *cain_sip_main_loop_find_source(cain_sip_main_loop_t *ml, unsigned long id);
 
 /**
  * Executes the main loop forever (or until cain_sip_main_loop_quit() is called)

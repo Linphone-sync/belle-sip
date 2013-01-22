@@ -16,12 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include "listeningpoint_internal.h"
 #include "cain_sip_internal.h"
-#include "cain-sip/mainloop.h"
 #include "stream_channel.h"
 #ifdef HAVE_GNUTLS
 #include <gnutls/gnutls.h>
@@ -55,7 +50,7 @@ static void tls_channel_close(cain_sip_tls_channel_t *obj){
 }
 
 static void tls_channel_uninit(cain_sip_tls_channel_t *obj){
-	cain_sip_fd_t sock = cain_sip_source_get_fd((cain_sip_source_t*)obj);
+	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
 	if (sock!=-1)
 		tls_channel_close(obj);
 }
@@ -74,12 +69,13 @@ static int tls_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buf
 
 static ssize_t tls_channel_pull_func(gnutls_transport_ptr_t obj, void* buff, size_t bufflen) {
 	int err=recv(
-		cain_sip_source_get_fd((cain_sip_source_t *)obj),buff,bufflen,0);
+		cain_sip_source_get_socket((cain_sip_source_t *)obj),buff,bufflen,0);
 	if (err==-1 && get_socket_error()!=EWOULDBLOCK){
 		cain_sip_error("tls_channel_pull_func: %s",cain_sip_get_socket_error_string());
 	}
 	return err;
 }
+
 static int tls_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	cain_sip_tls_channel_t* channel = (cain_sip_tls_channel_t*)obj;
 	int err;
@@ -94,8 +90,8 @@ static int tls_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 int tls_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 	int err= stream_channel_connect(obj,ai);
 	if (err==0){
-		cain_sip_fd_t sock=cain_sip_source_get_fd((cain_sip_source_t*)obj);
-		cain_sip_channel_set_fd(obj,sock,(cain_sip_source_func_t)tls_process_data);
+		cain_sip_socket_t sock=cain_sip_source_get_socket((cain_sip_source_t*)obj);
+		cain_sip_channel_set_socket(obj,sock,(cain_sip_source_func_t)tls_process_data);
 		return 0;
 	}
 	return -1;
@@ -133,7 +129,7 @@ static int tls_process_data(cain_sip_channel_t *obj,unsigned int revents){
 #ifdef HAVE_OPENSSL
 	char ssl_error_string[128];
 #endif /*HAVE_OPENSSL*/
-	cain_sip_fd_t fd=cain_sip_source_get_fd((cain_sip_source_t*)channel);
+	cain_sip_socket_t fd=cain_sip_source_get_socket((cain_sip_source_t*)channel);
 	if (obj->state == CAIN_SIP_CHANNEL_CONNECTING) {
 		if (!channel->socket_connected) {
 			if (finalize_stream_connection(fd,(struct sockaddr*)&channel->ss,&addrlen)) {

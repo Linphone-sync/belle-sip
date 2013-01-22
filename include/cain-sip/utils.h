@@ -24,6 +24,10 @@
 #include <errno.h>
 #include <unistd.h>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 /***************/
 /* logging api */
 /***************/
@@ -137,13 +141,20 @@ char * cain_sip_octets_to_text(const unsigned char *hash, size_t hash_len, char 
 
 char * cain_sip_create_tag(char *ret, size_t size);
 
-#if defined(WIN32) || defined(WIN32_WCE)
-typedef SOCKET cain_sip_fd_t;
+const char* cain_sip_version_to_string();
+
+#if defined(WIN32)
+
+#include <winsock2.h>
+
+typedef SOCKET cain_sip_socket_t;
+typedef HANDLE cain_sip_fd_t;
 #else
+typedef int cain_sip_socket_t;
 typedef int cain_sip_fd_t;
+
 #endif
 
-const char* cain_sip_version_to_string();
 CAIN_SIP_END_DECLS
 
 #endif

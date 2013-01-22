@@ -24,27 +24,10 @@
 #include <sys/types.h>
 #include <errno.h>
 
-
-#ifndef WIN32
-#include <stdint.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-
-#include <pthread.h>
-
-#else
-
-#include <ws2tcpip.h>
-#include <winsock2.h>
-#include <pthread.h>
-#endif
-
 /* include all public headers*/
 #include "cain-sip/cain-sip.h"
+
+#include "port.h"
 
 #ifdef PACKAGE
 #undef PACKAGE
@@ -72,42 +55,6 @@
 #include "config.h"
 #endif
 
-#if defined(WIN32) || defined(WIN32_WCE)
-
-static inline void close_socket(cain_sip_fd_t s){
-	closesocket(s);
-}
-
-static inline int get_socket_error(void){
-	return WSAGetLastError();
-}
-
-const char *getSocketErrorString();
-#define cain_sip_get_socket_error_string() getSocketErrorString()
-#define cain_sip_get_socket_error_string_from_code(code) getSocketErrorString()
-#define usleep(us) Sleep((us)/1000)
-static inline int inet_aton(const char *ip, struct in_addr *p){
-	*(long*)p=inet_addr(ip);
-	return 0;
-}
-
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#define EINPROGRESS WSAEINPROGRESS
-
-#else
-
-
-static inline void close_socket(cain_sip_fd_t s){
-	close(s);
-}
-
-static inline int get_socket_error(void){
-	return errno;
-}
-#define cain_sip_get_socket_error_string() strerror(errno)
-#define cain_sip_get_socket_error_string_from_code(code) strerror(code)
-
-#endif
 /*etc*/
 
 #define CAIN_SIP_INTERFACE_GET_METHODS(obj,interface) \
@@ -241,9 +188,12 @@ struct cain_sip_source{
 	cain_sip_source_remove_callback_t on_remove;
 	unsigned char cancelled;
 	unsigned char expired;
+	cain_sip_socket_t sock;
 };
 
+void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms);
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms);
+void cain_sip_source_uninit(cain_sip_source_t *s);
 
 #define cain_list_next(elem) ((elem)->next)
 
@@ -486,16 +436,7 @@ void cain_sip_parameters_init(cain_sip_parameters_t *obj);
  * Listening points
 */
 
-
-CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_listening_point_t,cain_sip_object_t)
-const char *transport;
-cain_sip_channel_t * (*create_channel)(cain_sip_listening_point_t *,const char *dest_ip, int port);
-CAIN_SIP_DECLARE_CUSTOM_VPTR_END
-
-
-#define CAIN_SIP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_listening_point_t)
-void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
-
+#include "listeningpoint_internal.h"
 
 /*
  cain_sip_stack_t

@@ -16,11 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "cain_sip_internal.h"
-#include "listeningpoint_internal.h"
 
 struct cain_sip_udp_listening_point{
 	cain_sip_listening_point_t base;
-	int sock;
+	cain_sip_socket_t sock;
 	cain_sip_source_t *source;
 };
 
@@ -58,11 +57,11 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_udp_listening_point_t)={
 };
 
 
-static int create_udp_socket(const char *addr, int port){
+static cain_sip_socket_t create_udp_socket(const char *addr, int port){
 	struct addrinfo hints={0};
 	struct addrinfo *res=NULL;
 	int err;
-	int sock;
+	cain_sip_socket_t sock;
 	char portnum[10];
 
 	snprintf(portnum,sizeof(portnum),"%i",port);
@@ -102,7 +101,7 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 
 	if (events & CAIN_SIP_EVENT_READ){
 		cain_sip_message("udp_listening_point: data to read.");
-		err=recvfrom(lp->sock,buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
+		err=recvfrom(lp->sock,(void*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
 		if (err==-1){
 			cain_sip_error("udp_listening_point: recvfrom() failed: %s",strerror(errno));
 		}else{
@@ -140,11 +139,12 @@ cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *
 	cain_sip_udp_listening_point_t *lp=cain_sip_object_new(cain_sip_udp_listening_point_t);
 	cain_sip_listening_point_init((cain_sip_listening_point_t*)lp,s,ipaddress,port);
 	lp->sock=create_udp_socket(ipaddress,port);
-	if (lp->sock==-1){
+	if (lp->sock==(cain_sip_socket_t)-1){
 		cain_sip_object_unref(lp);
 		return NULL;
 	}
-	lp->source=cain_sip_fd_source_new((cain_sip_source_func_t)on_udp_data,lp,lp->sock,CAIN_SIP_EVENT_READ,-1);
+	lp->source=cain_sip_socket_source_new((cain_sip_source_func_t)on_udp_data,lp,lp->sock,CAIN_SIP_EVENT_READ,-1);
 	cain_sip_main_loop_add_source(s->ml,lp->source);
 	return CAIN_SIP_LISTENING_POINT(lp);
 }
+

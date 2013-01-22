@@ -47,42 +47,44 @@ struct addrinfo * cain_sip_ip_address_to_addrinfo(const char *ipaddress, int por
 }
 
 
-void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
+static void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 	if (ctx->thread!=0){
-		if (!ctx->exited){
-			ctx->cancelled=1;
-			pthread_cancel(ctx->thread);
-		}
-		pthread_join(ctx->thread,NULL);
+		cain_sip_thread_join(ctx->thread,NULL);
 	}
 	if (ctx->name)
 		cain_sip_free(ctx->name);
 	if (ctx->ai){
 		freeaddrinfo(ctx->ai);
 	}
+#ifndef WIN32
 	close(ctx->ctlpipe[0]);
 	close(ctx->ctlpipe[1]);
+#endif
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_resolver_context_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t,cain_sip_resolver_context_destroy, NULL, NULL,FALSE);
 
 static int resolver_callback(cain_sip_resolver_context_t *ctx){
-	char tmp;
-	ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
-	ctx->ai=NULL;
-	if (read(ctx->source.fd,&tmp,1)!=1){
-		cain_sip_fatal("Unexpected read from resolver_callback");
+	cain_sip_message("resolver_callback() for %s called.",ctx->name);
+	if (!ctx->cancelled){
+		ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
+		ctx->ai=NULL;
 	}
+#ifndef WIN32
+	{
+		char tmp;
+		if (read(ctx->source.fd,&tmp,1)!=1){
+			cain_sip_fatal("Unexpected read from resolver_callback");
+		}
+	}
+#endif
+	/*by returning stop, we'll be removed from main loop and destroyed. */
 	return CAIN_SIP_STOP;
 }
 
 cain_sip_resolver_context_t *cain_sip_resolver_context_new(){
 	cain_sip_resolver_context_t *ctx=cain_sip_object_new(cain_sip_resolver_context_t);
-	if (pipe(ctx->ctlpipe)==-1){
-		cain_sip_fatal("pipe() failed: %s",strerror(errno));
-	}
-	cain_sip_fd_source_init(&ctx->source,(cain_sip_source_func_t)resolver_callback,ctx,ctx->ctlpipe[0],CAIN_SIP_EVENT_READ,-1);
 	return ctx;
 }
 
@@ -93,9 +95,12 @@ static void *cain_sip_resolver_thread(void *ptr){
 	char serv[10];
 	int err;
 
+	/*the thread owns a ref on the resolver context*/
+	cain_sip_object_ref(ctx);
+	
 	cain_sip_message("Resolver thread started.");
 	snprintf(serv,sizeof(serv),"%i",ctx->port);
-	hints.ai_family=(ctx->hints & CAIN_SIP_RESOLVER_HINT_IPV6) ? AF_INET6 : AF_INET;
+	hints.ai_family=ctx->family;
 	hints.ai_flags=AI_NUMERICSERV;
 	err=getaddrinfo(ctx->name,serv,&hints,&res);
 	if (err!=0){
@@ -106,14 +111,30 @@ static void *cain_sip_resolver_thread(void *ptr){
 		cain_sip_message("%s has address %s.",ctx->name,host);
 		ctx->ai=res;
 	}
-	
+#ifndef WIN32
 	if (write(ctx->ctlpipe[1],"q",1)==-1){
 		cain_sip_error("cain_sip_resolver_thread(): Fail to write on pipe.");
 	}
+#endif
+	cain_sip_object_unref(ctx);
 	return NULL;
 }
 
-unsigned long cain_sip_resolve(const char *name, int port, unsigned int hints, cain_sip_resolver_callback_t cb , void *data, cain_sip_main_loop_t *ml){
+static void cain_sip_resolver_context_start(cain_sip_resolver_context_t *ctx){
+	cain_sip_fd_t fd=(cain_sip_fd_t)-1;
+	cain_sip_thread_create(&ctx->thread,NULL,cain_sip_resolver_thread,ctx);
+#ifndef WIN32
+	if (pipe(ctx->ctlpipe)==-1){
+		cain_sip_fatal("pipe() failed: %s",strerror(errno));
+	}
+	fd=ctx->ctlpipe[0];
+#else
+	fd=(HANDLE)ctx->thread;
+#endif
+	cain_sip_fd_source_init(&ctx->source,(cain_sip_source_func_t)resolver_callback,ctx,fd,CAIN_SIP_EVENT_READ,-1);
+}
+
+unsigned long cain_sip_resolve(const char *name, int port, int family, cain_sip_resolver_callback_t cb , void *data, cain_sip_main_loop_t *ml){
 	struct addrinfo *res=cain_sip_ip_address_to_addrinfo (name, port);
 	if (res==NULL){
 		/*then perform asynchronous DNS query */
@@ -122,14 +143,27 @@ unsigned long cain_sip_resolve(const char *name, int port, unsigned int hints, c
 		ctx->cb=cb;
 		ctx->name=cain_sip_strdup(name);
 		ctx->port=port;
-		ctx->hints=hints;
+		if (family==0) family=AF_UNSPEC;
+		ctx->family=family;
+		
+		cain_sip_resolver_context_start(ctx);
+		/*the resolver context must never be removed manually from the main loop*/
 		cain_sip_main_loop_add_source(ml,(cain_sip_source_t*)ctx);
-		cain_sip_object_unref(ctx);
-		pthread_create(&ctx->thread,NULL,cain_sip_resolver_thread,ctx);
+		cain_sip_object_unref(ctx);/*the main loop and the thread have a ref on it*/
 		return ctx->source.id;
 	}else{
 		cb(data,name,res);
 		return 0;
+	}
+}
+
+void cain_sip_resolve_cancel(cain_sip_main_loop_t *ml, unsigned long id){
+	if (id!=0){
+		cain_sip_source_t *s=cain_sip_main_loop_find_source(ml,id);
+		if (s){
+			cain_sip_resolver_context_t *res=CAIN_SIP_RESOLVER_CONTEXT(s);
+			res->cancelled=1;
+		}
 	}
 }
 

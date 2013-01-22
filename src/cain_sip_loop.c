@@ -19,19 +19,117 @@
 #include "cain-sip/cain-sip.h"
 #include "cain_sip_internal.h"
 
+#include <malloc.h>
+
+#ifndef WIN32
 #include <unistd.h>
 #include <poll.h>
+typedef struct pollfd cain_sip_pollfd_t;
 
+static int cain_sip_poll(cain_sip_pollfd_t *pfd, int count, int duration){
+	int err;
+	err=poll(pfd,count,duration);
+	if (err==-1 && errno!=EINTR)
+		cain_sip_error("poll() error: %s",strerror(errno));
+	return err;
+}
+
+/*
+ Poll() based implementation of event loop.
+ */
+
+static int cain_sip_event_to_poll(unsigned int events){
+	int ret=0;
+	if (events & CAIN_SIP_EVENT_READ)
+		ret|=POLLIN;
+	if (events & CAIN_SIP_EVENT_WRITE)
+		ret|=POLLOUT;
+	if (events & CAIN_SIP_EVENT_ERROR)
+		ret|=POLLERR;
+	return ret;
+}
+
+static unsigned int cain_sip_poll_to_event(cain_sip_pollfd_t * pfd){
+	unsigned int ret=0;
+	short events=pfd->revents;
+	if (events & POLLIN)
+		ret|=CAIN_SIP_EVENT_READ;
+	if (events & POLLOUT)
+		ret|=CAIN_SIP_EVENT_WRITE;
+	if (events & POLLERR)
+		ret|=CAIN_SIP_EVENT_ERROR;
+	return ret;
+}
+
+static void cain_sip_source_to_poll(cain_sip_source_t *s, cain_sip_pollfd_t *pfd, int i){
+	pfd[i].fd=s->fd;
+	pfd[i].events=cain_sip_event_to_poll(s->events);
+	pfd[i].revents=0;
+	s->index=i;
+}
+
+static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_pollfd_t *pfd){
+	return cain_sip_poll_to_event(pfd[s->index]);
+}
+
+#else
+
+typedef HANDLE cain_sip_pollfd_t;
+
+static void cain_sip_source_to_poll(cain_sip_source_t *s, cain_sip_pollfd_t *pfd,int i){
+	int err;
+	long events=0;
+	pfd[i]=s->fd;
+	s->index=i;
+	
+	if (s->events & CAIN_SIP_EVENT_READ)
+		events|=FD_READ;
+	if (s->events & CAIN_SIP_EVENT_WRITE)
+		events|=FD_WRITE;
+	
+	err=WSAEventSelect(s->sock,s->fd,events);
+	if (err!=0) cain_sip_error("WSAEventSelect() failed: %i",err);
+}
+
+static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_pollfd_t *pfd){
+	WSANETWORKEVENTS revents={0};
+	int err;
+	unsigned int ret=0;
+	
+	err=WSAEnumNetworkEvents(s->sock,NULL,&revents);
+	if (err!=0){
+		cain_sip_error("WSAEnumNetworkEvents() failed: %i",err);
+		return 0;
+	}
+	if (revents.lNetworkEvents & FD_READ)
+		ret|=CAIN_SIP_EVENT_READ;
+	if (revents.lNetworkEvents & FD_WRITE)
+		ret|=CAIN_SIP_EVENT_WRITE;
+	return ret;
+}
+
+static int cain_sip_poll(cain_sip_pollfd_t *pfd, int count, int duration){
+	DWORD ret=WaitForMultipleObjectsEx(count,pfd,FALSE,duration,FALSE);
+	if (ret==WAIT_FAILED){
+		cain_sip_error("WaitForMultipleObjectsEx() failed.");
+		return -1;
+	}
+	if (ret==WAIT_TIMEOUT){
+		return 0;
+	}
+	return ret-WAIT_OBJECT_0;
+}
+
+#endif
 
 static void cain_sip_source_destroy(cain_sip_source_t *obj){
 	if (obj->node.next || obj->node.prev){
 		cain_sip_fatal("Destroying source currently used in main loop !");
 	}
+	cain_sip_source_uninit(obj);
 }
 
-
-
-void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
+static void cain_sip_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){
 	static unsigned long global_id=1;
 	s->node.data=s;
 	s->id=global_id++;
@@ -42,17 +140,54 @@ void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, 
 	s->notify=func;
 }
 
+void cain_sip_source_uninit(cain_sip_source_t *obj){
+#ifdef WIN32
+	if (obj->sock!=(cain_sip_socket_t)-1){
+		WSACloseEvent(obj->fd);
+		obj->fd=(WSAEVENT)-1;
+	}
+#endif
+	obj->fd=(cain_sip_fd_t)-1;
+	obj->sock=(cain_sip_socket_t)-1;
+}
+
+void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t sock, unsigned int events, unsigned int timeout_value_ms){
+	s->sock=sock;
+#ifdef WIN32
+	/*on windows, the fd to poll is not the socket */
+	cain_sip_fd_t fd=(cain_sip_fd_t)-1;
+	if (sock!=(cain_sip_socket_t)-1)
+		fd=WSACreateEvent();
+	else
+		fd=(WSAEVENT)-1;
+	cain_sip_source_init(s,func,data,fd,events,timeout_value_ms);
+	
+#else
+	cain_sip_source_init(s,func,data,sock,events,timeout_value_ms);
+#endif
+}
+
+void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){
+	cain_sip_source_init(s,func,data,fd,events,timeout_value_ms);
+}
+
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_source_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_source_t,cain_sip_object_t,cain_sip_source_destroy,NULL,NULL,FALSE);
 
-cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, int fd, unsigned int events, unsigned int timeout_value_ms){
+cain_sip_source_t * cain_sip_socket_source_new(cain_sip_source_func_t func, void *data, cain_sip_socket_t sock, unsigned int events, unsigned int timeout_value_ms){
+	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t);
+	cain_sip_socket_source_init(s,func,data,sock,events,timeout_value_ms);
+	return s;
+}
+
+cain_sip_source_t * cain_sip_fd_source_new(cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){
 	cain_sip_source_t *s=cain_sip_object_new(cain_sip_source_t);
 	cain_sip_fd_source_init(s,func,data,fd,events,timeout_value_ms);
 	return s;
 }
 
 cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
-	return cain_sip_fd_source_new(func,data,-1,0,timeout_value_ms);
+	return cain_sip_socket_source_new(func,data,(cain_sip_socket_t)-1,0,timeout_value_ms);
 }
 
 unsigned long cain_sip_source_get_id(cain_sip_source_t *s){
@@ -64,18 +199,16 @@ int cain_sip_source_set_events(cain_sip_source_t* source, int event_mask) {
 	return 0;
 }
 
-cain_sip_fd_t cain_sip_source_get_fd(const cain_sip_source_t* source) {
-	return source->fd;
+cain_sip_socket_t cain_sip_source_get_socket(const cain_sip_source_t* source) {
+	return source->sock;
 }
 
 
 struct cain_sip_main_loop{
 	cain_sip_object_t base;
 	cain_sip_list_t *sources;
-	cain_sip_source_t *control;
 	int nsources;
 	int run;
-	int control_fds[2];
 };
 
 void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source){
@@ -91,37 +224,17 @@ void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_
 
 
 static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
-	cain_sip_main_loop_remove_source(ml,ml->control);
 	while (ml->sources){
 		cain_sip_main_loop_remove_source(ml,(cain_sip_source_t*)ml->sources->data);
 	}
-	close(ml->control_fds[0]);
-	close(ml->control_fds[1]);
-	cain_sip_object_unref(ml->control);
 	cain_sip_object_delete_unowned();
 }
-
-static int main_loop_done(void *data, unsigned int events){
-	cain_sip_main_loop_t * m=(cain_sip_main_loop_t*)data;
-	char tmp;
-	if (read(m->control_fds[0],&tmp,sizeof(tmp))!=1){
-		cain_sip_error("Problem on control fd of main loop.");
-	}
-	return TRUE;
-}
-
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_main_loop_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_main_loop_t,cain_sip_object_t,cain_sip_main_loop_destroy,NULL,NULL,FALSE);
 
 cain_sip_main_loop_t *cain_sip_main_loop_new(void){
 	cain_sip_main_loop_t*m=cain_sip_object_new(cain_sip_main_loop_t);
-	if (pipe(m->control_fds)==-1){
-		cain_sip_fatal("Could not create control pipe.");
-	}
-	m->control=cain_sip_fd_source_new(main_loop_done,m,m->control_fds[0],CAIN_SIP_EVENT_READ,-1);
-	cain_sip_object_set_name((cain_sip_object_t*)m->control,"main loop control fd");
-	cain_sip_main_loop_add_source(m,m->control);
 	return m;
 }
 
@@ -166,42 +279,21 @@ static int match_source_id(const void *s, const void *pid){
 	return -1;
 }
 
-void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id){
+cain_sip_source_t *cain_sip_main_loop_find_source(cain_sip_main_loop_t *ml, unsigned long id){
 	cain_sip_list_t *elem=cain_sip_list_find_custom(ml->sources,match_source_id,(const void*)id);
 	if (elem!=NULL){
-		cain_sip_source_t *s=(cain_sip_source_t*)elem->data;
-		s->cancelled=TRUE;
+		return (cain_sip_source_t*)elem->data;
 	}
+	return NULL;
 }
 
-/*
- Poll() based implementation of event loop.
- */
-
-static int cain_sip_event_to_poll(unsigned int events){
-	int ret=0;
-	if (events & CAIN_SIP_EVENT_READ)
-		ret|=POLLIN;
-	if (events & CAIN_SIP_EVENT_WRITE)
-		ret|=POLLOUT;
-	if (events & CAIN_SIP_EVENT_ERROR)
-		ret|=POLLERR;
-	return ret;
-}
-
-static unsigned int cain_sip_poll_to_event(short events){
-	unsigned int ret=0;
-	if (events & POLLIN)
-		ret|=CAIN_SIP_EVENT_READ;
-	if (events & POLLOUT)
-		ret|=CAIN_SIP_EVENT_WRITE;
-	if (events & POLLERR)
-		ret|=CAIN_SIP_EVENT_ERROR;
-	return ret;
+void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id){
+	cain_sip_source_t *s=cain_sip_main_loop_find_source(ml,id);
+	if (s) s->cancelled=TRUE;
 }
 
 void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
-	struct pollfd *pfd=(struct pollfd*)alloca(ml->nsources*sizeof(struct pollfd));
+	cain_sip_pollfd_t *pfd=(cain_sip_pollfd_t*)alloca(ml->nsources*sizeof(cain_sip_pollfd_t));
 	int i=0;
 	cain_sip_source_t *s;
 	cain_sip_list_t *elem,*next;
@@ -216,11 +308,8 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		next=elem->next;
 		s=(cain_sip_source_t*)elem->data;
 		if (!s->cancelled){
-			if (s->fd!=-1){
-				pfd[i].fd=s->fd;
-				pfd[i].events=cain_sip_event_to_poll (s->events);
-				pfd[i].revents=0;
-				s->index=i;
+			if (s->fd!=(cain_sip_fd_t)-1){
+				cain_sip_source_to_poll(s,pfd,i);
 				++i;
 			}
 			if (s->timeout>=0){
@@ -241,9 +330,8 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 			duration=0;
 	}
 	/* do the poll */
-	ret=poll(pfd,i,duration);
-	if (ret==-1 && errno!=EINTR){
-		cain_sip_error("poll() error: %s",strerror(errno));
+	ret=cain_sip_poll(pfd,i,duration);
+	if (ret==-1){
 		return;
 	}
 	cur=cain_sip_time_ms();
@@ -254,10 +342,8 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		s=(cain_sip_source_t*)elem->data;
 
 		if (!s->cancelled){
-			if (s->fd!=-1){
-				if (pfd[s->index].revents!=0){
-					revents=cain_sip_poll_to_event(pfd[s->index].revents);		
-				}
+			if (s->fd!=(cain_sip_fd_t)-1){
+				revents=cain_sip_source_get_revents(s,pfd);		
 			}
 			if (revents!=0 || (s->timeout>=0 && cur>=s->expire_ms)){
 				char *objdesc=cain_sip_object_to_string((cain_sip_object_t*)s);
@@ -289,9 +375,6 @@ void cain_sip_main_loop_run(cain_sip_main_loop_t *ml){
 
 int cain_sip_main_loop_quit(cain_sip_main_loop_t *ml){
 	ml->run=0;
-	//if (write(ml->control_fds[1],"a",1)==-1){
-	//	cain_sip_error("Fail to write to main loop control fd.");
-	//}
 	return CAIN_SIP_STOP;
 }
 
@@ -299,5 +382,5 @@ void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){
 	unsigned long timer_id = cain_sip_main_loop_add_timeout(ml,(cain_sip_source_func_t)cain_sip_main_loop_quit,ml,milliseconds);
 	cain_sip_main_loop_run(ml);
 	cain_sip_main_loop_cancel_source(ml,timer_id);
-
 }
+
