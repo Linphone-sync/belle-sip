@@ -46,6 +46,8 @@
  * Socket abstraction layer
  */
 
+int cain_sip_init_sockets(void);
+void cain_sip_uninit_sockets(void);
 int cain_sip_socket_set_nonblocking (cain_sip_socket_t sock);
  
 #if defined(WIN32)
@@ -75,8 +77,6 @@ static inline int inet_aton(const char *ip, struct in_addr *p){
 
 #else
 
-#define cain_sip_init_sockets() 0
-#define cain_sip_uninit_sockets()
 static inline void close_socket(cain_sip_socket_t s){
 	close(s);
 }
