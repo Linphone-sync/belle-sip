@@ -113,7 +113,12 @@ static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_po
 			ret|=CAIN_SIP_EVENT_READ;
 		if (revents.lNetworkEvents & FD_WRITE)
 			ret|=CAIN_SIP_EVENT_WRITE;
-	}else ret=CAIN_SIP_EVENT_READ;
+	}else{
+		if (WaitForSingleObjectEx(s->fd,0,FALSE)==WAIT_OBJECT_0){
+			ret=CAIN_SIP_EVENT_READ;
+			ResetEvent(s->fd);
+		}
+	}
 	return ret;
 }
 

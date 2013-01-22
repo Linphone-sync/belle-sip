@@ -49,7 +49,7 @@ struct cain_sip_resolver_context{
 	HANDLE ctlevent;
 #endif
 	uint8_t cancelled;
-	uint8_t exited;
+	uint8_t done;
 };
 
 struct addrinfo * cain_sip_ip_address_to_addrinfo(const char *ipaddress, int port);

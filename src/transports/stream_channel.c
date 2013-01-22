@@ -80,13 +80,14 @@ int stream_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 	cain_sip_socket_set_nonblocking(sock);
 	cain_sip_channel_set_socket(obj,sock,(cain_sip_source_func_t)stream_channel_process_data);
 	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
-	cain_sip_main_loop_add_source(obj->stack->ml,(cain_sip_source_t*)obj);
+	
 	err = connect(sock,ai->ai_addr,ai->ai_addrlen);
-	if (err != 0 && get_socket_error()!=EINPROGRESS) {
+	if (err != 0 && get_socket_error()!=EINPROGRESS && get_socket_error()!=EWOULDBLOCK) {
 		cain_sip_error("stream connect failed %s",cain_sip_get_socket_error_string());
 		close_socket(sock);
 		return -1;
 	}
+	cain_sip_main_loop_add_source(obj->stack->ml,(cain_sip_source_t*)obj);
 
 	return 0;
 }
