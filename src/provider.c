@@ -140,7 +140,7 @@ static void cain_sip_provider_dispatch_message(cain_sip_provider_t *prov, cain_s
 /*
  * takes example on 16.11 of RFC3261
  */
-static void compute_branch(cain_sip_message_t *msg, char *branchid, size_t branchid_size){
+static void compute_hash_from_invariants(cain_sip_message_t *msg, char *branchid, size_t branchid_size, const char *initial){
 	md5_state_t ctx;
 	unsigned int cseq=cain_sip_header_cseq_get_seq_number(cain_sip_message_get_header_by_type(msg,cain_sip_header_cseq_t));
 	char tmp[256]={0};
@@ -148,20 +148,46 @@ static void compute_branch(cain_sip_message_t *msg, char *branchid, size_t branc
 	const char*callid=cain_sip_header_call_id_get_call_id(cain_sip_message_get_header_by_type(msg,cain_sip_header_call_id_t));
 	const char *from_tag=cain_sip_header_from_get_tag(cain_sip_message_get_header_by_type(msg,cain_sip_header_from_t));
 	const char *to_tag=cain_sip_header_to_get_tag(cain_sip_message_get_header_by_type(msg,cain_sip_header_to_t));
-	cain_sip_header_via_t *prev_via=(cain_sip_header_via_t*)cain_sip_message_get_headers(msg,"via")->next;
+	cain_sip_uri_t *requri=NULL;
+	cain_sip_header_via_t *via=NULL;
+	cain_sip_header_via_t *prev_via=NULL;
+	const cain_sip_list_t *vias=cain_sip_message_get_headers(msg,"via");
+	int is_request=cain_sip_message_is_request(msg);
+	
+	if (vias){
+		via=(cain_sip_header_via_t*)vias->data;
+		if (vias->next){
+			prev_via=(cain_sip_header_via_t*)vias->next->data;
+		}
+	}
+	
+	if (is_request){
+		requri=cain_sip_request_get_uri(CAIN_SIP_REQUEST(msg));
+	}
 	
 	md5_init(&ctx);
-	cain_sip_object_marshal((cain_sip_object_t*)cain_sip_request_get_uri(CAIN_SIP_REQUEST(msg)),tmp,0,sizeof(tmp)-1);
-	md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+	if (initial)
+		md5_append(&ctx,(uint8_t*)initial,strlen(initial));
+	if (requri){
+		cain_sip_object_marshal((cain_sip_object_t*)requri,tmp,0,sizeof(tmp)-1);
+		md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+	}
 	if (from_tag)
 		md5_append(&ctx,(uint8_t*)from_tag,strlen(from_tag));
 	if (to_tag)
 		md5_append(&ctx,(uint8_t*)to_tag,strlen(to_tag));
 	md5_append(&ctx,(uint8_t*)callid,strlen(callid));
 	md5_append(&ctx,(uint8_t*)&cseq,sizeof(cseq));
-	if (prev_via){
-		cain_sip_object_marshal((cain_sip_object_t*)prev_via,tmp,0,sizeof(tmp)-1);
-		md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+	if (is_request){
+		if (prev_via){
+			cain_sip_object_marshal((cain_sip_object_t*)prev_via,tmp,0,sizeof(tmp)-1);
+			md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+		}
+	}else{
+		if (via){
+			cain_sip_object_marshal((cain_sip_object_t*)via,tmp,0,sizeof(tmp)-1);
+			md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+		}
 	}
 	md5_finish(&ctx,digest);
 	cain_sip_octets_to_text(digest,sizeof(digest),branchid,branchid_size);
@@ -184,7 +210,7 @@ static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, c
 		/*branch id should not be set random here (stateless forwarding): but rather a hash of message invariants*/
 		char branchid[24];
 		char token[CAIN_SIP_BRANCH_ID_LENGTH];
-		compute_branch(msg,token,sizeof(token));
+		compute_hash_from_invariants(msg,token,sizeof(token),NULL);
 		snprintf(branchid,sizeof(branchid)-1,CAIN_SIP_BRANCH_MAGIC_COOKIE ".%s",token);
 		cain_sip_header_via_set_branch(via,branchid);
 		cain_sip_message("Computing branch id %s for message sent statelessly", branchid);
@@ -483,7 +509,9 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 	cain_sip_header_to_t *to=(cain_sip_header_to_t*)cain_sip_message_get_header((cain_sip_message_t*)resp,"to");
 
 	if (cain_sip_response_get_status_code(resp)!=100 && cain_sip_header_to_get_tag(to)==NULL){
-		cain_sip_fatal("Generation of unique to tags for stateless responses is not implemented.");
+		char token[CAIN_SIP_TAG_LENGTH];
+		compute_hash_from_invariants((cain_sip_message_t*)resp,token,sizeof(token),"tag");
+		cain_sip_header_to_set_tag(to,token);
 	}
 	cain_sip_response_get_return_hop(resp,&hop);
 	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
