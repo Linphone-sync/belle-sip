@@ -167,6 +167,7 @@ cain_sip_request_t* try_register_user_at_domain(cain_sip_stack_t * stack
 					,int use_transaction
 					,const char* username
 					,const char* domain
+					,const char* outband
 					,int success_expected) {
 	cain_sip_request_t *req,*copy;
 	char identity[256];
@@ -199,13 +200,13 @@ cain_sip_request_t* try_register_user_at_domain(cain_sip_stack_t * stack
 	cain_sip_provider_add_sip_listener(prov,l=CAIN_SIP_LISTENER(listener));
 	if (use_transaction){
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
-		cain_sip_client_transaction_send_request(t);
+		cain_sip_client_transaction_send_request_to(t,outband?cain_sip_uri_parse(outband):NULL);
 	}else cain_sip_provider_send_request(prov,req);
 	int i;
 	for(i=0;!is_register_ok && i<2 ;i++)
 		cain_sip_stack_sleep(stack,5000);
 	CU_ASSERT_EQUAL(is_register_ok,success_expected);
-	CU_ASSERT_EQUAL(using_transaction,use_transaction);
+	if (success_expected) CU_ASSERT_EQUAL(using_transaction,use_transaction);
 
 	cain_sip_provider_remove_sip_listener(prov,l);
 
@@ -216,27 +217,31 @@ cain_sip_request_t* register_user_at_domain(cain_sip_stack_t * stack
 					,const char *transport
 					,int use_transaction
 					,const char* username
-					,const char* domain) {
-	return try_register_user_at_domain(stack,prov,transport,use_transaction,username,domain,1);
+					,const char* domain
+					,const char* outband) {
+	return try_register_user_at_domain(stack,prov,transport,use_transaction,username,domain,outband,1);
 
 }
 cain_sip_request_t* register_user(cain_sip_stack_t * stack
 					,cain_sip_provider_t *prov
 					,const char *transport
 					,int use_transaction
-					,const char* username) {
-	return register_user_at_domain(stack,prov,transport,use_transaction,username,test_domain);
+					,const char* username
+					,const char* outband) {
+	return register_user_at_domain(stack,prov,transport,use_transaction,username,test_domain,outband);
 }
 
-static void register_test(const char *transport, int use_transaction) {
+static void register_with_outband(const char *transport, int use_transaction,const char* outband ) {
 	cain_sip_request_t *req;
-	req=register_user(stack, prov, transport,use_transaction,"tester");
+	req=register_user(stack, prov, transport,use_transaction,"tester",outband);
 	if (req) {
 		unregister_user(stack,prov,req,use_transaction);
 		cain_sip_object_unref(req);
 	}
 }
-
+static void register_test(const char *transport, int use_transaction) {
+	register_with_outband(transport,use_transaction,NULL);
+}
 static void stateless_register_udp(void){
 	register_test(NULL,0);
 }
@@ -253,6 +258,10 @@ static void stateful_register_udp(void){
 	register_test(NULL,1);
 }
 
+static void stateful_register_udp_with_outband_proxy(void){
+	register_with_outband("udp",1,test_domain);
+}
+
 static void stateful_register_udp_delayed(void){
 	cain_sip_stack_set_tx_delay(stack,3000);
 	register_test(NULL,1);
@@ -261,8 +270,7 @@ static void stateful_register_udp_delayed(void){
 
 static void stateful_register_udp_with_send_error(void){
 	cain_sip_stack_set_send_error(stack,-1);
-	cain_sip_request_t *req;
-	try_register_user(stack, prov, NULL,1,"tester",0);
+	try_register_user_at_domain(stack, prov, NULL,1,"tester",test_domain,NULL,0);
 	cain_sip_stack_set_send_error(stack,0);
 }
 
@@ -322,7 +330,7 @@ static void test_register_authenticate() {
 	cain_sip_request_t *reg;
 	number_of_challenge=0;
 	authorized_request=NULL;
-	reg=register_user_at_domain(stack, prov, "udp",1,"cainsip",auth_domain);
+	reg=register_user_at_domain(stack, prov, "udp",1,"cainsip",auth_domain,NULL);
 	if (authorized_request) {
 		unregister_user(stack,prov,authorized_request,1);
 		cain_sip_object_unref(authorized_request);
@@ -361,6 +369,9 @@ int cain_sip_register_test_suite(){
 			return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "stateful_register_udp_with_send_error", stateful_register_udp_with_send_error)) {
+			return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "stateful_register_udp_with_outband_proxy", stateful_register_udp_with_outband_proxy)) {
 			return CU_get_error();
 	}
 

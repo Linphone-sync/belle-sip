@@ -46,5 +46,16 @@ int cain_sip_refresher_start(cain_sip_refresher_t* refresher);
  */
 void cain_sip_refresher_stop(cain_sip_refresher_t* refresher);
 
+/**
+ * Manually initiate a new transaction .
+ * @param refresher object
+ * @param expires -1 means value extrated from the transaction
+ * @return 0 if succeed
+ */
+int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires);
+/**
+ * returns current expires value;
+ */
+int cain_sip_refresher_get_expires(const cain_sip_refresher_t* refresher);
 
 #endif /* REFRESHER_HELPER_H_ */

@@ -47,6 +47,8 @@ typedef struct endpoint {
 	unsigned char expire_in_contact;
 	char nonce[32];
 	unsigned int nonce_count;
+	const char* received;
+	int rport;
 } endpoint_t;
 
 static unsigned int  wait_for(cain_sip_stack_t*s1, cain_sip_stack_t*s2,int* counter,int value,int timeout) {
@@ -104,6 +106,7 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 	cain_sip_header_contact_t* contact;
 	cain_sip_header_expires_t* expires;
 	cain_sip_header_authorization_t* authorization;
+	cain_sip_header_via_t* via;
 	const char* raw_authenticate_digest = "WWW-Authenticate: Digest "
 			"algorithm=MD5, realm=\"" SIPDOMAIN "\", opaque=\"1bc7f9097684320\"";
 
@@ -184,6 +187,10 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 		resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),401);
 		if (www_authenticate)
 			cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(www_authenticate));
+	}
+	if (endpoint->received) {
+		via=cain_sip_message_get_header_by_type(req,cain_sip_header_via_t);
+		cain_sip_header_via_set_received(via,endpoint->received);
 	}
 	cain_sip_server_transaction_send_response(server_transaction,resp);
 }
@@ -319,6 +326,9 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	gettimeofday(&end, NULL);
 	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec>=3);
 	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec<5);
+	/*unregister*/
+	cain_sip_refresher_refresh(refresher,0);
+	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,4,1000));
 	cain_sip_refresher_stop(refresher);
 	cain_sip_object_unref(refresher);
 	destroy_endpoint(client);

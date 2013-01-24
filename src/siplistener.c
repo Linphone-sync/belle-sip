@@ -46,6 +46,22 @@ cain_sip_dialog_t* cain_sip_dialog_terminated_get_dialog(const cain_sip_dialog_t
 	return event->dialog;
 }
 
+const char* cain_sip_io_error_event_get_host(const cain_sip_io_error_event_t* event) {
+	return event->host;
+}
+
+const char* cain_sip_io_error_event_get_transport(const cain_sip_io_error_event_t* event) {
+	return event->transport;
+}
+
+unsigned int cain_sip_io_error_event_port(const cain_sip_io_error_event_t* event) {
+	return event->port;
+}
+
+cain_sip_object_t* cain_sip_io_error_event_get_source(const cain_sip_io_error_event_t* event) {
+	return event->source;
+}
+
 typedef struct cain_sip_callbacks cain_sip_callbacks_t;
 
 struct cain_sip_callbacks{

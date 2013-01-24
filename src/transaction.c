@@ -241,7 +241,11 @@ cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_t
 
 
 int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
-	cain_sip_hop_t hop={0};
+	return cain_sip_client_transaction_send_request_to(t,NULL);
+
+}
+int cain_sip_client_transaction_send_request_to(cain_sip_client_transaction_t *t,cain_sip_uri_t* outbound_proxy) {
+	cain_sip_hop_t* hop;
 	cain_sip_channel_t *chan;
 	cain_sip_provider_t *prov=t->base.provider;
 	
@@ -250,11 +254,17 @@ int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 		return -1;
 	}
 	/*store preset route for future use by refresher*/
-	t->preset_route=CAIN_SIP_HEADER_ROUTE(cain_sip_message_get_header(CAIN_SIP_MESSAGE(t->base.request),"route"));
+	t->preset_route=outbound_proxy;
 	if (t->preset_route) cain_sip_object_ref(t->preset_route);
+	if (outbound_proxy) {
+		hop=cain_sip_hop_create(	cain_sip_uri_get_transport_param(outbound_proxy)
+									,cain_sip_uri_get_host(outbound_proxy)
+									,cain_sip_uri_get_listening_port(outbound_proxy));
+	} else {
+		hop = cain_sip_stack_create_next_hop(prov->stack,t->base.request);
+	}
 
-	cain_sip_stack_get_next_hop(prov->stack,t->base.request,&hop);
-	chan=cain_sip_provider_get_channel(prov,hop.host, hop.port, hop.transport);
+	chan=cain_sip_provider_get_channel(prov,hop->host, hop->port, hop->transport);
 	if (chan){
 		cain_sip_provider_add_client_transaction(t->base.provider,t);
 		cain_sip_object_ref(chan);
@@ -269,7 +279,7 @@ int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t){
 			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
 		}
 	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
-	cain_sip_hop_free(&hop);
+	cain_sip_hop_free(hop);
 	return 0;
 }
 
@@ -329,10 +339,19 @@ static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
 
 static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
 	cain_sip_client_transaction_t *t=(cain_sip_client_transaction_t*)l;
+	cain_sip_io_error_event_t ev;
 	cain_sip_message("transaction on_channel_state_changed");
 	switch(state){
 		case CAIN_SIP_CHANNEL_READY:
 			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
+		break;
+		case CAIN_SIP_CHANNEL_DISCONNECTED:
+		case CAIN_SIP_CHANNEL_ERROR:
+			ev.transport=cain_sip_channel_get_transport_name(chan);
+			ev.source=CAIN_SIP_OBJECT(t);
+			ev.port=chan->peer_port;
+			ev.host=chan->peer_name;
+			CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*)t),process_io_error,&ev);
 		break;
 		default:
 			/*ignored*/
@@ -390,8 +409,9 @@ cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cai
 	cain_sip_request_t* req=CAIN_SIP_REQUEST(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(t)))));
 	cain_sip_header_cseq_t* cseq=cain_sip_message_get_header_by_type(req,cain_sip_header_cseq_t);
 	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
-	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)) != CAIN_SIP_TRANSACTION_COMPLETED) {
-		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED"
+	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)) != CAIN_SIP_TRANSACTION_COMPLETED
+		&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)) != CAIN_SIP_TRANSACTION_TERMINATED) {
+		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED|CAIN_SIP_TRANSACTION_TERMINATED"
 					,cain_sip_transaction_state_to_string(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)))
 					,t);
 		return NULL;
@@ -399,10 +419,7 @@ cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cai
 	/*remove auth headers*/
 	cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_AUTHORIZATION);
 	cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_PROXY_AUTHORIZATION);
-	/*add preset route if any*/
-	if (t->preset_route) {
-		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(t->preset_route));
-	}
+
 	/*put auth header*/
 	cain_sip_provider_add_authorization(t->base.provider,req,t->base.last_response,NULL);
 	return req;

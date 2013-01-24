@@ -71,6 +71,34 @@ void cain_sip_auth_event_set_passwd(cain_sip_auth_event_t* event, const char* va
 const char* cain_sip_auth_event_get_ha1(const cain_sip_auth_event_t* event);
 void cain_sip_auth_event_set_ha1(cain_sip_auth_event_t* event, const char* value);
 
+/*Io error event*/
+/*
+ * Give access to the remote host
+ * @param event object
+ * @return host value the socket is pointing to
+ * */
+const char* cain_sip_io_error_event_get_host(const cain_sip_io_error_event_t* event);
+/*
+ * Give access to the used transport
+ * @param event object
+ * @return host value the socket is pointing to
+ * */
+const char* cain_sip_io_error_event_get_transport(const cain_sip_io_error_event_t* event);
+/*
+ * Give access to the remote port
+ * @param event object
+ * @return port value the socket is pointing to
+ * */
+unsigned int cain_sip_io_error_event_port(const cain_sip_io_error_event_t* event);
+
+/*
+ * Get access to the object involved in this error, can be either cain_sip_dialog_t or cain_sip_transaction_t or cain_sip_provider_t
+ * @param event
+ * @return cain_sip_object_t source, use cain_sip_object_is_instance_of to check returns type
+ * */
+
+cain_sip_object_t* cain_sip_io_error_event_get_source(const cain_sip_io_error_event_t* event);
+
 
 struct cain_sip_listener_callbacks{
 	void (*process_dialog_terminated)(void *user_ctx, const cain_sip_dialog_terminated_event_t *event);

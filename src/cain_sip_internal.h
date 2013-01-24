@@ -450,7 +450,9 @@ struct cain_sip_stack{
 	int send_error; /* used to simulate network error. if <0, channel_send will return this value*/
 };
 
-void cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req, cain_sip_hop_t *hop);
+cain_sip_hop_t* cain_sip_hop_create(const char* transport, const char* host,int port);
+
+cain_sip_hop_t * cain_sip_stack_create_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req);
 
 const cain_sip_timer_config_t *cain_sip_stack_get_timer_config(const cain_sip_stack_t *stack);
 
@@ -484,6 +486,7 @@ void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *
 void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
 void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_t *chan);
 void cain_sip_provider_add_internal_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
+void cain_sip_provider_remove_internal_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
 typedef struct listener_ctx{
 	cain_sip_listener_t *listener;
@@ -547,7 +550,7 @@ void cain_sip_transaction_set_dialog(cain_sip_transaction_t *t, cain_sip_dialog_
 
 struct cain_sip_client_transaction{
 	cain_sip_transaction_t base;
-	cain_sip_header_route_t* preset_route; /*use to store first remove route header, will be helpful for refresher*/
+	cain_sip_uri_t* preset_route; /*use to store outbound proxy, will be helpful for refresher*/
 };
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_client_transaction_t,cain_sip_transaction_t)
@@ -747,10 +750,10 @@ struct cain_sip_dialog_terminated_event{
 };
 
 struct cain_sip_io_error_event{
-	cain_sip_provider_t *source;
+	cain_sip_object_t *source;  /*the object impacted by this error*/
 	const char *transport;
 	const char *host;
-	int port;
+	unsigned int port;
 };
 
 struct cain_sip_request_event{

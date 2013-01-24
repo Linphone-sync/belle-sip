@@ -68,13 +68,14 @@ static void cain_sip_provider_uninit(cain_sip_provider_t *p){
 
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
 	cain_sip_io_error_event_t ev;
+	cain_sip_provider_t* prov=CAIN_SIP_PROVIDER(obj);
 	if (state == CAIN_SIP_CHANNEL_ERROR || state == CAIN_SIP_CHANNEL_DISCONNECTED) {
-		cain_sip_provider_release_channel(ev.source,chan);
 		ev.transport=cain_sip_channel_get_transport_name(chan);
-		ev.source=(cain_sip_provider_t*)obj;
+		ev.source=CAIN_SIP_OBJECT(obj); /*FIXME, must be either trans, dialog or provider, but  not only prov */
 		ev.port=chan->peer_port;
 		ev.host=chan->peer_name;
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(ev.source->listeners,process_io_error,&ev);
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_io_error,&ev);
+		cain_sip_provider_release_channel(prov,chan);
 	}
 }
 
@@ -493,14 +494,14 @@ void cain_sip_provider_clean_channels(cain_sip_provider_t *p){
 }
 
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
-	cain_sip_hop_t hop={0};
+	cain_sip_hop_t* hop;
 	cain_sip_channel_t *chan;
-	cain_sip_stack_get_next_hop(p->stack,req,&hop);
-	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
+	hop=cain_sip_stack_create_next_hop(p->stack,req);
+	chan=cain_sip_provider_get_channel(p,hop->host, hop->port, hop->transport);
 	if (chan) {
 		cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(req));
 	}
-	cain_sip_hop_free(&hop);
+	cain_sip_hop_free(hop);
 }
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
