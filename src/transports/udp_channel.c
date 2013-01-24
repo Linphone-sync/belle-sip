@@ -32,7 +32,7 @@ typedef struct cain_sip_udp_channel cain_sip_udp_channel_t;
 
 static void udp_channel_uninit(cain_sip_udp_channel_t *obj){
 	if (obj->sock!=-1)
-		close(obj->sock);
+		close_socket(obj->sock);
 }
 
 static int udp_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
