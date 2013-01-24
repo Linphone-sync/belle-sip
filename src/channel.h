@@ -25,7 +25,7 @@
 
 #endif
 
-static const int cain_sip_network_buffer_size=65535;
+#define cain_sip_network_buffer_size 65535
 
 typedef enum cain_sip_channel_state{
 	CAIN_SIP_CHANNEL_INIT,

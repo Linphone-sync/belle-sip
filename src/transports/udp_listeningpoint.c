@@ -25,7 +25,7 @@ struct cain_sip_udp_listening_point{
 
 
 static void cain_sip_udp_listening_point_uninit(cain_sip_udp_listening_point_t *lp){
-	if (lp->sock!=-1) close(lp->sock);
+	if (lp->sock!=-1) close_socket(lp->sock);
 	if (lp->source) {
 		cain_sip_main_loop_remove_source(lp->base.stack->ml,lp->source);
 		cain_sip_object_unref(lp->source);
@@ -83,7 +83,7 @@ static cain_sip_socket_t create_udp_socket(const char *addr, int port){
 	err=bind(sock,res->ai_addr,res->ai_addrlen);
 	if (err==-1){
 		cain_sip_error("udp bind() failed for %s port %i: %s",addr,port,strerror(errno));
-		close(sock);
+		close_socket(sock);
 		freeaddrinfo(res);
 		return -1;
 	}
@@ -101,7 +101,7 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 
 	if (events & CAIN_SIP_EVENT_READ){
 		cain_sip_message("udp_listening_point: data to read.");
-		err=recvfrom(lp->sock,(void*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
+		err=recvfrom(lp->sock,(char*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
 		if (err==-1){
 			cain_sip_error("udp_listening_point: recvfrom() failed: %s",cain_sip_get_socket_error_string());
 		}else{
