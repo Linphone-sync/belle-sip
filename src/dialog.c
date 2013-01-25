@@ -448,13 +448,15 @@ cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *obj, unsigned 
 }
 
 cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const char *method){
+	cain_sip_request_t *req;
+
 	if (obj->state != CAIN_SIP_DIALOG_CONFIRMED && obj->state != CAIN_SIP_DIALOG_EARLY) {
 		cain_sip_error("Cannot create method [%s] from dialog [%p] in state [%s]",method,obj,cain_sip_dialog_state_to_string(obj->state));
 		return NULL;
 	}
 	if (obj->local_cseq==0) obj->local_cseq=110;
 	if (strcmp(method,"ACK")!=0) obj->local_cseq++;
-	cain_sip_request_t *req=cain_sip_request_create(cain_sip_header_address_get_uri(obj->remote_target),
+	req=cain_sip_request_create(cain_sip_header_address_get_uri(obj->remote_target),
 	                                                method,
 	                                                obj->call_id,
 	                                                cain_sip_header_cseq_create(obj->local_cseq,method),

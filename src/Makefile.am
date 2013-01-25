@@ -69,7 +69,7 @@ libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS) $(TLS_CFLAGS)
 
 libcainsip_la_LIBADD=libcainsip_generated.la $(ANTLR_LIBS) $(TLS_LIBS)
 
-libcainsip_la_LDFLAGS=-no-undefined
+libcainsip_la_LDFLAGS=-no-undefined $(LDFLAGS)
 
 
 AM_CPPFLAGS=-I$(top_srcdir)/include

@@ -53,6 +53,12 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION "0.0.1"
+#endif
+
 #endif
 
 /*etc*/
@@ -212,9 +218,7 @@ extern "C" {
 	
 cain_sip_list_t *cain_sip_list_new(void *data);
 cain_sip_list_t*  cain_sip_list_append_link(cain_sip_list_t* elem,cain_sip_list_t *new_elem);
-cain_sip_list_t *cain_sip_list_find_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
 cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_compare_func compare_func, const void *user_data);
-cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 
 #define cain_sip_list_next(elem) ((elem)->next)
 
@@ -298,7 +302,7 @@ char *cain_sip_strdup_printf(const char *fmt,...);
 
 #define ATO_(type,value) ATO_##type(value)
 #define ATO_int(value) atoi(value)
-#define ATO_float(value) strtof(value,NULL)
+#define ATO_float(value) (float)strtod(value,NULL)
 #define FORMAT_(type) FORMAT_##type
 #define FORMAT_int    "%i"
 #define FORMAT_float  "%f"
@@ -344,6 +348,7 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	pcain_sip_messageLexer               lex; \
 	pANTLR3_COMMON_TOKEN_STREAM    tokens; \
 	pcain_sip_messageParser              parser; \
+	cain_sip_##object_type##_t* l_parsed_object; \
 	input  = antlr3NewAsciiStringCopyStream	(\
 			(pANTLR3_UINT8)value,\
 			(ANTLR3_UINT32)strlen(value),\
@@ -351,7 +356,7 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	lex    = cain_sip_messageLexerNew                (input);\
 	tokens = antlr3CommonTokenStreamSourceNew  (ANTLR3_SIZE_HINT, TOKENSOURCE(lex));\
 	parser = cain_sip_messageParserNew               (tokens);\
-	cain_sip_##object_type##_t* l_parsed_object = parser->object_type(parser);\
+	l_parsed_object = parser->object_type(parser);\
 	parser ->free(parser);\
 	tokens ->free(tokens);\
 	lex    ->free(lex);\
@@ -702,6 +707,7 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 	pcain_sdpLexer               lex; \
 	pANTLR3_COMMON_TOKEN_STREAM    tokens; \
 	pcain_sdpParser              parser; \
+	cain_sdp_##object_type##_t* l_parsed_object; \
 	input  = antlr3NewAsciiStringCopyStream	(\
 			(pANTLR3_UINT8)value,\
 			(ANTLR3_UINT32)strlen(value),\
@@ -709,7 +715,7 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 	lex    = cain_sdpLexerNew                (input);\
 	tokens = antlr3CommonTokenStreamSourceNew  (ANTLR3_SIZE_HINT, TOKENSOURCE(lex));\
 	parser = cain_sdpParserNew               (tokens);\
-	cain_sdp_##object_type##_t* l_parsed_object = parser->object_type(parser).ret;\
+	l_parsed_object = parser->object_type(parser).ret;\
 	parser ->free(parser);\
 	tokens ->free(tokens);\
 	lex    ->free(lex);\
@@ -791,7 +797,6 @@ struct cain_sip_auth_event {
 	char* ha1;
 };
 cain_sip_auth_event_t* cain_sip_auth_event_create(const char* realm,const char* username);
-void cain_sip_auth_event_destroy(cain_sip_auth_event_t* event);
 
 /*
  * refresher

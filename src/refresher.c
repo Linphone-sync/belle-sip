@@ -226,8 +226,10 @@ static int set_expires_from_trans(cain_sip_refresher_t* refresher) {
 	cain_sip_response_t*response=transaction->last_response;
 	cain_sip_request_t*request=cain_sip_transaction_get_request(transaction);
 	cain_sip_header_expires_t* expires_header;
-	refresher->expires=-1;
 	cain_sip_header_contact_t* contact_header;
+
+	refresher->expires=-1;
+	
 	if (strcmp("REGISTER",cain_sip_request_get_method(request))==0
 			|| strcmp("SUBSCRIBE",cain_sip_request_get_method(request))==0) {
 
@@ -282,14 +284,14 @@ void cain_sip_refresher_stop(cain_sip_refresher_t* refresher) {
 	}
 }
 cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction) {
-
+	cain_sip_refresher_t* refresher;
 	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction)) != CAIN_SIP_TRANSACTION_COMPLETED) {
 		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED"
 					,cain_sip_transaction_state_to_string(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction)))
 					,transaction);
 		return NULL;
 	}
-	cain_sip_refresher_t* refresher = (cain_sip_refresher_t*)cain_sip_object_new(cain_sip_refresher_t);
+	refresher = (cain_sip_refresher_t*)cain_sip_object_new(cain_sip_refresher_t);
 	refresher->transaction=transaction;
 	cain_sip_object_ref(transaction);
 	refresher->listener_callbacks.process_response_event=process_response_event;

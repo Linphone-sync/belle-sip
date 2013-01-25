@@ -72,6 +72,7 @@ unsigned int cain_sip_parameters_is_parameter(const cain_sip_parameters_t* param
 }
 void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* params,const char* name,const char* value) {
 	/*1 check if present*/
+	cain_sip_param_pair_t* lNewpair;
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->paramnames_list, (cain_sip_compare_func)strcmp, name);
 	/* first remove from header names list*/
 	if (lResult) {
@@ -84,7 +85,7 @@ void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* params,const char*
 		params->param_list=cain_sip_list_delete_link(params->param_list,lResult);
 	}
 	/* 2 insert*/
-	cain_sip_param_pair_t* lNewpair = cain_sip_param_pair_new(name,value);
+	lNewpair = cain_sip_param_pair_new(name,value);
 	params->param_list=cain_sip_list_append(params->param_list,lNewpair);
 	params->paramnames_list=cain_sip_list_append(params->paramnames_list,lNewpair->name);
 }
@@ -106,7 +107,7 @@ void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* params,const ch
 			params->param_list=cain_sip_list_delete_link(params->param_list,lResult);
 		}
 	} else {
-		cain_sip_warning("cannot remove param \%s because not present",name);
+		cain_sip_warning("cannot remove param %s because not present",name);
 	}
 }
 

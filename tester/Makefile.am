@@ -18,7 +18,7 @@ cain_sip_tester_SOURCES=	cain_sip_tester.c \
 
 cain_sip_tester_CFLAGS=$(CUNIT_CFLAGS) $(STRICT_OPTIONS)
 
-cain_sip_tester_LDFLAGS=$(CUNIT_LIBS)
+cain_sip_tester_LDFLAGS=$(CUNIT_LIBS) $(AM_LDFLAGS)
 
 cain_sip_object_describe_SOURCES=describe.c
 
@@ -26,7 +26,7 @@ AM_CPPFLAGS=-I$(top_srcdir)/include -I$(top_srcdir)/src
 
 LDADD=$(top_builddir)/src/libcainsip.la 
 
-AM_LDFLAGS=-export-dynamic 
+AM_LDFLAGS=-no-undefined -export-dynamic 
 
 AM_CFLAGS=$(STRICT_OPTIONS) 
 
