@@ -208,7 +208,10 @@ unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int po
 		ctx->ai = NULL;
 		if (family == 0) family = AF_UNSPEC;
 		ctx->family = family;
-		resolver_start_query(ctx, (cain_sip_source_func_t)resolver_process_a_data, DNS_T_A, cain_sip_stack_get_dns_timeout(stack));
+		if (resolver_start_query(ctx, (cain_sip_source_func_t)resolver_process_a_data, DNS_T_A, cain_sip_stack_get_dns_timeout(stack)) < 0) {
+			cain_sip_object_unref(ctx);
+			return 0;
+		}
 
 		/*the resolver context must never be removed manually from the main loop*/
 		cain_sip_main_loop_add_source(ml,(cain_sip_source_t*)ctx);

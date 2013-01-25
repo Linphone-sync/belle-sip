@@ -44,7 +44,9 @@ static unsigned int  wait_for(cain_sip_stack_t *stack, int *current_value, int e
 }
 
 static endpoint_t* create_endpoint(void) {
-	endpoint_t* endpoint = cain_sip_new0(endpoint_t);
+	endpoint_t* endpoint;
+	if (cain_sip_init_sockets() < 0) return NULL;
+	endpoint = cain_sip_new0(endpoint_t);
 	endpoint->stack = cain_sip_stack_new(NULL);
 	return endpoint;
 }
@@ -52,6 +54,7 @@ static endpoint_t* create_endpoint(void) {
 static void destroy_endpoint(endpoint_t* endpoint) {
 	cain_sip_object_unref(endpoint->stack);
 	cain_sip_free(endpoint);
+	cain_sip_uninit_sockets();
 }
 
 static void resolve_done(void *data, const char *name, struct addrinfo *res) {
@@ -66,6 +69,7 @@ static void resolve(void) {
 	const char* peer_name = SIPDOMAIN;
 	int peer_port = SIPPORT;
 	endpoint_t* client = create_endpoint();
+	CU_ASSERT_PTR_NOT_NULL_FATAL(client);
 	client->resolver_id = cain_sip_resolve(client->stack, peer_name, peer_port, 0, resolve_done, client, cain_sip_stack_get_main_loop(client->stack));
 	CU_ASSERT_TRUE(wait_for(client->stack, &client->resolve_done, 1, 2000));
 	CU_ASSERT_TRUE((client->resolve_successful == 1));
