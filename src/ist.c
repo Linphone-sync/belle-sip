@@ -181,10 +181,10 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_ist_t)={
 
 cain_sip_ist_t *cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *req){
 	cain_sip_ist_t *obj=cain_sip_object_new(cain_sip_ist_t);
-	cain_sip_server_transaction_init((cain_sip_server_transaction_t*)obj,prov,req);
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	cain_sip_response_t *resp;
-	
+
+	cain_sip_server_transaction_init((cain_sip_server_transaction_t*)obj,prov,req);
 	base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
 	resp=cain_sip_response_create_from_request(req,100);
 	cain_sip_server_transaction_send_response((cain_sip_server_transaction_t*)obj,resp);

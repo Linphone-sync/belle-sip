@@ -123,10 +123,11 @@ time_field:   {IS_TOKEN(t)}?alpha_num EQUAL
               SPACE 
               stop_time {cain_sdp_time_description_t* time_description =cain_sdp_time_description_new();
                          cain_sdp_time_t* time_value =cain_sdp_time_new();
+						 cain_sip_list_t* time_description_list;
                          cain_sdp_time_set_start(time_value,atoi((const char*)$start_time.text->chars));
                          cain_sdp_time_set_stop(time_value,atoi((const char*)$stop_time.text->chars));
                          cain_sdp_time_description_set_time(time_description,time_value);
-                         cain_sip_list_t* time_description_list = cain_sip_list_append(NULL,time_description);
+                         time_description_list = cain_sip_list_append(NULL,time_description);
                          cain_sdp_session_description_set_time_descriptions($session_description::current,time_description_list);};
 
 repeat_time:       {IS_TOKEN(r)}?alpha_num EQUAL repeat_interval (SPACE typed_time)+;

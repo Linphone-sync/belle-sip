@@ -28,6 +28,10 @@
 #define CAIN_SIP_END_DECLS
 #endif
 
+#ifdef _MSC_VER
+#define inline __inline
+#endif
+
 #include "cain-sip/object.h"
 
 /**

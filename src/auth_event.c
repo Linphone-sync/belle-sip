@@ -28,7 +28,7 @@ GET_SET_STRING(cain_sip_auth_event,realm)
 GET_SET_STRING(cain_sip_auth_event,passwd)
 GET_SET_STRING(cain_sip_auth_event,ha1)
 cain_sip_auth_event_t* cain_sip_auth_event_create(const char* realm,const char* username) {
-	cain_sip_auth_event_t* result = cain_sip_malloc(sizeof(cain_sip_auth_event_t));
+	cain_sip_auth_event_t* result = cain_sip_new(cain_sip_auth_event_t);
 	memset(result,0,sizeof(cain_sip_auth_event_t));
 	cain_sip_auth_event_set_realm(result,realm);
 	cain_sip_auth_event_set_username(result,username);
