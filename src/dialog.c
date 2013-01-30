@@ -273,10 +273,11 @@ static int dialog_on_200Ok_end(cain_sip_dialog_t *dialog){
 	cain_sip_request_t *bye;
 	cain_sip_client_transaction_t *trn;
 	cain_sip_dialog_stop_200Ok_retrans(dialog);
-	cain_sip_error("Dialog was not ACK'd within T1*64 seconds, it is going to be terminated.");
+	cain_sip_error("Dialog [%p] was not ACK'd within T1*64 seconds, it is going to be terminated.",dialog);
 	dialog->state=CAIN_SIP_DIALOG_CONFIRMED;
 	bye=cain_sip_dialog_create_request(dialog,"BYE");
 	trn=cain_sip_provider_get_new_client_transaction(dialog->provider,bye);
+	CAIN_SIP_TRANSACTION(trn)->is_internal=1; /*don't bother user with this transaction*/
 	cain_sip_client_transaction_send_request(trn);
 	return CAIN_SIP_STOP;
 }
@@ -340,7 +341,7 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_
 					/*retransmission of 200Ok */
 					if (!as_uas) cain_sip_dialog_handle_200Ok(obj,resp);
 				}
-			}else if (strcmp(cain_sip_request_get_method(req),"BYE")==0 && ((code>=200 && code<300) || code==481 || code==408)){
+			}else if (strcmp(cain_sip_request_get_method(req),"BYE")==0 && (/*(*/code>=200 /*&& code<300) || code==481 || code==408*/)){
 				/*15.1.1 UAC Behavior
 
 				   A BYE request is constructed as would any other request within a
@@ -355,7 +356,7 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_
 				   response at all is received for the BYE (that is, a timeout is
 				   returned by the client transaction), the UAC MUST consider the
 				   session and the dialog terminated. */
-
+				/*what should we do with other reponse >300 ?? */
 				if (obj->terminate_on_bye) cain_sip_dialog_delete(obj);
 				obj->needs_ack=FALSE; /*no longuer need ACK*/
 			}
@@ -619,7 +620,7 @@ void cain_sip_dialog_check_ack_sent(cain_sip_dialog_t*obj){
 		client_trans=cain_sip_provider_get_new_client_transaction(obj->provider,req);
 		CAIN_SIP_TRANSACTION(client_trans)->is_internal=TRUE; /*internal transaction, don't bother user with 200ok*/
 		cain_sip_client_transaction_send_request(client_trans);
-
+		/*call dialog terminated*/
 	}
 }
 

@@ -329,6 +329,7 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 	char buffer[cain_sip_network_buffer_size];
 	int len;
 	int ret=0;
+	cain_sip_object_ref(obj);
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_sending,obj,msg);
 	len=cain_sip_object_marshal((cain_sip_object_t*)msg,buffer,0,sizeof(buffer));
 	if (len>0){
@@ -357,6 +358,7 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 								,buffer);
 		}
 	}
+	cain_sip_object_unref(obj);
 }
 
 /* just to emulate network transmission delay */

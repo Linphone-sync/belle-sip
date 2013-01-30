@@ -62,6 +62,13 @@ cain_sip_object_t* cain_sip_io_error_event_get_source(const cain_sip_io_error_ev
 	return event->source;
 }
 
+cain_sip_client_transaction_t *cain_sip_timeout_event_get_client_transaction(const cain_sip_timeout_event_t* event) {
+	return CAIN_SIP_CLIENT_TRANSACTION(event->transaction);
+}
+cain_sip_server_transaction_t *cain_sip_timeout_event_get_server_transaction(const cain_sip_timeout_event_t* event) {
+	return CAIN_SIP_SERVER_TRANSACTION(event->transaction);
+}
+
 typedef struct cain_sip_callbacks cain_sip_callbacks_t;
 
 struct cain_sip_callbacks{

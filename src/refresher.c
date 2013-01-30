@@ -97,12 +97,16 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 
 }
 static void process_timeout(void *user_ctx, const cain_sip_timeout_event_t *event) {
-/*	cain_sip_client_transaction_t* client_transaction = cain_sip_response_event_get_client_transaction(event);
 	cain_sip_refresher_t* refresher=(cain_sip_refresher_t*)user_ctx;
-	if (refresher && (client_transaction !=refresher->transaction))
-		return;*/ /*not for me*/
+	cain_sip_client_transaction_t*client_transaction =cain_sip_timeout_event_get_client_transaction(event);
 
-		cain_sip_fatal("Unhandled event timeout [%p]",event);
+	if (refresher && (client_transaction !=refresher->transaction))
+				return; /*not for me*/
+
+		/*first stop timer if any*/
+	cain_sip_refresher_stop(refresher);
+	refresher->listener(refresher,refresher->user_data,408, "timeout");
+	return;
 }
 static void process_transaction_terminated(void *user_ctx, const cain_sip_transaction_terminated_event_t *event) {
 	cain_sip_message("process_transaction_terminated Transaction terminated [%p]",event);
@@ -193,30 +197,40 @@ static cain_sip_header_contact_t* get_matching_contact(const cain_sip_transactio
 	cain_sip_request_t*request=cain_sip_transaction_get_request(transaction);
 	cain_sip_response_t*response=transaction->last_response;
 	const cain_sip_list_t* contact_header_list;
-	cain_sip_header_contact_t* local_contact;
+	cain_sip_header_contact_t* unfixed_local_contact;
+	cain_sip_header_contact_t* fixed_local_contact;
+	char* tmp_string;
+	char* tmp_string2;
 	/*we assume, there is only one contact in request*/
-	local_contact= cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(request),cain_sip_header_contact_t);
-	local_contact= CAIN_SIP_HEADER_CONTACT(cain_sip_object_clone(CAIN_SIP_OBJECT(local_contact)));
+	unfixed_local_contact= cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(request),cain_sip_header_contact_t);
+	fixed_local_contact= CAIN_SIP_HEADER_CONTACT(cain_sip_object_clone(CAIN_SIP_OBJECT(unfixed_local_contact)));
 
 	/*first fix contact using received/rport*/
-	cain_sip_response_fix_contact(response,local_contact);
-	/*FIXME contact may not be fixed by proxy*/
-	/*now, we have a *NAT* aware contact*/
+	cain_sip_response_fix_contact(response,fixed_local_contact);
 	contact_header_list = cain_sip_message_get_headers(CAIN_SIP_MESSAGE(response),CAIN_SIP_CONTACT);
+
 	if (contact_header_list) {
-		contact_header_list = cain_sip_list_find_custom((cain_sip_list_t*)contact_header_list
-				,(cain_sip_compare_func)cain_sip_header_contact_not_equals
-				, (const void*)local_contact);
-		if (!contact_header_list) {
-			char* contact_string=cain_sip_object_to_string(CAIN_SIP_OBJECT(local_contact));
-			cain_sip_error("no matching contact for  [%s]",contact_string);
-			cain_sip_free(contact_string);
-			cain_sip_object_unref(local_contact);
-			return NULL;
+			contact_header_list = cain_sip_list_find_custom((cain_sip_list_t*)contact_header_list
+																,(cain_sip_compare_func)cain_sip_header_contact_not_equals
+																, (const void*)fixed_local_contact);
+			if (!contact_header_list) {
+				/*reset header list*/
+				contact_header_list = cain_sip_message_get_headers(CAIN_SIP_MESSAGE(response),CAIN_SIP_CONTACT);
+				contact_header_list = cain_sip_list_find_custom((cain_sip_list_t*)contact_header_list
+																,(cain_sip_compare_func)cain_sip_header_contact_not_equals
+																,unfixed_local_contact);
+			}
+			if (!contact_header_list) {
+				tmp_string=cain_sip_object_to_string(CAIN_SIP_OBJECT(fixed_local_contact));
+				tmp_string2=cain_sip_object_to_string(CAIN_SIP_OBJECT(unfixed_local_contact));
+				cain_sip_error("No matching contact neither for [%s] nor [%s]", tmp_string, tmp_string2);
+				cain_sip_free(tmp_string);
+				cain_sip_free(tmp_string2);
+				return NULL;
+			} else {
+				return CAIN_SIP_HEADER_CONTACT(contact_header_list->data);
+			}
 		} else {
-			return CAIN_SIP_HEADER_CONTACT(contact_header_list->data);
-		}
-	} else {
 		return NULL;
 	}
 

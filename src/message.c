@@ -527,14 +527,23 @@ cain_sip_response_t *cain_sip_response_create_from_request(cain_sip_request_t *r
 	cain_sip_message_add_header((cain_sip_message_t*)resp,cain_sip_message_get_header((cain_sip_message_t*)req,"cseq"));
 	return resp;
 }
+/*
+12.1.1 UAS behavior
 
+   When a UAS responds to a request with a response that establishes a
+   dialog (such as a 2xx to INVITE), the UAS MUST copy all Record-Route
+   header field values from the request into the response (including the
+   URIs, URI parameters, and any Record-Route header field parameters,
+   whether they are known or unknown to the UAS) and MUST maintain the
+   order of those values.
+   */
 void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_request_t *req){
 	const cain_sip_list_t *rr=cain_sip_message_get_headers((cain_sip_message_t*)req,CAIN_SIP_RECORD_ROUTE);
 	cain_sip_header_contact_t *ct=cain_sip_message_get_header_by_type(obj,cain_sip_header_contact_t);
 	cain_sip_message_remove_header((cain_sip_message_t*)obj,CAIN_SIP_RECORD_ROUTE);
 	if (rr)
 		cain_sip_message_add_headers((cain_sip_message_t*)obj,rr);
-	if (!ct){
+	if (cain_sip_response_get_status_code(obj)>=200 && cain_sip_response_get_status_code(obj)<300 && !ct){
 		/*add a dummy contact to be filled by channel later*/
 		cain_sip_message_add_header((cain_sip_message_t*)obj,(cain_sip_header_t*)cain_sip_header_contact_new());
 	}	

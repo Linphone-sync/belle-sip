@@ -159,9 +159,14 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 			//add a random to tag
 			cain_sip_header_to_set_tag(to,t->to_tag);
 		}
-		if (dialog && status_code>=200 && status_code<300){
-			/*response establishes a dialog*/
-			/*fill dialog related fields accordingly*/
+		/*12.1 Creation of a Dialog
+
+		   Dialogs are created through the generation of non-failure responses
+		   to requests with specific methods.  Within this specification, only
+		   2xx and 101-199 responses with a To tag, where the request was
+		   INVITE, will establish a dialog.*/
+		if (dialog && status_code>100 && status_code<300){
+
 			cain_sip_response_fill_for_dialog(resp,base->request);
 		}
 	}
@@ -292,6 +297,8 @@ static unsigned int should_dialog_be_created(cain_sip_client_transaction_t *t, c
 
 void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)t;
+	cain_sip_request_t* req = cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(t));
+	const char* method = cain_sip_request_get_method(req);
 	cain_sip_response_event_t event;
 	cain_sip_dialog_t *dialog=base->dialog;
 	int status_code =  cain_sip_response_get_status_code(resp);
@@ -301,7 +308,8 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 
 	if (dialog){
 		if (status_code>=200 && status_code<300
-				&& (dialog->state==CAIN_SIP_DIALOG_EARLY || dialog->state==CAIN_SIP_DIALOG_CONFIRMED)){
+			&& strcmp(method,"INVITE")==0
+			&& (dialog->state==CAIN_SIP_DIALOG_EARLY || dialog->state==CAIN_SIP_DIALOG_CONFIRMED)){
 			/*make sure this response matches the current dialog, or creates a new one*/
 			if (!cain_sip_dialog_match(dialog,(cain_sip_message_t*)resp,FALSE)){
 				dialog=cain_sip_provider_get_new_dialog_internal(t->base.provider,CAIN_SIP_TRANSACTION(t),FALSE);/*cain_sip_dialog_new(base);*/
@@ -324,8 +332,9 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 	event.dialog=dialog;
 	event.response=(cain_sip_response_t*)resp;
 	CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*)t),process_response_event,&event);
-	/*check that 200Ok for INVITEs have been acknoledged by listener*/
-	if (dialog) cain_sip_dialog_check_ack_sent(dialog);
+	/*check that 200Ok for INVITEs have been acknowledged by listener*/
+	if (dialog && strcmp(method,"INVITE")==0)
+		cain_sip_dialog_check_ack_sent(dialog);
 }
 
 
