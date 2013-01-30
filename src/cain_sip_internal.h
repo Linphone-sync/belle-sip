@@ -349,10 +349,11 @@ cain_sip_##object_type##_t* cain_sip_##object_type##_parse (const char* value) {
 	pANTLR3_COMMON_TOKEN_STREAM    tokens; \
 	pcain_sip_messageParser              parser; \
 	cain_sip_##object_type##_t* l_parsed_object; \
-	input  = antlr3NewAsciiStringCopyStream	(\
+	input  = antlr3StringStreamNew(\
 			(pANTLR3_UINT8)value,\
+			ANTLR3_ENC_8BIT,\
 			(ANTLR3_UINT32)strlen(value),\
-			NULL);\
+			(pANTLR3_UINT8)#object_type);\
 	lex    = cain_sip_messageLexerNew                (input);\
 	tokens = antlr3CommonTokenStreamSourceNew  (ANTLR3_SIZE_HINT, TOKENSOURCE(lex));\
 	parser = cain_sip_messageParserNew               (tokens);\
@@ -407,6 +408,7 @@ cain_sip_param_pair_t* cain_sip_param_pair_new(const char* name,const char* valu
 void cain_sip_param_pair_destroy(cain_sip_param_pair_t*  pair) ;
 
 int cain_sip_param_pair_comp_func(const cain_sip_param_pair_t *a, const char*b) ;
+int cain_sip_param_pair_case_comp_func(const cain_sip_param_pair_t *a, const char*b) ;
 
 cain_sip_param_pair_t* cain_sip_param_pair_ref(cain_sip_param_pair_t* obj);
 
@@ -707,10 +709,11 @@ cain_sdp_##object_type##_t* cain_sdp_##object_type##_parse (const char* value) {
 	pANTLR3_COMMON_TOKEN_STREAM    tokens; \
 	pcain_sdpParser              parser; \
 	cain_sdp_##object_type##_t* l_parsed_object; \
-	input  = antlr3NewAsciiStringCopyStream	(\
+	input  = antlr3StringStreamNew	(\
 			(pANTLR3_UINT8)value,\
+			ANTLR3_ENC_8BIT,\
 			(ANTLR3_UINT32)strlen(value),\
-			NULL);\
+			(pANTLR3_UINT8)#object_type);\
 	lex    = cain_sdpLexerNew                (input);\
 	tokens = antlr3CommonTokenStreamSourceNew  (ANTLR3_SIZE_HINT, TOKENSOURCE(lex));\
 	parser = cain_sdpParserNew               (tokens);\

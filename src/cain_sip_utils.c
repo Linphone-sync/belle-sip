@@ -522,6 +522,9 @@ void cain_sip_param_pair_destroy(cain_sip_param_pair_t*  pair) {
 int cain_sip_param_pair_comp_func(const cain_sip_param_pair_t *a, const char*b) {
 	return strcmp(a->name,b);
 }
+int cain_sip_param_pair_case_comp_func(const cain_sip_param_pair_t *a, const char*b) {
+	return strcasecmp(a->name,b);
+}
 
 char* _cain_sip_str_dup_and_unquote_string(const char* quoted_string) {
 	size_t value_size = strlen(quoted_string);

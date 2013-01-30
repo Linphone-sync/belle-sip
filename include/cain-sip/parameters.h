@@ -34,6 +34,10 @@ void cain_sip_parameters_clean(cain_sip_parameters_t* params);
 
 
 const char*	cain_sip_parameters_get_parameter(const cain_sip_parameters_t* obj,const char* name);
+/*
+ * same as #cain_sip_parameters_get_parameter but name is case insensitive */
+const char*	cain_sip_parameters_get_case_parameter(const cain_sip_parameters_t* params,const char* name);
+
 /**
  * returns 0 if not found
  */

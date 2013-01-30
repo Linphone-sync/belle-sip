@@ -802,10 +802,11 @@ cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* value)
 	pANTLR3_COMMON_TOKEN_STREAM    tokens;
 	pcain_sip_messageParser              parser;
 	cain_sip_messageParser_header_extension_return l_parsed_object;
-	input  = antlr3NewAsciiStringCopyStream	(
+	input  = antlr3StringStreamNew	(
 			(pANTLR3_UINT8)value,
+			ANTLR3_ENC_8BIT,
 			(ANTLR3_UINT32)strlen(value),
-			((void *)0));
+			(pANTLR3_UINT8)"header_extension");
 	lex    = cain_sip_messageLexerNew                (input);
 	tokens = antlr3CommonTokenStreamSourceNew  (1025, lex->pLexer->rec->state->tokSource);
 	parser = cain_sip_messageParserNew               (tokens);
