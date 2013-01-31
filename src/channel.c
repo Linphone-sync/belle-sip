@@ -129,7 +129,7 @@ static size_t cain_sip_channel_input_stream_get_buff_length(cain_sip_channel_inp
 	return MAX_CHANNEL_BUFF_SIZE - (input_stream->write_ptr-input_stream->read_ptr);
 }
 
-void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
+int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	int num;
 	int offset;
 	int i;
@@ -138,11 +138,15 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 	int content_length;
 
 	if (revents) {
-		num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_length(&obj->input_stream)-1);
-		/*write ptr is only incremented if data were acquired from the transport*/
-		obj->input_stream.write_ptr+=num;
-		/*first null terminate the read buff*/
-		*obj->input_stream.write_ptr='\0';
+		if (obj->recv_error>0) {
+			num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_length(&obj->input_stream)-1);
+			/*write ptr is only incremented if data were acquired from the transport*/
+			obj->input_stream.write_ptr+=num;
+			/*first null terminate the read buff*/
+			*obj->input_stream.write_ptr='\0';
+		} else {
+			num=obj->recv_error;
+		}
 	}
 	else
 		num=obj->input_stream.write_ptr-obj->input_stream.read_ptr;
@@ -206,7 +210,7 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 
 			}
 		}
-		return;
+		return CAIN_SIP_CONTINUE;
 	message_ready:
 		obj->incoming_messages=cain_sip_list_append(obj->incoming_messages,obj->input_stream.msg);
 		cain_sip_channel_input_stream_reset(&obj->input_stream,message_size);
@@ -215,16 +219,18 @@ void cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents)
 			/*process residu*/
 			cain_sip_channel_process_data(obj,0);
 		}
-		return;
+		return CAIN_SIP_CONTINUE;
 	} else if (num == 0) {
 		channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
 		cain_sip_channel_close(obj);
+		return CAIN_SIP_STOP;
 	} else {
 		cain_sip_error("Receive error on channel [%p]",obj);
 		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 		cain_sip_channel_close(obj);
+		return CAIN_SIP_STOP;
 	}
-	return;
+	return CAIN_SIP_CONTINUE;
 }
 
 
@@ -236,7 +242,7 @@ void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,cons
 	if (strcmp(bindip,"::0")!=0 && strcmp(bindip,"0.0.0.0")!=0)
 		obj->local_ip=cain_sip_strdup(bindip);
 	obj->local_port=localport;
-
+	obj->recv_error=1;/*not set*/
 	cain_sip_channel_input_stream_reset(&obj->input_stream,0);
 }
 

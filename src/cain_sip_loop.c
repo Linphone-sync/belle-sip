@@ -359,7 +359,12 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 
 		if (!s->cancelled){
 			if (s->fd!=(cain_sip_fd_t)-1){
-				revents=cain_sip_source_get_revents(s,pfd);		
+				if (s->notify_required) { /*for testing purpose to force channel to read*/
+					revents=CAIN_SIP_EVENT_READ;
+					s->notify_required=0; /*reset*/
+				} else {
+					revents=cain_sip_source_get_revents(s,pfd);
+				}
 			}
 			if (revents!=0 || (s->timeout>=0 && cur>=s->expire_ms)){
 				char *objdesc=cain_sip_object_to_string((cain_sip_object_t*)s);

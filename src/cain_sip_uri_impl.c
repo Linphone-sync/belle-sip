@@ -78,7 +78,11 @@ int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offs
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s@",uri->user);
 	}
 	if (uri->host) {
-		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",uri->host);
+		if (strchr(uri->host,':')) { /*ipv6*/
+			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"[%s]",uri->host);
+		} else {
+			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",uri->host);
+		}
 	} else {
 		cain_sip_warning("no host found in this uri");
 	}
@@ -317,3 +321,4 @@ int cain_sip_uri_equals(const cain_sip_uri_t* uri_a,const cain_sip_uri_t* uri_b)
  */
 	return 1;
 }
+

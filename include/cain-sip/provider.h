@@ -64,6 +64,14 @@ void cain_sip_provider_clean_channels(cain_sip_provider_t *p);
  **/
 int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp,cain_sip_list_t** auth_infos);
 
+/**
+ * Can be used to simulate network recv error, for tests.
+ * @param stack
+ * @param recv_error if <=0, will cause channel error to be reported
+**/
+
+void cain_sip_provider_set_recv_error(cain_sip_provider_t *prov, int recv_error);
+
 CAIN_SIP_END_DECLS
 
 #define CAIN_SIP_PROVIDER(obj) CAIN_SIP_CAST(obj,cain_sip_provider_t)
