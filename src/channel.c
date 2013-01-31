@@ -247,7 +247,12 @@ void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,cons
 }
 
 void cain_sip_channel_set_socket(cain_sip_channel_t *obj, cain_sip_socket_t sock, cain_sip_source_func_t datafunc){
-	cain_sip_socket_source_init((cain_sip_source_t*)obj, datafunc, obj, sock, CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_WRITE, cain_sip_stack_get_transport_timeout(obj->stack));
+	cain_sip_socket_source_init((cain_sip_source_t*)obj
+									, datafunc
+									, obj
+									, sock
+									, CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_WRITE
+									, -1);
 }
 
 void cain_sip_channel_add_listener(cain_sip_channel_t *obj, cain_sip_channel_listener_t *l){
