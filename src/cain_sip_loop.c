@@ -123,7 +123,14 @@ static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_po
 }
 
 static int cain_sip_poll(cain_sip_pollfd_t *pfd, int count, int duration){
-	DWORD ret=WaitForMultipleObjectsEx(count,pfd,FALSE,duration,FALSE);
+	DWORD ret;
+	
+	if (count == 0) {
+		Sleep(duration);
+		return 0;
+	}
+
+	ret=WaitForMultipleObjectsEx(count,pfd,FALSE,duration,FALSE);
 	if (ret==WAIT_FAILED){
 		cain_sip_error("WaitForMultipleObjectsEx() failed.");
 		return -1;
