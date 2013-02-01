@@ -62,12 +62,7 @@ cain_sip_object_t* cain_sip_io_error_event_get_source(const cain_sip_io_error_ev
 	return event->source;
 }
 
-cain_sip_client_transaction_t *cain_sip_timeout_event_get_client_transaction(const cain_sip_timeout_event_t* event) {
-	return CAIN_SIP_CLIENT_TRANSACTION(event->transaction);
-}
-cain_sip_server_transaction_t *cain_sip_timeout_event_get_server_transaction(const cain_sip_timeout_event_t* event) {
-	return CAIN_SIP_SERVER_TRANSACTION(event->transaction);
-}
+
 
 typedef struct cain_sip_callbacks cain_sip_callbacks_t;
 
@@ -148,3 +143,16 @@ cain_sip_listener_t *cain_sip_listener_create_from_callbacks(const cain_sip_list
 	return CAIN_SIP_LISTENER(obj);
 }
 
+cain_sip_client_transaction_t *cain_sip_transaction_terminated_event_get_client_transaction(const cain_sip_transaction_terminated_event_t* event) {
+	return event->is_server_transaction ? NULL:CAIN_SIP_CLIENT_TRANSACTION(event->transaction);
+}
+cain_sip_server_transaction_t *cain_sip_transaction_terminated_event_get_server_transaction(const cain_sip_transaction_terminated_event_t* event) {
+	return event->is_server_transaction ? CAIN_SIP_SERVER_TRANSACTION(event->transaction):NULL;
+}
+
+cain_sip_client_transaction_t *cain_sip_timeout_event_get_client_transaction(const cain_sip_timeout_event_t* event) {
+	return event->is_server_transaction ? NULL:CAIN_SIP_CLIENT_TRANSACTION(event->transaction);
+}
+cain_sip_server_transaction_t *cain_sip_timeout_event_get_server_transaction(const cain_sip_timeout_event_t* event) {
+	return event->is_server_transaction ? CAIN_SIP_SERVER_TRANSACTION(event->transaction):NULL;
+}

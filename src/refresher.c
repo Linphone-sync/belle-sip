@@ -109,7 +109,7 @@ static void process_timeout(void *user_ctx, const cain_sip_timeout_event_t *even
 	return;
 }
 static void process_transaction_terminated(void *user_ctx, const cain_sip_transaction_terminated_event_t *event) {
-	cain_sip_message("process_transaction_terminated Transaction terminated [%p]",event);
+	/*cain_sip_message("process_transaction_terminated Transaction terminated [%p]",event);*/
 }
 
 static void destroy(cain_sip_refresher_t *refresher){

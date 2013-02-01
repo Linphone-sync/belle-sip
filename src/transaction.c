@@ -253,6 +253,7 @@ int cain_sip_client_transaction_send_request_to(cain_sip_client_transaction_t *t
 	cain_sip_hop_t* hop;
 	cain_sip_channel_t *chan;
 	cain_sip_provider_t *prov=t->base.provider;
+	int result=-1;
 	
 	if (t->base.state!=CAIN_SIP_TRANSACTION_INIT){
 		cain_sip_error("cain_sip_client_transaction_send_request: bad state.");
@@ -268,10 +269,9 @@ int cain_sip_client_transaction_send_request_to(cain_sip_client_transaction_t *t
 	} else {
 		hop = cain_sip_stack_create_next_hop(prov->stack,t->base.request);
 	}
-
+	cain_sip_provider_add_client_transaction(t->base.provider,t); /*add it in any case*/
 	chan=cain_sip_provider_get_channel(prov,hop->host, hop->port, hop->transport);
 	if (chan){
-		cain_sip_provider_add_client_transaction(t->base.provider,t);
 		cain_sip_object_ref(chan);
 		cain_sip_channel_add_listener(chan,CAIN_SIP_CHANNEL_LISTENER(t));
 		t->base.channel=chan;
@@ -283,9 +283,14 @@ int cain_sip_client_transaction_send_request_to(cain_sip_client_transaction_t *t
 			/*otherwise we can send immediately*/
 			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
 		}
-	}else cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
+		result=0;
+	}else {
+		cain_sip_error("cain_sip_client_transaction_send_request(): no channel available");
+		cain_sip_transaction_terminate(CAIN_SIP_TRANSACTION(t));
+		result=-1;
+	}
 	cain_sip_hop_free(hop);
-	return 0;
+	return result;
 }
 
 static unsigned int should_dialog_be_created(cain_sip_client_transaction_t *t, cain_sip_response_t *resp){
@@ -349,18 +354,28 @@ static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
 static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
 	cain_sip_client_transaction_t *t=(cain_sip_client_transaction_t*)l;
 	cain_sip_io_error_event_t ev;
-	cain_sip_message("transaction on_channel_state_changed");
+	cain_sip_message("transaction [%p] channel state changed to [%s]"
+						,t
+						,cain_sip_channel_state_to_string(state));
 	switch(state){
 		case CAIN_SIP_CHANNEL_READY:
 			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
 		break;
 		case CAIN_SIP_CHANNEL_DISCONNECTED:
 		case CAIN_SIP_CHANNEL_ERROR:
+
 			ev.transport=cain_sip_channel_get_transport_name(chan);
 			ev.source=CAIN_SIP_OBJECT(t);
 			ev.port=chan->peer_port;
 			ev.host=chan->peer_name;
-			CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*)t),process_io_error,&ev);
+			if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_COMPLETED
+				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_CONFIRMED
+				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_ACCEPTED
+				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_TERMINATED) {
+				CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*)t),process_io_error,&ev);
+			}
+			if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_TERMINATED) /*avoid double notification*/
+				cain_sip_transaction_terminate(CAIN_SIP_TRANSACTION(t));
 		break;
 		default:
 			/*ignored*/

@@ -71,9 +71,9 @@ static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_cha
 	cain_sip_provider_t* prov=CAIN_SIP_PROVIDER(obj);
 	if (state == CAIN_SIP_CHANNEL_ERROR || state == CAIN_SIP_CHANNEL_DISCONNECTED) {
 		ev.transport=cain_sip_channel_get_transport_name(chan);
-		ev.source=CAIN_SIP_OBJECT(obj); /*FIXME, must be either trans, dialog or provider, but  not only prov */
 		ev.port=chan->peer_port;
 		ev.host=chan->peer_name;
+		ev.source=CAIN_SIP_OBJECT(prov);
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_io_error,&ev);
 		cain_sip_provider_release_channel(prov,chan);
 	}
@@ -217,25 +217,7 @@ static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, c
 		cain_sip_message("Computing branch id %s for message sent statelessly", branchid);
 	}
 }
-/*
-static void cain_sip_provider_read_message(cain_sip_provider_t *prov, cain_sip_channel_t *chan){
-	char buffer[cain_sip_network_buffer_size];
-	int err;
-	err=cain_sip_channel_recv(chan,buffer,sizeof(buffer));
-	if (err>0){
-		cain_sip_message_t *msg;
-		buffer[err]='\0';
-		cain_sip_message("provider %p read message from %s:%i\n%s",prov,chan->peer_name,chan->peer_port,buffer);
-		msg=cain_sip_message_parse(buffer);
-		if (msg){
-			if (cain_sip_message_is_request(msg)) fix_incoming_via(CAIN_SIP_REQUEST(msg),chan->peer);
-			cain_sip_provider_dispatch_message(prov,msg);
-		}else{
-			cain_sip_error("Could not parse this message.");
-		}
-	}
-}
-*/
+
 static int channel_on_event(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, unsigned int revents){
 	if (revents & CAIN_SIP_EVENT_READ){
 		cain_sip_message_t *msg=cain_sip_channel_pick_message(chan);
@@ -581,8 +563,14 @@ cain_sip_client_transaction_t * cain_sip_provider_find_matching_client_transacti
 }
 
 void cain_sip_provider_remove_client_transaction(cain_sip_provider_t *prov, cain_sip_client_transaction_t *t){	
-	prov->client_transactions=cain_sip_list_remove(prov->client_transactions,t);
-	cain_sip_object_unref(t);
+	cain_sip_list_t* elem=cain_sip_list_find(prov->client_transactions,t);
+	if (elem) {
+		prov->client_transactions=cain_sip_list_delete_link(prov->client_transactions,elem);
+		cain_sip_object_unref(t);
+	} else {
+		cain_sip_error("trying to remove transaction [%p] not part of provider [%p]",t,prov);
+	}
+
 }
 
 void cain_sip_provider_add_server_transaction(cain_sip_provider_t *prov, cain_sip_server_transaction_t *t){

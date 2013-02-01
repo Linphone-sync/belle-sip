@@ -71,11 +71,13 @@
 		const cain_sip_list_t *__elem=list;\
 		do{\
 			interface_name *__obj=(interface_name*)__elem->data;\
+			cain_sip_object_ref(__obj);\
 			void *__method=CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->method;\
 			if (__method) CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->
 
 #define __CAIN_SIP_INVOKE_LISTENER_END \
 			__elem=__elem->next;\
+			cain_sip_object_unref(__obj);\
 		}while(__elem!=NULL);\
 	}
 
@@ -523,7 +525,6 @@ struct cain_sip_transaction{
 	cain_sip_dialog_t *dialog;
 	char *branch_id;
 	cain_sip_transaction_state_t state;
-	cain_sip_transaction_state_t previous_state; /*just to provide user with information regarding state transition*/
 	uint64_t start_time;
 	void *appdata;
 	unsigned int  is_internal;

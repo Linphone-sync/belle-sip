@@ -60,6 +60,13 @@ cain_sip_dialog_t* cain_sip_dialog_terminated_get_dialog(const cain_sip_dialog_t
 cain_sip_client_transaction_t *cain_sip_timeout_event_get_client_transaction(const cain_sip_timeout_event_t* event);
 cain_sip_server_transaction_t *cain_sip_timeout_event_get_server_transaction(const cain_sip_timeout_event_t* event);
 
+/**
+ * Transaction Termonated Event
+ */
+cain_sip_client_transaction_t *cain_sip_transaction_terminated_event_get_client_transaction(const cain_sip_transaction_terminated_event_t* event);
+cain_sip_server_transaction_t *cain_sip_transaction_terminated_event_get_server_transaction(const cain_sip_transaction_terminated_event_t* event);
+
+
 /*auth event*/
 void cain_sip_auth_event_destroy(cain_sip_auth_event_t* event);
 const char* cain_sip_auth_event_get_username(const cain_sip_auth_event_t* event);
