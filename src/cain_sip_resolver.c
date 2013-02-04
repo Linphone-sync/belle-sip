@@ -78,6 +78,8 @@ struct dns_cache *cache(cain_sip_resolver_context_t *ctx) {
 }
 
 static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned int revents) {
+	char host[128];
+	const char *host_ptr;
 	struct dns_packet *ans;
 	struct dns_rr_i *I;
 	int error;
@@ -113,13 +115,24 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 					free(ans);
 					return CAIN_SIP_STOP;
 				}
-				if ((rr.class == DNS_C_IN) && (rr.type == DNS_T_A)) {
-					char host[64];
-					struct dns_a *a = &any.a;
-					ctx->ai = cain_sip_ip_address_to_addrinfo(inet_ntoa(a->addr), ctx->port);
+				if ((ctx->family == AF_INET6) && (rr.class == DNS_C_IN) && (rr.type == DNS_T_AAAA)) {
+					struct dns_aaaa *aaaa = &any.aaaa;
+					host_ptr = inet_ntop(ctx->family, &aaaa->addr, host, sizeof(host));
+					if (!host_ptr) continue;
+					ctx->ai = cain_sip_ip_address_to_addrinfo(host_ptr, ctx->port);
 					cain_sip_addrinfo_to_ip(ctx->ai, host, sizeof(host), NULL);
 					cain_sip_message("%s has address %s", ctx->name, host);
 					break;
+				} else {
+					if ((rr.class == DNS_C_IN) && (rr.type == DNS_T_A)) {
+						struct dns_a *a = &any.a;
+						host_ptr = inet_ntop(ctx->family, &a->addr, host, sizeof(host));
+						if (!host_ptr) continue;
+						ctx->ai = cain_sip_ip_address_to_addrinfo(host_ptr, ctx->port);
+						cain_sip_addrinfo_to_ip(ctx->ai, host, sizeof(host), NULL);
+						cain_sip_message("%s has address %s", ctx->name, host);
+						break;
+					}
 				}
 			}
 		}
@@ -232,7 +245,10 @@ unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int po
 		ctx->ai = NULL;
 		if (family == 0) family = AF_UNSPEC;
 		ctx->family = family;
-		if (resolver_start_query(ctx, (cain_sip_source_func_t)resolver_process_a_data, DNS_T_A, cain_sip_stack_get_dns_timeout(stack)) < 0) {
+		if (resolver_start_query(ctx,
+				(cain_sip_source_func_t)resolver_process_a_data,
+				(ctx->family == AF_INET6) ? DNS_T_AAAA : DNS_T_A,
+				cain_sip_stack_get_dns_timeout(stack)) < 0) {
 			cain_sip_object_unref(ctx);
 			return 0;
 		}
