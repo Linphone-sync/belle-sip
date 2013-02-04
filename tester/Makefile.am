@@ -13,7 +13,8 @@ cain_sip_tester_SOURCES=	cain_sip_tester.c \
 				cast_test.c \
 				cain_sip_register_tester.c \
 				cain_sip_dialog_tester.c \
-				cain_sip_refresher_tester.c
+				cain_sip_refresher_tester.c \
+				cain_sip_resolver_tester.c
 
 cain_sip_tester_CFLAGS=$(CUNIT_CFLAGS) $(STRICT_OPTIONS)
 

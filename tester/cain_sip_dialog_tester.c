@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include "CUnit/Basic.h"
 #include "cain-sip/cain-sip.h"
-#include "pthread.h"
 
 extern cain_sip_stack_t * stack;
 extern cain_sip_provider_t *prov;

@@ -37,6 +37,7 @@ extern int cain_sip_cast_test_suite();
 extern int cain_sip_register_test_suite();
 extern int cain_sip_dialog_test_suite();
 extern int cain_sip_refresher_test_suite();
+extern int cain_sip_resolver_test_suite();
 
 int main (int argc, char *argv[]) {
 	int i;
@@ -115,6 +116,8 @@ int main (int argc, char *argv[]) {
 	cain_sip_dialog_test_suite ();
 
 	cain_sip_refresher_test_suite();
+
+	cain_sip_resolver_test_suite();
 
 
 #if HAVE_CU_GET_SUITE
