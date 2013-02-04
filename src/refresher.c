@@ -47,8 +47,21 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 		cain_sip_refresher_stop(refresher);
 		refresher->listener(refresher,refresher->user_data,503, "io error");
 		return;
-	} else {
-		cain_sip_error("Refresher process_io_error not implemented yet for non transaction source");
+	} else if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_provider_t))) {
+		/*something went wrong on this provider, checking if my channel is still up*/
+		if (refresher->started &&
+								(cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_DISCONNECTED
+								||cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_ERROR)) {
+			cain_sip_message("refresher [%p] has channel [%p] in state [%s], reporting error"
+								,refresher
+								,refresher->transaction->base.channel
+								,cain_sip_channel_state_to_string(cain_sip_channel_get_state(refresher->transaction->base.channel)));
+			cain_sip_refresher_stop(refresher);
+			refresher->listener(refresher,refresher->user_data,503, "io error");
+		}
+		return;
+	}else {
+		cain_sip_error("Refresher process_io_error not implemented yet for non transaction/provider source");
 	}
 }
 
@@ -287,6 +300,7 @@ int cain_sip_refresher_start(cain_sip_refresher_t* refresher) {
 			cain_sip_message("Refresher [%p] started, next refresh in [%i] s",refresher,refresher->expires);
 		}
 	}
+	refresher->started=1;
 	return 0;
 }
 
@@ -296,6 +310,7 @@ void cain_sip_refresher_stop(cain_sip_refresher_t* refresher) {
 		cain_sip_object_unref(refresher->timer);
 		refresher->timer=NULL;
 	}
+	refresher->started=0;
 }
 cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction) {
 	cain_sip_refresher_t* refresher;

@@ -75,6 +75,8 @@ static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_cha
 		ev.host=chan->peer_name;
 		ev.source=CAIN_SIP_OBJECT(prov);
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_io_error,&ev);
+		/*IO error is also relevant for internal listener like refreshers*/
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->internal_listeners,process_io_error,&ev);
 		cain_sip_provider_release_channel(prov,chan);
 	}
 }
