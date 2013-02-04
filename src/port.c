@@ -42,37 +42,6 @@ void cain_sip_uninit_sockets(void){
 	if (sockets_initd==0) WSACleanup();
 }
 
-typedef struct thread_param{
-	void * (*func)(void *);
-	void * arg;
-}thread_param_t;
-
-static unsigned WINAPI thread_starter(void *data){
-	thread_param_t *params=(thread_param_t*)data;
-	void *ret=params->func(params->arg);
-	cain_sip_free(data);
-	return (DWORD)ret;
-}
-
-int cain_sip_thread_create(cain_sip_thread_t *th, void *attr, void * (*func)(void *), void *data)
-{
-	thread_param_t *params=cain_sip_new(thread_param_t);
-	params->func=func;
-	params->arg=data;
-	*th=(HANDLE)_beginthreadex( NULL, 0, thread_starter, params, 0, NULL);
-	return 0;
-}
-
-int cain_sip_thread_join(cain_sip_thread_t thread_h, void **unused)
-{
-	if (thread_h!=NULL)
-	{
-		WaitForSingleObject(thread_h, INFINITE);
-		CloseHandle(thread_h);
-	}
-	return 0;
-}
-
 int cain_sip_socket_set_nonblocking (cain_sip_socket_t sock)
 {
 	unsigned long nonBlock = 1;
