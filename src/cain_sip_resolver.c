@@ -51,8 +51,7 @@ static struct dns_resolv_conf *resconf(cain_sip_resolver_context_t *ctx) {
 	path = "/etc/nsswitch.conf";
 	error = dns_nssconf_loadpath(ctx->resconf, path);
 	if (error) {
-		cain_sip_error("%s dns_nssconf_loadpath error [%s]: %s", __FUNCTION__, path, dns_strerror(error));
-		return NULL;
+		cain_sip_message("%s dns_nssconf_loadpath error [%s]: %s", __FUNCTION__, path, dns_strerror(error));
 	}
 #endif
 
