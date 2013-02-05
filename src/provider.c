@@ -636,7 +636,7 @@ cain_sip_transaction_t * cain_sip_provider_find_matching_transaction(cain_sip_li
 	
 	if (elem){
 		ret=(cain_sip_transaction_t*)elem->data;
-		cain_sip_message("Found %s transaction [%p] matching request.",ret);
+		cain_sip_message("Found transaction [%p] matching request.",ret);
 	}
 	return ret;
 }
