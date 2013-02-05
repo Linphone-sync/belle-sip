@@ -57,13 +57,13 @@ static void cain_sip_authorization_destroy(authorization_context_t* object) {
 }
 
 static void cain_sip_provider_uninit(cain_sip_provider_t *p){
-	cain_sip_list_free(p->listeners);
-	cain_sip_list_free(p->internal_listeners);
-	cain_sip_list_free_with_data(p->client_transactions,cain_sip_object_unref);
-	cain_sip_list_free_with_data(p->server_transactions,cain_sip_object_unref);
-	cain_sip_list_free_with_data(p->auth_contexts,(void(*)(void*))cain_sip_authorization_destroy);
-	cain_sip_list_free_with_data(p->dialogs,cain_sip_object_unref);
-	cain_sip_list_free_with_data(p->lps,cain_sip_object_unref);
+	p->listeners=cain_sip_list_free(p->listeners);
+	p->listeners=cain_sip_list_free(p->internal_listeners);
+	p->client_transactions=cain_sip_list_free_with_data(p->client_transactions,cain_sip_object_unref);
+	p->server_transactions=cain_sip_list_free_with_data(p->server_transactions,cain_sip_object_unref);
+	p->auth_contexts=cain_sip_list_free_with_data(p->auth_contexts,(void(*)(void*))cain_sip_authorization_destroy);
+	p->dialogs=cain_sip_list_free_with_data(p->dialogs,cain_sip_object_unref);
+	p->lps=cain_sip_list_free_with_data(p->lps,cain_sip_object_unref);
 }
 
 static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
@@ -601,7 +601,7 @@ cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transacti
 	struct server_transaction_matcher matcher;
 	cain_sip_header_via_t *via=(cain_sip_header_via_t*)cain_sip_message_get_header((cain_sip_message_t*)req,"via");
 	cain_sip_server_transaction_t *ret=NULL;
-	cain_sip_list_t *elem;
+	cain_sip_list_t *elem=NULL;
 	if (via==NULL){
 		cain_sip_warning("Request has no via.");
 		return NULL;
