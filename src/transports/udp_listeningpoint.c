@@ -100,7 +100,7 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 	socklen_t addrlen=sizeof(addr);
 
 	if (events & CAIN_SIP_EVENT_READ){
-		cain_sip_message("udp_listening_point: data to read.");
+		cain_sip_debug("udp_listening_point: data to read.");
 		err=recvfrom(lp->sock,(char*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
 		if (err==-1){
 			cain_sip_error("udp_listening_point: recvfrom() failed: %s",cain_sip_get_socket_error_string());
@@ -126,7 +126,7 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 			}
 			if (chan){
 				/*notify the channel*/
-				cain_sip_message("Notifying udp channel, local [%s:%i]  remote [%s:%i]",chan->local_ip
+				cain_sip_debug("Notifying udp channel, local [%s:%i]  remote [%s:%i]",chan->local_ip
 																						,chan->local_port
 																						,chan->peer_name
 																						,chan->peer_port);

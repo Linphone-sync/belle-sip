@@ -164,7 +164,7 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 				}
 				obj->input_stream.state=MESSAGE_AQUISITION;
 			} else {
-				cain_sip_warning("Unexpected [%s] received on channel [%p], trashing",obj->input_stream.read_ptr,obj);
+				cain_sip_debug("Unexpected [%s] received on channel [%p], trashing",obj->input_stream.read_ptr,obj);
 				cain_sip_channel_input_stream_reset(&obj->input_stream,0);
 			}
 		}
