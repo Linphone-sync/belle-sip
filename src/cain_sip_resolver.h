@@ -37,6 +37,7 @@ typedef void (*cain_sip_resolver_callback_t)(void *data, const char *name, struc
 
 struct cain_sip_resolver_context{
 	cain_sip_source_t source;
+	cain_sip_stack_t *stack;
 	cain_sip_resolver_callback_t cb;
 	void *cb_data;
 	struct dns_resolv_conf *resconf;
