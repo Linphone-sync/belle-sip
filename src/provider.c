@@ -410,13 +410,31 @@ void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
 	const char *method=cain_sip_request_get_method(req);
 	cain_sip_client_transaction_t *t;
+	cain_sip_client_transaction_t *inv_transaction;
 	if (strcmp(method,"INVITE")==0)
 		t=(cain_sip_client_transaction_t*)cain_sip_ict_new(prov,req);
 	else if (strcmp(method,"ACK")==0){
 		cain_sip_error("cain_sip_provider_get_new_client_transaction() cannot be used for ACK requests.");
 		return NULL;
+	} else {
+		t=(cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
+		if (strcmp(method,"CANCEL")==0){
+			/*force next hop*/
+			inv_transaction=cain_sip_provider_find_matching_client_transaction_from_req(prov,req);
+			if (inv_transaction && inv_transaction->next_hop) {
+				/*found corresponding ict, taking next hop*/
+				/*9.1 Client Behavior
+				 * The destination address,
+				   port, and transport for the CANCEL MUST be identical to those used to
+				   send the original request.*/
+				t->next_hop=cain_sip_hop_create(inv_transaction->next_hop->transport
+												, inv_transaction->next_hop->host
+												, inv_transaction->next_hop->port);
+			} else {
+				cain_sip_error (" No corresponding ict nor dest found for cancel request attached to transaction [%p]",t);
+			}
+		}
 	}
-	else t=(cain_sip_client_transaction_t*)cain_sip_nict_new(prov,req);
 	cain_sip_transaction_set_dialog((cain_sip_transaction_t*)t,cain_sip_provider_find_dialog(prov,req,FALSE));
 	return t;
 }
@@ -579,28 +597,28 @@ void cain_sip_provider_add_server_transaction(cain_sip_provider_t *prov, cain_si
 	prov->server_transactions=cain_sip_list_prepend(prov->server_transactions,cain_sip_object_ref(t));
 }
 
-struct server_transaction_matcher{
+struct transaction_matcher{
 	const char *branchid;
 	const char *method;
 	const char *sentby;
 	int is_ack_or_cancel;
 };
 
-static int rfc3261_server_transaction_match(const void *p_tr, const void *p_matcher){
-	cain_sip_server_transaction_t *tr=(cain_sip_server_transaction_t*)p_tr;
-	struct server_transaction_matcher *matcher=(struct server_transaction_matcher*)p_matcher;
-	const char *req_method=cain_sip_request_get_method(tr->base.request);
-	if (strcmp(matcher->branchid,tr->base.branch_id)==0){
+static int rfc3261_transaction_match(const void *p_tr, const void *p_matcher){
+	cain_sip_transaction_t *tr=(cain_sip_transaction_t*)p_tr;
+	struct transaction_matcher *matcher=(struct transaction_matcher*)p_matcher;
+	const char *req_method=cain_sip_request_get_method(tr->request);
+	if (strcmp(matcher->branchid,tr->branch_id)==0){
 		if (strcmp(matcher->method,req_method)==0) return 0;
 		if (matcher->is_ack_or_cancel && strcmp(req_method,"INVITE")==0) return 0;
 	}
 	return -1;
 }
 
-cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){
-	struct server_transaction_matcher matcher;
+cain_sip_transaction_t * cain_sip_provider_find_matching_transaction(cain_sip_list_t *transactions, cain_sip_request_t *req){
+	struct transaction_matcher matcher;
 	cain_sip_header_via_t *via=(cain_sip_header_via_t*)cain_sip_message_get_header((cain_sip_message_t*)req,"via");
-	cain_sip_server_transaction_t *ret=NULL;
+	cain_sip_transaction_t *ret=NULL;
 	cain_sip_list_t *elem=NULL;
 	if (via==NULL){
 		cain_sip_warning("Request has no via.");
@@ -611,16 +629,24 @@ cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transacti
 	matcher.is_ack_or_cancel=(strcmp(matcher.method,"ACK")==0 || strcmp(matcher.method,"CANCEL")==0);
 	if (strncmp(matcher.branchid,CAIN_SIP_BRANCH_MAGIC_COOKIE,strlen(CAIN_SIP_BRANCH_MAGIC_COOKIE))==0){
 		/*compliant to RFC3261*/
-		elem=cain_sip_list_find_custom(prov->server_transactions,rfc3261_server_transaction_match,&matcher);
+		elem=cain_sip_list_find_custom(transactions,rfc3261_transaction_match,&matcher);
 	}else{
 		//FIXME
 	}
 	
 	if (elem){
-		ret=(cain_sip_server_transaction_t*)elem->data;
-		cain_sip_message("Found transaction matching request.");
+		ret=(cain_sip_transaction_t*)elem->data;
+		cain_sip_message("Found %s transaction [%p] matching request.",ret);
 	}
 	return ret;
+}
+cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req) {
+	cain_sip_transaction_t *ret=cain_sip_provider_find_matching_transaction(prov->server_transactions,req);
+	return ret?CAIN_SIP_SERVER_TRANSACTION(ret):NULL;
+}
+cain_sip_client_transaction_t * cain_sip_provider_find_matching_client_transaction_from_req(cain_sip_provider_t *prov, cain_sip_request_t *req) {
+	cain_sip_transaction_t *ret=cain_sip_provider_find_matching_transaction(prov->client_transactions,req);
+	return ret?CAIN_SIP_CLIENT_TRANSACTION(ret):NULL;
 }
 
 void cain_sip_provider_remove_server_transaction(cain_sip_provider_t *prov, cain_sip_server_transaction_t *t){	

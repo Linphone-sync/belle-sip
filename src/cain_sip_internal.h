@@ -500,6 +500,7 @@ void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_
 void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_t *chan);
 void cain_sip_provider_add_internal_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 void cain_sip_provider_remove_internal_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
+cain_sip_client_transaction_t * cain_sip_provider_find_matching_client_transaction_from_req(cain_sip_provider_t *prov, cain_sip_request_t *req) ;
 
 typedef struct listener_ctx{
 	cain_sip_listener_t *listener;
@@ -563,6 +564,7 @@ void cain_sip_transaction_set_dialog(cain_sip_transaction_t *t, cain_sip_dialog_
 struct cain_sip_client_transaction{
 	cain_sip_transaction_t base;
 	cain_sip_uri_t* preset_route; /*use to store outbound proxy, will be helpful for refresher*/
+	cain_sip_hop_t* next_hop; /*use to send cancel request*/
 };
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_client_transaction_t,cain_sip_transaction_t)
