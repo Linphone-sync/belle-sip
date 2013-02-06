@@ -51,18 +51,25 @@ typedef unsigned char uint8_t;
 
 #endif
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN32__)
+#ifdef CAINSIP_INTERNAL_EXPORTS
+#define CAINSIP_INTERNAL_EXPORT __declspec(dllexport)
+#else
+#define CAINSIP_INTERNAL_EXPORT extern
+#endif
+#else
+#define CAINSIP_INTERNAL_EXPORT extern
+#endif
+
 /*
  * Socket abstraction layer
  */
 
-int cain_sip_init_sockets(void);
-void cain_sip_uninit_sockets(void);
+CAINSIP_INTERNAL_EXPORT int cain_sip_init_sockets(void);
+CAINSIP_INTERNAL_EXPORT void cain_sip_uninit_sockets(void);
 int cain_sip_socket_set_nonblocking (cain_sip_socket_t sock);
  
 #if defined(WIN32)
-
-int cain_sip_init_sockets(void);
-void cain_sip_uninit_sockets(void);
 
 static inline void close_socket(cain_sip_socket_t s){
 	closesocket(s);

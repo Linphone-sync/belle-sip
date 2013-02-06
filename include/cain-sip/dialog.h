@@ -31,11 +31,11 @@ typedef enum cain_sip_dialog_state cain_sip_dialog_state_t;
 
 CAIN_SIP_BEGIN_DECLS
 
-const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state);
+CAINSIP_EXPORT const char* cain_sip_dialog_state_to_string(const cain_sip_dialog_state_t state);
 
-cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *dialog, unsigned int cseq);
+CAINSIP_EXPORT cain_sip_request_t *cain_sip_dialog_create_ack(cain_sip_dialog_t *dialog, unsigned int cseq);
 
-cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *dialog, const char *method);
+CAINSIP_EXPORT cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *dialog, const char *method);
 /**
  * Create a request within a dialog keeping non system header from an initial request. This function is very useful to resend request after expiration or chalenge.
  * @param obj dialog associated to the request
@@ -73,7 +73,7 @@ const cain_sip_header_address_t *cain_sip_dialog_get_remote_target(cain_sip_dial
 
 const cain_sip_list_t* cain_sip_dialog_get_route_set(cain_sip_dialog_t *dialog);
 
-cain_sip_dialog_state_t cain_sip_dialog_get_state(const cain_sip_dialog_t *dialog);
+CAINSIP_EXPORT cain_sip_dialog_state_t cain_sip_dialog_get_state(const cain_sip_dialog_t *dialog);
 /*
  * return the dialog state before last transition. Can be usefull to detect early avorted dialogs
  * @param dialog
@@ -86,7 +86,7 @@ int cain_sip_dialog_is_server(const cain_sip_dialog_t *dialog);
 
 int cain_sip_dialog_is_secure(const cain_sip_dialog_t *dialog);
 
-void cain_sip_dialog_send_ack(cain_sip_dialog_t *dialog, cain_sip_request_t *request);
+CAINSIP_EXPORT void cain_sip_dialog_send_ack(cain_sip_dialog_t *dialog, cain_sip_request_t *request);
 
 void cain_sip_dialog_terminate_on_bye(cain_sip_dialog_t *dialog, int val);
 

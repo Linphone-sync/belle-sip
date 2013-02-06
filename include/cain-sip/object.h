@@ -19,6 +19,8 @@
 #ifndef cain_sip_object_h
 #define cain_sip_object_h
 
+#include "cain-sip/defs.h"
+
 /*
  * typedefs, macros and functions for object definition and manipulation.
  */
@@ -126,7 +128,7 @@ struct _cain_sip_object_vptr{
 
 typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
 
-extern cain_sip_object_vptr_t cain_sip_object_t_vptr;		
+CAINSIP_EXPORT cain_sip_object_vptr_t cain_sip_object_t_vptr;		
 
 struct _cain_sip_object{
 	cain_sip_object_vptr_t *vptr;
@@ -140,7 +142,7 @@ struct _cain_sip_object{
 CAIN_SIP_BEGIN_DECLS
 
 
-cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr);
+CAINSIP_EXPORT cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr);
 
 #define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type))
 
@@ -152,13 +154,13 @@ int cain_sip_object_is_unowed(const cain_sip_object_t *obj);
  * If the object is initially unowed, this acquires the first reference.
  * 
 **/
-cain_sip_object_t * cain_sip_object_ref(void *obj);
+CAINSIP_EXPORT cain_sip_object_t * cain_sip_object_ref(void *obj);
 
 /*#define CAIN_SIP_REF(object,type) (type*)cain_sip_object_ref(object);*/
 /**
  * Decrements the reference counter. When it drops to zero, the object is destroyed.
 **/
-void cain_sip_object_unref(void *obj);
+CAINSIP_EXPORT void cain_sip_object_unref(void *obj);
 
 
 typedef void (*cain_sip_object_destroy_notify_t)(void *userpointer, cain_sip_object_t *obj_being_destroyed);
@@ -193,7 +195,7 @@ void _cain_sip_object_copy(cain_sip_object_t *newobj, const cain_sip_object_t *r
  * This clone function makes a deep copy of all object internal structure, so that the new object and the reference object have no dependencies at all.
  * 
 **/
-cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj);
+CAINSIP_EXPORT cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj);
 
 /**
  * Same as #cain_sip_object_clone but with ref count set to 1
@@ -212,14 +214,14 @@ char *cain_sip_object_describe(void *obj);
 **/
 char *cain_sip_object_describe_type_from_name(const char *name);
 
-void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
+CAINSIP_EXPORT void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_id_t id, const char *castname, const char *file, int fileno);
 
 /**
  * Returns a newly allocated string representing the object.
  * WHen the object is a sip header, uri or message, this is the textual representation of the header, uri or message.
  * This function internally calls cain_sip_object_marshal().
 **/
-char* cain_sip_object_to_string(cain_sip_object_t* obj);
+CAINSIP_EXPORT char* cain_sip_object_to_string(cain_sip_object_t* obj);
 
 /**
  * Writes a string representation of the object into the supplied buffer.
@@ -227,7 +229,7 @@ char* cain_sip_object_to_string(cain_sip_object_t* obj);
 **/
 int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
-int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
+CAINSIP_EXPORT int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
 
 CAIN_SIP_END_DECLS
 
@@ -249,7 +251,7 @@ typedef unsigned int cain_sip_interface_id_t;
 
 CAIN_SIP_BEGIN_DECLS
 
-void *cain_sip_object_interface_cast(cain_sip_object_t *obj, cain_sip_interface_id_t id, const char *castname, const char *file, int fileno);
+CAINSIP_EXPORT void *cain_sip_object_interface_cast(cain_sip_object_t *obj, cain_sip_interface_id_t id, const char *castname, const char *file, int fileno);
 
 int cain_sip_object_implements(cain_sip_object_t *obj, cain_sip_interface_id_t id);
 

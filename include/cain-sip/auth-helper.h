@@ -18,6 +18,8 @@
 
 #ifndef AUTHENTICATION_HELPER_H_
 #define AUTHENTICATION_HELPER_H_
+
+#include "cain-sip/defs.h"
 #include "cain-sip/cain-sip.h"
 
 /**
@@ -26,7 +28,7 @@
  * @param authentication source to be used as input
  * @return cain_sip_header_authorization_t*
  */
-cain_sip_header_authorization_t* cain_sip_auth_helper_create_authorization(const cain_sip_header_www_authenticate_t* authentication);
+CAINSIP_EXPORT cain_sip_header_authorization_t* cain_sip_auth_helper_create_authorization(const cain_sip_header_www_authenticate_t* authentication);
 
 /**
  * Create an proxy_authorization header from an www_authenticate header, all common parameters are copyed.
@@ -34,7 +36,7 @@ cain_sip_header_authorization_t* cain_sip_auth_helper_create_authorization(const
  * @param authentication source to be used as input
  * @return cain_sip_header_authorization_t*
  */
-cain_sip_header_proxy_authorization_t* cain_sip_auth_helper_create_proxy_authorization(const cain_sip_header_proxy_authenticate_t* proxy_authentication);
+CAINSIP_EXPORT cain_sip_header_proxy_authorization_t* cain_sip_auth_helper_create_proxy_authorization(const cain_sip_header_proxy_authenticate_t* proxy_authentication);
 
 /**
  * compute and set response value according to parameters
@@ -44,14 +46,14 @@ cain_sip_header_proxy_authorization_t* cain_sip_auth_helper_create_proxy_authori
  *
  * @return 0 if succeed
  */
-int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* authorization
+CAINSIP_EXPORT int cain_sip_auth_helper_fill_authorization(cain_sip_header_authorization_t* authorization
 												,const char* method
 												,const char* ha1);
 /**
  * compute and set response value according to parameters
  * @return 0 if succeed
  */
-int cain_sip_auth_helper_fill_proxy_authorization(cain_sip_header_proxy_authorization_t* proxy_authorization
+CAINSIP_EXPORT int cain_sip_auth_helper_fill_proxy_authorization(cain_sip_header_proxy_authorization_t* proxy_authorization
 												,const char* method
 												,const char* ha1);
 
@@ -60,27 +62,27 @@ int cain_sip_auth_helper_fill_proxy_authorization(cain_sip_header_proxy_authoriz
  * HA1=MD5(userid:realm:passwd)
  * return 0 in case of success
  * */
-int cain_sip_auth_helper_compute_ha1(const char* userid,const char* realm,const char* password, char ha1[33]);
+CAINSIP_EXPORT int cain_sip_auth_helper_compute_ha1(const char* userid,const char* realm,const char* password, char ha1[33]);
 /*
  * compute HA2 (NULL terminated)
  * HA2=MD5(method:uri)
  * return 0 in case of success
  * */
-int cain_sip_auth_helper_compute_ha2(const char* method,const char* uri, char ha2[33]);
+CAINSIP_EXPORT int cain_sip_auth_helper_compute_ha2(const char* method,const char* uri, char ha2[33]);
 
 /*
  * compute response(NULL terminated)
  * res=MD5(ha1:nonce:ha2)
  * return 0 in case of success
  * */
-int cain_sip_auth_helper_compute_response(const char* ha1,const char* nonce, const char* ha2, char response[33]);
+CAINSIP_EXPORT int cain_sip_auth_helper_compute_response(const char* ha1,const char* nonce, const char* ha2, char response[33]);
 
 /*
  * compute response(NULL terminated)
  * res=MD5(HA1:nonce:nonce_count:cnonce:qop:HA2)
  * return 0 in case of success
  * */
-int cain_sip_auth_helper_compute_response_qop_auth(	const char* ha1
+CAINSIP_EXPORT int cain_sip_auth_helper_compute_response_qop_auth(	const char* ha1
 													, const char* nonce
 													, unsigned int nonce_count
 													, const char* cnonce

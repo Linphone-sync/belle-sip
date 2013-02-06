@@ -39,37 +39,37 @@ typedef struct cain_sip_timer_config cain_sip_timer_config_t;
 
 CAIN_SIP_BEGIN_DECLS
 
-cain_sip_stack_t * cain_sip_stack_new(const char *properties);
+CAINSIP_EXPORT cain_sip_stack_t * cain_sip_stack_new(const char *properties);
 
-cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport);
+CAINSIP_EXPORT cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport);
 
 void cain_sip_stack_delete_listening_point(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
-cain_sip_provider_t *cain_sip_stack_create_provider(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
+CAINSIP_EXPORT cain_sip_provider_t *cain_sip_stack_create_provider(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
-cain_sip_main_loop_t* cain_sip_stack_get_main_loop(cain_sip_stack_t *stack);
+CAINSIP_EXPORT cain_sip_main_loop_t* cain_sip_stack_get_main_loop(cain_sip_stack_t *stack);
 
 void cain_sip_stack_main(cain_sip_stack_t *stack);
 
-void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
+CAINSIP_EXPORT void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
 
 int cain_sip_stack_get_transport_timeout(const cain_sip_stack_t *stack);
 
-int cain_sip_stack_get_dns_timeout(const cain_sip_stack_t *stack);
+CAINSIP_EXPORT int cain_sip_stack_get_dns_timeout(const cain_sip_stack_t *stack);
 
 void cain_sip_hop_free(cain_sip_hop_t *hop);
 
 /**
  * Can be used to simulate network transmission delays, for tests.
 **/
-void cain_sip_stack_set_tx_delay(cain_sip_stack_t *stack, int delay_ms);
+CAINSIP_EXPORT void cain_sip_stack_set_tx_delay(cain_sip_stack_t *stack, int delay_ms);
 /**
  * Can be used to simulate network sending error, for tests.
  * @param stack
  * @param send_error if <0, will cause channel error to be reported
 **/
 
-void cain_sip_stack_set_send_error(cain_sip_stack_t *stack, int send_error);
+CAINSIP_EXPORT void cain_sip_stack_set_send_error(cain_sip_stack_t *stack, int send_error);
 
 
 CAIN_SIP_END_DECLS

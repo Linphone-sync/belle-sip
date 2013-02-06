@@ -24,29 +24,29 @@
 
 CAIN_SIP_BEGIN_DECLS
 
-int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp);
+CAINSIP_EXPORT int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp);
 
 void cain_sip_provider_remove_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp);
 
-cain_sip_listening_point_t *cain_sip_provider_get_listening_point(cain_sip_provider_t *p, const char *transport);
+CAINSIP_EXPORT cain_sip_listening_point_t *cain_sip_provider_get_listening_point(cain_sip_provider_t *p, const char *transport);
 
 const cain_sip_list_t *cain_sip_provider_get_listening_points(cain_sip_provider_t *p);
 
-void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
+CAINSIP_EXPORT void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
-void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
+CAINSIP_EXPORT void cain_sip_provider_remove_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
-cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_provider_t *prov);
+CAINSIP_EXPORT cain_sip_header_call_id_t * cain_sip_provider_get_new_call_id(const cain_sip_provider_t *prov);
 
-cain_sip_dialog_t *cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, cain_sip_transaction_t *t);
+CAINSIP_EXPORT cain_sip_dialog_t *cain_sip_provider_get_new_dialog(cain_sip_provider_t *prov, cain_sip_transaction_t *t);
 
-cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *p, cain_sip_request_t *req);
+CAINSIP_EXPORT cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *p, cain_sip_request_t *req);
 
-cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *p, cain_sip_request_t *req);
+CAINSIP_EXPORT cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *p, cain_sip_request_t *req);
 
 cain_sip_stack_t *cain_sip_provider_get_sip_stack(cain_sip_provider_t *p);
 
-void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req);
+CAINSIP_EXPORT void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req);
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp);
 
@@ -62,7 +62,7 @@ void cain_sip_provider_clean_channels(cain_sip_provider_t *p);
  * @returns 0 in case of success,
  *
  **/
-int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp,cain_sip_list_t** auth_infos);
+CAINSIP_EXPORT int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request_t* request,cain_sip_response_t *resp,cain_sip_list_t** auth_infos);
 
 /**
  * Can be used to simulate network recv error, for tests.

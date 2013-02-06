@@ -55,10 +55,12 @@ static void testCOMPLEXURI(void) {
 
 static void testIPV6URI_base(const char* ip6) {
 	cain_sip_uri_t* L_tmp;
+	cain_sip_uri_t * L_uri;
+	char* l_raw_uri;
 	char uri[256];
 	snprintf(uri,sizeof(uri),"sip:toto@[%s]:5060;transport=tcp",ip6);
-	cain_sip_uri_t *  L_uri = cain_sip_uri_parse(uri);
-	char* l_raw_uri = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_uri));
+	L_uri = cain_sip_uri_parse(uri);
+	l_raw_uri = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_uri));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 	L_tmp = cain_sip_uri_parse(l_raw_uri);
 	L_uri = CAIN_SIP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
@@ -121,12 +123,13 @@ static void test_maddr(void) {
 
 }
 static void test_uri_parameters () {
+	char* l_raw_uri;
 	cain_sip_uri_t* L_tmp;
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:192.168.0.1;ttl=12");
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 
 	L_uri = cain_sip_uri_parse("sip:maddr=@192.168.0.1;lr;maddr=192.168.0.1;user=ip;ttl=140;transport=sctp;method=INVITE;rport=5060");
-	char* l_raw_uri = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_uri));
+	l_raw_uri = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_uri));
 
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 	L_tmp = cain_sip_uri_parse(l_raw_uri);

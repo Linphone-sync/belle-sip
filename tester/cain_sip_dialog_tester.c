@@ -117,15 +117,17 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 	cain_sip_message("process_io_error not implemented yet");
 }
 static void caller_process_request_event(void *user_ctx, const cain_sip_request_event_t *event) {
+	cain_sip_server_transaction_t* server_transaction;
+	cain_sip_response_t* resp;
+	cain_sip_dialog_t* dialog;
 	cain_sip_header_to_t* to=cain_sip_message_get_header_by_type(cain_sip_request_event_get_request(event),cain_sip_header_to_t);
 	if (!cain_sip_uri_equals(CAIN_SIP_URI(user_ctx),cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(to)))) {
 		return; /*not for the caller*/
 	}
 	cain_sip_message("caller_process_request_event received [%s] message",cain_sip_request_get_method(cain_sip_request_event_get_request(event)));
-	cain_sip_server_transaction_t* server_transaction =cain_sip_provider_get_new_server_transaction(prov,cain_sip_request_event_get_request(event));
-	cain_sip_response_t* resp;
+	server_transaction=cain_sip_provider_get_new_server_transaction(prov,cain_sip_request_event_get_request(event));
 	CU_ASSERT_STRING_EQUAL_FATAL("BYE",cain_sip_request_get_method(cain_sip_request_event_get_request(event)));
-	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(server_transaction));
+	dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(server_transaction));
 	CU_ASSERT_PTR_NOT_NULL_FATAL(dialog);
 	CU_ASSERT_EQUAL(cain_sip_dialog_get_state(dialog) , CAIN_SIP_DIALOG_CONFIRMED);
 	resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),200);
@@ -133,6 +135,10 @@ static void caller_process_request_event(void *user_ctx, const cain_sip_request_
 
 }
 static void callee_process_request_event(void *user_ctx, const cain_sip_request_event_t *event) {
+	cain_sip_dialog_t* dialog;
+	cain_sip_response_t* ringing_response;
+	cain_sip_header_content_type_t* content_type ;
+	cain_sip_header_content_length_t* content_length;
 	cain_sip_server_transaction_t* server_transaction = cain_sip_request_event_get_server_transaction(event);
 	cain_sip_header_to_t* to=cain_sip_message_get_header_by_type(cain_sip_request_event_get_request(event),cain_sip_header_to_t);
 	const char* method;
@@ -145,10 +151,7 @@ static void callee_process_request_event(void *user_ctx, const cain_sip_request_
 	}
 	
 	cain_sip_message("callee_process_request_event received [%s] message",method);
-	cain_sip_dialog_t* dialog =  cain_sip_request_event_get_dialog(event);
-	cain_sip_response_t* ringing_response;
-	cain_sip_header_content_type_t* content_type ;
-	cain_sip_header_content_length_t* content_length;
+	dialog = cain_sip_request_event_get_dialog(event);
 	if (!dialog ) {
 		CU_ASSERT_STRING_EQUAL_FATAL("INVITE",method);
 		dialog=cain_sip_provider_get_new_dialog(prov,CAIN_SIP_TRANSACTION(server_transaction));
@@ -182,14 +185,16 @@ static void caller_process_response_event(void *user_ctx, const cain_sip_respons
 	cain_sip_header_from_t* from=cain_sip_message_get_header_by_type(cain_sip_response_event_get_response(event),cain_sip_header_from_t);
 	cain_sip_header_cseq_t* invite_cseq=cain_sip_message_get_header_by_type(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(client_transaction)),cain_sip_header_cseq_t);
 	cain_sip_request_t* ack;
+	cain_sip_dialog_t* dialog;
+	int status;
 	if (!cain_sip_uri_equals(CAIN_SIP_URI(user_ctx),cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(from)))) {
 		return; /*not for the caller*/
 	}
 
-	int status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
+	status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
 	cain_sip_message("caller_process_response_event [%i]",status);
 	CU_ASSERT_PTR_NOT_NULL_FATAL(client_transaction);
-	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(client_transaction));
+	dialog = cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(client_transaction));
 	CU_ASSERT_PTR_NOT_NULL_FATAL(dialog);
 	CU_ASSERT_PTR_EQUAL(caller_dialog,dialog);
 	if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_NULL) {
@@ -209,6 +214,7 @@ static void caller_process_response_event(void *user_ctx, const cain_sip_respons
 
 }
 static void callee_process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
+	cain_sip_dialog_t* dialog;
 	cain_sip_client_transaction_t* client_transaction = cain_sip_response_event_get_client_transaction(event);
 	cain_sip_header_from_t* from=cain_sip_message_get_header_by_type(cain_sip_response_event_get_response(event),cain_sip_header_from_t);
 	int status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
@@ -216,7 +222,7 @@ static void callee_process_response_event(void *user_ctx, const cain_sip_respons
 		return; /*not for the callee*/
 	}
 	CU_ASSERT_PTR_NOT_NULL_FATAL(client_transaction);
-	cain_sip_dialog_t* dialog =  cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(client_transaction));
+	dialog = cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(client_transaction));
 	CU_ASSERT_PTR_NOT_NULL_FATAL(dialog);
 	CU_ASSERT_PTR_EQUAL(callee_dialog,dialog);
 	if (cain_sip_dialog_get_state(dialog) == CAIN_SIP_DIALOG_TERMINATED) {

@@ -35,7 +35,7 @@ typedef void (*cain_sip_refresher_listener_t) ( const cain_sip_refresher_t* refr
 /**
  * add a refresher listener
  */
-void cain_sip_refresher_set_listener(cain_sip_refresher_t* refresher, cain_sip_refresher_listener_t listener,void* user_pointer);
+CAINSIP_EXPORT void cain_sip_refresher_set_listener(cain_sip_refresher_t* refresher, cain_sip_refresher_listener_t listener,void* user_pointer);
 
 /**
  * start the refresher
@@ -44,7 +44,7 @@ int cain_sip_refresher_start(cain_sip_refresher_t* refresher);
 /**
  * stop refresher
  */
-void cain_sip_refresher_stop(cain_sip_refresher_t* refresher);
+CAINSIP_EXPORT void cain_sip_refresher_stop(cain_sip_refresher_t* refresher);
 
 /**
  * Manually initiate a new transaction .
@@ -52,7 +52,7 @@ void cain_sip_refresher_stop(cain_sip_refresher_t* refresher);
  * @param expires -1 means value extrated from the transaction
  * @return 0 if succeed
  */
-int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires);
+CAINSIP_EXPORT int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires);
 /**
  * returns current expires value;
  */

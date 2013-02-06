@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include "CUnit/Basic.h"
 #include "cain-sip/cain-sip.h"
+#include "cain_sip_internal.h"
 
 const char *test_domain="test.linphone.org";
 const char *auth_domain="sip.linphone.org";
@@ -49,13 +50,15 @@ static void process_response_event(cain_sip_listener_t *obj, const cain_sip_resp
 					,status=cain_sip_response_get_status_code(cain_sip_response_event_get_response(event))
 					,cain_sip_response_get_reason_phrase(cain_sip_response_event_get_response(event)));
 	if (status==401) {
+		cain_sip_header_cseq_t* cseq;
+		cain_sip_client_transaction_t *t;
 		CU_ASSERT_NOT_EQUAL_FATAL(number_of_challenge,2);
 		CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_response_event_get_client_transaction(event)); /*require transaction mode*/
 		request=cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(cain_sip_response_event_get_client_transaction(event)));
-		cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_CSEQ);
+		cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_CSEQ);
 		cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
 		CU_ASSERT_TRUE_FATAL(cain_sip_provider_add_authorization(prov,request,cain_sip_response_event_get_response(event),NULL));
-		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,request);
+		t=cain_sip_provider_get_new_client_transaction(prov,request);
 		cain_sip_client_transaction_send_request(t);
 		number_of_challenge++;
 		authorized_request=request;
@@ -112,8 +115,9 @@ CAIN_SIP_INSTANCIATE_VPTR(test_listener_t,cain_sip_object_t,NULL,NULL,NULL,FALSE
 static test_listener_t *listener;
 
 int register_init(void) {
+	cain_sip_listening_point_t *lp;
 	stack=cain_sip_stack_new(NULL);
-	cain_sip_listening_point_t* lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
+	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
 	prov=cain_sip_stack_create_provider(stack,lp);
 	
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"TCP");
@@ -138,22 +142,25 @@ void unregister_user(cain_sip_stack_t * stack
 					,cain_sip_request_t* initial_request
 					,int use_transaction) {
 	cain_sip_request_t *req;
+	cain_sip_header_cseq_t* cseq;
+	cain_sip_header_expires_t* expires_header;
+	int i;
 	cain_sip_provider_add_sip_listener(prov,l);
 	is_register_ok=0;
 	using_transaction=0;
 	req=(cain_sip_request_t*)cain_sip_object_clone((cain_sip_object_t*)initial_request);
-	cain_sip_header_cseq_t* cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)req,CAIN_SIP_CSEQ);
+	cseq=(cain_sip_header_cseq_t*)cain_sip_message_get_header((cain_sip_message_t*)req,CAIN_SIP_CSEQ);
 	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+2); /*+2 if initial reg was challenged*/
-	cain_sip_header_expires_t* expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_EXPIRES);
+	expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_EXPIRES);
 	cain_sip_header_expires_set_expires(expires_header,0);
 	if (use_transaction){
+		cain_sip_client_transaction_t *t;
 		cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_AUTHORIZATION);
 		cain_sip_message_remove_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_PROXY_AUTHORIZATION);
 		cain_sip_provider_add_authorization(prov,req,NULL,NULL); /*just in case*/
-		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
+		t=cain_sip_provider_get_new_client_transaction(prov,req);
 		cain_sip_client_transaction_send_request(t);
 	}else cain_sip_provider_send_request(prov,req);
-	int i;
 	for(i=0;!is_register_ok && i<2 ;i++)
 		cain_sip_stack_sleep(stack,5000);
 	CU_ASSERT_EQUAL(is_register_ok,1);
@@ -171,6 +178,7 @@ cain_sip_request_t* try_register_user_at_domain(cain_sip_stack_t * stack
 	cain_sip_request_t *req,*copy;
 	char identity[256];
 	char uri[256];
+	int i;
 	number_of_challenge=0;
 	if (transport)
 		snprintf(uri,sizeof(uri),"sip:%s;transport=%s",domain,transport);
@@ -201,7 +209,6 @@ cain_sip_request_t* try_register_user_at_domain(cain_sip_stack_t * stack
 		cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
 		cain_sip_client_transaction_send_request_to(t,outband?cain_sip_uri_parse(outband):NULL);
 	}else cain_sip_provider_send_request(prov,req);
-	int i;
 	for(i=0;!is_register_ok && i<2 ;i++)
 		cain_sip_stack_sleep(stack,5000);
 	CU_ASSERT_EQUAL(is_register_ok,success_expected);
@@ -296,13 +303,15 @@ static void bad_req_process_response_event(void *user_ctx, const cain_sip_respon
 
 static void test_bad_request() {
 	cain_sip_request_t *req;
+	cain_sip_listener_t *bad_req_listener;
+	cain_sip_client_transaction_t *t;
 	cain_sip_header_address_t* route_address=cain_sip_header_address_create(NULL,cain_sip_uri_create(NULL,test_domain));
 	cain_sip_header_route_t* route;
 	cain_sip_header_to_t* to = cain_sip_header_to_create2("sip:toto@titi.com",NULL);
 	cain_sip_listener_callbacks_t cbs;
 	memset(&cbs,0,sizeof(cbs));
 
-	cain_sip_listener_t* bad_req_listener = cain_sip_listener_create_from_callbacks(&cbs,NULL);
+	bad_req_listener = cain_sip_listener_create_from_callbacks(&cbs,NULL);
 	cbs.process_io_error=bad_req_process_io_error;
 	cbs.process_response_event=bad_req_process_response_event;
 
@@ -324,7 +333,7 @@ static void test_bad_request() {
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(route));
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_contact_new()));
 	cain_sip_provider_add_sip_listener(prov,bad_req_listener);
-	cain_sip_client_transaction_t *t=cain_sip_provider_get_new_client_transaction(prov,req);
+	t=cain_sip_provider_get_new_client_transaction(prov,req);
 	cain_sip_client_transaction_send_request(t);
 	cain_sip_stack_sleep(stack,100);
 	cain_sip_provider_remove_sip_listener(prov,bad_req_listener);

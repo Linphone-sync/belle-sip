@@ -61,6 +61,8 @@
 
 #endif
 
+#include "port.h"
+
 /*etc*/
 
 #define CAIN_SIP_INTERFACE_GET_METHODS(obj,interface) \
@@ -429,7 +431,7 @@ struct _cain_sip_header {
 };
 
 void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next);
-cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* headers);
+CAINSIP_INTERNAL_EXPORT cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* headers);
 void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_request_t *req);
 void cain_sip_util_copy_headers(cain_sip_message_t *orig, cain_sip_message_t *dest, const char*header, int multiple);
 

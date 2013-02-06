@@ -31,7 +31,7 @@ const char *cain_sip_listening_point_get_ip_address(const  cain_sip_listening_po
  * @param lp object
  * @param ms keep alive period in ms. Values <=0 disable keep alive
  * */
-void cain_sip_listening_point_set_keep_alive(cain_sip_listening_point_t *lp,int ms);
+CAINSIP_EXPORT void cain_sip_listening_point_set_keep_alive(cain_sip_listening_point_t *lp,int ms);
 
 /*
  * get keep alive frequency in ms
@@ -46,7 +46,7 @@ int cain_sip_listening_point_get_keep_alive(const cain_sip_listening_point_t *lp
  * get the listening information as an URI
  * @return IP/port/transport as an URI
  */
-const cain_sip_uri_t* cain_sip_listening_point_get_uri(const  cain_sip_listening_point_t *ip);
+CAINSIP_EXPORT const cain_sip_uri_t* cain_sip_listening_point_get_uri(const  cain_sip_listening_point_t *ip);
 int cain_sip_listening_point_is_reliable(const cain_sip_listening_point_t *lp);
 void cain_sip_listening_point_clean_channels(cain_sip_listening_point_t *lp);
 int cain_sip_listening_point_get_well_known_port(const char *transport);

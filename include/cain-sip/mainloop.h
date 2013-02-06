@@ -106,12 +106,12 @@ void cain_sip_main_loop_run(cain_sip_main_loop_t *ml);
 /**
  * Executes the main loop for the time specified in milliseconds.
 **/
-void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds);
+CAINSIP_EXPORT void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds);
 
 /**
  * Break out the main loop.
 **/
-int cain_sip_main_loop_quit(cain_sip_main_loop_t *ml);
+CAINSIP_EXPORT int cain_sip_main_loop_quit(cain_sip_main_loop_t *ml);
 
 /**
  * Cancel (removes) a source. It is not freed.
