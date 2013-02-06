@@ -64,6 +64,22 @@ cain_sip_main_loop_t *cain_sip_main_loop_new(void);
 **/
 unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
 
+/**
+ * Adds a timeout into the main loop
+ * @param ml
+ * @param func a callback function to be called to notify timeout expiration
+ * @param data a pointer to be passed to the callback
+ * @param timeout_value_ms duration of the timeout.
+ * @param timer_name name of the timer, can be null
+ * @returns timeout cain_sip_source_t  with ref count = 1
+**/
+cain_sip_source_t* cain_sip_main_loop_create_timeout(cain_sip_main_loop_t *ml
+														, cain_sip_source_func_t func
+														, void *data
+														, unsigned int timeout_value_ms
+														,const char* timer_name);
+
+
 
 /**
  * Creates a timeout source, similarly to cain_sip_main_loop_add_timeout().

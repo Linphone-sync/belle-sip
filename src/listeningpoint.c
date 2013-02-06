@@ -38,6 +38,7 @@ static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
 	cain_sip_object_unref(lp->listening_uri);
 	lp->channel_listener=NULL; /*does not unref provider*/
 	cain_sip_uninit_sockets();
+	cain_sip_listening_point_set_keep_alive(lp,-1);
 }
 
 
@@ -145,4 +146,69 @@ void cain_sip_listener_set_channel_listener(cain_sip_listening_point_t *lp,cain_
 	lp->channel_listener=channel_listener;
 }
 
+static int send_keep_alive(cain_sip_channel_t* obj) {
+	/*keep alive*/
+			const char* crlfcrlf = "\r\n\r\n";
+			int size=strlen(crlfcrlf);
+			if (cain_sip_channel_send(obj,crlfcrlf,size)<0){
+				cain_sip_error("channel [%p]: could not send [%i] bytes of keep alive from [%s://%s:%i]  to [%s:%i]"	,obj
+																										,size
+																										,cain_sip_channel_get_transport_name(obj)
+																										,obj->local_ip
+																										,obj->local_port
+																										,obj->peer_name
+																										,obj->peer_port);
+
+				return -1;
+			}else{
+				cain_sip_message("channel [%p]: keep alive sent to [%s://%s:%i]"
+									,obj
+									,cain_sip_channel_get_transport_name(obj)
+									,obj->peer_name
+									,obj->peer_port);
+				return 0;
+			}
+}
+static int keep_alive_timer_func(void *user_data, unsigned int events) {
+	cain_sip_listening_point_t* lp=(cain_sip_listening_point_t*)user_data;
+	cain_sip_list_t* iterator;
+	cain_sip_channel_t* channel;
+		for (iterator=lp->channels;iterator!=NULL;iterator=iterator->next) {
+			channel=(cain_sip_channel_t*)iterator->data;
+			if (send_keep_alive(channel)) {
+					channel_set_state(channel,CAIN_SIP_CHANNEL_ERROR);
+					cain_sip_channel_close(channel);
+			}
+	}
+	return CAIN_SIP_CONTINUE;
+}
+void cain_sip_listening_point_set_keep_alive(cain_sip_listening_point_t *lp,int ms) {
+
+	if (ms <=0) {
+		if(lp->keep_alive_timer) {
+			cain_sip_main_loop_remove_source(lp->stack->ml,lp->keep_alive_timer);
+			cain_sip_object_unref(lp->keep_alive_timer);
+			lp->keep_alive_timer=NULL;
+		}
+		return;
+	}
+
+	if (!lp->keep_alive_timer) {
+		lp->keep_alive_timer = cain_sip_main_loop_create_timeout(lp->stack->ml
+																, keep_alive_timer_func
+																, lp
+																, ms
+																,"keep alive") ;
+	} else {
+		cain_sip_source_set_timeout(lp->keep_alive_timer,ms);
+	}
+
+	return;
+
+}
+
+int cain_sip_listening_point_get_keep_alive(const cain_sip_listening_point_t *lp) {
+	return lp->keep_alive_timer?cain_sip_source_get_timeout(lp->keep_alive_timer):-1;
+
+}
 

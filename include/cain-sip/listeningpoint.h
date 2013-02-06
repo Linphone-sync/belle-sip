@@ -24,8 +24,24 @@ CAIN_SIP_BEGIN_DECLS
 
 const char *cain_sip_listening_point_get_ip_address(const cain_sip_listening_point_t *lp);
 int cain_sip_listening_point_get_port(const cain_sip_listening_point_t *lp);
-const char *cain_sip_listening_point_get_transport(const cain_sip_listening_point_t *ip);
-const char *cain_sip_listening_point_get_ip_address(const  cain_sip_listening_point_t *ip);
+const char *cain_sip_listening_point_get_transport(const cain_sip_listening_point_t *lp);
+const char *cain_sip_listening_point_get_ip_address(const  cain_sip_listening_point_t *lp);
+/*
+ * set keep alive frequency in ms
+ * @param lp object
+ * @param ms keep alive period in ms. Values <=0 disable keep alive
+ * */
+void cain_sip_listening_point_set_keep_alive(cain_sip_listening_point_t *lp,int ms);
+
+/*
+ * get keep alive frequency in ms
+ * @param lp object
+ * @return  keep alive period in ms. Values <=0 disable keep alive
+ * */
+int cain_sip_listening_point_get_keep_alive(const cain_sip_listening_point_t *lp);
+
+
+
 /**
  * get the listening information as an URI
  * @return IP/port/transport as an URI

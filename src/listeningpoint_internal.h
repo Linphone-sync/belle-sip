@@ -40,8 +40,9 @@ struct cain_sip_listening_point{
 	cain_sip_object_t base;
 	cain_sip_stack_t *stack;
 	cain_sip_list_t *channels;
-	cain_sip_channel_listener_t* channel_listener; /*inital chennel listener used for channel creation*/
+	cain_sip_channel_listener_t* channel_listener; /*initial chennel listener used for channel creation*/
 	cain_sip_uri_t* listening_uri;
+	cain_sip_source_t* keep_alive_timer;
 };
 
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s,  const char *address, int port);

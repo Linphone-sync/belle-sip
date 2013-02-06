@@ -273,11 +273,18 @@ void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *
 	ml->nsources++;
 }
 
-
-unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
+cain_sip_source_t* cain_sip_main_loop_create_timeout(cain_sip_main_loop_t *ml
+														, cain_sip_source_func_t func
+														, void *data
+														, unsigned int timeout_value_ms
+														,const char* timer_name) {
 	cain_sip_source_t * s=cain_sip_timeout_source_new(func,data,timeout_value_ms);
-	cain_sip_object_set_name((cain_sip_object_t*)s,"timeout");
+	cain_sip_object_set_name((cain_sip_object_t*)s,timer_name);
 	cain_sip_main_loop_add_source(ml,s);
+	return s;
+}
+unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms){
+	cain_sip_source_t * s=cain_sip_main_loop_create_timeout(ml,func,data,timeout_value_ms,"Timer");
 	cain_sip_object_unref(s);
 	return s->id;
 }

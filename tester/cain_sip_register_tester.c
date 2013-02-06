@@ -113,7 +113,7 @@ static test_listener_t *listener;
 
 int register_init(void) {
 	stack=cain_sip_stack_new(NULL);
-	cain_sip_listening_point_t *lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
+	cain_sip_listening_point_t* lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
 	prov=cain_sip_stack_create_provider(stack,lp);
 	
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"TCP");
@@ -256,7 +256,12 @@ static void stateless_register_tcp(void){
 static void stateful_register_udp(void){
 	register_test(NULL,1);
 }
-
+static void stateful_register_udp_with_keep_alive() {
+	cain_sip_listening_point_set_keep_alive(cain_sip_provider_get_listening_point(prov,"udp"),200);
+	register_test(NULL,1);
+	cain_sip_main_loop_sleep(cain_sip_stack_get_main_loop(stack),500);
+	cain_sip_listening_point_set_keep_alive(cain_sip_provider_get_listening_point(prov,"udp"),-1);
+}
 static void stateful_register_udp_with_outband_proxy(void){
 	register_with_outband("udp",1,test_domain);
 }
@@ -340,9 +345,13 @@ static void test_register_authenticate() {
 int cain_sip_register_test_suite(){
 	CU_pSuite pSuite = CU_add_suite("Register", register_init, register_uninit);
 
-	if (NULL == CU_add_test(pSuite, "stateful-udp-register", stateful_register_udp)) {
+	if (NULL == CU_add_test(pSuite, "stateful_register_udp", stateful_register_udp)) {
 		return CU_get_error();
 	}
+	if (NULL == CU_add_test(pSuite, "stateful_register_udp_with_keep_alive", stateful_register_udp_with_keep_alive)) {
+			return CU_get_error();
+	}
+
 	if (NULL == CU_add_test(pSuite, "stateful-udp-register-with-network-delay", stateful_register_udp_delayed)) {
 		return CU_get_error();
 	}
