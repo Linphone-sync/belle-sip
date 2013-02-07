@@ -40,6 +40,7 @@
 #define CAINSIP_VAR_EXPORT extern __declspec(dllimport)
 #endif
 #else
+#define CAINSIP_VAR_EXPORT extern
 #define CAINSIP_EXPORT extern
 #endif
 
