@@ -197,9 +197,10 @@ void cain_sip_server_transaction_on_request(cain_sip_server_transaction_t *t, ca
 			cain_sip_ist_t *ist=(cain_sip_ist_t*)t;
 			if (cain_sip_ist_process_ack(ist,(cain_sip_message_t*)req)==0){
 				cain_sip_dialog_t *dialog=t->base.dialog;
-				if (dialog && cain_sip_dialog_handle_ack(dialog,req)==-1)
-					dialog=NULL;
-				server_transaction_notify(t,req,dialog);
+				if (dialog && cain_sip_dialog_handle_ack(dialog,req)==0)
+					server_transaction_notify(t,req,dialog);
+				/*else nothing to do because retransmission of ACK*/
+
 			}
 		}else{
 			cain_sip_warning("ACK received for non-invite server transaction ?");

@@ -173,13 +173,17 @@ static int keep_alive_timer_func(void *user_data, unsigned int events) {
 	cain_sip_listening_point_t* lp=(cain_sip_listening_point_t*)user_data;
 	cain_sip_list_t* iterator;
 	cain_sip_channel_t* channel;
-		for (iterator=lp->channels;iterator!=NULL;iterator=iterator->next) {
-			channel=(cain_sip_channel_t*)iterator->data;
-			if (send_keep_alive(channel)) {
-					channel_set_state(channel,CAIN_SIP_CHANNEL_ERROR);
-					cain_sip_channel_close(channel);
-			}
+		/*list is copied to make sure it is not altered in case of error*/
+	for (iterator=cain_sip_list_copy(lp->channels);iterator!=NULL;iterator=iterator->next) {
+		channel=(cain_sip_channel_t*)iterator->data;
+		cain_sip_object_ref(channel); /*to make sure channels are still valid even if error is reported*/
+		if (channel->state == CAIN_SIP_CHANNEL_READY && send_keep_alive(channel)) { /*only send keep alive if ready*/
+			channel_set_state(channel,CAIN_SIP_CHANNEL_ERROR);
+			cain_sip_channel_close(channel);
+		}
+		cain_sip_object_unref(channel);
 	}
+	cain_sip_list_free(iterator);
 	return CAIN_SIP_CONTINUE;
 }
 void cain_sip_listening_point_set_keep_alive(cain_sip_listening_point_t *lp,int ms) {

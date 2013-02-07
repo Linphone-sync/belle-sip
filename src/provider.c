@@ -96,6 +96,7 @@ static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_s
 
 		ev.dialog=cain_sip_provider_find_dialog(prov,req,1/*request=uas*/);
 		if (strcmp("ACK",cain_sip_request_get_method(req))==0 && ev.dialog){
+			cain_sip_warning("Provider [%p] received an unexpected stateless ACK",prov);
 			if (cain_sip_dialog_handle_ack(ev.dialog,req)==-1){
 				/*absorbed ACK retransmission, ignore */
 				return;
