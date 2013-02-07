@@ -55,7 +55,7 @@ typedef unsigned char uint8_t;
 #ifdef CAINSIP_INTERNAL_EXPORTS
 #define CAINSIP_INTERNAL_EXPORT __declspec(dllexport)
 #else
-#define CAINSIP_INTERNAL_EXPORT extern
+#define CAINSIP_INTERNAL_EXPORT
 #endif
 #else
 #define CAINSIP_INTERNAL_EXPORT extern

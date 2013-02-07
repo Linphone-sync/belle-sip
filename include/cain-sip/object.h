@@ -41,7 +41,7 @@ typedef unsigned int cain_sip_type_id_t;
 
 #define CAIN_SIP_DECLARE_VPTR(object_type) \
 	typedef cain_sip_object_vptr_t CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
-	extern CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type);
+	CAINSIP_EXPORT CAIN_SIP_OBJECT_VPTR_TYPE(object_type) CAIN_SIP_OBJECT_VPTR_NAME(object_type);
 
 #define CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(object_type, parent_type) \
 	typedef struct object_type##_vptr_struct CAIN_SIP_OBJECT_VPTR_TYPE(object_type);\
@@ -128,8 +128,6 @@ struct _cain_sip_object_vptr{
 
 typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
 
-CAINSIP_EXPORT cain_sip_object_vptr_t cain_sip_object_t_vptr;		
-
 struct _cain_sip_object{
 	cain_sip_object_vptr_t *vptr;
 	size_t size;
@@ -140,6 +138,8 @@ struct _cain_sip_object{
 
 
 CAIN_SIP_BEGIN_DECLS
+
+CAINSIP_VAR_EXPORT cain_sip_object_vptr_t cain_sip_object_t_vptr;		
 
 
 CAINSIP_EXPORT cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t *vptr);

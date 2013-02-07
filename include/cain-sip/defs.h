@@ -34,8 +34,10 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN32__)
 #ifdef CAINSIP_EXPORTS
 #define CAINSIP_EXPORT __declspec(dllexport)
+#define CAINSIP_VAR_EXPORT __declspec(dllexport)
 #else
-#define CAINSIP_EXPORT extern
+#define CAINSIP_EXPORT
+#define CAINSIP_VAR_EXPORT extern __declspec(dllimport)
 #endif
 #else
 #define CAINSIP_EXPORT extern
