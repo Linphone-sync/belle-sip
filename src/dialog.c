@@ -315,6 +315,15 @@ static void cain_sip_dialog_stop_200Ok_retrans(cain_sip_dialog_t *obj){
 
 int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas){
 	int code;
+
+	/*first update local/remote cseq*/
+	if (as_uas) {
+		cain_sip_header_cseq_t* cseq=cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(req),cain_sip_header_cseq_t);
+		if (cain_sip_header_cseq_get_seq_number(cseq)<=obj->remote_cseq) {
+			cain_sip_error("Non monotonic cseq [%i] previous was [%i]",cain_sip_header_cseq_get_seq_number(cseq),obj->remote_cseq);
+		}
+		obj->remote_cseq=cain_sip_header_cseq_get_seq_number(cseq);
+	}
 	switch (obj->state){
 		case CAIN_SIP_DIALOG_NULL:
 		case CAIN_SIP_DIALOG_EARLY:
