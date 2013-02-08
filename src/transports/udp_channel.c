@@ -39,7 +39,7 @@ static int udp_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buf
 	int err;
 	err=sendto(chan->sock,buf,buflen,0,obj->peer->ai_addr,obj->peer->ai_addrlen);
 	if (err==-1){
-		cain_sip_error("channel [%p]: could not send UDP packet because [%s]",obj,strerror(errno));
+		cain_sip_error("channel [%p]: could not send UDP packet because [%s]",obj,cain_sip_get_socket_error_string());
 		return -errno;
 	}
 	return err;
@@ -52,8 +52,8 @@ static int udp_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	socklen_t addrlen=sizeof(addr);
 	err=recvfrom(chan->sock,buf,buflen,0,(struct sockaddr*)&addr,&addrlen);
 
-	if (err==-1 && errno!=EWOULDBLOCK){
-		cain_sip_error("Could not receive UDP packet: %s",strerror(errno));
+	if (err==-1 && get_socket_error()!=CAINSIP_EWOULDBLOCK){
+		cain_sip_error("Could not receive UDP packet: %s",cain_sip_get_socket_error_string());
 		return -errno;
 	}
 	return err;

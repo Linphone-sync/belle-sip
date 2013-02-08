@@ -76,13 +76,13 @@ static cain_sip_socket_t create_udp_socket(const char *addr, int port){
 	}
 	sock=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
 	if (sock==-1){
-		cain_sip_error("Cannot create UDP socket: %s",strerror(errno));
+		cain_sip_error("Cannot create UDP socket: %s",cain_sip_get_socket_error_string());
 		freeaddrinfo(res);
 		return -1;
 	}
 	err=bind(sock,res->ai_addr,res->ai_addrlen);
 	if (err==-1){
-		cain_sip_error("udp bind() failed for %s port %i: %s",addr,port,strerror(errno));
+		cain_sip_error("udp bind() failed for %s port %i: %s",addr,port,cain_sip_get_socket_error_string());
 		close_socket(sock);
 		freeaddrinfo(res);
 		return -1;

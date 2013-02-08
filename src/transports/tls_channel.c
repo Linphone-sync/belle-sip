@@ -75,7 +75,7 @@ static ssize_t tls_channel_pull_func(gnutls_transport_ptr_t obj, void* buff, siz
 	int err=recv(
 		cain_sip_source_get_socket((cain_sip_source_t *)obj),buff,bufflen,0);
 	if (err==-1){
-		if (get_socket_error()!=EWOULDBLOCK){
+		if (get_socket_error()!=CAINSIP_EWOULDBLOCK){
 			cain_sip_error("tls_channel_pull_func: %s",cain_sip_get_socket_error_string());
 		}else gnutls_transport_set_errno(channel->session,EAGAIN); /*necessary on windows*/
 	}

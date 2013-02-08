@@ -89,13 +89,8 @@ static inline int inet_aton(const char *ip, struct in_addr *p){
 	return 0;
 }
 
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
-#endif
-
-#ifndef EINPROGRESS
-#define EINPROGRESS WSAEINPROGRESS
-#endif
+#define CAINSIP_EWOULDBLOCK WSAEWOULDBLOCK
+#define CAINSIP_EINPROGRESS WSAEINPROGRESS
 
 #else
 
@@ -108,6 +103,9 @@ static inline int get_socket_error(void){
 }
 #define cain_sip_get_socket_error_string() strerror(errno)
 #define cain_sip_get_socket_error_string_from_code(code) strerror(code)
+
+#define CAINSIP_EWOULDBLOCK EWOULDBLOCK
+#define CAINSIP_EINPROGRESS EINPROGRESS
 
 #endif
 

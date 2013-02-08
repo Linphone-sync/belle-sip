@@ -35,7 +35,7 @@ int stream_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen)
 	int err;
 	err=send(sock,buf,buflen,0);
 	if (err==(cain_sip_socket_t)-1){
-		cain_sip_error("Could not send stream packet on channel [%p]: %s",obj,strerror(errno));
+		cain_sip_error("Could not send stream packet on channel [%p]: %s",obj,cain_sip_get_socket_error_string());
 		return -errno;
 	}
 	return err;
@@ -46,7 +46,7 @@ int stream_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	int err;
 	err=recv(sock,buf,buflen,0);
 	if (err==(cain_sip_socket_t)-1){
-		cain_sip_error("Could not receive stream packet: %s",strerror(errno));
+		cain_sip_error("Could not receive stream packet: %s",cain_sip_get_socket_error_string());
 		return -errno;
 	}
 	return err;
@@ -82,7 +82,7 @@ int stream_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
 	
 	err = connect(sock,ai->ai_addr,ai->ai_addrlen);
-	if (err != 0 && get_socket_error()!=EINPROGRESS && get_socket_error()!=EWOULDBLOCK) {
+	if (err != 0 && get_socket_error()!=CAINSIP_EINPROGRESS && get_socket_error()!=CAINSIP_EWOULDBLOCK) {
 		cain_sip_error("stream connect failed %s",cain_sip_get_socket_error_string());
 		close_socket(sock);
 		return -1;
