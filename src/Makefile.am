@@ -65,7 +65,7 @@ if BUILD_TLS
 libcainsip_la_SOURCES+=transports/tls_channel.c 
 endif
 
-libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS) $(TLS_CFLAGS)
+libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS) $(TLS_CFLAGS) $(LIBCAINSIP_CFLAGS)
 
 libcainsip_la_LIBADD=libcainsip_generated.la $(ANTLR_LIBS) $(TLS_LIBS)
 

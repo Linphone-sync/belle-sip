@@ -44,6 +44,6 @@
 #define CAINSIP_EXPORT extern
 #endif
 
-#define CAINSIP_UNUSED(a) a;
+#define CAINSIP_UNUSED(a) (void)a;
 
 #endif
