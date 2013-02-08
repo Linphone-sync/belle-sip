@@ -30,19 +30,19 @@ cain_sip_stack_t * stack;
 cain_sip_provider_t *prov;
 static cain_sip_listener_t* l;
 
-static void process_dialog_terminated(cain_sip_listener_t *obj, const cain_sip_dialog_terminated_event_t *event){
+static void process_dialog_terminated(void *user_ctx, const cain_sip_dialog_terminated_event_t *event){
 	cain_sip_message("process_dialog_terminated called");
 }
-static void process_io_error(cain_sip_listener_t *obj, const cain_sip_io_error_event_t *event){
+static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *event){
 	cain_sip_warning("process_io_error");
 	cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
 	/*CU_ASSERT(CU_FALSE);*/
 }
-static void process_request_event(cain_sip_listener_t *obj, const cain_sip_request_event_t *event){
+static void process_request_event(void *user_ctx, const cain_sip_request_event_t *event){
 	cain_sip_message("process_request_event");
 }
 cain_sip_request_t* authorized_request;
-static void process_response_event(cain_sip_listener_t *obj, const cain_sip_response_event_t *event){
+static void process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
 	int status;
 	cain_sip_request_t* request;
 	CU_ASSERT_PTR_NOT_NULL_FATAL(cain_sip_response_event_get_response(event));
@@ -70,49 +70,22 @@ static void process_response_event(cain_sip_listener_t *obj, const cain_sip_resp
 		cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
 	}
 }
-static void process_timeout(cain_sip_listener_t *obj, const cain_sip_timeout_event_t *event){
+static void process_timeout(void *user_ctx, const cain_sip_timeout_event_t *event){
 	cain_sip_message("process_timeout");
 }
-static void process_transaction_terminated(cain_sip_listener_t *obj, const cain_sip_transaction_terminated_event_t *event){
+static void process_transaction_terminated(void *user_ctx, const cain_sip_transaction_terminated_event_t *event){
 	cain_sip_message("process_transaction_terminated");
 }
-static void process_auth_requested(cain_sip_listener_t *obj, cain_sip_auth_event_t *event){
+static void process_auth_requested(void *user_ctx, cain_sip_auth_event_t *event){
 	cain_sip_message("process_auth_requested requested for [%s@%s]"
 			,cain_sip_auth_event_get_username(event)
 			,cain_sip_auth_event_get_realm(event));
 	cain_sip_auth_event_set_passwd(event,"secret");
 }
-/*this would normally go to a .h file*/
-struct test_listener{
-	cain_sip_object_t base;
-	void *some_context;
-};
 
-typedef struct test_listener test_listener_t;
 
-CAIN_SIP_DECLARE_TYPES_BEGIN(test,0x1000)
-	CAIN_SIP_TYPE_ID(test_listener_t)
-CAIN_SIP_DECLARE_TYPES_END
-
-CAIN_SIP_DECLARE_VPTR(test_listener_t);
-
-/*the following would go to .c file */
-
-CAIN_SIP_IMPLEMENT_INTERFACE_BEGIN(test_listener_t,cain_sip_listener_t)
-	process_dialog_terminated,
-	process_io_error,
-	process_request_event,
-	process_response_event,
-	process_timeout,
-	process_transaction_terminated,
-	process_auth_requested
-CAIN_SIP_IMPLEMENT_INTERFACE_END
-
-CAIN_SIP_DECLARE_IMPLEMENTED_INTERFACES_1(test_listener_t,cain_sip_listener_t);
-
-CAIN_SIP_INSTANCIATE_VPTR(test_listener_t,cain_sip_object_t,NULL,NULL,NULL,FALSE);
-
-static test_listener_t *listener;
+cain_sip_listener_callbacks_t listener_callbacks;
+cain_sip_listener_t *listener;
 
 int register_init(void) {
 	cain_sip_listening_point_t *lp;
@@ -126,8 +99,16 @@ int register_init(void) {
 	if (lp) {
 		cain_sip_provider_add_listening_point(prov,lp);
 	}
-	listener=cain_sip_object_new(test_listener_t);
 
+	listener_callbacks.process_dialog_terminated=process_dialog_terminated;
+	listener_callbacks.process_io_error=process_io_error;
+	listener_callbacks.process_request_event=process_request_event;
+	listener_callbacks.process_response_event=process_response_event;
+	listener_callbacks.process_timeout=process_timeout;
+	listener_callbacks.process_transaction_terminated=process_transaction_terminated;
+	listener_callbacks.process_auth_requested=process_auth_requested;
+	listener_callbacks.listener_destroyed=NULL;
+	listener=cain_sip_listener_create_from_callbacks(&listener_callbacks,NULL);
 	return 0;
 }
 int register_uninit(void) {
