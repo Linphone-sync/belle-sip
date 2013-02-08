@@ -521,12 +521,12 @@ void test_header_allow(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_allow));
 }
 
-static void test_header_address_with_error() {
+static void test_header_address_with_error(void) {
 	cain_sip_header_address_t* laddress = cain_sip_header_address_parse("sip:liblinphone_tester@=auth1.example.org");
 	CU_ASSERT_PTR_NULL(laddress);
 }
 
-static void test_header_address() {
+static void test_header_address(void) {
 	cain_sip_uri_t* L_uri;
 	cain_sip_header_address_t* laddress = cain_sip_header_address_parse("\"toto\" <sip:liblinphone_tester@81.56.11.2:5060>");
 	CU_ASSERT_PTR_NOT_NULL_FATAL(laddress);

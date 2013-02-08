@@ -122,7 +122,7 @@ static void test_maddr(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
 
 }
-static void test_uri_parameters () {
+static void test_uri_parameters (void) {
 	char* l_raw_uri;
 	cain_sip_uri_t* L_tmp;
 	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:192.168.0.1;ttl=12");

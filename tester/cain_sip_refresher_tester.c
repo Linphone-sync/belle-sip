@@ -127,7 +127,7 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 	}
 	case digest_auth:
 	case digest: {
-		if ((authorization=cain_sip_message_get_header_by_type(req,cain_sip_header_authorization_t))){
+		if ((authorization=cain_sip_message_get_header_by_type(req,cain_sip_header_authorization_t)) != NULL){
 			qop=cain_sip_header_authorization_get_qop(authorization);
 
 			if (qop && strcmp(qop,"auth")==0) {
@@ -216,6 +216,7 @@ static void client_process_response_event(void *obj, const cain_sip_response_eve
 //	cain_sip_message("process_transaction_terminated");
 //}
 static void client_process_auth_requested(void *obj, cain_sip_auth_event_t *event){
+	CAINSIP_UNUSED(obj);
 	cain_sip_message("process_auth_requested requested for [%s@%s]"
 			,cain_sip_auth_event_get_username(event)
 			,cain_sip_auth_event_get_realm(event));
@@ -227,6 +228,7 @@ static void cain_sip_refresher_listener ( const cain_sip_refresher_t* refresher
 		,unsigned int status_code
 		,const char* reason_phrase) {
 	endpoint_t* endpoint = (endpoint_t*)user_pointer;
+	CAINSIP_UNUSED(refresher);
 	cain_sip_message("cain_sip_refresher_listener [%i] reason [%s]",status_code,reason_phrase);
 	switch (status_code) {
 		case 200:endpoint->stat.refreshOk++; break;
@@ -338,7 +340,7 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	destroy_endpoint(server);
 }
 
-static void subscribe_test() {
+static void subscribe_test(void) {
 	cain_sip_listener_callbacks_t client_callbacks;
 	cain_sip_listener_callbacks_t server_callbacks;
 	cain_sip_request_t* req;
@@ -413,17 +415,17 @@ static void subscribe_test() {
 	destroy_endpoint(server);
 }
 
-static void register_expires_header() {
+static void register_expires_header(void) {
 	register_test_with_param(0,none);
 }
-static void register_expires_in_contact() {
+static void register_expires_in_contact(void) {
 	register_test_with_param(1,none);
 }
-static void register_expires_header_digest() {
+static void register_expires_header_digest(void) {
 	register_test_with_param(0,digest);
 }
 
-static void register_expires_in_contact_header_digest_auth() {
+static void register_expires_in_contact_header_digest_auth(void) {
 	register_test_with_param(1,digest_auth);
 }
 

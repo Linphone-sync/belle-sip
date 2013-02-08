@@ -263,7 +263,7 @@ static int dialog_on_200Ok_timer(cain_sip_dialog_t *dialog){
 	/*reset the timer */
 	const cain_sip_timer_config_t *cfg=cain_sip_stack_get_timer_config(dialog->provider->stack);
 	unsigned int prev_timeout=cain_sip_source_get_timeout(dialog->timer_200Ok);
-	cain_sip_source_set_timeout(dialog->timer_200Ok,MIN(2*prev_timeout,cfg->T2));
+	cain_sip_source_set_timeout(dialog->timer_200Ok,MIN(2*prev_timeout,(unsigned int)cfg->T2));
 	cain_sip_message("Dialog sending retransmission of 200Ok");
 	cain_sip_provider_send_response(dialog->provider,dialog->last_200Ok);
 	return CAIN_SIP_CONTINUE;

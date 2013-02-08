@@ -48,4 +48,6 @@
 CAINSIP_EXPORT int gettimeofday (struct timeval *tv, void* tz);
 #endif
 
+#define CAINSIP_UNUSED(a) a;
+
 #endif

@@ -20,15 +20,15 @@
 
 #include "cain-sip/cain-sip.h"
 
-static int init_cast_suite(){
+static int init_cast_suite(void){
 	return 0;
 }
 
-static int cleanup_cast_suite(){
+static int cleanup_cast_suite(void){
 	return 0;
 }
 
-static void cast_test(){
+static void cast_test(void){
 	cain_sip_stack_t *stack=cain_sip_stack_new(NULL);
 	cain_sip_listening_point_t *lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7060,"UDP");
 	cain_sip_provider_t *provider;

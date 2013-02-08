@@ -134,7 +134,9 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_tls_channel_t)=
 static int tls_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	cain_sip_tls_channel_t* channel=(cain_sip_tls_channel_t*)obj;
 	socklen_t addrlen=sizeof(channel->ss);
+#if HAVE_GNUTLS || HAVE_OPENSSL
 	int result;
+#endif
 #ifdef HAVE_OPENSSL
 	char ssl_error_string[128];
 #endif /*HAVE_OPENSSL*/
@@ -205,8 +207,8 @@ static int tls_process_data(cain_sip_channel_t *obj,unsigned int revents){
 cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp,const char *bindip, int localport, const char *dest, int port){
 	cain_sip_tls_channel_t *obj=cain_sip_object_new(cain_sip_tls_channel_t);
 	cain_sip_channel_t* channel=(cain_sip_channel_t*)obj;
+#ifdef HAVE_GNUTLS
 	int result;
-	#ifdef HAVE_GNUTLS
 	const char* err_pos;
 	result = gnutls_init (&obj->session, GNUTLS_CLIENT);
 	if (result<0) {
@@ -237,7 +239,9 @@ cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp
 							,((cain_sip_listening_point_t*)lp)->stack
 							,bindip,localport,dest,port);
 	return (cain_sip_channel_t*)obj;
+#ifdef HAVE_GNUTLS
 error:
+#endif
 	cain_sip_error("Cannot create tls channel to [%s://%s:%i]",cain_sip_channel_get_transport_name(channel),channel->peer_name,channel->peer_port);
 	cain_sip_object_unref(obj);
 	return NULL;

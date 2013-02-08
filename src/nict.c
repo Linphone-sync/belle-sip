@@ -109,7 +109,7 @@ static int nict_on_timer_E(cain_sip_nict_t *obj){
 		{
 			/*reset the timer */
 			unsigned int prev_timeout=cain_sip_source_get_timeout(obj->timer_E);
-			cain_sip_source_set_timeout(obj->timer_E,MIN(2*prev_timeout,cfg->T2));
+			cain_sip_source_set_timeout(obj->timer_E,MIN(2*prev_timeout,(unsigned int)cfg->T2));
 			cain_sip_message("nict_on_timer_E: sending retransmission");
 			cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
 		}
