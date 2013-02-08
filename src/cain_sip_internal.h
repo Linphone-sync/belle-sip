@@ -240,7 +240,7 @@ cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_com
 
 char * cain_sip_concat (const char *str, ...);
 
-uint64_t cain_sip_time_ms(void);
+CAINSIP_INTERNAL_EXPORT uint64_t cain_sip_time_ms(void);
 
 unsigned int cain_sip_random(void);
 

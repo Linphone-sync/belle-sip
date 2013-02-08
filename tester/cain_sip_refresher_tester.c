@@ -270,8 +270,8 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	cain_sip_header_contact_t* contact=cain_sip_header_contact_new();
 	cain_sip_uri_t *dest_uri;
 	endpoint_t* client,*server;
-	struct timeval begin;
-	struct timeval end;
+	uint64_t begin;
+	uint64_t end;
 
 	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
 	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
@@ -326,11 +326,11 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	cain_sip_object_unref(trans);
 	cain_sip_refresher_set_listener(refresher,cain_sip_refresher_listener,client);
 
-	gettimeofday(&begin, NULL);
+	begin = cain_sip_time_ms();
 	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,3,4000));
-	gettimeofday(&end, NULL);
-	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec>=3);
-	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec<5);
+	end = cain_sip_time_ms();
+	CU_ASSERT_TRUE(end-begin>=3000);
+	CU_ASSERT_TRUE(end-begin<5000);
 	/*unregister*/
 	cain_sip_refresher_refresh(refresher,0);
 	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,4,1000));
@@ -352,8 +352,8 @@ static void subscribe_test(void) {
 	cain_sip_uri_t *dest_uri;
 	cain_sip_refresher_t* refresher;
 	cain_sip_header_contact_t* contact=cain_sip_header_contact_new();
-	struct timeval begin;
-	struct timeval end;
+	uint64_t begin;
+	uint64_t end;
 	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
 	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
 
@@ -404,11 +404,11 @@ static void subscribe_test(void) {
 	cain_sip_object_unref(trans);
 	cain_sip_refresher_set_listener(refresher,cain_sip_refresher_listener,client);
 
-	gettimeofday(&begin, NULL);
+	begin = cain_sip_time_ms();
 	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,3,4000));
-	gettimeofday(&end, NULL);
-	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec>=3);
-	CU_ASSERT_TRUE(end.tv_sec-begin.tv_sec<5);
+	end = cain_sip_time_ms();
+	CU_ASSERT_TRUE(end-begin>=3000);
+	CU_ASSERT_TRUE(end-begin<5000);
 	cain_sip_refresher_stop(refresher);
 	cain_sip_object_unref(refresher);
 	destroy_endpoint(client);
