@@ -71,6 +71,17 @@ CAINSIP_EXPORT void cain_sip_stack_set_tx_delay(cain_sip_stack_t *stack, int del
 
 CAINSIP_EXPORT void cain_sip_stack_set_send_error(cain_sip_stack_t *stack, int send_error);
 
+/**
+ * Can be used to simulate network transmission delays, for tests.
+**/
+CAINSIP_EXPORT void cain_sip_stack_set_resolver_tx_delay(cain_sip_stack_t *stack, int delay_ms);
+
+/**
+ * Can be used to simulate network sending error, for tests.
+ * @param stack
+ * @param send_error if <0, will cause the resolver to fail with this error code.
+**/
+CAINSIP_EXPORT void cain_sip_stack_set_resolver_send_error(cain_sip_stack_t *stack, int send_error);
 
 CAIN_SIP_END_DECLS
 

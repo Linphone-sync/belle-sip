@@ -159,13 +159,13 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 static int _resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_source_func_t datafunc, enum dns_type type, int timeout) {
 	int error;
 
-	if (!ctx->stack->send_error) {
+	if (!ctx->stack->resolver_send_error) {
 		error = dns_res_submit(ctx->R, ctx->name, type, DNS_C_IN);
 		if (error)
 			cain_sip_error("%s dns_res_submit error [%s]: %s", __FUNCTION__, ctx->name, dns_strerror(error));
 	} else {
 		/* Error simulation */
-		error = ctx->stack->send_error;
+		error = ctx->stack->resolver_send_error;
 		cain_sip_error("%s dns_res_submit error [%s]: simulated error %d", __FUNCTION__, ctx->name, error);
 	}
 	if (error < 0) {
@@ -220,15 +220,15 @@ static int resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_sourc
 		return -1;
 	}
 
-	if (ctx->stack->tx_delay > 0) {
+	if (ctx->stack->resolver_tx_delay > 0) {
 		delayed_send_t *ds = cain_sip_new(delayed_send_t);
 		ds->ctx = (cain_sip_resolver_context_t *)cain_sip_object_ref(ctx);
 		ds->datafunc = datafunc;
 		ds->type = type;
 		ds->timeout = timeout;
-		cain_sip_main_loop_add_timeout(ctx->stack->ml, (cain_sip_source_func_t)on_delayed_send_do, ds, ctx->stack->tx_delay);
+		cain_sip_main_loop_add_timeout(ctx->stack->ml, (cain_sip_source_func_t)on_delayed_send_do, ds, ctx->stack->resolver_tx_delay);
 		cain_sip_socket_source_init((cain_sip_source_t*)ctx, datafunc, ctx, dns_res_pollfd(ctx->R), CAIN_SIP_EVENT_READ | CAIN_SIP_EVENT_TIMEOUT, timeout);
-		cain_sip_message("%s DNS resolution delayed by %d ms", __FUNCTION__, ctx->stack->tx_delay);
+		cain_sip_message("%s DNS resolution delayed by %d ms", __FUNCTION__, ctx->stack->resolver_tx_delay);
 		return 0;
 	} else {
 		return _resolver_start_query(ctx, datafunc, type, timeout);
