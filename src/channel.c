@@ -214,7 +214,7 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	message_ready:
 		obj->incoming_messages=cain_sip_list_append(obj->incoming_messages,obj->input_stream.msg);
 		cain_sip_channel_input_stream_reset(&obj->input_stream,message_size);
-		CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_event,obj,CAIN_SIP_EVENT_READ/*alway a read event*revents*/);
+		CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_event,obj,CAIN_SIP_EVENT_READ/*always a read event*/);
 		if (obj->input_stream.write_ptr-obj->input_stream.read_ptr>0) {
 			/*process residu*/
 			cain_sip_channel_process_data(obj,0);
@@ -329,18 +329,30 @@ cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj) {
 	return result;
 }
 
+static void channel_invoke_state_listener(cain_sip_channel_t *obj){
+	cain_sip_object_ref(obj);
+	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_state_changed,obj,obj->state);
+	cain_sip_object_unref(obj);
+}
+
 void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) {
 	cain_sip_message("channel %p: state %s",obj,cain_sip_channel_state_to_string(state));
 	obj->state=state;
-	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_state_changed,obj,state);
+	if (state==CAIN_SIP_CHANNEL_ERROR){
+		/*Because error notification will in practice trigger the destruction of possible transactions and this channel,
+		 * it is safer to invoke the listener outside the current call stack.
+		 * Indeed the channel encounters network errors while being called for transmiting by a transaction.
+		 */
+		cain_sip_main_loop_do_later(obj->stack->ml,(cain_sip_callback_t)channel_invoke_state_listener,obj);
+	}else
+		channel_invoke_state_listener(obj);
 }
-
 
 static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 	char buffer[cain_sip_network_buffer_size];
 	int len;
 	int ret=0;
-	cain_sip_object_ref(obj);
+	
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_sending,obj,msg);
 	len=cain_sip_object_marshal((cain_sip_object_t*)msg,buffer,0,sizeof(buffer));
 	if (len>0){
@@ -352,12 +364,12 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 
 		if (ret<0){
 			cain_sip_error("channel [%p]: could not send [%i] bytes from [%s://%s:%i]  to [%s:%i]"	,obj
-																									,len
-																									,cain_sip_channel_get_transport_name(obj)
-																									,obj->local_ip
-																									,obj->local_port
-																									,obj->peer_name
-																									,obj->peer_port);
+				,len
+				,cain_sip_channel_get_transport_name(obj)
+				,obj->local_ip
+				,obj->local_port
+				,obj->peer_name
+				,obj->peer_port);
 			channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 			cain_sip_channel_close(obj);
 		}else{
@@ -369,7 +381,6 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 								,buffer);
 		}
 	}
-	cain_sip_object_unref(obj);
 }
 
 /* just to emulate network transmission delay */
@@ -406,6 +417,7 @@ void cain_sip_channel_prepare(cain_sip_channel_t *obj){
 }
 
 void channel_process_queue(cain_sip_channel_t *obj){
+	cain_sip_object_ref(obj);/* we need to ref ourself because code below may trigger our destruction*/
 	switch(obj->state){
 		case CAIN_SIP_CHANNEL_INIT:
 			if (obj->prepare) cain_sip_channel_resolve(obj);
@@ -419,16 +431,14 @@ void channel_process_queue(cain_sip_channel_t *obj){
 				cain_sip_object_unref(obj->msg);
 				obj->msg=NULL;
 			}
-			break;
+		break;
 		case CAIN_SIP_CHANNEL_ERROR:
-			if (obj->msg){
-				cain_sip_object_unref(obj->msg);
-				obj->msg=NULL;
-			}
+			if (obj->msg) cain_sip_error("channel %p: trying to send a message over a broken channel ???",obj);
 		break;
 		default:
 		break;
 	}
+	cain_sip_object_unref(obj);
 }
 
 void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t slen){
@@ -490,5 +500,11 @@ int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *
 	return 0;
 }
 
+void cain_sip_channel_force_close(cain_sip_channel_t *obj){
+	obj->force_close=1;
+	/*first, every existing channel must be set to error*/
+	channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
+	cain_sip_channel_close(obj);
+}
 
 

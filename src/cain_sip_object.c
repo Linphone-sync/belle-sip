@@ -112,7 +112,6 @@ void cain_sip_object_weak_unref(void *obj, cain_sip_object_destroy_notify_t dest
 	for(ref=o->weak_refs;ref!=NULL;ref=next){
 		next=ref->next;
 		if (ref->notify==destroy_notify && ref->userpointer==userpointer){
-			cain_sip_message("cain_sip_object_weak_unref(): prefref=%p",prevref);
 			if (prevref==NULL) o->weak_refs=next;
 			else prevref->next=next;
 			cain_sip_free(ref);

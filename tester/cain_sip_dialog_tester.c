@@ -20,21 +20,7 @@
 #include "CUnit/Basic.h"
 #include "cain-sip/cain-sip.h"
 
-extern cain_sip_stack_t * stack;
-extern cain_sip_provider_t *prov;
-extern const char *test_domain;
-int call_endeed;
-extern int register_init(void);
-extern int register_uninit(void);
-extern cain_sip_request_t* register_user(cain_sip_stack_t * stack
-		,cain_sip_provider_t *prov
-		,const char *transport
-		,int use_transaction
-		,const char* username) ;
-extern void unregister_user(cain_sip_stack_t * stack
-					,cain_sip_provider_t *prov
-					,cain_sip_request_t* initial_request
-					,int use_transaction);
+#include "register_tester.h"
 
 
 
@@ -299,8 +285,8 @@ static void do_simple_call(void) {
 	callee_listener_callbacks.process_transaction_terminated=process_transaction_terminated;
 	callee_listener_callbacks.listener_destroyed=listener_destroyed;
 
-	pauline_register_req=register_user(stack, prov, "TCP" ,1 ,CALLER);
-	marie_register_req=register_user(stack, prov, "TLS" ,1 ,CALLEE);
+	pauline_register_req=register_user(stack, prov, "TCP" ,1 ,CALLER,NULL);
+	marie_register_req=register_user(stack, prov, "TLS" ,1 ,CALLEE,NULL);
 
 	from=cain_sip_header_address_create(NULL,cain_sip_uri_create(CALLER,test_domain));
 	to=cain_sip_header_address_create(NULL,cain_sip_uri_create(CALLEE,test_domain));

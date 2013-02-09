@@ -171,7 +171,6 @@ static void ict_send_request(cain_sip_ict_t *obj){
 	const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
 
 	base->state=CAIN_SIP_TRANSACTION_CALLING;
-	cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
 	
 	if (!cain_sip_channel_is_reliable(base->channel)){
 		obj->timer_A=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_A,obj,cfg->T1);
@@ -181,6 +180,7 @@ static void ict_send_request(cain_sip_ict_t *obj){
 	obj->timer_B=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_B,obj,cfg->T1*64);
 	cain_sip_transaction_start_timer(base,obj->timer_B);
 	
+	cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)base->request);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_ict_t);

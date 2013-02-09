@@ -122,7 +122,6 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 					cain_sip_message("udp_listening_point: new channel created to %s:%i",chan->peer_name,chan->peer_port);
 					chan->lp=(cain_sip_listening_point_t*)lp; /*FIXME, exactly the same code as for channel creation from provider. might be good to factorize*/
 					cain_sip_listening_point_add_channel((cain_sip_listening_point_t*)lp,chan);
-					cain_sip_channel_add_listener(chan,lp->base.channel_listener);
 				}
 			}
 			if (chan){

@@ -241,6 +241,7 @@ static endpoint_t* create_endpoint(int port,const char* transport,cain_sip_liste
 	endpoint->stack=cain_sip_stack_new(NULL);
 	endpoint->listener_callbacks=listener_callbacks;
 	endpoint->lp=cain_sip_stack_create_listening_point(endpoint->stack,"0.0.0.0",port,transport);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(endpoint->lp);
 	cain_sip_object_ref(endpoint->lp);
 	endpoint->provider=cain_sip_stack_create_provider(endpoint->stack,endpoint->lp);
 	cain_sip_provider_add_sip_listener(endpoint->provider,(endpoint->listener=cain_sip_listener_create_from_callbacks(endpoint->listener_callbacks,endpoint)));
@@ -248,6 +249,7 @@ static endpoint_t* create_endpoint(int port,const char* transport,cain_sip_liste
 	endpoint->nonce_count=1;
 	return endpoint;
 }
+
 static void destroy_endpoint(endpoint_t* endpoint) {
 	cain_sip_object_unref(endpoint->lp);
 	cain_sip_object_unref(endpoint->provider);
@@ -255,9 +257,11 @@ static void destroy_endpoint(endpoint_t* endpoint) {
 	cain_sip_object_unref(endpoint->listener);
 	cain_sip_free(endpoint);
 }
+
 static endpoint_t* create_udp_endpoint(int port,cain_sip_listener_callbacks_t* listener_callbacks) {
 	return create_endpoint(port,"udp",listener_callbacks);
 }
+
 static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t auth_mode) {
 	cain_sip_listener_callbacks_t client_callbacks;
 	cain_sip_listener_callbacks_t server_callbacks;
@@ -323,6 +327,7 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 		CU_ASSERT_TRUE_FATAL(wait_for(server->stack,client->stack,&client->stat.twoHundredOk,1,1000));
 	}
 	refresher = cain_sip_client_transaction_create_refresher(trans);
+	CU_ASSERT_TRUE_FATAL(refresher!=NULL);
 	cain_sip_object_unref(trans);
 	cain_sip_refresher_set_listener(refresher,cain_sip_refresher_listener,client);
 

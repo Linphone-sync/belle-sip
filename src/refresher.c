@@ -312,6 +312,7 @@ void cain_sip_refresher_stop(cain_sip_refresher_t* refresher) {
 	}
 	refresher->started=0;
 }
+
 cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction) {
 	cain_sip_refresher_t* refresher;
 	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction)) != CAIN_SIP_TRANSACTION_COMPLETED) {
@@ -335,6 +336,7 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 	}
 	return refresher;
 }
+
 int cain_sip_refresher_get_expires(const cain_sip_refresher_t* refresher) {
 	return refresher->expires;
 }

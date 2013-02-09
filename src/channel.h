@@ -88,7 +88,8 @@ struct cain_sip_channel{
 	cain_sip_message_t *msg;
 	cain_sip_list_t* incoming_messages;
 	cain_sip_channel_input_stream_t input_stream;
-	int recv_error; /* used to simulate network error. if <=0, channel_recv will return this value*/
+	unsigned int recv_error:1; /* used to simulate network error. if <=0, channel_recv will return this value*/
+	unsigned int force_close:1; /* used to simulate network error. if <=0, channel_recv will return this value*/
 };
 
 #define CAIN_SIP_CHANNEL(obj)		CAIN_SIP_CAST(obj,cain_sip_channel_t)
@@ -139,10 +140,14 @@ const char *cain_sip_channel_get_local_address(cain_sip_channel_t *obj, int *por
 
 void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state);
 
+/*remember that channel_process_queue() might trigger the destruction of the channel*/
 void channel_process_queue(cain_sip_channel_t *obj);
 
 /*just invokes the listeners to process data*/
 int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
+
+/*this function is to be used only in cain_sip_listening_point_clean_channels()*/
+void cain_sip_channel_force_close(cain_sip_channel_t *obj);
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
 	const char *transport;

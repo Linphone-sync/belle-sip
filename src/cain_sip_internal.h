@@ -199,6 +199,7 @@ struct cain_sip_source{
 	cain_sip_source_remove_callback_t on_remove;
 	unsigned char cancelled;
 	unsigned char expired;
+	unsigned char oneshot;
 	cain_sip_socket_t sock;
 	unsigned int notify_required; /*for testing purpose, use to ask for being scheduled*/
 };
@@ -486,7 +487,6 @@ struct cain_sip_provider{
 	cain_sip_list_t *server_transactions;
 	cain_sip_list_t *dialogs;
 	cain_sip_list_t *auth_contexts;
-
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);

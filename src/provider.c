@@ -77,7 +77,7 @@ static void channel_state_changed(cain_sip_channel_listener_t *obj, cain_sip_cha
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_io_error,&ev);
 		/*IO error is also relevant for internal listener like refreshers*/
 		CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->internal_listeners,process_io_error,&ev);
-		cain_sip_provider_release_channel(prov,chan);
+		if (!chan->force_close) cain_sip_provider_release_channel(prov,chan);
 	}
 }
 
@@ -284,7 +284,6 @@ int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_liste
 		cain_sip_error("Cannot add NULL lp to provider [%p]",p);
 		return -1;
 	}
-	cain_sip_listener_set_channel_listener(lp,CAIN_SIP_CHANNEL_LISTENER(p));
 	p->lps=cain_sip_list_append(p->lps,cain_sip_object_ref(lp));
 	return 0;
 }
@@ -476,7 +475,8 @@ cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const
 	}
 	if (candidate){
 		chan=cain_sip_listening_point_create_channel(candidate,name,port);
-		if (chan==NULL) cain_sip_error("Could not create channel to %s:%s:%i",transport,name,port);
+		if (chan) cain_sip_channel_add_listener(chan,(cain_sip_channel_listener_t*)p);
+		else cain_sip_error("Could not create channel to %s:%s:%i",transport,name,port);
 		return chan;
 	}
 	cain_sip_error("No listening point matching for transport %s",transport);
@@ -490,7 +490,7 @@ void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_
 void cain_sip_provider_clean_channels(cain_sip_provider_t *p){
 	cain_sip_list_t *l;
 	cain_sip_listening_point_t *lp;
-
+	
 	for(l=p->lps;l!=NULL;l=l->next){
 		lp=(cain_sip_listening_point_t*)l->data;
 		cain_sip_listening_point_clean_channels(lp);
