@@ -227,7 +227,7 @@ static int resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_sourc
 		ds->type = type;
 		ds->timeout = timeout;
 		cain_sip_main_loop_add_timeout(ctx->stack->ml, (cain_sip_source_func_t)on_delayed_send_do, ds, ctx->stack->resolver_tx_delay);
-		cain_sip_socket_source_init((cain_sip_source_t*)ctx, datafunc, ctx, dns_res_pollfd(ctx->R), CAIN_SIP_EVENT_READ | CAIN_SIP_EVENT_TIMEOUT, timeout);
+		cain_sip_socket_source_init((cain_sip_source_t*)ctx, datafunc, ctx, dns_res_pollfd(ctx->R), CAIN_SIP_EVENT_READ | CAIN_SIP_EVENT_TIMEOUT, ctx->stack->resolver_tx_delay + 1000);
 		cain_sip_message("%s DNS resolution delayed by %d ms", __FUNCTION__, ctx->stack->resolver_tx_delay);
 		return 0;
 	} else {
