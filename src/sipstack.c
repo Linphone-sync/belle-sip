@@ -50,6 +50,10 @@ int cain_sip_stack_get_dns_timeout(const cain_sip_stack_t *stack) {
 	return stack->dns_timeout;
 }
 
+void cain_sip_stack_set_dns_timeout(cain_sip_stack_t *stack, int timeout) {
+	stack->dns_timeout = timeout;
+}
+
 cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport){
 	cain_sip_listening_point_t *lp=NULL;
 	if (strcasecmp(transport,"UDP")==0) {

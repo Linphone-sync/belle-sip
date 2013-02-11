@@ -43,19 +43,21 @@ CAINSIP_EXPORT cain_sip_stack_t * cain_sip_stack_new(const char *properties);
 
 CAINSIP_EXPORT cain_sip_listening_point_t *cain_sip_stack_create_listening_point(cain_sip_stack_t *s, const char *ipaddress, int port, const char *transport);
 
-void cain_sip_stack_delete_listening_point(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
+CAINSIP_EXPORT void cain_sip_stack_delete_listening_point(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
 CAINSIP_EXPORT cain_sip_provider_t *cain_sip_stack_create_provider(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);
 
 CAINSIP_EXPORT cain_sip_main_loop_t* cain_sip_stack_get_main_loop(cain_sip_stack_t *stack);
 
-void cain_sip_stack_main(cain_sip_stack_t *stack);
+CAINSIP_EXPORT void cain_sip_stack_main(cain_sip_stack_t *stack);
 
 CAINSIP_EXPORT void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds);
 
-int cain_sip_stack_get_transport_timeout(const cain_sip_stack_t *stack);
+CAINSIP_EXPORT int cain_sip_stack_get_transport_timeout(const cain_sip_stack_t *stack);
 
 CAINSIP_EXPORT int cain_sip_stack_get_dns_timeout(const cain_sip_stack_t *stack);
+
+CAINSIP_EXPORT void cain_sip_stack_set_dns_timeout(cain_sip_stack_t *stack, int timeout);
 
 void cain_sip_hop_free(cain_sip_hop_t *hop);
 
