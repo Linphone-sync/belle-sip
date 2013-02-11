@@ -110,11 +110,11 @@ enum cain_sip_interface_ids{
 
 CAIN_SIP_BEGIN_DECLS
 
-void *cain_sip_malloc(size_t size);
+CAINSIP_EXPORT void *cain_sip_malloc(size_t size);
 CAINSIP_EXPORT void *cain_sip_malloc0(size_t size);
-void *cain_sip_realloc(void *ptr, size_t size);
+CAINSIP_EXPORT void *cain_sip_realloc(void *ptr, size_t size);
 CAINSIP_EXPORT void cain_sip_free(void *ptr);
-char * cain_sip_strdup(const char *s);
+CAINSIP_EXPORT char * cain_sip_strdup(const char *s);
 
 CAIN_SIP_END_DECLS
 

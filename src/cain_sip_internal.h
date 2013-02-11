@@ -239,13 +239,13 @@ cain_sip_list_t *cain_sip_list_delete_custom(cain_sip_list_t *list, cain_sip_com
 #define MAX(a,b)	((a)>(b) ? (a) : (b))
 
 
-char * cain_sip_concat (const char *str, ...);
+CAINSIP_INTERNAL_EXPORT char * cain_sip_concat (const char *str, ...);
 
 CAINSIP_INTERNAL_EXPORT uint64_t cain_sip_time_ms(void);
 
-unsigned int cain_sip_random(void);
+CAINSIP_INTERNAL_EXPORT unsigned int cain_sip_random(void);
 
-char *cain_sip_strdup_printf(const char *fmt,...);
+CAINSIP_INTERNAL_EXPORT char *cain_sip_strdup_printf(const char *fmt,...);
 
 
 /*parameters accessors*/
