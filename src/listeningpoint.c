@@ -36,12 +36,14 @@ static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
 				,cain_sip_uri_get_host(CAIN_SIP_LISTENING_POINT(lp)->listening_uri)
 				,cain_sip_uri_get_port(CAIN_SIP_LISTENING_POINT(lp)->listening_uri));
 	cain_sip_object_unref(lp->listening_uri);
+	lp->channel_listener=NULL; /*does not unref provider*/
 	cain_sip_uninit_sockets();
 	cain_sip_listening_point_set_keep_alive(lp,-1);
 }
 
 
 void cain_sip_listening_point_add_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan){
+	cain_sip_channel_add_listener(chan,lp->channel_listener); /*add channel listener*/
 	lp->channels=cain_sip_list_append(lp->channels,chan);/*channel is already owned*/
 }
 
@@ -56,6 +58,7 @@ cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_p
 
 
 void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan){
+	cain_sip_channel_remove_listener(chan,lp->channel_listener);
 	lp->channels=cain_sip_list_remove(lp->channels,chan);
 	cain_sip_object_unref(chan);
 }
@@ -204,3 +207,6 @@ int cain_sip_listening_point_get_keep_alive(const cain_sip_listening_point_t *lp
 	return lp->keep_alive_timer?cain_sip_source_get_timeout(lp->keep_alive_timer):-1;
 }
 
+void cain_sip_listener_set_channel_listener(cain_sip_listening_point_t *lp,cain_sip_channel_listener_t* channel_listener) {
+	lp->channel_listener=channel_listener;
+}
