@@ -1186,3 +1186,30 @@ cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_create 
 	cain_sip_header_subscription_state_set_expires(sub_state,expires);
 	return sub_state;
 }
+
+/**************************
+* Refer-To header object inherits from header_address
+****************************
+*/
+struct _cain_sip_header_refer_to  {
+	cain_sip_header_address_t address;
+};
+
+static void cain_sip_header_refer_to_destroy(cain_sip_header_refer_to_t* refer_to) {
+}
+
+void cain_sip_header_refer_to_clone(cain_sip_header_refer_to_t *contact, const cain_sip_header_refer_to_t *orig){
+}
+int cain_sip_header_refer_to_marshal(cain_sip_header_refer_to_t* refer_to, char* buff,unsigned int offset,unsigned int buff_size) {
+	CAIN_SIP_FROM_LIKE_MARSHAL(refer_to)
+}
+
+CAIN_SIP_NEW_HEADER(header_refer_to,header_address,CAIN_SIP_REFER_TO)
+CAIN_SIP_PARSE(header_refer_to)
+
+cain_sip_header_refer_to_t* cain_sip_header_refer_to_create(const cain_sip_header_address_t* address) {
+	cain_sip_header_refer_to_t* header= cain_sip_header_refer_to_new();
+	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_REFER_TO); /*restaure header name*/
+	return header;
+}

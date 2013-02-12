@@ -513,5 +513,16 @@ void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscrip
 #define CAIN_SIP_SUBSCRIPTION_STATE_PENDING "pending"
 #define CAIN_SIP_SUBSCRIPTION_STATE_TERMINATED "terminated"
 
+/******************************
+ * Refer-To header object inherent from header_address
+ *
+ ******************************/
+ typedef struct _cain_sip_header_refer_to cain_sip_header_refer_to_t;
+ cain_sip_header_refer_to_t* cain_sip_header_refer_to_new();
+ CAINSIP_EXPORT cain_sip_header_refer_to_t* cain_sip_header_refer_to_parse(const char* refer_to) ;
+ CAINSIP_EXPORT cain_sip_header_refer_to_t* cain_sip_header_refer_to_create(const cain_sip_header_address_t *address);
+#define CAIN_SIP_HEADER_REFER_TO(t) CAIN_SIP_CAST(t,cain_sip_header_refer_to_t)
+#define CAIN_SIP_REFER_TO "Refer-To"
+
 
 #endif /* HEADERS_H_ */

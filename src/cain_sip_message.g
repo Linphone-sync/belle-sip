@@ -972,6 +972,25 @@ to_spec
                ( semi to_param )*;
 to_param  
   :   /*tag_param |*/ generic_param [CAIN_SIP_PARAMETERS($header_to::current)];
+
+refer_to_token:  {IS_TOKEN(Refer-To)}? token;
+header_refer_to  returns [cain_sip_header_refer_to_t* ret]   
+scope { cain_sip_header_refer_to_t* current; }
+@init { $header_refer_to::current = cain_sip_header_refer_to_new(); }
+        
+  :   refer_to_token /*'Refer-To'*/ hcolon refer_to_spec {$ret = $header_refer_to::current;};
+catch [ANTLR3_MISMATCHED_TOKEN_EXCEPTION]
+{
+   cain_sip_message("[\%s]  reason [\%s]",(const char*)EXCEPTION->name,(const char*)EXCEPTION->message);
+   cain_sip_object_unref($header_refer_to::current);
+   $ret=NULL;
+}  
+refer_to_spec   
+  :   ( name_addr[CAIN_SIP_HEADER_ADDRESS($header_refer_to::current)] | paramless_addr_spec[CAIN_SIP_HEADER_ADDRESS($header_refer_to::current)] )
+               ( semi refer_to_param )*;
+refer_to_param  
+  :   /*tag_param |*/ generic_param [CAIN_SIP_PARAMETERS($header_refer_to::current)];
+    
 /*
 unsupported  
 	:	  'Unsupported' HCOLON option_tag (COMMA option_tag)*;
@@ -1140,6 +1159,8 @@ header_extension[ANTLR3_BOOLEAN check_for_known_header]  returns [cain_sip_heade
                      $ret = CAIN_SIP_HEADER(cain_sip_header_subscription_state_parse((const char*)$header_extension.text->chars));
                     }else if (check_for_known_header && strcasecmp(CAIN_SIP_SERVICE_ROUTE,(const char*)$header_name.text->chars) == 0) {
                      $ret = CAIN_SIP_HEADER(cain_sip_header_service_route_parse((const char*)$header_extension.text->chars));
+                    }else if (check_for_known_header && strcasecmp(CAIN_SIP_REFER_TO,(const char*)$header_name.text->chars) == 0) {
+                     $ret = CAIN_SIP_HEADER(cain_sip_header_refer_to_parse((const char*)$header_extension.text->chars));
                     }else {
                       $ret =  CAIN_SIP_HEADER(cain_sip_header_extension_new());
                       cain_sip_header_extension_set_value((cain_sip_header_extension_t*)$ret,(const char*)$header_value.text->chars);

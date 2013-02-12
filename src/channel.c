@@ -330,9 +330,9 @@ cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj) {
 }
 
 static void channel_invoke_state_listener(cain_sip_channel_t *obj){
-	cain_sip_object_ref(obj);
-	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_state_changed,obj,obj->state);
-	cain_sip_object_unref(obj);
+	cain_sip_list_t* list=cain_sip_list_copy(obj->listeners); /*copy list because error state alter this list (I.E by provider)*/
+	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(list,cain_sip_channel_listener_t,on_state_changed,obj,obj->state);
+	cain_sip_list_free(list);
 }
 
 void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) {
