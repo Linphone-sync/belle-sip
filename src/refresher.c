@@ -49,8 +49,10 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 		return;
 	} else if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_provider_t))) {
 		/*something went wrong on this provider, checking if my channel is still up*/
-		if (refresher->started &&
-								(cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_DISCONNECTED
+		if ((refresher->started  /*refresher started or trying to refresh */
+				|| cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) == CAIN_SIP_TRANSACTION_TRYING
+				|| cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) == CAIN_SIP_TRANSACTION_TRYING)
+			&&	(cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_DISCONNECTED
 								||cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_ERROR)) {
 			cain_sip_message("refresher [%p] has channel [%p] in state [%s], reporting error"
 								,refresher
