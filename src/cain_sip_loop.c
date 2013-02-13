@@ -76,6 +76,7 @@ static unsigned int cain_sip_source_get_revents(cain_sip_source_t *s,cain_sip_po
 
 #include <malloc.h>
 
+
 typedef HANDLE cain_sip_pollfd_t;
 
 static void cain_sip_source_to_poll(cain_sip_source_t *s, cain_sip_pollfd_t *pfd,int i){
@@ -126,7 +127,7 @@ static int cain_sip_poll(cain_sip_pollfd_t *pfd, int count, int duration){
 	DWORD ret;
 	
 	if (count == 0) {
-		Sleep(duration);
+		cain_sip_sleep(duration);
 		return 0;
 	}
 

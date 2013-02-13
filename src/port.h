@@ -83,6 +83,12 @@ static inline int get_socket_error(void){
 const char *cain_sip_get_socket_error_string();
 const char *cain_sip_get_socket_error_string_from_code(int code);
 
+#if WINAPI_FAMILY_APP
+CAINSIP_INTERNAL_EXPORT void cain_sip_sleep(unsigned int ms);
+#else
+#define cain_sip_sleep Sleep
+#endif
+
 #define usleep(us) Sleep((us)/1000)
 static inline int inet_aton(const char *ip, struct in_addr *p){
 	*(long*)p=inet_addr(ip);
