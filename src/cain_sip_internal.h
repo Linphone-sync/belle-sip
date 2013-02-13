@@ -180,6 +180,8 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_refresher_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_subscription_state_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_service_route_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_refer_to_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_referred_by_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_replaces_t);
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 
@@ -820,6 +822,10 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 }
 #endif
 
+
+/*
+ * returns a char, even if entry is escaped*/
+int cain_sip_get_char (const char*a,int n,char*out);
 
 /*include private headers */
 #include "cain_sip_resolver.h"

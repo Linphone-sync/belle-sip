@@ -652,3 +652,17 @@ void cain_sip_util_copy_headers(cain_sip_message_t *orig, cain_sip_message_t *de
 	}
 }
 
+int cain_sip_get_char (const char*a,int n,char*out) {
+	char result;
+	char tmp[3];
+	if (*a=='%' && n>2) {
+		memcpy(tmp,a+1,sizeof(tmp)-1);
+		tmp[sizeof(tmp)-1]='\0';
+		*out=(char)((atoi(tmp)*16)/10); /*convert to hexa*/;
+		return 3;
+	} else {
+		*out=*a;
+		return 1;
+	}
+return result;
+}

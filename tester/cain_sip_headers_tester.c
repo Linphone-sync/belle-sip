@@ -575,6 +575,51 @@ void test_simple_header_refer_to(void) {
 	cain_sip_object_unref(L_refer_to);
 
 }
+void test_simple_header_referred_by(void) {
+	cain_sip_uri_t* L_uri;
+	cain_sip_header_referred_by_t* L_referred_by = cain_sip_header_referred_by_parse("Referred-By: sip:r@ref.example;cid=\"2UWQFN309shb3@ref.example\"");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_referred_by));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_referred_by));
+	L_referred_by = cain_sip_header_referred_by_parse(l_raw_header);
+	cain_sip_free(l_raw_header);
+
+	L_uri = cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(L_referred_by));
+
+	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_user(L_uri),"r");
+	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "ref.example");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_referred_by));
+}
+void test_header_replaces(void) {
+	cain_sip_header_replaces_t* L_tmp;
+	cain_sip_header_replaces_t* L_replaces = cain_sip_header_replaces_parse("Replaces: 12345@149.112.118.3;to-tag=12345;from-tag=54321");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_replaces));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_replaces));
+	L_tmp= cain_sip_header_replaces_parse(l_raw_header);
+	L_replaces = CAIN_SIP_HEADER_REPLACES(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
+	cain_sip_free(l_raw_header);
+
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_replaces_get_call_id(L_replaces), "12345@149.112.118.3");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_replaces_get_from_tag(L_replaces), "54321");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_replaces_get_to_tag(L_replaces), "12345");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_replaces));
+}
+
+void test_header_replaces_escaped(void) {
+/*	cain_sip_header_replaces_t* L_tmp;
+	cain_sip_header_replaces_t* L_replaces = cain_sip_header_replaces_create2("12345%40192.168.118.3%3Bto-tag%3D12345%3Bfrom-tag%3D5FFE-3994");
+	char* l_raw_header = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_replaces));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_replaces));
+	L_tmp= cain_sip_header_replaces_parse(l_raw_header);
+	L_replaces = CAIN_SIP_HEADER_REPLACES(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
+	cain_sip_free(l_raw_header);
+
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_replaces_get_call_id(L_replaces), "12345@192.168.118.3");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_replaces_get_from_tag(L_replaces), "5FFE-3994");
+	CU_ASSERT_STRING_EQUAL(cain_sip_header_replaces_get_to_tag(L_replaces), "12345");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_replaces));*/
+}
 
 int cain_sip_headers_test_suite() {
 	
@@ -666,6 +711,12 @@ int cain_sip_headers_test_suite() {
 	   	  return CU_get_error();
 	   }
 	   if (NULL == CU_add_test(pSuite, "test_simple_header_refer_to",test_simple_header_refer_to )) {
+	   	  return CU_get_error();
+	   }
+	   if (NULL == CU_add_test(pSuite, "test_simple_header_referred_by",test_simple_header_referred_by )) {
+		  return CU_get_error();
+	   }
+	   if (NULL == CU_add_test(pSuite, "test_header_replaces_escaped",test_header_replaces_escaped )) {
 	   	  return CU_get_error();
 	   }
 	   return 0;

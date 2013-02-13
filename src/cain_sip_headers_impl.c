@@ -1187,29 +1187,86 @@ cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_create 
 	return sub_state;
 }
 
+
+#define HEADER_TO_LIKE_IMPL(name,header_name) \
+struct _cain_sip_header_##name  { \
+	cain_sip_header_address_t address; \
+}; \
+\
+static void cain_sip_header_##name##_destroy(cain_sip_header_##name##_t * obj) { \
+} \
+void cain_sip_header_##name##_clone(cain_sip_header_##name##_t *contact, const cain_sip_header_##name##_t *orig){ }\
+int cain_sip_header_##name##_marshal(cain_sip_header_##name##_t* name, char* buff,unsigned int offset,unsigned int buff_size) {\
+	CAIN_SIP_FROM_LIKE_MARSHAL(name)\
+}\
+CAIN_SIP_NEW_HEADER(header_##name,header_address,header_name)\
+CAIN_SIP_PARSE(header_##name)\
+cain_sip_header_##name##_t* cain_sip_header_##name##_create(const cain_sip_header_address_t* address) { \
+	cain_sip_header_##name##_t* header= cain_sip_header_##name##_new();\
+	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);\
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),header_name);  \
+	return header;\
+}
+
 /**************************
 * Refer-To header object inherits from header_address
 ****************************
 */
-struct _cain_sip_header_refer_to  {
-	cain_sip_header_address_t address;
+HEADER_TO_LIKE_IMPL(refer_to,CAIN_SIP_REFER_TO)
+
+/**************************
+* Referred-By header object inherits from header_address
+****************************
+*/
+HEADER_TO_LIKE_IMPL(referred_by,CAIN_SIP_REFERRED_BY)
+
+/**************************
+* Replaces state header object inherent from parameters
+****************************
+*/
+struct _cain_sip_header_replaces  {
+	cain_sip_parameters_t parameters;
+	const char* call_id;
 };
 
-static void cain_sip_header_refer_to_destroy(cain_sip_header_refer_to_t* refer_to) {
+static void cain_sip_header_replaces_destroy(cain_sip_header_replaces_t* replaces) {
+	DESTROY_STRING(replaces,call_id);
 }
 
-void cain_sip_header_refer_to_clone(cain_sip_header_refer_to_t *contact, const cain_sip_header_refer_to_t *orig){
-}
-int cain_sip_header_refer_to_marshal(cain_sip_header_refer_to_t* refer_to, char* buff,unsigned int offset,unsigned int buff_size) {
-	CAIN_SIP_FROM_LIKE_MARSHAL(refer_to)
+static void cain_sip_header_replaces_clone(cain_sip_header_replaces_t* replaces,
+                                                 const cain_sip_header_replaces_t *orig ) {
+	CLONE_STRING(cain_sip_header_replaces,call_id,replaces,orig)
 }
 
-CAIN_SIP_NEW_HEADER(header_refer_to,header_address,CAIN_SIP_REFER_TO)
-CAIN_SIP_PARSE(header_refer_to)
+int cain_sip_header_replaces_marshal(cain_sip_header_replaces_t* replaces, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(replaces), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",replaces->call_id);
+	current_offset+=cain_sip_parameters_marshal(CAIN_SIP_PARAMETERS(replaces), buff,current_offset, buff_size);
+	return current_offset-offset;
+}
+CAIN_SIP_NEW_HEADER(header_replaces,parameters,CAIN_SIP_REPLACES)
+CAIN_SIP_PARSE(header_replaces)
 
-cain_sip_header_refer_to_t* cain_sip_header_refer_to_create(const cain_sip_header_address_t* address) {
-	cain_sip_header_refer_to_t* header= cain_sip_header_refer_to_new();
-	_cain_sip_object_copy((cain_sip_object_t*)header,(cain_sip_object_t*)address);
-	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_REFER_TO); /*restaure header name*/
-	return header;
+GET_SET_STRING(cain_sip_header_replaces,call_id);
+GET_SET_STRING_PARAM2(cain_sip_header_replaces,to-tag,to_tag);
+GET_SET_STRING_PARAM2(cain_sip_header_replaces,from-tag,from_tag);
+
+static void escaped_to_ascii(const char*a,char*b,size_t n) {
+	size_t index_a=0,index_b=0;
+
+	while (a[index_a]!='\0'&& index_a<n)
+		index_a+=cain_sip_get_char(a+index_a,n-index_a,b+index_b++);
+}
+#define REPLACES_PREF_OFFSET 10
+cain_sip_header_replaces_t* cain_sip_header_replaces_create2(const char* escaped_replace) {
+	cain_sip_header_replaces_t* replaces;
+	size_t len=strlen(escaped_replace);
+	char* out=cain_sip_malloc(REPLACES_PREF_OFFSET+len);
+	strcpy(out,CAIN_SIP_REPLACES ": ");
+	escaped_to_ascii(escaped_replace,out+REPLACES_PREF_OFFSET,len);
+	/*now we can parse*/
+	replaces= cain_sip_header_replaces_parse(out);
+	cain_sip_free(out);
+	return replaces;
 }

@@ -524,5 +524,41 @@ void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscrip
 #define CAIN_SIP_HEADER_REFER_TO(t) CAIN_SIP_CAST(t,cain_sip_header_refer_to_t)
 #define CAIN_SIP_REFER_TO "Refer-To"
 
+ /******************************
+  * Referred-by header object inherent from header_address
+  *
+  ******************************/
+  typedef struct _cain_sip_header_referred_by cain_sip_header_referred_by_t;
+  cain_sip_header_referred_by_t* cain_sip_header_referred_by_new();
+  CAINSIP_EXPORT cain_sip_header_referred_by_t* cain_sip_header_referred_by_parse(const char* referred_by) ;
+  CAINSIP_EXPORT cain_sip_header_referred_by_t* cain_sip_header_referred_by_create(const cain_sip_header_address_t *address);
+ #define CAIN_SIP_HEADER_REFERRED_BY(t) CAIN_SIP_CAST(t,cain_sip_header_referred_by_t)
+ #define CAIN_SIP_REFERRED_BY "Referred-By"
+
+  /******************************
+   * Replace header object inherent from parameters
+   *
+   ******************************/
+typedef struct _cain_sip_header_replaces cain_sip_header_replaces_t;
+cain_sip_header_replaces_t* cain_sip_header_replaces_new();
+CAINSIP_EXPORT cain_sip_header_replaces_t* cain_sip_header_replaces_parse(const char* replaces) ;
+
+CAINSIP_EXPORT cain_sip_header_replaces_t* cain_sip_header_replaces_create(const char* call_id,const char* from_tag,const char* to_tag);
+/*
+ * Creates a Eeplaces header from an escaped value that can be found in Referred-by header
+ * @param escaped_replace ex : 12345%40192.168.118.3%3Bto-tag%3D12345%3Bfrom-tag%3D5FFE-3994
+ * @return a newly allocated Replace header
+ * */
+CAINSIP_EXPORT cain_sip_header_replaces_t* cain_sip_header_replaces_create2(const char* escaped_replace);
+CAINSIP_EXPORT const char* cain_sip_header_replaces_get_call_id(const cain_sip_header_replaces_t* obj);
+CAINSIP_EXPORT const char* cain_sip_header_replaces_get_from_tag(const cain_sip_header_replaces_t* obj);
+CAINSIP_EXPORT const char* cain_sip_header_replaces_get_to_tag(const cain_sip_header_replaces_t* obj);
+CAINSIP_EXPORT void cain_sip_header_replaces_set_call_id(cain_sip_header_replaces_t* obj, const char* callid);
+CAINSIP_EXPORT void cain_sip_header_replaces_set_from_tag(cain_sip_header_replaces_t* obj,const char* from_tag);
+CAINSIP_EXPORT void cain_sip_header_replaces_set_to_tag(cain_sip_header_replaces_t* obj,const char* to_tag);
+#define CAIN_SIP_HEADER_REPLACES(t) CAIN_SIP_CAST(t,cain_sip_header_replaces_t)
+#define CAIN_SIP_REPLACES "Replaces"
+
+
 
 #endif /* HEADERS_H_ */

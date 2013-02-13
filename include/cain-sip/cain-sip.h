@@ -99,7 +99,9 @@ CAIN_SIP_DECLARE_TYPES_BEGIN(cain_sip,1)
 	CAIN_SIP_TYPE_ID(cain_sip_refresher_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_subscription_state_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_service_route_t),
-	CAIN_SIP_TYPE_ID(cain_sip_header_refer_to_t)
+	CAIN_SIP_TYPE_ID(cain_sip_header_refer_to_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_referred_by_t),
+	CAIN_SIP_TYPE_ID(cain_sip_header_replaces_t)
 CAIN_SIP_DECLARE_TYPES_END
 
 
