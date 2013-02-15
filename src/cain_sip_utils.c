@@ -654,11 +654,10 @@ void cain_sip_util_copy_headers(cain_sip_message_t *orig, cain_sip_message_t *de
 
 int cain_sip_get_char (const char*a,int n,char*out) {
 	char result;
-	char tmp[3];
+	unsigned int tmp;
 	if (*a=='%' && n>2) {
-		memcpy(tmp,a+1,sizeof(tmp)-1);
-		tmp[sizeof(tmp)-1]='\0';
-		*out=(char)((atoi(tmp)*16)/10); /*convert to hexa*/;
+		sscanf(a+1,"%02x",&tmp);
+		*out=(char)tmp;
 		return 3;
 	} else {
 		*out=*a;
