@@ -157,7 +157,7 @@ extension_method
 response  returns [cain_sip_response_t* ret]
 scope { cain_sip_response_t* current; }
 @init {$response::current = cain_sip_response_new(); $ret=$response::current; }         
-	:	  status_line message_header[CAIN_SIP_MESSAGE($response::current)]+ last_crlf=CRLF {*($message_raw::message_length)=$last_crlf->user1;} /*message_body*/ ;
+	:	  status_line (message_header[CAIN_SIP_MESSAGE($response::current)]+ last_crlf=CRLF {*($message_raw::message_length)=$last_crlf->user1;} /*message_body*/)?  ;
 
 status_line     
 	:	  sip_version 

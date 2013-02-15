@@ -242,6 +242,16 @@ static void test_extract_source(void) {
 	cain_sip_object_unref(message);
 
 }
+static void test_sipfrag(void) {
+	const char* raw_message = 	"SIP/2.0 100 Trying\r\n";
+	cain_sip_response_t* response;
+	cain_sip_message_t* message = cain_sip_message_parse(raw_message);
+	response = CAIN_SIP_RESPONSE(message);
+	CU_ASSERT_EQUAL(cain_sip_response_get_status_code(response),100);
+	CU_ASSERT_STRING_EQUAL(cain_sip_response_get_reason_phrase(response),"Trying");
+	cain_sip_object_unref(message);
+}
+
 /*static void test_fix_contact_with_received_rport() {
 
 }*/
@@ -275,6 +285,9 @@ int cain_sip_message_test_suite () {
 	      return CU_get_error();
 	   }
 	   if (NULL == CU_add_test(pSuite, "test cain_sip_request_extract_origin", test_extract_source)) {
+	      return CU_get_error();
+	   }
+	   if (NULL == CU_add_test(pSuite, "test_sipfrag", test_sipfrag)) {
 	      return CU_get_error();
 	   }
 
