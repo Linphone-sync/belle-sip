@@ -556,6 +556,11 @@ CAINSIP_EXPORT const char* cain_sip_header_replaces_get_to_tag(const cain_sip_he
 CAINSIP_EXPORT void cain_sip_header_replaces_set_call_id(cain_sip_header_replaces_t* obj, const char* callid);
 CAINSIP_EXPORT void cain_sip_header_replaces_set_from_tag(cain_sip_header_replaces_t* obj,const char* from_tag);
 CAINSIP_EXPORT void cain_sip_header_replaces_set_to_tag(cain_sip_header_replaces_t* obj,const char* to_tag);
+/*return a newly allocated string with the content of the header value in escaped form.
+ * <br> Purpose of this function is to be used to set Refer-To uri header Replaces
+ * @param obj Replaces object
+ * @return newly allocated string ex: 12345%40192.168.118.3%3Bto-tag%3D12345%3Bfrom-tag%3D5FFE-3994*/
+CAINSIP_EXPORT char* cain_sip_header_replaces_value_to_escaped_string(const cain_sip_header_replaces_t* obj);
 #define CAIN_SIP_HEADER_REPLACES(t) CAIN_SIP_CAST(t,cain_sip_header_replaces_t)
 #define CAIN_SIP_REPLACES "Replaces"
 

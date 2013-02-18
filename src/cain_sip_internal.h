@@ -835,5 +835,5 @@ int cain_sip_get_char (const char*a,int n,char*out);
 #define CAIN_SIP_BRANCH_ID_LENGTH 10
 /*Shall not be less than 32bit */
 #define CAIN_SIP_TAG_LENGTH 6
-
+#define CAIN_SIP_MAX_TO_STRING_SIZE 2048
 #endif

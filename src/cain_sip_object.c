@@ -284,7 +284,7 @@ int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offs
 }
 
 char* cain_sip_object_to_string(cain_sip_object_t* obj) {
-	char buff[2048]; /*to be optimized*/
+	char buff[CAIN_SIP_MAX_TO_STRING_SIZE]; /*to be optimized*/
 	int size = cain_sip_object_marshal(obj,buff,0,sizeof(buff));
 	buff[size]='\0';
 	return cain_sip_strdup(buff);

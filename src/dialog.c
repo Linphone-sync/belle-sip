@@ -534,11 +534,11 @@ const char *cain_sip_dialog_get_dialog_id(const cain_sip_dialog_t *dialog){
 	return NULL;
 }
 
-const cain_sip_header_address_t *cain_sip_get_local_party(const cain_sip_dialog_t *dialog){
+const cain_sip_header_address_t *cain_sip_dialog_get_local_party(const cain_sip_dialog_t *dialog){
 	return dialog->local_party;
 }
 
-const cain_sip_header_address_t *cain_sip_get_remote_party(const cain_sip_dialog_t *dialog){
+const cain_sip_header_address_t *cain_sip_dialog_get_remote_party(const cain_sip_dialog_t *dialog){
 	return dialog->remote_party;
 }
 
