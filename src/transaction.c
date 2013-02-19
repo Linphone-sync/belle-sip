@@ -344,8 +344,11 @@ void cain_sip_client_transaction_notify_response(cain_sip_client_transaction_t *
 		dialog=cain_sip_provider_get_new_dialog_internal(t->base.provider,CAIN_SIP_TRANSACTION(t),FALSE);
 	}
 
-	if (dialog)
-		cain_sip_dialog_update(dialog,base->request,resp,FALSE);
+	if (dialog && cain_sip_dialog_update(dialog,base->request,resp,FALSE)) {
+		/* retransmition, just return*/
+		cain_sip_message("[%p] is a200 ok retransmition on dialog [%p], skiping",resp,dialog);
+		return;
+	}
 
 	event.source=base->provider;
 	event.client_transaction=t;
