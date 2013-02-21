@@ -83,7 +83,7 @@ static inline int get_socket_error(void){
 const char *cain_sip_get_socket_error_string();
 const char *cain_sip_get_socket_error_string_from_code(int code);
 
-#if WINAPI_FAMILY_APP
+#ifdef WINAPI_FAMILY_PHONE_APP
 CAINSIP_INTERNAL_EXPORT void cain_sip_sleep(unsigned int ms);
 #else
 #define cain_sip_sleep Sleep
