@@ -573,27 +573,29 @@ int cain_sip_response_fix_contact(const cain_sip_response_t* response,cain_sip_h
 	via_header= (cain_sip_header_via_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(response),CAIN_SIP_VIA);
 	received = cain_sip_header_via_get_received(via_header);
 	rport = cain_sip_header_via_get_rport(via_header);
-	if (received!=NULL || rport>0) {
-		contact_uri=cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(contact));
-		if (received && strcmp(received,cain_sip_uri_get_host(contact_uri))!=0) {
-			/*need to update host*/
-			cain_sip_uri_set_host(contact_uri,received);
+	contact_uri=cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(contact));
+	if (received) {
+		/*need to update host*/
+		cain_sip_uri_set_host(contact_uri,received);
+	} else {
+		cain_sip_uri_set_host(contact_uri,cain_sip_header_via_get_host(via_header));
+	}
+	contact_port =  cain_sip_uri_get_port(contact_uri);
+	if (rport>0 ) {
+		/*need to update port*/
+		if ((rport+contact_port)!=5060) cain_sip_uri_set_port(contact_uri,rport);
+	} else if ((cain_sip_header_via_get_port(via_header)+contact_port)!=5060) {
+		cain_sip_uri_set_port(contact_uri,cain_sip_header_via_get_port(via_header));
+	}
+	/*try to fix transport if needed (very unlikely)*/
+	if (strcasecmp(cain_sip_header_via_get_transport(via_header),"UDP")!=0) {
+		if (!cain_sip_uri_get_transport_param(contact_uri)
+				||strcasecmp(cain_sip_uri_get_transport_param(contact_uri),cain_sip_header_via_get_transport(via_header))!=0) {
+			cain_sip_uri_set_transport_param(contact_uri,cain_sip_header_via_get_transport_lowercase(via_header));
 		}
-		contact_port =  cain_sip_uri_get_port(contact_uri);
-		if (rport>0 && rport!=contact_port && (contact_port+rport)!=5060) {
-			/*need to update port*/
-			cain_sip_uri_set_port(contact_uri,rport);
-		}
-		/*try to fix transport if needed (very unlikely)*/
-		if (strcasecmp(cain_sip_header_via_get_transport(via_header),"UDP")!=0) {
-			if (!cain_sip_uri_get_transport_param(contact_uri)
-					||strcasecmp(cain_sip_uri_get_transport_param(contact_uri),cain_sip_header_via_get_transport(via_header))!=0) {
-				cain_sip_uri_set_transport_param(contact_uri,cain_sip_header_via_get_transport_lowercase(via_header));
-			}
-		} else {
-			if (cain_sip_uri_get_transport_param(contact_uri)) {
-				cain_sip_uri_set_transport_param(contact_uri,NULL);
-			}
+	} else {
+		if (cain_sip_uri_get_transport_param(contact_uri)) {
+			cain_sip_uri_set_transport_param(contact_uri,NULL);
 		}
 	}
 	return 0;

@@ -51,6 +51,7 @@ typedef struct endpoint {
 	unsigned int nonce_count;
 	const char* received;
 	int rport;
+	unsigned char unreconizable_contact;
 } endpoint_t;
 
 static unsigned int  wait_for(cain_sip_stack_t*s1, cain_sip_stack_t*s2,int* counter,int value,int timeout) {
@@ -183,6 +184,10 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 		} else {
 			contact=cain_sip_header_contact_new();
 		}
+		if(endpoint->unreconizable_contact) {
+			/*put an unexopected address*/
+			cain_sip_uri_set_host(cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(contact)),"nimportequoi.com");
+		}
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(contact));
 
 	} else {
@@ -261,10 +266,7 @@ static void destroy_endpoint(endpoint_t* endpoint) {
 static endpoint_t* create_udp_endpoint(int port,cain_sip_listener_callbacks_t* listener_callbacks) {
 	return create_endpoint(port,"udp",listener_callbacks);
 }
-
-static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t auth_mode) {
-	cain_sip_listener_callbacks_t client_callbacks;
-	cain_sip_listener_callbacks_t server_callbacks;
+static void register_base(endpoint_t* client,endpoint_t *server) {
 	cain_sip_request_t* req;
 	cain_sip_client_transaction_t* trans;
 	cain_sip_header_route_t* destination_route;
@@ -273,23 +275,10 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	const char* domain="sip:" SIPDOMAIN ;
 	cain_sip_header_contact_t* contact=cain_sip_header_contact_new();
 	cain_sip_uri_t *dest_uri;
-	endpoint_t* client,*server;
 	uint64_t begin;
 	uint64_t end;
+	if (client->expire_in_contact) cain_sip_header_contact_set_expires(contact,1);
 
-	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
-	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
-
-	if (expire_in_contact) cain_sip_header_contact_set_expires(contact,1);
-
-	client_callbacks.process_response_event=client_process_response_event;
-	client_callbacks.process_auth_requested=client_process_auth_requested;
-	server_callbacks.process_request_event=server_process_request_event;
-
-	client = create_udp_endpoint(3452,&client_callbacks);
-	server = create_udp_endpoint(6788,&server_callbacks);
-	server->expire_in_contact=expire_in_contact;
-	server->auth=auth_mode;
 	
 	dest_uri=(cain_sip_uri_t*)cain_sip_object_clone((cain_sip_object_t*)cain_sip_listening_point_get_uri(server->lp));
 	cain_sip_uri_set_host(dest_uri,"127.0.0.1");
@@ -306,7 +295,7 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 		                    cain_sip_header_via_new(),
 		                    70);
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(contact));
-	if (!expire_in_contact)
+	if (!client->expire_in_contact)
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(1)));
 
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(destination_route));
@@ -341,6 +330,21 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.refreshOk,4,1000));
 	cain_sip_refresher_stop(refresher);
 	cain_sip_object_unref(refresher);
+}
+static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t auth_mode) {
+	cain_sip_listener_callbacks_t client_callbacks;
+	cain_sip_listener_callbacks_t server_callbacks;
+	endpoint_t* client,*server;
+	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	client_callbacks.process_response_event=client_process_response_event;
+	client_callbacks.process_auth_requested=client_process_auth_requested;
+	server_callbacks.process_request_event=server_process_request_event;
+	client = create_udp_endpoint(3452,&client_callbacks);
+	server = create_udp_endpoint(6788,&server_callbacks);
+	server->expire_in_contact=client->expire_in_contact=expire_in_contact;
+	server->auth=auth_mode;
+	register_base(client,server);
 	destroy_endpoint(client);
 	destroy_endpoint(server);
 }
@@ -434,6 +438,26 @@ static void register_expires_in_contact_header_digest_auth(void) {
 	register_test_with_param(1,digest_auth);
 }
 
+static void register_with_unreconizable_contact(void) {
+	cain_sip_listener_callbacks_t client_callbacks;
+	cain_sip_listener_callbacks_t server_callbacks;
+	endpoint_t* client,*server;
+	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	client_callbacks.process_response_event=client_process_response_event;
+	client_callbacks.process_auth_requested=client_process_auth_requested;
+	server_callbacks.process_request_event=server_process_request_event;
+	client = create_udp_endpoint(3452,&client_callbacks);
+	server = create_udp_endpoint(6788,&server_callbacks);
+	server->expire_in_contact=1;
+	server->unreconizable_contact=1;
+	server->auth=digest;
+	register_base(client,server);
+	destroy_endpoint(client);
+	destroy_endpoint(server);
+}
+
+
 int cain_sip_refresher_test_suite(){
 	CU_pSuite pSuite = CU_add_suite("Refresher", NULL, NULL);
 
@@ -450,6 +474,9 @@ int cain_sip_refresher_test_suite(){
 		return CU_get_error();
 	}
 	if (NULL == CU_add_test(pSuite, "subscribe_test", subscribe_test)) {
+		return CU_get_error();
+	}
+	if (NULL == CU_add_test(pSuite, "register_with_unreconizable_contact", register_with_unreconizable_contact)) {
 		return CU_get_error();
 	}
 	return 0;

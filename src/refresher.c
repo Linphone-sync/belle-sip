@@ -278,16 +278,22 @@ static int set_expires_from_trans(cain_sip_refresher_t* refresher) {
 			}
 		}
 		if (refresher->expires<0) {
-			cain_sip_message("Neither Expires header nor corresponding Contact header found");
-			refresher->expires=0;
-			return 1;
+			cain_sip_message("Neither Expires header nor corresponding Contact header found, checking from original request");
+			if ((expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_EXPIRES))) {
+				refresher->expires = cain_sip_header_expires_get_expires(expires_header);
+			} else {
+				cain_sip_message("Not possible to guess expire value, giving up");
+				refresher->expires=0;
+				return 1;
+			}
 		}
 
 	} 	else if (strcmp("INVITE",cain_sip_request_get_method(request))==0) {
-		cain_sip_fatal("Refresher does not support ERROR yet");
+		cain_sip_error("Refresher does not support ERROR yet");
+		return -1;
 	} else {
 		cain_sip_error("Refresher does not support [%s] yet",cain_sip_request_get_method(request));
-		return 1;
+		return -1;
 	}
 	return 0;
 }
