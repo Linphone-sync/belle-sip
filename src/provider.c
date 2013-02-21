@@ -20,7 +20,7 @@
 #include "listeningpoint_internal.h"
 #include "md5.h"
 
-cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas);
+cain_sip_dialog_t *cain_sip_provider_find_dialog_from_msg(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas);
 
 typedef struct authorization_context {
 	cain_sip_header_call_id_t* callid;
@@ -94,7 +94,7 @@ static void cain_sip_provider_dispatch_request(cain_sip_provider_t* prov, cain_s
 		/* Should we limit to ACK ?  */
 		/*Search for a dialog if exist */
 
-		ev.dialog=cain_sip_provider_find_dialog(prov,req,1/*request=uas*/);
+		ev.dialog=cain_sip_provider_find_dialog_from_msg(prov,req,1/*request=uas*/);
 		if (strcmp("ACK",cain_sip_request_get_method(req))==0){
 			if (!ev.dialog) {
 				cain_sip_warning("Provider [%p] received an unexpected stateless ACK",prov);
@@ -355,7 +355,7 @@ cain_sip_dialog_t * cain_sip_provider_get_new_dialog_internal(cain_sip_provider_
 }
 
 /*finds an existing dialog for an outgoing or incoming request */
-cain_sip_dialog_t *cain_sip_provider_find_dialog(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas){
+cain_sip_dialog_t *cain_sip_provider_find_dialog_from_msg(cain_sip_provider_t *prov, cain_sip_request_t *msg, int as_uas){
 	cain_sip_list_t *elem;
 	cain_sip_dialog_t *dialog;
 	cain_sip_dialog_t *returned_dialog=NULL;
@@ -437,7 +437,7 @@ cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain
 			}
 		}
 	}
-	cain_sip_transaction_set_dialog((cain_sip_transaction_t*)t,cain_sip_provider_find_dialog(prov,req,FALSE));
+	cain_sip_transaction_set_dialog((cain_sip_transaction_t*)t,cain_sip_provider_find_dialog_from_msg(prov,req,FALSE));
 	return t;
 }
 
@@ -450,7 +450,7 @@ cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain
 		return NULL;
 	}else 
 		t=(cain_sip_server_transaction_t*)cain_sip_nist_new(prov,req);
-	cain_sip_transaction_set_dialog((cain_sip_transaction_t*)t,cain_sip_provider_find_dialog(prov,req,TRUE));
+	cain_sip_transaction_set_dialog((cain_sip_transaction_t*)t,cain_sip_provider_find_dialog_from_msg(prov,req,TRUE));
 	cain_sip_provider_add_server_transaction(prov,t);
 	return t;
 }

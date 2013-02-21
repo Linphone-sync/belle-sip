@@ -26,11 +26,11 @@ CAIN_SIP_BEGIN_DECLS
 
 CAINSIP_EXPORT int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp);
 
-void cain_sip_provider_remove_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp);
+CAINSIP_EXPORT void cain_sip_provider_remove_listening_point(cain_sip_provider_t *p, cain_sip_listening_point_t *lp);
 
 CAINSIP_EXPORT cain_sip_listening_point_t *cain_sip_provider_get_listening_point(cain_sip_provider_t *p, const char *transport);
 
-const cain_sip_list_t *cain_sip_provider_get_listening_points(cain_sip_provider_t *p);
+CAINSIP_EXPORT const cain_sip_list_t *cain_sip_provider_get_listening_points(cain_sip_provider_t *p);
 
 CAINSIP_EXPORT void cain_sip_provider_add_sip_listener(cain_sip_provider_t *p, cain_sip_listener_t *l);
 
@@ -44,13 +44,13 @@ CAINSIP_EXPORT cain_sip_client_transaction_t *cain_sip_provider_get_new_client_t
 
 CAINSIP_EXPORT cain_sip_server_transaction_t *cain_sip_provider_get_new_server_transaction(cain_sip_provider_t *p, cain_sip_request_t *req);
 
-cain_sip_stack_t *cain_sip_provider_get_sip_stack(cain_sip_provider_t *p);
+CAINSIP_EXPORT cain_sip_stack_t *cain_sip_provider_get_sip_stack(cain_sip_provider_t *p);
 
 CAINSIP_EXPORT void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req);
 
-void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp);
+CAINSIP_EXPORT void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp);
 
-void cain_sip_provider_clean_channels(cain_sip_provider_t *p);
+CAINSIP_EXPORT void cain_sip_provider_clean_channels(cain_sip_provider_t *p);
 
 /**
  * Add auth info to the request if found
@@ -69,8 +69,18 @@ CAINSIP_EXPORT int cain_sip_provider_add_authorization(cain_sip_provider_t *p, c
  * @param stack
  * @param recv_error if <=0, will cause channel error to be reported
 **/
+CAINSIP_EXPORT void cain_sip_provider_set_recv_error(cain_sip_provider_t *prov, int recv_error);
 
-void cain_sip_provider_set_recv_error(cain_sip_provider_t *prov, int recv_error);
+/**
+ * Provides access to a specific dialog
+ * @param prov object
+ * @param call_if of the dialog
+ * @param from_tag of the dialog
+ * @param to_tag of the dialog
+ * @returns dialog corresponding to this parameter or NULL if not found
+ *
+ **/
+CAINSIP_EXPORT cain_sip_dialog_t* cain_sip_provider_find_dialog(const cain_sip_provider_t *prov, const char* call_id,const char* from_tag,const char* to_tag);
 
 CAIN_SIP_END_DECLS
 

@@ -1322,7 +1322,7 @@ char* cain_sip_header_replaces_value_to_escaped_string(const cain_sip_header_rep
 			break;
 		}
 	}
-
+	output_buff[out_buff_index]='\0';
 	return cain_sip_strdup(output_buff);
 }
 cain_sip_header_replaces_t* cain_sip_header_replaces_create(const char* call_id,const char* from_tag,const char* to_tag) {

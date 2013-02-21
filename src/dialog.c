@@ -668,3 +668,26 @@ int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack){
 	cain_sip_message("Dialog ignoring incoming ACK (surely a retransmission)");
 	return -1;
 }
+
+cain_sip_dialog_t* cain_sip_provider_find_dialog(const cain_sip_provider_t *prov, const char* call_id,const char* from_tag,const char* to_tag) {
+	cain_sip_list_t* iterator;
+
+	for(iterator=prov->dialogs;iterator!=NULL;iterator=iterator->next) {
+		cain_sip_dialog_t* dialog=(cain_sip_dialog_t*)iterator->data;
+		if (strcmp(cain_sip_header_call_id_get_call_id(cain_sip_dialog_get_call_id(dialog)),call_id)==0) {
+			const char* target_from;
+			const char*target_to;
+			if (cain_sip_dialog_is_server(dialog)) {
+				target_to=cain_sip_dialog_get_local_tag(dialog);
+				target_from=cain_sip_dialog_get_remote_tag(dialog);
+			} else {
+				target_from=cain_sip_dialog_get_local_tag(dialog);
+				target_to=cain_sip_dialog_get_remote_tag(dialog);
+			}
+			if (strcmp(from_tag,target_from)==0 && strcmp(to_tag,target_to)==0) {
+				return dialog;
+			}
+		}
+	}
+	return NULL;
+}
