@@ -92,7 +92,9 @@ void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
 cain_sip_request_t *cain_sip_transaction_get_request(const cain_sip_transaction_t *t){
 	return t->request;
 }
-
+cain_sip_response_t *cain_sip_transaction_get_response(const cain_sip_transaction_t *t) {
+	return t->last_response;
+}
 void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
 	cain_sip_timeout_event_t ev;
 	ev.source=t->provider;

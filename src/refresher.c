@@ -153,7 +153,7 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 	cain_sip_header_contact_t* contact;
 	/*first remove timer if any*/
 	cain_sip_refresher_stop(refresher);
-
+	refresher->expires=expires;
 	if (!dialog) {
 		/*create new request*/
 		request=cain_sip_client_transaction_create_authenticated_request(refresher->transaction);
@@ -179,10 +179,10 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 	/*update expires in any cases*/
 	expires_header = cain_sip_message_get_header_by_type(request,cain_sip_header_expires_t);
 	if (expires_header)
-		cain_sip_header_expires_set_expires(expires_header,expires);
+		cain_sip_header_expires_set_expires(expires_header,refresher->expires);
 	contact=cain_sip_message_get_header_by_type(request,cain_sip_header_contact_t);
 	if (cain_sip_header_contact_get_expires(contact)>=0)
-		cain_sip_header_contact_set_expires(contact,expires);
+		cain_sip_header_contact_set_expires(contact,refresher->expires);
 
 	client_transaction = cain_sip_provider_get_new_client_transaction(prov,request);
 	client_transaction->base.is_internal=1;
