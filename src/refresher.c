@@ -238,7 +238,7 @@ static cain_sip_header_contact_t* get_matching_contact(const cain_sip_transactio
 			if (!contact_header_list) {
 				tmp_string=cain_sip_object_to_string(CAIN_SIP_OBJECT(fixed_local_contact));
 				tmp_string2=cain_sip_object_to_string(CAIN_SIP_OBJECT(unfixed_local_contact));
-				cain_sip_error("No matching contact neither for [%s] nor [%s]", tmp_string, tmp_string2);
+				cain_sip_message("No matching contact neither for [%s] nor [%s]", tmp_string, tmp_string2);
 				cain_sip_free(tmp_string);
 				cain_sip_free(tmp_string2);
 				return NULL;
