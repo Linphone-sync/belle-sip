@@ -48,8 +48,16 @@ static void cain_sip_hop_destroy(cain_sip_hop_t *hop){
 	}
 }
 
+static void cain_sip_hop_clone(cain_sip_hop_t *hop, const cain_sip_hop_t *orig){
+	if (orig->host)
+		hop->host=cain_sip_strdup(orig->host);
+	if (orig->transport)
+		hop->transport=cain_sip_strdup(orig->transport);
+	
+}
+
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_hop_t);
-CAIN_SIP_INSTANCIATE_VPTR(cain_sip_hop_t,cain_sip_object_t,cain_sip_hop_destroy,NULL,NULL,TRUE);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_hop_t,cain_sip_object_t,cain_sip_hop_destroy,cain_sip_hop_clone,NULL,TRUE);
 
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 	cain_sip_object_unref(stack->ml);
