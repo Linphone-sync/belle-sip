@@ -149,11 +149,10 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 	
 	cain_sip_object_ref(resp);
 	if (!base->last_response){
-		cain_sip_hop_t hop;
-		cain_sip_response_get_return_hop(resp,&hop);
-		base->channel=cain_sip_provider_get_channel(base->provider,hop.host, hop.port, hop.transport);
+		cain_sip_hop_t *hop;
+		hop=cain_sip_response_get_return_hop(resp);
+		base->channel=cain_sip_provider_get_channel(base->provider,hop->host, hop->port, hop->transport);
 		cain_sip_object_ref(base->channel);
-		cain_sip_hop_free(&hop);
 	}
 	status_code=cain_sip_response_get_status_code(resp);
 	if (status_code!=100){
@@ -277,12 +276,11 @@ int cain_sip_client_transaction_send_request_to(cain_sip_client_transaction_t *t
 	if (t->preset_route) cain_sip_object_ref(t->preset_route);
 	if (!t->next_hop) {
 		if (outbound_proxy) {
-			t->next_hop=cain_sip_hop_create(	cain_sip_uri_get_transport_param(outbound_proxy)
-					,cain_sip_uri_get_host(outbound_proxy)
-					,cain_sip_uri_get_listening_port(outbound_proxy));
+			t->next_hop=cain_sip_hop_new_from_uri(outbound_proxy);
 		} else {
-			t->next_hop = cain_sip_stack_create_next_hop(prov->stack,t->base.request);
+			t->next_hop = cain_sip_stack_get_next_hop(prov->stack,t->base.request);
 		}
+		cain_sip_object_ref(t->next_hop);
 	} else {
 		/*next hop already preset, probably in case of CANCEL*/
 	}
@@ -369,7 +367,7 @@ void cain_sip_client_transaction_add_response(cain_sip_client_transaction_t *t, 
 
 static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
 	if (t->preset_route) cain_sip_object_unref(t->preset_route);
-	if (t->next_hop) cain_sip_hop_free(t->next_hop);
+	if (t->next_hop) cain_sip_object_unref(t->next_hop);
 }
 
 static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_channel_t *chan, cain_sip_channel_state_t state){

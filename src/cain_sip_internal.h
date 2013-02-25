@@ -182,6 +182,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_header_service_route_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_refer_to_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_referred_by_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_replaces_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_hop_t);
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 
@@ -455,6 +456,15 @@ void cain_sip_parameters_init(cain_sip_parameters_t *obj);
 
 #include "listeningpoint_internal.h"
 
+
+struct cain_sip_hop{
+	cain_sip_object_t base;
+	char *host;
+	char *transport;
+	int port;
+};
+
+
 /*
  cain_sip_stack_t
 */
@@ -470,10 +480,10 @@ struct cain_sip_stack{
 	int resolver_send_error;	/* used to simulate network error*/
 };
 
-cain_sip_hop_t* cain_sip_hop_create(const char* transport, const char* host,int port);
+cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char* host,int port);
+cain_sip_hop_t* cain_sip_hop_new_from_uri(const cain_sip_uri_t *uri);
 
-cain_sip_hop_t * cain_sip_stack_create_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req);
-
+cain_sip_hop_t * cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req);
 const cain_sip_timer_config_t *cain_sip_stack_get_timer_config(const cain_sip_stack_t *stack);
 
 /*
@@ -706,7 +716,7 @@ int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack);
 /*
  cain_sip_response_t
 */
-void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop);
+cain_sip_hop_t * cain_sip_response_get_return_hop(cain_sip_response_t *msg);
 
 #define IS_TOKEN(token) \
 		(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars ?\

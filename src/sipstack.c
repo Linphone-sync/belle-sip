@@ -20,6 +20,37 @@
 #include "listeningpoint_internal.h"
 
 
+cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char* host,int port) {
+	cain_sip_hop_t* hop = cain_sip_object_new(cain_sip_hop_t);
+	if (transport) hop->transport=cain_sip_strdup(transport);
+	if (host) hop->host=cain_sip_strdup(host);
+	hop->port=port;
+	return hop;
+}
+
+cain_sip_hop_t* cain_sip_hop_new_from_uri(const cain_sip_uri_t *uri){
+	const char *host;
+	host=cain_sip_uri_get_maddr_param(uri);
+	if (!host) host=cain_sip_uri_get_host(uri);
+	return cain_sip_hop_new(cain_sip_uri_get_transport_param(uri),
+				host,
+				cain_sip_uri_get_listening_port(uri));
+}
+
+static void cain_sip_hop_destroy(cain_sip_hop_t *hop){
+	if (hop->host) {
+		cain_sip_free(hop->host);
+		hop->host=NULL;
+	}
+	if (hop->transport){
+		cain_sip_free(hop->transport);
+		hop->transport=NULL;
+	}
+}
+
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_hop_t);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_hop_t,cain_sip_object_t,cain_sip_hop_destroy,NULL,NULL,TRUE);
+
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 	cain_sip_object_unref(stack->ml);
 }
@@ -93,35 +124,19 @@ void cain_sip_stack_sleep(cain_sip_stack_t *stack, unsigned int milliseconds){
 	cain_sip_main_loop_sleep (stack->ml,milliseconds);
 }
 
-cain_sip_hop_t * cain_sip_stack_create_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req) {
+cain_sip_hop_t * cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req) {
 	cain_sip_header_route_t *route=CAIN_SIP_HEADER_ROUTE(cain_sip_message_get_header(CAIN_SIP_MESSAGE(req),"route"));
 	cain_sip_uri_t *uri;
+
 	if (route!=NULL){
 		uri=cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(route));
 	}else{
 		uri=cain_sip_request_get_uri(req);
 	}
-	return cain_sip_hop_create(	cain_sip_uri_get_transport_param(uri)
-								,cain_sip_uri_get_host(uri)
-								,cain_sip_uri_get_listening_port(uri));
+	return cain_sip_hop_new_from_uri(uri);
 }
-cain_sip_hop_t* cain_sip_hop_create(const char* transport, const char* host,int port) {
-	cain_sip_hop_t* hop = cain_sip_new0(cain_sip_hop_t);
-	if (transport) hop->transport=cain_sip_strdup(transport);
-	if (host) hop->host=cain_sip_strdup(host);
-	hop->port=port;
-	return hop;
-}
-void cain_sip_hop_free(cain_sip_hop_t *hop){
-	if (hop->host) {
-		cain_sip_free(hop->host);
-		hop->host=NULL;
-	}
-	if (hop->transport){
-		cain_sip_free(hop->transport);
-		hop->transport=NULL;
-	}
-}
+
+
 
 void cain_sip_stack_set_tx_delay(cain_sip_stack_t *stack, int delay_ms){
 	stack->tx_delay=delay_ms;

@@ -20,13 +20,6 @@
 #ifndef cain_sip_stack_h
 #define cain_sip_stack_h
 
-struct cain_sip_hop{
-	char *host;
-	char *transport;
-	int port;
-};
-
-typedef struct cain_sip_hop cain_sip_hop_t;
 
 struct cain_sip_timer_config{
 	int T1;
@@ -58,8 +51,6 @@ CAINSIP_EXPORT int cain_sip_stack_get_transport_timeout(const cain_sip_stack_t *
 CAINSIP_EXPORT int cain_sip_stack_get_dns_timeout(const cain_sip_stack_t *stack);
 
 CAINSIP_EXPORT void cain_sip_stack_set_dns_timeout(cain_sip_stack_t *stack, int timeout);
-
-void cain_sip_hop_free(cain_sip_hop_t *hop);
 
 /**
  * Can be used to simulate network transmission delays, for tests.

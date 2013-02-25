@@ -101,7 +101,8 @@ CAIN_SIP_DECLARE_TYPES_BEGIN(cain_sip,1)
 	CAIN_SIP_TYPE_ID(cain_sip_header_service_route_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_refer_to_t),
 	CAIN_SIP_TYPE_ID(cain_sip_header_referred_by_t),
-	CAIN_SIP_TYPE_ID(cain_sip_header_replaces_t)
+	CAIN_SIP_TYPE_ID(cain_sip_header_replaces_t),
+	CAIN_SIP_TYPE_ID(cain_sip_hop_t)
 CAIN_SIP_DECLARE_TYPES_END
 
 
@@ -133,6 +134,7 @@ typedef struct cain_sip_client_transaction cain_sip_client_transaction_t;
 typedef struct _cain_sip_message cain_sip_message_t;
 typedef struct _cain_sip_request cain_sip_request_t;
 typedef struct _cain_sip_response cain_sip_response_t;
+typedef struct cain_sip_hop cain_sip_hop_t;
 
 #include "cain-sip/utils.h"
 #include "cain-sip/list.h"

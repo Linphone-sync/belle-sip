@@ -551,18 +551,21 @@ void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_reques
 	}	
 }
 
-void cain_sip_response_get_return_hop(cain_sip_response_t *msg, cain_sip_hop_t *hop){
+cain_sip_hop_t * cain_sip_response_get_return_hop(cain_sip_response_t *msg){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
 	const char *host;
-	hop->transport=cain_sip_strdup(cain_sip_header_via_get_transport_lowercase(via));
+	const char *transport;
+	int port;
+	transport=cain_sip_strdup(cain_sip_header_via_get_transport_lowercase(via));
 	host=cain_sip_header_via_get_received(via);
 	if (host==NULL)
 		host=cain_sip_header_via_get_host(via);
-	hop->host=cain_sip_strdup(host);
-	hop->port=cain_sip_header_via_get_rport(via);
-	if (hop->port==-1)
-		hop->port=cain_sip_header_via_get_listening_port(via);
+	port=cain_sip_header_via_get_rport(via);
+	if (port==-1)
+		port=cain_sip_header_via_get_listening_port(via);
+	return cain_sip_hop_new(transport,host,port);
 }
+
 int cain_sip_response_fix_contact(const cain_sip_response_t* response,cain_sip_header_contact_t* contact) {
 	cain_sip_header_via_t* via_header;
 	cain_sip_uri_t* contact_uri;

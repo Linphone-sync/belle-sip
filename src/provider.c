@@ -429,9 +429,7 @@ cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain
 				 * The destination address,
 				   port, and transport for the CANCEL MUST be identical to those used to
 				   send the original request.*/
-				t->next_hop=cain_sip_hop_create(inv_transaction->next_hop->transport
-												, inv_transaction->next_hop->host
-												, inv_transaction->next_hop->port);
+				t->next_hop=(cain_sip_hop_t*)cain_sip_object_ref(inv_transaction->next_hop);
 			} else {
 				cain_sip_error (" No corresponding ict nor dest found for cancel request attached to transaction [%p]",t);
 			}
@@ -500,16 +498,15 @@ void cain_sip_provider_clean_channels(cain_sip_provider_t *p){
 void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *req){
 	cain_sip_hop_t* hop;
 	cain_sip_channel_t *chan;
-	hop=cain_sip_stack_create_next_hop(p->stack,req);
+	hop=cain_sip_stack_get_next_hop(p->stack,req);
 	chan=cain_sip_provider_get_channel(p,hop->host, hop->port, hop->transport);
 	if (chan) {
 		cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(req));
 	}
-	cain_sip_hop_free(hop);
 }
 
 void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t *resp){
-	cain_sip_hop_t hop;
+	cain_sip_hop_t *hop;
 	cain_sip_channel_t *chan;
 	cain_sip_header_to_t *to=(cain_sip_header_to_t*)cain_sip_message_get_header((cain_sip_message_t*)resp,"to");
 
@@ -518,10 +515,9 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 		compute_hash_from_invariants((cain_sip_message_t*)resp,token,sizeof(token),"tag");
 		cain_sip_header_to_set_tag(to,token);
 	}
-	cain_sip_response_get_return_hop(resp,&hop);
-	chan=cain_sip_provider_get_channel(p,hop.host, hop.port, hop.transport);
+	hop=cain_sip_response_get_return_hop(resp);
+	chan=cain_sip_provider_get_channel(p,hop->host, hop->port, hop->transport);
 	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(resp));
-	cain_sip_hop_free(&hop);
 }
 
 
