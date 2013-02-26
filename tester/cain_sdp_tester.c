@@ -17,16 +17,11 @@
 */
 
 #include "cain-sip/cain-sdp.h"
+#include "cain_sip_tester.h"
 #include <stdio.h>
 #include "CUnit/Basic.h"
 
-static int init_suite_sdp(void) {
-      return 0;
-}
 
-static int clean_suite_sdp(void) {
-      return 0;
-}
 //v=0
 //o=jehan-mac 1239 1239 IN IP4 192.168.0.18
 //s=Talk
@@ -61,6 +56,7 @@ static void test_attribute(void) {
 	CU_ASSERT_TRUE(cain_sdp_attribute_as_value(lAttribute));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lAttribute));
 }
+
 static void test_attribute_2(void) {
 	cain_sdp_attribute_t* lTmp;
 	cain_sdp_attribute_t* lAttribute = cain_sdp_attribute_parse("a=ice-pwd:31ec21eb38b2ec6d36e8dc7b\r\n");
@@ -75,6 +71,7 @@ static void test_attribute_2(void) {
 	CU_ASSERT_TRUE(cain_sdp_attribute_as_value(lAttribute));
 	cain_sip_object_unref(CAIN_SIP_OBJECT(lAttribute));
 }
+
 static void test_bandwidth(void) {
 	cain_sdp_bandwidth_t* lTmp;
 	cain_sdp_bandwidth_t* l_bandwidth = cain_sdp_bandwidth_parse("b=AS:380");
@@ -88,7 +85,6 @@ static void test_bandwidth(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_bandwidth));
 	cain_sip_free(l_raw_bandwidth);
 }
-
 
 static void test_connection(void) {
 	cain_sdp_connection_t* lTmp;
@@ -132,6 +128,7 @@ static void test_email(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_email));
 	cain_sip_free(l_raw_email);
 }
+
 static void test_info(void) {
 	cain_sdp_info_t* lTmp;
 	cain_sdp_info_t* l_info = cain_sdp_info_parse("i=A Seminar on the session description protocol");
@@ -144,6 +141,7 @@ static void test_info(void) {
 	cain_sip_object_unref(CAIN_SIP_OBJECT(l_info));
 	cain_sip_free(l_raw_info);
 }
+
 static void test_media(void) {
 	cain_sdp_media_t* lTmp;
 	cain_sip_list_t* list;
@@ -231,7 +229,8 @@ static void test_media_description(void) {
 	cain_sip_free(l_raw_media_description);
 	return;
 }
-static void simple_session_description(void) {
+
+static void test_simple_session_description(void) {
 	const char* l_src = "v=0\r\n"\
 						"o=jehan-mac 1239 1239 IN IP4 192.168.0.18\r\n"\
 						"s=Talk\r\n"\
@@ -365,6 +364,7 @@ static cain_sdp_mime_parameter_t* find_mime_parameter(cain_sip_list_t* list,cons
 	}
 	return NULL;
 }
+
 static void check_mime_param (cain_sdp_mime_parameter_t* mime_param
 							,int rate
 							,int channel_count
@@ -382,6 +382,7 @@ static void check_mime_param (cain_sdp_mime_parameter_t* mime_param
 	if (type) CU_ASSERT_STRING_EQUAL(cain_sdp_mime_parameter_get_type(mime_param),type);
 	if (parameters) CU_ASSERT_STRING_EQUAL(cain_sdp_mime_parameter_get_parameters(mime_param),parameters);
 }
+
 static void test_mime_parameter(void) {
 	const char* l_src = "m=audio 7078 RTP/AVP 111 110 0 8 9 3 101\r\n"\
 						"a=rtpmap:111 speex/16000\r\n"\
@@ -447,49 +448,28 @@ static void test_mime_parameter(void) {
 
 	cain_sip_list_free_with_data(mime_parameter_list, (void (*)(void*))cain_sip_object_unref);
 }
-int cain_sdp_test_suite () {
 
-	CU_pSuite pSuite = NULL;
-	/* add a suite to the registry */
-	pSuite = CU_add_suite("SDP", init_suite_sdp, clean_suite_sdp);
 
-	/* add the tests to the suite */
-	/* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
-	if (NULL == CU_add_test(pSuite, "test_connection", test_connection)) {
-		return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "test_connection_6", test_connection_6)) {
-		return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "attribute", test_attribute)) {
-		return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "test_attribute_2", test_attribute_2)) {
-		return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "bandwidth", test_bandwidth)) {
-		return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "email", test_email)) {
-			return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "info", test_info)) {
-			return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "media", test_media)) {
-			return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "media_description", test_media_description)) {
-			return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "mime_parameter", test_mime_parameter)) {
-			return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "simple_session_description", simple_session_description)) {
-			return CU_get_error();
-	}
-	if (NULL == CU_add_test(pSuite, "test_session_description", test_session_description)) {
-			return CU_get_error();
-	}
-	return 0;
-}
+test_t sdp_tests[] = {
+	{ "a= (attribute)", test_attribute },
+	{ "a= (attribute) 2", test_attribute_2 },
+	{ "b= (bandwidth)", test_bandwidth },
+	{ "c= (IPv4 connection)", test_connection },
+	{ "c= (IPv6 connection)", test_connection_6 },
+	{ "e= (email)", test_email },
+	{ "i= (info)", test_info },
+	{ "m= (media)", test_media },
+	{ "mime parameter", test_mime_parameter },
+	{ "Media description", test_media_description },
+	{ "Simple session description", test_simple_session_description },
+	{ "Session description", test_session_description }
+};
+
+test_suite_t sdp_test_suite = {
+	"SDP",
+	NULL,
+	NULL,
+	sizeof(sdp_tests) / sizeof(sdp_tests[0]),
+	sdp_tests
+};
+

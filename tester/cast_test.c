@@ -19,14 +19,8 @@
 #include "CUnit/Basic.h"
 
 #include "cain-sip/cain-sip.h"
+#include "cain_sip_tester.h"
 
-static int init_cast_suite(void){
-	return 0;
-}
-
-static int cleanup_cast_suite(void){
-	return 0;
-}
 
 static void cast_test(void){
 	cain_sip_stack_t *stack=cain_sip_stack_new(NULL);
@@ -62,12 +56,15 @@ static void cast_test(void){
 }
 
 
-int cain_sip_cast_test_suite(){
-	CU_pSuite pSuite = CU_add_suite("Object inheritence", init_cast_suite, cleanup_cast_suite);
+test_t cast_tests[] = {
+	{ "Casting requests and responses", cast_test }
+};
 
-	if (NULL == CU_add_test(pSuite, "casting requests and responses", cast_test)) {
-		return CU_get_error();
-	}
-	return 0;
-}
+test_suite_t cast_test_suite = {
+	"Object inheritence",
+	NULL,
+	NULL,
+	sizeof(cast_tests) / sizeof(cast_tests[0]),
+	cast_tests
+};
 

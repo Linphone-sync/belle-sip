@@ -18,6 +18,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include "cain_sip_tester.h"
 
 #include <stdio.h>
 #include "CUnit/Basic.h"
@@ -28,46 +29,106 @@
 
 extern const char *test_domain;
 extern const char *auth_domain;
-extern int cain_sip_uri_test_suite ();
-extern int cain_sip_headers_test_suite ();
-extern int cain_sip_message_test_suite ();
-extern int cain_sdp_test_suite();
-extern int cain_sip_authentication_helper_suite ();
-extern int cain_sip_cast_test_suite();
-extern int cain_sip_register_test_suite();
-extern int cain_sip_dialog_test_suite();
-extern int cain_sip_refresher_test_suite();
-extern int cain_sip_resolver_test_suite();
+
+
+static test_suite_t **test_suite = NULL;
+static int nb_test_suites = 0;
+
 
 #if HAVE_CU_CURSES
 	static unsigned char curses = 0;
 #endif
 
-int cain_sip_tester_run_tests(char *suite_name, char *test_name) {
+
+static void add_test_suite(test_suite_t *suite) {
+	if (test_suite == NULL) {
+		test_suite = (test_suite_t **)malloc(10 * sizeof(test_suite_t *));
+	}
+	test_suite[nb_test_suites] = suite;
+	nb_test_suites++;
+	if ((nb_test_suites % 10) == 0) {
+		test_suite = (test_suite_t **)realloc(test_suite, (nb_test_suites + 10) * sizeof(test_suite_t *));
+	}
+}
+
+static int run_test_suite(test_suite_t *suite) {
+	int i;
+
+	CU_pSuite pSuite = CU_add_suite(suite->name, suite->init_func, suite->cleanup_func);
+
+	for (i = 0; i < suite->nb_tests; i++) {
+		if (NULL == CU_add_test(pSuite, suite->tests[i].name, suite->tests[i].func)) {
+			return CU_get_error();
+		}
+	}
+
+	return 0;
+}
+
+static int test_suite_index(const char *suite_name) {
+	int i;
+
+	for (i = 0; i < cain_sip_tester_nb_test_suites(); i++) {
+		if ((strcmp(suite_name, test_suite[i]->name) == 0) && (strlen(suite_name) == strlen(test_suite[i]->name))) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+int cain_sip_tester_nb_test_suites(void) {
+	return nb_test_suites;
+}
+
+int cain_sip_tester_nb_tests(const char *suite_name) {
+	int i = test_suite_index(suite_name);
+	if (i < 0) return 0;
+	return test_suite[i]->nb_tests;
+}
+
+const char * cain_sip_tester_test_suite_name(int suite_index) {
+	if (suite_index >= cain_sip_tester_nb_test_suites()) return NULL;
+	return test_suite[suite_index]->name;
+}
+
+const char * cain_sip_tester_test_name(const char *suite_name, int test_index) {
+	int suite_index = test_suite_index(suite_name);
+	if ((suite_index < 0) || (suite_index >= cain_sip_tester_nb_test_suites())) return NULL;
+	if (test_index >= test_suite[suite_index]->nb_tests) return NULL;
+	return test_suite[suite_index]->tests[test_index].name;
+}
+
+void cain_sip_tester_init(void) {
+	add_test_suite(&cast_test_suite);
+	add_test_suite(&uri_test_suite);
+	add_test_suite(&headers_test_suite);
+	add_test_suite(&sdp_test_suite);
+	add_test_suite(&resolver_test_suite);
+	add_test_suite(&message_test_suite);
+	add_test_suite(&authentication_helper_test_suite);
+	add_test_suite(&register_test_suite);
+	add_test_suite(&dialog_test_suite);
+	add_test_suite(&refresher_test_suite);
+}
+
+void cain_sip_tester_uninit(void) {
+	if (test_suite != NULL) {
+		free(test_suite);
+		test_suite = NULL;
+		nb_test_suites = 0;
+	}
+}
+int cain_sip_tester_run_tests(const char *suite_name, const char *test_name) {
+	int i;
+
 	/* initialize the CUnit test registry */
 	if (CUE_SUCCESS != CU_initialize_registry())
 		return CU_get_error();
 
-	cain_sip_uri_test_suite();
-
-	cain_sip_headers_test_suite ();
-
-	cain_sip_message_test_suite();
-
-	cain_sdp_test_suite();
-
-	cain_sip_cast_test_suite();
-
-	cain_sip_authentication_helper_suite();
-
-	cain_sip_register_test_suite();
-
-	cain_sip_dialog_test_suite ();
-
-	cain_sip_refresher_test_suite();
-
-	cain_sip_resolver_test_suite();
-
+	for (i = 0; i < cain_sip_tester_nb_test_suites(); i++) {
+		run_test_suite(test_suite[i]);
+	}
 
 #if HAVE_CU_GET_SUITE
 	if (suite_name){
@@ -104,6 +165,7 @@ int cain_sip_tester_run_tests(char *suite_name, char *test_name) {
 #ifndef WINAPI_FAMILY_PHONE_APP
 int main (int argc, char *argv[]) {
 	int i;
+	int ret;
 	char *suite_name=NULL;
 	char *test_name=NULL;
 	const char *env_domain=getenv("TEST_DOMAIN");
@@ -154,6 +216,9 @@ int main (int argc, char *argv[]) {
 #endif
 	}
 
-	return cain_sip_tester_run_tests(suite_name, test_name);
+	cain_sip_tester_init();
+	ret = cain_sip_tester_run_tests(suite_name, test_name);
+	cain_sip_tester_uninit();
+	return ret;
 }
 #endif
