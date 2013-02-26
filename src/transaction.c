@@ -149,10 +149,10 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 	
 	cain_sip_object_ref(resp);
 	if (!base->last_response){
-		cain_sip_hop_t *hop;
-		hop=cain_sip_response_get_return_hop(resp);
+		cain_sip_hop_t* hop=cain_sip_response_get_return_hop(resp);
 		base->channel=cain_sip_provider_get_channel(base->provider,hop->host, hop->port, hop->transport);
 		cain_sip_object_ref(base->channel);
+		cain_sip_object_unref(hop);
 	}
 	status_code=cain_sip_response_get_status_code(resp);
 	if (status_code!=100){

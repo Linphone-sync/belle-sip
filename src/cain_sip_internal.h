@@ -716,7 +716,7 @@ int cain_sip_dialog_handle_ack(cain_sip_dialog_t *obj, cain_sip_request_t *ack);
 /*
  cain_sip_response_t
 */
-cain_sip_hop_t * cain_sip_response_get_return_hop(cain_sip_response_t *msg);
+cain_sip_hop_t* cain_sip_response_get_return_hop(cain_sip_response_t *msg);
 
 #define IS_TOKEN(token) \
 		(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars ?\

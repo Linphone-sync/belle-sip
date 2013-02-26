@@ -100,7 +100,7 @@ static void compute_response_auth_qop(const char* username
 	cain_sip_auth_helper_compute_ha2(method,uri,ha2);
 	cain_sip_auth_helper_compute_response_qop_auth(ha1, nonce,nonce_count, cnonce,qop,ha2,response);
 }
-
+#define MAX_NC_COUNT 3
 static void server_process_request_event(void *obj, const cain_sip_request_event_t *event){
 	endpoint_t* endpoint = (endpoint_t*)obj;
 	cain_sip_server_transaction_t* server_transaction =cain_sip_provider_get_new_server_transaction(endpoint->provider,cain_sip_request_event_get_request(event));
@@ -156,17 +156,23 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 			cain_sip_free((void*)auth_uri);
 			auth_ok=strcmp(cain_sip_header_authorization_get_response(authorization),local_resp)==0;
 		}
-		if (auth_ok) {
-			if (endpoint->auth == digest) {
-			sprintf(endpoint->nonce,"%p",authorization); //*change the nonce for next auth*/
+		if (auth_ok && endpoint->nonce_count<MAX_NC_COUNT ) {/*revoke nonce after MAX_NC_COUNT uses*/
+			if (endpoint->auth == digest ) {
+				sprintf(endpoint->nonce,"%p",authorization); //*change the nonce for next auth*/
 			} else {
 				endpoint->nonce_count++;
 			}
 		} else {
+			auth_ok=0;
 			www_authenticate=cain_sip_header_www_authenticate_parse(raw_authenticate_digest);
+			sprintf(endpoint->nonce,"%p",authorization); //*change the nonce for next auth*/
 			cain_sip_header_www_authenticate_set_nonce(www_authenticate,endpoint->nonce);
 			if (endpoint->auth == digest_auth) {
 				cain_sip_header_www_authenticate_add_qop(www_authenticate,"auth");
+				if (endpoint->nonce_count>=MAX_NC_COUNT) {
+					cain_sip_header_www_authenticate_set_stale(www_authenticate,1);
+					endpoint->nonce_count=1;
+				}
 			}
 		}
 	}
