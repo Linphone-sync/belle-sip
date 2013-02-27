@@ -24,6 +24,7 @@ struct cain_sip_udp_listening_point{
 };
 
 
+
 static void cain_sip_udp_listening_point_uninit(cain_sip_udp_listening_point_t *lp){
 	if (lp->sock!=-1) close_socket(lp->sock);
 	if (lp->source) {
@@ -90,6 +91,19 @@ static cain_sip_socket_t create_udp_socket(const char *addr, int port){
 	freeaddrinfo(res);
 	return sock;
 }
+static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events);
+
+static cain_sip_listening_point_t* cain_sip_udp_listening_point_init(cain_sip_udp_listening_point_t *lp) {
+	lp->sock=create_udp_socket(cain_sip_uri_get_host(((cain_sip_listening_point_t*)lp)->listening_uri)
+													,cain_sip_uri_get_port(((cain_sip_listening_point_t*)lp)->listening_uri));
+	if (lp->sock==(cain_sip_socket_t)-1){
+		cain_sip_object_unref(lp);
+		return NULL;
+	}
+	lp->source=cain_sip_socket_source_new((cain_sip_source_func_t)on_udp_data,lp,lp->sock,CAIN_SIP_EVENT_READ,-1);
+	cain_sip_main_loop_add_source(((cain_sip_listening_point_t*)lp)->stack->ml,lp->source);
+	return CAIN_SIP_LISTENING_POINT(lp);
+}
 
 /*peek data from the master socket to see where it comes from, and dispatch to matching channel.
  * If the channel does not exist, create it */
@@ -103,7 +117,12 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 		cain_sip_debug("udp_listening_point: data to read.");
 		err=recvfrom(lp->sock,(char*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
 		if (err==-1){
-			cain_sip_error("udp_listening_point: recvfrom() failed: %s",cain_sip_get_socket_error_string());
+			cain_sip_error("udp_listening_point: recvfrom() failed on [%s:%i], : [%s] reopening server socket"
+					,cain_sip_uri_get_host(((cain_sip_listening_point_t*)lp)->listening_uri)
+					,cain_sip_uri_get_port(((cain_sip_listening_point_t*)lp)->listening_uri)
+					,cain_sip_get_socket_error_string());
+			cain_sip_udp_listening_point_uninit(lp);
+			cain_sip_udp_listening_point_init(lp);
 		}else{
 			cain_sip_channel_t *chan;
 			struct addrinfo ai={0};
@@ -141,13 +160,6 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port){
 	cain_sip_udp_listening_point_t *lp=cain_sip_object_new(cain_sip_udp_listening_point_t);
 	cain_sip_listening_point_init((cain_sip_listening_point_t*)lp,s,ipaddress,port);
-	lp->sock=create_udp_socket(ipaddress,port);
-	if (lp->sock==(cain_sip_socket_t)-1){
-		cain_sip_object_unref(lp);
-		return NULL;
-	}
-	lp->source=cain_sip_socket_source_new((cain_sip_source_func_t)on_udp_data,lp,lp->sock,CAIN_SIP_EVENT_READ,-1);
-	cain_sip_main_loop_add_source(s->ml,lp->source);
-	return CAIN_SIP_LISTENING_POINT(lp);
+	return cain_sip_udp_listening_point_init(lp);
 }
 
