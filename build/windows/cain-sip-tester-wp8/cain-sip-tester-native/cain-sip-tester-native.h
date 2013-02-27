@@ -1,14 +1,7 @@
 ﻿#pragma once
 
 #include "cain-sip/cain-sip.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-	int cain_sip_tester_run_tests(char *suite_name, char *test_name);
-#ifdef __cplusplus
-}
-#endif
+#include "cain_sip_tester.h"
 
 namespace cain_sip_tester_native
 {
@@ -21,7 +14,13 @@ namespace cain_sip_tester_native
     public ref class CainSipTesterNative sealed
     {
     public:
-        CainSipTesterNative(OutputTraceListener^ traceListener);
-		void run(Platform::String^ name, Platform::Boolean verbose);
+        CainSipTesterNative();
+		virtual ~CainSipTesterNative();
+		void setOutputTraceListener(OutputTraceListener^ traceListener);
+		unsigned int nbTestSuites();
+		unsigned int nbTests(Platform::String^ suiteName);
+		Platform::String^ testSuiteName(int index);
+		Platform::String^ testName(Platform::String^ suiteName, int testIndex);
+		void run(Platform::String^ suiteName, Platform::String^ caseName, Platform::Boolean verbose);
     };
 }
