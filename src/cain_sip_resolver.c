@@ -102,6 +102,7 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 
 	if (revents & CAIN_SIP_EVENT_TIMEOUT) {
 		cain_sip_error("%s timed-out", __FUNCTION__);
+		ctx->cb(ctx->cb_data, ctx->name, NULL);
 		return CAIN_SIP_STOP;
 	}
 	if (ctx->cancelled) {

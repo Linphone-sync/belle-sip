@@ -394,13 +394,15 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 			if (revents!=0 || (s->timeout>=0 && cur>=s->expire_ms)){
 				char *objdesc=cain_sip_object_to_string((cain_sip_object_t*)s);
 				s->expired=TRUE;
+				if (revents==0)
+					revents=CAIN_SIP_EVENT_TIMEOUT;
 				if (s->timeout>0)/*to avoid too many traces*/ cain_sip_debug("source %s notified revents=%u, timeout=%i",objdesc,revents,s->timeout);
 				cain_sip_free(objdesc);
 				ret=s->notify(s->data,revents);
 				if (ret==CAIN_SIP_STOP || s->oneshot){
 					/*this source needs to be removed*/
 					cain_sip_main_loop_remove_source(ml,s);
-				}else if (revents==0){
+				}else if (revents==CAIN_SIP_EVENT_TIMEOUT){
 					/*timeout needs to be started again */
 					s->expire_ms+=s->timeout;
 					s->expired=FALSE;
