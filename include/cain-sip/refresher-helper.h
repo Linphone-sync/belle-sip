@@ -56,6 +56,6 @@ CAINSIP_EXPORT int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,in
 /**
  * returns current expires value;
  */
-int cain_sip_refresher_get_expires(const cain_sip_refresher_t* refresher);
+CAINSIP_EXPORT int cain_sip_refresher_get_expires(const cain_sip_refresher_t* refresher);
 
 #endif /* REFRESHER_HELPER_H_ */

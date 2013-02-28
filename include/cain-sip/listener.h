@@ -44,7 +44,7 @@ CAIN_SIP_DECLARE_INTERFACE_END
 /*Response event*/
 CAINSIP_EXPORT cain_sip_response_t* cain_sip_response_event_get_response(const cain_sip_response_event_t* event);
 CAINSIP_EXPORT cain_sip_client_transaction_t *cain_sip_response_event_get_client_transaction(const cain_sip_response_event_t* event);
-cain_sip_dialog_t *cain_sip_response_event_get_dialog(const cain_sip_response_event_t* event);
+CAINSIP_EXPORT cain_sip_dialog_t *cain_sip_response_event_get_dialog(const cain_sip_response_event_t* event);
 
 /*Request event*/
 CAINSIP_EXPORT cain_sip_request_t* cain_sip_request_event_get_request(const cain_sip_request_event_t* event);
@@ -52,28 +52,28 @@ CAINSIP_EXPORT cain_sip_server_transaction_t *cain_sip_request_event_get_server_
 CAINSIP_EXPORT cain_sip_dialog_t *cain_sip_request_event_get_dialog(const cain_sip_request_event_t* event);
 
 /*Dialog terminated event*/
-cain_sip_dialog_t* cain_sip_dialog_terminated_get_dialog(const cain_sip_dialog_terminated_event_t *event);
+CAINSIP_EXPORT cain_sip_dialog_t* cain_sip_dialog_terminated_get_dialog(const cain_sip_dialog_terminated_event_t *event);
 
 /**
  * Timeout Event
  */
-cain_sip_client_transaction_t *cain_sip_timeout_event_get_client_transaction(const cain_sip_timeout_event_t* event);
+CAINSIP_EXPORT cain_sip_client_transaction_t *cain_sip_timeout_event_get_client_transaction(const cain_sip_timeout_event_t* event);
 cain_sip_server_transaction_t *cain_sip_timeout_event_get_server_transaction(const cain_sip_timeout_event_t* event);
 
 /**
  * Transaction Termonated Event
  */
-cain_sip_client_transaction_t *cain_sip_transaction_terminated_event_get_client_transaction(const cain_sip_transaction_terminated_event_t* event);
-cain_sip_server_transaction_t *cain_sip_transaction_terminated_event_get_server_transaction(const cain_sip_transaction_terminated_event_t* event);
+CAINSIP_EXPORT cain_sip_client_transaction_t *cain_sip_transaction_terminated_event_get_client_transaction(const cain_sip_transaction_terminated_event_t* event);
+CAINSIP_EXPORT cain_sip_server_transaction_t *cain_sip_transaction_terminated_event_get_server_transaction(const cain_sip_transaction_terminated_event_t* event);
 
 
 /*auth event*/
-void cain_sip_auth_event_destroy(cain_sip_auth_event_t* event);
+CAINSIP_EXPORT void cain_sip_auth_event_destroy(cain_sip_auth_event_t* event);
 CAINSIP_EXPORT const char* cain_sip_auth_event_get_username(const cain_sip_auth_event_t* event);
 void cain_sip_auth_event_set_username(cain_sip_auth_event_t* event, const char* value);
 
 const char* cain_sip_auth_event_get_userid(const cain_sip_auth_event_t* event);
-void cain_sip_auth_event_set_userid(cain_sip_auth_event_t* event, const char* value);
+CAINSIP_EXPORT void cain_sip_auth_event_set_userid(cain_sip_auth_event_t* event, const char* value);
 
 CAINSIP_EXPORT const char* cain_sip_auth_event_get_realm(const cain_sip_auth_event_t* event);
 void cain_sip_auth_event_set_realm(cain_sip_auth_event_t* event, const char* value);
@@ -82,7 +82,7 @@ const char* cain_sip_auth_event_get_passwd(const cain_sip_auth_event_t* event);
 CAINSIP_EXPORT void cain_sip_auth_event_set_passwd(cain_sip_auth_event_t* event, const char* value);
 
 const char* cain_sip_auth_event_get_ha1(const cain_sip_auth_event_t* event);
-void cain_sip_auth_event_set_ha1(cain_sip_auth_event_t* event, const char* value);
+CAINSIP_EXPORT void cain_sip_auth_event_set_ha1(cain_sip_auth_event_t* event, const char* value);
 
 /*Io error event*/
 /*
@@ -110,7 +110,7 @@ unsigned int cain_sip_io_error_event_port(const cain_sip_io_error_event_t* event
  * @return cain_sip_object_t source, use cain_sip_object_is_instance_of to check returns type
  * */
 
-cain_sip_object_t* cain_sip_io_error_event_get_source(const cain_sip_io_error_event_t* event);
+CAINSIP_EXPORT cain_sip_object_t* cain_sip_io_error_event_get_source(const cain_sip_io_error_event_t* event);
 
 
 struct cain_sip_listener_callbacks{

@@ -31,7 +31,7 @@
 
 typedef struct _cain_sip_header_address cain_sip_header_address_t;
 
-cain_sip_header_address_t* cain_sip_header_address_new();
+CAINSIP_EXPORT cain_sip_header_address_t* cain_sip_header_address_new();
 /*
  * creates an address from a display name and an uri
  * Note the uri not copied but only its ref count is incremented
@@ -59,7 +59,7 @@ CAINSIP_EXPORT const char* cain_sip_header_address_get_displayname(const cain_si
 /**
  *
  */
-void cain_sip_header_address_set_displayname(cain_sip_header_address_t* address, const char* uri);
+CAINSIP_EXPORT void cain_sip_header_address_set_displayname(cain_sip_header_address_t* address, const char* uri);
 
 #define CAIN_SIP_HEADER_ADDRESS(t) CAIN_SIP_CAST(t,cain_sip_header_address_t)
 
@@ -105,7 +105,7 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_new();
 
 CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_parse (const char* contact) ;
 
-cain_sip_header_contact_t* cain_sip_header_contact_create (const cain_sip_header_address_t* contact) ;
+CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const cain_sip_header_address_t* contact) ;
 
 
 /**
@@ -213,15 +213,15 @@ CAINSIP_EXPORT const char*	cain_sip_header_via_get_transport(const cain_sip_head
  * Get lower case version of the transport
  * @return the lower case version of the transport if from tcp,udp,tls or dtls else, return the value from #cain_sip_header_via_get_transport
  */
-const char*	cain_sip_header_via_get_transport_lowercase(const cain_sip_header_via_t* via);
+CAINSIP_EXPORT const char*	cain_sip_header_via_get_transport_lowercase(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT const char*	cain_sip_header_via_get_host(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT int cain_sip_header_via_get_port(const cain_sip_header_via_t* via);
-int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via);
+CAINSIP_EXPORT int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via);
 
 const char*	cain_sip_header_via_get_maddr(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT const char*	cain_sip_header_via_get_protocol(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT const char*	cain_sip_header_via_get_received(const cain_sip_header_via_t* via);
-int cain_sip_header_via_get_rport(const cain_sip_header_via_t* via);
+CAINSIP_EXPORT int cain_sip_header_via_get_rport(const cain_sip_header_via_t* via);
 int	cain_sip_header_via_get_ttl(const cain_sip_header_via_t* via);
 
 void cain_sip_header_via_set_branch(cain_sip_header_via_t* via,const char* branch);
@@ -289,7 +289,7 @@ void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* co
  ******************************/
 typedef struct _cain_sip_header_expires cain_sip_header_expires_t;
 
-cain_sip_header_expires_t* cain_sip_header_expires_new();
+CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_new();
 
 CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_parse (const char* expires) ;
 CAINSIP_EXPORT int cain_sip_header_expires_get_expires(const cain_sip_header_expires_t* expires);
@@ -339,7 +339,7 @@ CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_create(int exp
   ******************************/
  typedef struct _cain_sip_header_user_agent cain_sip_header_user_agent_t;
 
- cain_sip_header_user_agent_t* cain_sip_header_user_agent_new();
+ CAINSIP_EXPORT cain_sip_header_user_agent_t* cain_sip_header_user_agent_new();
 
  CAINSIP_EXPORT cain_sip_header_user_agent_t* cain_sip_header_user_agent_parse (const char* user_agent) ;
  CAINSIP_EXPORT cain_sip_list_t* cain_sip_header_user_agent_get_products(const cain_sip_header_user_agent_t* user_agent);
@@ -350,9 +350,9 @@ CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_create(int exp
   * @param value_size [in] size of the buffer
   * @return number of written characters or -1 inca se of error;
   */
- int cain_sip_header_user_agent_get_products_as_string(const cain_sip_header_user_agent_t* user_agent,char* value,unsigned int value_size);
- void cain_sip_header_user_agent_set_products(cain_sip_header_user_agent_t* user_agent,cain_sip_list_t* value);
- void cain_sip_header_user_agent_add_product(cain_sip_header_user_agent_t* user_agent,const char* product);
+ CAINSIP_EXPORT int cain_sip_header_user_agent_get_products_as_string(const cain_sip_header_user_agent_t* user_agent,char* value,unsigned int value_size);
+ CAINSIP_EXPORT void cain_sip_header_user_agent_set_products(cain_sip_header_user_agent_t* user_agent,cain_sip_list_t* value);
+ CAINSIP_EXPORT void cain_sip_header_user_agent_add_product(cain_sip_header_user_agent_t* user_agent,const char* product);
  #define CAIN_SIP_HEADER_USER_AGENT(t) CAIN_SIP_CAST(t,cain_sip_header_user_agent_t)
 
  /******************************
@@ -494,7 +494,7 @@ typedef struct _cain_sip_header_subscription_state cain_sip_header_subscription_
 cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_new();
 
 CAINSIP_EXPORT cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_parse (const char* subscription_state) ;
-cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_create (const char* subscription_state,int expires);
+CAINSIP_EXPORT cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_create (const char* subscription_state,int expires);
 
 CAINSIP_EXPORT const char* cain_sip_header_subscription_state_get_state(const cain_sip_header_subscription_state_t* subscription_state);
 CAINSIP_EXPORT int cain_sip_header_subscription_state_get_expires(const cain_sip_header_subscription_state_t* subscription_state);

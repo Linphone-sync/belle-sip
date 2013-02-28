@@ -34,10 +34,10 @@ CAIN_SIP_BEGIN_DECLS
 
 const char *cain_sip_transaction_state_to_string(cain_sip_transaction_state_t state);
 
-void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t);
-void cain_sip_transaction_set_application_data(cain_sip_transaction_t *t, void *data);
+CAINSIP_EXPORT void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t);
+CAINSIP_EXPORT void cain_sip_transaction_set_application_data(cain_sip_transaction_t *t, void *data);
 const char *cain_sip_transaction_get_branch_id(const cain_sip_transaction_t *t);
-cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_transaction_t *t);
+CAINSIP_EXPORT cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_transaction_t *t);
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t);
 CAINSIP_EXPORT cain_sip_request_t *cain_sip_transaction_get_request(const cain_sip_transaction_t *t);
 CAINSIP_EXPORT cain_sip_response_t *cain_sip_transaction_get_response(const cain_sip_transaction_t *t);
@@ -45,7 +45,7 @@ CAINSIP_EXPORT cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_si
 
 CAINSIP_EXPORT void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t, cain_sip_response_t *resp);
 
-cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t);
+CAINSIP_EXPORT cain_sip_request_t * cain_sip_client_transaction_create_cancel(cain_sip_client_transaction_t *t);
 CAINSIP_EXPORT int cain_sip_client_transaction_send_request(cain_sip_client_transaction_t *t);
 /*
  * Same as #cain_sip_client_transaction_send_request but with a predefined route.

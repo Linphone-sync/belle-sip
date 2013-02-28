@@ -30,7 +30,7 @@ typedef struct _cain_sip_parameters cain_sip_parameters_t;
 cain_sip_parameters_t* cain_sip_parameters_new();
 /*
  * remove all parameters */
-void cain_sip_parameters_clean(cain_sip_parameters_t* params);
+CAINSIP_EXPORT void cain_sip_parameters_clean(cain_sip_parameters_t* params);
 
 
 CAINSIP_EXPORT const char*	cain_sip_parameters_get_parameter(const cain_sip_parameters_t* obj,const char* name);
@@ -43,7 +43,7 @@ const char*	cain_sip_parameters_get_case_parameter(const cain_sip_parameters_t* 
  */
 CAINSIP_EXPORT unsigned int cain_sip_parameters_is_parameter(const cain_sip_parameters_t* obj,const char* name);
 
-void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* obj,const char* name,const char* value);
+CAINSIP_EXPORT void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* obj,const char* name,const char* value);
 
 const cain_sip_list_t *	cain_sip_parameters_get_parameter_names(const cain_sip_parameters_t* obj);
 

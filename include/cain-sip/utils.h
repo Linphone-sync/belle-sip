@@ -131,13 +131,13 @@ CAINSIP_EXPORT void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
 CAINSIP_EXPORT void cain_sip_set_log_level(int level);
 
-char * cain_sip_random_token(char *ret, size_t size);
+CAINSIP_EXPORT char * cain_sip_random_token(char *ret, size_t size);
 
 char * cain_sip_octets_to_text(const unsigned char *hash, size_t hash_len, char *ret, size_t size);
 
 char * cain_sip_create_tag(char *ret, size_t size);
 
-const char* cain_sip_version_to_string();
+CAINSIP_EXPORT const char* cain_sip_version_to_string();
 
 #if defined(WIN32)
 

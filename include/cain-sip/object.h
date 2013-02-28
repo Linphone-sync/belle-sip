@@ -227,7 +227,7 @@ CAINSIP_EXPORT char* cain_sip_object_to_string(cain_sip_object_t* obj);
  * Writes a string representation of the object into the supplied buffer.
  * Same as cain_sip_object_to_string(), but without allocating space for the output string.
 **/
-int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
+CAINSIP_EXPORT int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
 
 CAINSIP_EXPORT int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
 
