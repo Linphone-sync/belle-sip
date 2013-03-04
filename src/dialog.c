@@ -317,7 +317,7 @@ static void cain_sip_dialog_stop_200Ok_retrans(cain_sip_dialog_t *obj){
  * */
 int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas){
 	int code;
-
+	int is_retransmition=FALSE;
 	/*first update local/remote cseq*/
 	if (as_uas) {
 		cain_sip_header_cseq_t* cseq=cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(req),cain_sip_header_cseq_t);
@@ -344,10 +344,11 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_
 					cain_sip_object_unref(obj->remote_target);
 					obj->remote_target=(cain_sip_header_address_t*)cain_sip_object_ref(ct);
 				}
-				obj->needs_ack=TRUE; /*REINVITE case, ack needed by both uas and uac*/
 				/*handle possible retransmission of 200Ok */
-				if (!as_uas) {
-					return cain_sip_dialog_handle_200Ok(obj,resp)==0;
+				if (!as_uas && (is_retransmition=(cain_sip_dialog_handle_200Ok(obj,resp)==0))) {
+					return is_retransmition;
+				} else {
+					obj->needs_ack=TRUE; /*REINVITE case, ack needed by both uas and uac*/
 				}
 
 			}if (strcmp(cain_sip_request_get_method(req),"INVITE")==0 && code >=300) {
