@@ -129,7 +129,8 @@ int cain_sip_tester_run_tests(const char *suite_name, const char *test_name) {
 	for (i = 0; i < cain_sip_tester_nb_test_suites(); i++) {
 		run_test_suite(test_suite[i]);
 	}
-
+	cain_sip_object_pool_push();
+	
 #if HAVE_CU_GET_SUITE
 	if (suite_name){
 		CU_pSuite suite;
@@ -157,6 +158,8 @@ int cain_sip_tester_run_tests(const char *suite_name, const char *test_name) {
 		}
 	}
 
+	cain_sip_object_pool_pop();
+	
 	CU_cleanup_registry();
 	return CU_get_error();
 }

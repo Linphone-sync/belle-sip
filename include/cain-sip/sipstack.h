@@ -76,6 +76,11 @@ CAINSIP_EXPORT void cain_sip_stack_set_resolver_tx_delay(cain_sip_stack_t *stack
 **/
 CAINSIP_EXPORT void cain_sip_stack_set_resolver_send_error(cain_sip_stack_t *stack, int send_error);
 
+
+void cain_sip_stack_push_pool(cain_sip_stack_t *stack);
+
+void cain_sip_stack_pop_pool(cain_sip_stack_t *stack);
+
 CAIN_SIP_END_DECLS
 
 #endif

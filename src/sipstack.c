@@ -164,3 +164,4 @@ void cain_sip_stack_set_resolver_send_error(cain_sip_stack_t *stack, int send_er
 const char* cain_sip_version_to_string() {
 	return PACKAGE_VERSION;
 }
+

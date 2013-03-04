@@ -134,6 +134,8 @@ struct _cain_sip_object{
 	int ref;
 	char* name;
 	struct weak_ref *weak_refs;
+	struct cain_sip_object_pool *pool;
+	struct _cain_sip_list *pool_iterator;
 };
 
 
@@ -305,7 +307,14 @@ typedef struct cain_sip_interface_desc{
 	}
 
 
+/**
+ * Object holding unowned objects - used as a kind of garbage collector for temporary objects.
+**/
+typedef struct cain_sip_object_pool cain_sip_object_pool_t;
 
+cain_sip_object_pool_t * cain_sip_object_pool_push(void);
+void cain_sip_object_pool_pop(void);
+void cain_sip_object_pool_clean(cain_sip_object_pool_t *obj);
 
 #endif
 

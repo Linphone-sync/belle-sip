@@ -18,7 +18,6 @@
 
 #include "cain_sip_internal.h"
 
-static cain_sip_list_t *unowned_objects=NULL;
 
 static int has_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
 	cain_sip_object_vptr_t *vptr=obj->vptr;
@@ -40,23 +39,10 @@ cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip_object_vptr_t 
 	obj->vptr=vptr;
 	obj->size=objsize;
 	if (obj->ref==0){
-		unowned_objects=cain_sip_list_prepend(unowned_objects,obj);
+		cain_sip_object_pool_t *pool=cain_sip_object_pool_get_current();
+		if (pool) cain_sip_object_pool_add(pool,obj);
 	}
 	return obj;
-}
-
-void cain_sip_object_delete_unowned(void){
-	cain_sip_list_t *elem,*next;
-	for(elem=unowned_objects;elem!=NULL;elem=next){
-		cain_sip_object_t *obj=(cain_sip_object_t*)elem->data;
-		if (obj->ref==0){
-			cain_sip_message("Garbage collecting unowned object of type %s",obj->vptr->type_name);
-			obj->ref=-1;
-			cain_sip_object_delete(obj);
-			next=elem->next;
-			unowned_objects=cain_sip_list_delete_link(unowned_objects,elem);
-		}else next=elem->next;
-	}
 }
 
 int cain_sip_object_is_initially_unowned(const cain_sip_object_t *obj){
@@ -65,8 +51,8 @@ int cain_sip_object_is_initially_unowned(const cain_sip_object_t *obj){
 
 cain_sip_object_t * cain_sip_object_ref(void *obj){
 	cain_sip_object_t *o=CAIN_SIP_OBJECT(obj);
-	if (o->ref==0){
-		unowned_objects=cain_sip_list_remove(unowned_objects,obj);
+	if (o->ref==0 && o->pool){
+		cain_sip_object_pool_remove(o->pool,obj);
 	}
 	o->ref++;
 	return obj;
@@ -74,9 +60,9 @@ cain_sip_object_t * cain_sip_object_ref(void *obj){
 
 void cain_sip_object_unref(void *ptr){
 	cain_sip_object_t *obj=CAIN_SIP_OBJECT(ptr);
-	if (obj->ref==-1) cain_sip_fatal("Object of type [%s] freed twice !",obj->name);
-	if (obj->ref==0){
-		unowned_objects=cain_sip_list_remove(unowned_objects,obj);
+	if (obj->ref==-1) cain_sip_fatal("Object with name [%s] freed twice !",obj->name);
+	if (obj->ref==0 && obj->pool){
+		cain_sip_object_pool_remove(obj->pool,obj);
 		obj->ref=-1;
 		cain_sip_object_delete(obj);
 		return;
@@ -208,7 +194,8 @@ cain_sip_object_t *cain_sip_object_clone(const cain_sip_object_t *obj){
 	newobj->size=obj->size;
 	_cain_sip_object_copy(newobj,obj);
 	if (newobj->ref==0){
-		unowned_objects=cain_sip_list_prepend(unowned_objects,newobj);
+		cain_sip_object_pool_t *pool=cain_sip_object_pool_get_current();
+		if (pool) cain_sip_object_pool_add(pool,newobj);
 	}
 	return newobj;
 }
@@ -360,5 +347,133 @@ char *cain_sip_object_describe_type_from_name(const char *name){
 }
 
 #endif
+
+struct cain_sip_object_pool{
+	cain_sip_object_t base;
+	cain_sip_list_t *objects;
+	cain_sip_thread_t thread_id;
+};
+
+static void cain_sip_object_pool_destroy(cain_sip_object_pool_t *pool){
+	cain_sip_object_pool_clean(pool);
+}
+
+CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_object_pool_t);
+CAIN_SIP_INSTANCIATE_VPTR(cain_sip_object_pool_t,cain_sip_object_t,cain_sip_object_pool_destroy,NULL,NULL,FALSE);
+
+cain_sip_object_pool_t *cain_sip_object_pool_new(void){
+	cain_sip_object_pool_t *pool=cain_sip_object_new(cain_sip_object_pool_t);
+	pool->thread_id=cain_sip_thread_self();
+	return pool;
+}
+
+void cain_sip_object_pool_add(cain_sip_object_pool_t *pool, cain_sip_object_t *obj){
+	if (obj->pool!=NULL){
+		cain_sip_fatal("It is not possible to add an object to multiple pools.");
+	}
+	pool->objects=cain_sip_list_prepend(pool->objects,obj);
+	obj->pool_iterator=pool->objects;
+	obj->pool=pool;
+}
+
+void cain_sip_object_pool_remove(cain_sip_object_pool_t *pool, cain_sip_object_t *obj){
+	cain_sip_thread_t tid=cain_sip_thread_self();
+	if (obj->pool!=pool){
+		cain_sip_fatal("Attempting to remove object from an incorrect pool: obj->pool=%p, pool=%p",obj->pool,pool);
+		return;
+	}
+	if (tid!=pool->thread_id){
+		cain_sip_fatal("It is forbidden (and unsafe()) to ref()/unref() an unowned object outside of the thread that created it.");
+		return;
+	}
+	pool->objects=cain_sip_list_delete_link(pool->objects,obj->pool_iterator);
+	obj->pool_iterator=NULL;
+	obj->pool=NULL;
+}
+
+void cain_sip_object_pool_clean(cain_sip_object_pool_t *pool){
+	cain_sip_list_t *elem,*next;
+	for(elem=pool->objects;elem!=NULL;elem=next){
+		cain_sip_object_t *obj=(cain_sip_object_t*)elem->data;
+		if (obj->ref==0){
+			cain_sip_message("Garbage collecting unowned object of type %s",obj->vptr->type_name);
+			obj->ref=-1;
+			cain_sip_object_delete(obj);
+			next=elem->next;
+			cain_sip_free(elem);
+		}else {
+			cain_sip_fatal("Object %p is in unowned list but with ref count %i, bug.",obj,obj->ref);
+			next=elem->next;
+		}
+	}
+	pool->objects=NULL;
+}
+
+static void cleanup_pool_stack(void *data){
+	cain_sip_list_t **pool_stack=(cain_sip_list_t**)data;
+	cain_sip_list_free_with_data(*pool_stack, cain_sip_object_unref);
+	cain_sip_message("Object pools for thread [%u] cleaned while exiting",(unsigned long)cain_sip_thread_self());
+	*pool_stack=NULL;
+	cain_sip_free(pool_stack);
+}
+
+static cain_sip_list_t** get_current_pool_stack(void){
+	static cain_sip_thread_key_t pools_key;
+	static int pools_key_created=0;
+	cain_sip_list_t **pool_stack;
+	
+	if (!pools_key_created){
+		pools_key_created=1;
+		if (cain_sip_thread_key_create(&pools_key, cleanup_pool_stack)!=0){
+			return NULL;
+		}
+	}
+	pool_stack=(cain_sip_list_t**)cain_sip_thread_getspecific(pools_key);
+	if (pool_stack==NULL){
+		pool_stack=cain_sip_new(cain_sip_list_t*);
+		*pool_stack=NULL;
+		cain_sip_thread_setspecific(pools_key,pool_stack);
+	}
+	return pool_stack;
+}
+
+cain_sip_object_pool_t * cain_sip_object_pool_push(void){
+	cain_sip_list_t **pools=get_current_pool_stack();
+	cain_sip_object_pool_t *pool;
+	if (pools==NULL) {
+		cain_sip_error("Not possible to create a pool.");
+		return NULL;
+	}
+	pool=cain_sip_object_pool_new();
+	*pools=cain_sip_list_prepend(*pools,pool);
+	return pool;
+}
+
+void cain_sip_object_pool_pop(void){
+	cain_sip_list_t **pools=get_current_pool_stack();
+	cain_sip_object_pool_t *pool;
+	if (pools==NULL) {
+		cain_sip_error("Not possible to pop a pool.");
+		return;
+	}
+	if (*pools==NULL){
+		cain_sip_error("There is no current pool in stack.");
+		return;
+	}
+	pool=(cain_sip_object_pool_t*)(*pools)->data;
+	*pools=cain_sip_list_remove_link(*pools,*pools);
+	cain_sip_object_unref(pool);
+}
+
+cain_sip_object_pool_t *cain_sip_object_pool_get_current(void){
+	cain_sip_list_t **pools=get_current_pool_stack();
+	if (pools==NULL) return NULL;
+	if (*pools==NULL){
+		cain_sip_warning("There is no object pool created. Use cain_sip_stack_push_pool() to create one. Unowned objects not unref'd will be leaked.");
+		return NULL;
+	}
+	return (cain_sip_object_pool_t*)(*pools)->data;
+}
+
 
 

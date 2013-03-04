@@ -68,6 +68,28 @@ const char *cain_sip_get_socket_error_string_from_code(int code){
 	return (const char *)msgBuf;
 }
 
+
+int cain_sip_thread_key_create(cain_sip_thread_key_t *key, void (*destructor)(void*) ){
+	*key=TlsAlloc();
+	if (*key==TLS_OUT_OF_INDEXES){
+		cain_sip_error("TlsAlloc(): TLS_OUT_OF_INDEXES.");
+		return -1;
+	}
+	return 0;
+}
+
+int cain_sip_thread_setspecific(cain_sip_thread_key_t key,const void *value){
+	return TlsSetValue(key,value) ? 0 : -1;
+}
+
+const void* cain_sip_thread_getspecific(cain_sip_thread_key_t key){
+	return TlsGetValue(key);
+}
+
+int cain_sip_thread_key_delete(cain_sip_thread_key_t key){
+	return TlsFree(key) ? 0 : -1;
+}
+
 #ifdef WINAPI_FAMILY_PHONE_APP
 void cain_sip_sleep(unsigned int ms) {
 	HANDLE sleepEvent = CreateEventEx(NULL, NULL, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS);

@@ -113,9 +113,11 @@ typedef struct weak_ref{
 
 
 void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_interface_id_t ifid);
-void cain_sip_object_delete_unowned(void);
 /*used internally by unref()*/
 void cain_sip_object_delete(void *obj);
+cain_sip_object_pool_t *cain_sip_object_pool_get_current(void);
+void cain_sip_object_pool_add(cain_sip_object_pool_t *pool, cain_sip_object_t *obj);
+void cain_sip_object_pool_remove(cain_sip_object_pool_t *pool, cain_sip_object_t *obj);
 
 
 #define CAIN_SIP_OBJECT_VPTR(obj,object_type) ((CAIN_SIP_OBJECT_VPTR_TYPE(object_type)*)(((cain_sip_object_t*)obj)->vptr))
@@ -183,6 +185,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_header_refer_to_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_referred_by_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_replaces_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_hop_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_object_pool_t);
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 

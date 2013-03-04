@@ -28,6 +28,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include <pthread.h>
 
 #else
 
@@ -72,6 +73,17 @@ int cain_sip_socket_set_nonblocking (cain_sip_socket_t sock);
  
 #if defined(WIN32)
 
+typedef HANDLE cain_sip_thread_t;
+
+#define cain_sip_thread_self()		GetCurrentThread()
+
+typedef DWORD cain_sip_thread_key_t;
+int cain_sip_thread_key_create(cain_sip_thread_key_t *key, void (*destructor)(void*) );
+int cain_sip_thread_setspecific(cain_sip_thread_key_t key,const void *value);
+const void* cain_sip_thread_getspecific(cain_sip_thread_key_t key);
+int cain_sip_thread_key_delete(cain_sip_thread_key_t key);
+
+
 static inline void close_socket(cain_sip_socket_t s){
 	closesocket(s);
 }
@@ -99,6 +111,15 @@ static inline int inet_aton(const char *ip, struct in_addr *p){
 #define CAINSIP_EINPROGRESS WSAEINPROGRESS
 
 #else
+
+typedef pthread_t cain_sip_thread_t;
+#define cain_sip_thread_self()			pthread_self()
+
+typedef pthread_key_t cain_sip_thread_key_t;
+#define cain_sip_thread_key_create(key,destructor)		pthread_key_create(key,destructor)
+#define cain_sip_thread_setspecific(key,value)			pthread_setspecific(key,value)
+#define cain_sip_thread_getspecific(key)			pthread_getspecific(key)
+#define cain_sip_thread_key_delete(key)				pthread_key_delete(key)
 
 static inline void close_socket(cain_sip_socket_t s){
 	close(s);

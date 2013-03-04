@@ -230,6 +230,7 @@ cain_sip_socket_t cain_sip_source_get_socket(const cain_sip_source_t* source) {
 struct cain_sip_main_loop{
 	cain_sip_object_t base;
 	cain_sip_list_t *sources;
+	cain_sip_object_pool_t *pool;
 	int nsources;
 	int run;
 };
@@ -250,7 +251,7 @@ static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
 	while (ml->sources){
 		cain_sip_main_loop_remove_source(ml,(cain_sip_source_t*)ml->sources->data);
 	}
-	cain_sip_object_delete_unowned();
+	cain_sip_object_pool_pop();
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_main_loop_t);
@@ -258,6 +259,7 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_main_loop_t,cain_sip_object_t,cain_sip_main_l
 
 cain_sip_main_loop_t *cain_sip_main_loop_new(void){
 	cain_sip_main_loop_t*m=cain_sip_object_new(cain_sip_main_loop_t);
+	m->pool=cain_sip_object_pool_push();
 	return m;
 }
 
@@ -411,7 +413,7 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		}else cain_sip_main_loop_remove_source(ml,s);
 	}
 	cain_sip_list_free_with_data(copy,cain_sip_object_unref);
-	cain_sip_object_delete_unowned();
+	cain_sip_object_pool_clean(ml->pool);
 }
 
 void cain_sip_main_loop_run(cain_sip_main_loop_t *ml){
