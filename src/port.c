@@ -79,7 +79,7 @@ int cain_sip_thread_key_create(cain_sip_thread_key_t *key, void (*destructor)(vo
 }
 
 int cain_sip_thread_setspecific(cain_sip_thread_key_t key,const void *value){
-	return TlsSetValue(key,value) ? 0 : -1;
+	return TlsSetValue(key,(void*)value) ? 0 : -1;
 }
 
 const void* cain_sip_thread_getspecific(cain_sip_thread_key_t key){
