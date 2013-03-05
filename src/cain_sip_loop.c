@@ -343,6 +343,12 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 	int ret;
 	uint64_t cur;
 	cain_sip_list_t *copy;
+	int can_clean=cain_sip_object_pool_cleanable(ml->pool); /*iterate might not be called by the thread that created the main loop*/ 
+	
+	if (!can_clean){
+		/*Push a temporary pool for the time of the iterate loop*/
+		cain_sip_object_pool_push();
+	}
 	
 	/*prepare the pollfd table */
 	memset(pfd, 0, pfd_size);
@@ -413,7 +419,8 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		}else cain_sip_main_loop_remove_source(ml,s);
 	}
 	cain_sip_list_free_with_data(copy,cain_sip_object_unref);
-	cain_sip_object_pool_clean(ml->pool);
+	if (cain_sip_object_pool_cleanable(ml->pool)) cain_sip_object_pool_clean(ml->pool);
+	else cain_sip_object_pool_pop();
 }
 
 void cain_sip_main_loop_run(cain_sip_main_loop_t *ml){

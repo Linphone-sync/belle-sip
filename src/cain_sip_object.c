@@ -391,8 +391,19 @@ void cain_sip_object_pool_remove(cain_sip_object_pool_t *pool, cain_sip_object_t
 	obj->pool=NULL;
 }
 
+int cain_sip_object_pool_cleanable(cain_sip_object_pool_t *pool){
+	return cain_sip_thread_self()==pool->thread_id;
+}
+
 void cain_sip_object_pool_clean(cain_sip_object_pool_t *pool){
 	cain_sip_list_t *elem,*next;
+	
+	if (!cain_sip_object_pool_cleanable(pool)){
+		cain_sip_warning("Thread pool [%p] cannot be cleaned from thread [%u] because it was created for thread [%u]",
+				 pool,(unsigned)cain_sip_thread_self(),(unsigned)pool->thread_id);
+		return;
+	}
+	
 	for(elem=pool->objects;elem!=NULL;elem=next){
 		cain_sip_object_t *obj=(cain_sip_object_t*)elem->data;
 		if (obj->ref==0){
@@ -417,10 +428,12 @@ static void cleanup_pool_stack(void *data){
 	cain_sip_free(pool_stack);
 }
 
-static cain_sip_list_t** get_current_pool_stack(void){
+static cain_sip_list_t** get_current_pool_stack(int *first_time){
 	static cain_sip_thread_key_t pools_key;
 	static int pools_key_created=0;
 	cain_sip_list_t **pool_stack;
+	
+	if (first_time) *first_time=0;
 	
 	if (!pools_key_created){
 		pools_key_created=1;
@@ -433,12 +446,13 @@ static cain_sip_list_t** get_current_pool_stack(void){
 		pool_stack=cain_sip_new(cain_sip_list_t*);
 		*pool_stack=NULL;
 		cain_sip_thread_setspecific(pools_key,pool_stack);
+		if (first_time) *first_time=1;
 	}
 	return pool_stack;
 }
 
 cain_sip_object_pool_t * cain_sip_object_pool_push(void){
-	cain_sip_list_t **pools=get_current_pool_stack();
+	cain_sip_list_t **pools=get_current_pool_stack(NULL);
 	cain_sip_object_pool_t *pool;
 	if (pools==NULL) {
 		cain_sip_error("Not possible to create a pool.");
@@ -450,7 +464,7 @@ cain_sip_object_pool_t * cain_sip_object_pool_push(void){
 }
 
 void cain_sip_object_pool_pop(void){
-	cain_sip_list_t **pools=get_current_pool_stack();
+	cain_sip_list_t **pools=get_current_pool_stack(NULL);
 	cain_sip_object_pool_t *pool;
 	if (pools==NULL) {
 		cain_sip_error("Not possible to pop a pool.");
@@ -466,10 +480,15 @@ void cain_sip_object_pool_pop(void){
 }
 
 cain_sip_object_pool_t *cain_sip_object_pool_get_current(void){
-	cain_sip_list_t **pools=get_current_pool_stack();
+	int first_time;
+	cain_sip_list_t **pools=get_current_pool_stack(&first_time);
 	if (pools==NULL) return NULL;
-	if (*pools==NULL){
-		cain_sip_warning("There is no object pool created. Use cain_sip_stack_push_pool() to create one. Unowned objects not unref'd will be leaked.");
+	if (*pools==NULL ){
+		if (first_time) {
+			cain_sip_warning("There is no object pool created in thread [%u]. "
+			"Use cain_sip_stack_push_pool() to create one. Unowned objects not unref'd will be leaked.",
+			(unsigned int)cain_sip_thread_self());
+		}
 		return NULL;
 	}
 	return (cain_sip_object_pool_t*)(*pools)->data;

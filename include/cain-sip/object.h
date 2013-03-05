@@ -314,6 +314,8 @@ typedef struct cain_sip_object_pool cain_sip_object_pool_t;
 
 cain_sip_object_pool_t * cain_sip_object_pool_push(void);
 void cain_sip_object_pool_pop(void);
+cain_sip_object_pool_t * cain_sip_object_pool_get_current();
+int cain_sip_object_pool_cleanable(cain_sip_object_pool_t *pool);
 void cain_sip_object_pool_clean(cain_sip_object_pool_t *obj);
 
 #endif

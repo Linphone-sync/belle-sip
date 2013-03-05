@@ -115,7 +115,6 @@ typedef struct weak_ref{
 void *cain_sip_object_get_interface_methods(cain_sip_object_t *obj, cain_sip_interface_id_t ifid);
 /*used internally by unref()*/
 void cain_sip_object_delete(void *obj);
-cain_sip_object_pool_t *cain_sip_object_pool_get_current(void);
 void cain_sip_object_pool_add(cain_sip_object_pool_t *pool, cain_sip_object_t *obj);
 void cain_sip_object_pool_remove(cain_sip_object_pool_t *pool, cain_sip_object_t *obj);
 
