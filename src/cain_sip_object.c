@@ -399,8 +399,8 @@ void cain_sip_object_pool_clean(cain_sip_object_pool_t *pool){
 	cain_sip_list_t *elem,*next;
 	
 	if (!cain_sip_object_pool_cleanable(pool)){
-		cain_sip_warning("Thread pool [%p] cannot be cleaned from thread [%u] because it was created for thread [%u]",
-				 pool,(unsigned)cain_sip_thread_self(),(unsigned)pool->thread_id);
+		cain_sip_warning("Thread pool [%p] cannot be cleaned from thread [%ul] because it was created for thread [%ul]",
+				 pool,(unsigned long)cain_sip_thread_self(),(unsigned long)pool->thread_id);
 		return;
 	}
 	
@@ -485,9 +485,9 @@ cain_sip_object_pool_t *cain_sip_object_pool_get_current(void){
 	if (pools==NULL) return NULL;
 	if (*pools==NULL ){
 		if (first_time) {
-			cain_sip_warning("There is no object pool created in thread [%u]. "
+			cain_sip_warning("There is no object pool created in thread [%ul]. "
 			"Use cain_sip_stack_push_pool() to create one. Unowned objects not unref'd will be leaked.",
-			(unsigned int)cain_sip_thread_self());
+			(unsigned long)cain_sip_thread_self());
 		}
 		return NULL;
 	}
