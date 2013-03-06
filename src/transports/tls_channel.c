@@ -200,7 +200,6 @@ static int tls_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	process_error:
 	cain_sip_error("Cannot connect to [%s://%s:%i]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
 	channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
-	channel_process_queue(obj);
 	return CAIN_SIP_STOP;
 }
 

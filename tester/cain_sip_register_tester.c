@@ -47,7 +47,7 @@ static void process_dialog_terminated(void *user_ctx, const cain_sip_dialog_term
 static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *event){
 	CAINSIP_UNUSED(user_ctx);
 	CAINSIP_UNUSED(event);
-	cain_sip_warning("process_io_error");
+	cain_sip_message("process_io_error");
 	cain_sip_main_loop_quit(cain_sip_stack_get_main_loop(stack));
 	/*CU_ASSERT(CU_FALSE);*/
 }

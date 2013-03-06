@@ -82,10 +82,9 @@ struct cain_sip_channel{
 	int peer_port;
 	char *local_ip;
 	int local_port;
-	int prepare;
 	unsigned long resolver_id;
 	struct addrinfo *peer;
-	cain_sip_message_t *msg;
+	cain_sip_list_t *outgoing_messages;
 	cain_sip_list_t* incoming_messages;
 	cain_sip_channel_input_stream_t input_stream;
 	unsigned int recv_error:1; /* used to simulate network error. if <=0, channel_recv will return this value*/
@@ -139,9 +138,6 @@ const char *cain_sip_channel_get_local_address(cain_sip_channel_t *obj, int *por
 #define cain_sip_channel_get_state(chan) ((chan)->state)
 
 void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state);
-
-/*remember that channel_process_queue() might trigger the destruction of the channel*/
-void channel_process_queue(cain_sip_channel_t *obj);
 
 /*just invokes the listeners to process data*/
 int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);

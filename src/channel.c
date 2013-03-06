@@ -19,6 +19,9 @@
 
 #include "cain_sip_internal.h"
 
+static void channel_prepare_continue(cain_sip_channel_t *obj);
+static void channel_process_queue(cain_sip_channel_t *obj);
+
 const char *cain_sip_channel_state_to_string(cain_sip_channel_state_t state){
 	switch(state){
 		case CAIN_SIP_CHANNEL_INIT:
@@ -416,32 +419,47 @@ static void send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 }
 
 void cain_sip_channel_prepare(cain_sip_channel_t *obj){
-	obj->prepare=1;
-	channel_process_queue(obj);
+	channel_prepare_continue(obj);
 }
 
-void channel_process_queue(cain_sip_channel_t *obj){
-	cain_sip_object_ref(obj);/* we need to ref ourself because code below may trigger our destruction*/
+static void channel_push_outgoing(cain_sip_channel_t *obj, cain_sip_message_t *msg){
+	obj->outgoing_messages=cain_sip_list_append(obj->outgoing_messages,msg);
+}
+
+static cain_sip_message_t *channel_pop_outgoing(cain_sip_channel_t *obj){
+	cain_sip_message_t *msg=NULL;
+	if (obj->outgoing_messages){
+		msg=(cain_sip_message_t*)obj->outgoing_messages->data;
+		obj->outgoing_messages=cain_sip_list_delete_link(obj->outgoing_messages,obj->outgoing_messages);
+	}
+	return msg;
+}
+
+static void channel_prepare_continue(cain_sip_channel_t *obj){
 	switch(obj->state){
 		case CAIN_SIP_CHANNEL_INIT:
-			if (obj->prepare) cain_sip_channel_resolve(obj);
+			cain_sip_channel_resolve(obj);
 		break;
 		case CAIN_SIP_CHANNEL_RES_DONE:
-			if (obj->prepare) cain_sip_channel_connect(obj);
+			cain_sip_channel_connect(obj);
 		break;
 		case CAIN_SIP_CHANNEL_READY:
-			if (obj->msg) {
-				send_message(obj, obj->msg);
-				cain_sip_object_unref(obj->msg);
-				obj->msg=NULL;
-			}
-		break;
-		case CAIN_SIP_CHANNEL_ERROR:
-			if (obj->msg) cain_sip_error("channel %p: trying to send a message over a broken channel ???",obj);
+			channel_process_queue(obj);
 		break;
 		default:
 		break;
 	}
+}
+
+static void channel_process_queue(cain_sip_channel_t *obj){
+	cain_sip_message_t *msg;
+	cain_sip_object_ref(obj);/* we need to ref ourself because code below may trigger our destruction*/
+
+	while((msg=channel_pop_outgoing(obj))!=NULL) {
+		send_message(obj, msg);
+		cain_sip_object_unref(msg);
+	}
+
 	cain_sip_object_unref(obj);
 }
 
@@ -460,7 +478,6 @@ void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *
 		}
 	}
 	channel_set_state(obj,CAIN_SIP_CHANNEL_READY);
-	obj->prepare=0;
 	channel_process_queue(obj);
 }
 
@@ -470,10 +487,10 @@ static void channel_res_done(void *data, const char *name, struct addrinfo *res)
 	if (res){
 		obj->peer=res;
 		channel_set_state(obj,CAIN_SIP_CHANNEL_RES_DONE);
+		channel_prepare_continue(obj);
 	}else{
 		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 	}
-	channel_process_queue(obj);
 }
 
 void cain_sip_channel_resolve(cain_sip_channel_t *obj){
@@ -487,20 +504,18 @@ void cain_sip_channel_connect(cain_sip_channel_t *obj){
 	if(CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->connect(obj,obj->peer)) {
 		cain_sip_error("Cannot connect to [%s://%s:%i]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
 		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
-		channel_process_queue(obj);
 	}
 	return;
 }
 
 int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
-	if (obj->msg!=NULL){
-		cain_sip_error("Queue is not a queue, state=%s", cain_sip_channel_state_to_string(obj->state));
-		return -1;
-	}
-	obj->msg=(cain_sip_message_t*)cain_sip_object_ref(msg);
-	if (obj->state==CAIN_SIP_CHANNEL_INIT)
+	cain_sip_object_ref(msg);
+	channel_push_outgoing(obj,msg);
+	if (obj->state==CAIN_SIP_CHANNEL_INIT){
 		cain_sip_channel_prepare(obj);
-	channel_process_queue(obj);
+	}else if (obj->state==CAIN_SIP_CHANNEL_READY) {
+		channel_process_queue(obj);
+	}		
 	return 0;
 }
 

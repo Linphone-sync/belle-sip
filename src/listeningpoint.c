@@ -69,7 +69,7 @@ void cain_sip_listening_point_clean_channels(cain_sip_listening_point_t *lp){
 	cain_sip_list_t* iterator;
 	
 	if ((existing_channels=cain_sip_list_size(lp->channels)) > 0) {
-		cain_sip_warning("Listening point destroying [%i] channels",existing_channels);
+		cain_sip_message("Listening point destroying [%i] channels",existing_channels);
 	}
 	for (iterator=lp->channels;iterator!=NULL;iterator=iterator->next) {
 		cain_sip_channel_t *chan=(cain_sip_channel_t*)iterator->data;
