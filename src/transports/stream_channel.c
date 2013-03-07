@@ -168,18 +168,3 @@ cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char
 							,bindip,localport,dest,port);
 	return (cain_sip_channel_t*)obj;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
