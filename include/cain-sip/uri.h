@@ -61,7 +61,7 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 	 *	          Returns the port part of this SipURI.
 	 *
 	 */
-	CAINSIP_EXPORT unsigned int	cain_sip_uri_get_port(const cain_sip_uri_t* uri) ;
+	CAINSIP_EXPORT int	cain_sip_uri_get_port(const cain_sip_uri_t* uri) ;
 	/**
  	 * Returns the port of the uri, if not specified in the uri returns the well known port according to the transport.
  	**/
@@ -136,7 +136,7 @@ typedef struct _cain_sip_uri cain_sip_uri_t;
 	 * 	          Set the port part of this SipURI to the newly supplied port parameter.
 	 *
 	 */
-	 CAINSIP_EXPORT void	cain_sip_uri_set_port(cain_sip_uri_t* uri,unsigned int port) ;
+	 CAINSIP_EXPORT void	cain_sip_uri_set_port(cain_sip_uri_t* uri, int port) ;
 	/**
 	 * 	          Sets the scheme of this URI to sip or sips depending on whether the argument is true or false.
 	 *

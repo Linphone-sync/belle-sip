@@ -252,7 +252,7 @@ static void channel_on_sending(cain_sip_channel_listener_t *obj, cain_sip_channe
 		if (cain_sip_uri_get_transport_param(contact_uri) == NULL && strcasecmp("udp",cain_sip_channel_get_transport_name(chan))!=0) {
 			cain_sip_uri_set_transport_param(contact_uri,cain_sip_channel_get_transport_name_lower_case(chan));
 		}
-		if (cain_sip_uri_get_port(contact_uri) == 0 && chan->local_port!=5060) {
+		if (cain_sip_uri_get_port(contact_uri) <= 0 && chan->local_port!=5060) {
 			cain_sip_uri_set_port(contact_uri,chan->local_port);
 		}
 	}
