@@ -184,7 +184,7 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 					obj->input_stream.msg=cain_sip_message_parse_raw(obj->input_stream.read_ptr
 											,obj->input_stream.write_ptr-obj->input_stream.read_ptr
 											,&message_size);
-					if (obj->input_stream.msg){
+					if (obj->input_stream.msg && message_size > 0){
 						cain_sip_object_ref(obj->input_stream.msg);
 						if (cain_sip_message_is_request(obj->input_stream.msg)) fix_incoming_via(CAIN_SIP_REQUEST(obj->input_stream.msg),obj->peer);
 						/*check for body*/
