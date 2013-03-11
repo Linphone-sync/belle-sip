@@ -312,8 +312,12 @@ typedef struct cain_sip_interface_desc{
 **/
 typedef struct cain_sip_object_pool cain_sip_object_pool_t;
 
+/**
+ * Push a new object pool for use for creation of new objects.
+ * When no longer needed, this pool can be destroyed with cain_sip_object_unref().
+**/
 CAINSIP_EXPORT cain_sip_object_pool_t * cain_sip_object_pool_push(void);
-CAINSIP_EXPORT void cain_sip_object_pool_pop(void);
+
 cain_sip_object_pool_t * cain_sip_object_pool_get_current();
 int cain_sip_object_pool_cleanable(cain_sip_object_pool_t *pool);
 void cain_sip_object_pool_clean(cain_sip_object_pool_t *obj);

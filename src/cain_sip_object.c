@@ -18,6 +18,7 @@
 
 #include "cain_sip_internal.h"
 
+static void _cain_sip_object_pool_remove_from_stack(cain_sip_object_pool_t *pool);
 
 static int has_type(cain_sip_object_t *obj, cain_sip_type_id_t id){
 	cain_sip_object_vptr_t *vptr=obj->vptr;
@@ -356,6 +357,7 @@ struct cain_sip_object_pool{
 
 static void cain_sip_object_pool_destroy(cain_sip_object_pool_t *pool){
 	cain_sip_object_pool_clean(pool);
+	_cain_sip_object_pool_remove_from_stack(pool);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_object_pool_t);
@@ -451,6 +453,26 @@ static cain_sip_list_t** get_current_pool_stack(int *first_time){
 	return pool_stack;
 }
 
+static void _cain_sip_object_pool_remove_from_stack(cain_sip_object_pool_t *pool){
+	cain_sip_list_t **pools=get_current_pool_stack(NULL);
+	cain_sip_thread_t tid=cain_sip_thread_self();
+	
+	if (tid!=pool->thread_id){
+		cain_sip_fatal("It is forbidden to destroy a pool outside the thread that created it.");
+		return;
+	}
+	
+	if (pools==NULL) {
+		cain_sip_fatal("Not possible to pop a pool.");
+		return;
+	}
+	if (*pools==NULL){
+		cain_sip_fatal("There is no current pool in stack.");
+		return;
+	}
+	*pools=cain_sip_list_remove(*pools,pool);
+}
+
 cain_sip_object_pool_t * cain_sip_object_pool_push(void){
 	cain_sip_list_t **pools=get_current_pool_stack(NULL);
 	cain_sip_object_pool_t *pool;
@@ -463,21 +485,7 @@ cain_sip_object_pool_t * cain_sip_object_pool_push(void){
 	return pool;
 }
 
-void cain_sip_object_pool_pop(void){
-	cain_sip_list_t **pools=get_current_pool_stack(NULL);
-	cain_sip_object_pool_t *pool;
-	if (pools==NULL) {
-		cain_sip_error("Not possible to pop a pool.");
-		return;
-	}
-	if (*pools==NULL){
-		cain_sip_error("There is no current pool in stack.");
-		return;
-	}
-	pool=(cain_sip_object_pool_t*)(*pools)->data;
-	*pools=cain_sip_list_remove_link(*pools,*pools);
-	cain_sip_object_unref(pool);
-}
+
 
 cain_sip_object_pool_t *cain_sip_object_pool_get_current(void){
 	int first_time;

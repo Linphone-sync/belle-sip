@@ -251,7 +251,7 @@ static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
 	while (ml->sources){
 		cain_sip_main_loop_remove_source(ml,(cain_sip_source_t*)ml->sources->data);
 	}
-	cain_sip_object_pool_pop();
+	cain_sip_object_unref(ml->pool);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_main_loop_t);
@@ -344,10 +344,11 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 	uint64_t cur;
 	cain_sip_list_t *copy;
 	int can_clean=cain_sip_object_pool_cleanable(ml->pool); /*iterate might not be called by the thread that created the main loop*/ 
+	cain_sip_object_pool_t *tmp_pool=NULL;
 	
 	if (!can_clean){
 		/*Push a temporary pool for the time of the iterate loop*/
-		cain_sip_object_pool_push();
+		tmp_pool=cain_sip_object_pool_push();
 	}
 	
 	/*prepare the pollfd table */
@@ -419,8 +420,8 @@ void cain_sip_main_loop_iterate(cain_sip_main_loop_t *ml){
 		}else cain_sip_main_loop_remove_source(ml,s);
 	}
 	cain_sip_list_free_with_data(copy,cain_sip_object_unref);
-	if (cain_sip_object_pool_cleanable(ml->pool)) cain_sip_object_pool_clean(ml->pool);
-	else cain_sip_object_pool_pop();
+	if (can_clean) cain_sip_object_pool_clean(ml->pool);
+	else if (tmp_pool) cain_sip_object_unref(tmp_pool);
 }
 
 void cain_sip_main_loop_run(cain_sip_main_loop_t *ml){
