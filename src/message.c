@@ -554,10 +554,9 @@ void cain_sip_response_fill_for_dialog(cain_sip_response_t *obj, cain_sip_reques
 cain_sip_hop_t* cain_sip_response_get_return_hop(cain_sip_response_t *msg){
 
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(CAIN_SIP_MESSAGE(msg),"via"));
-	const char *host=cain_sip_header_via_get_received(via)?cain_sip_header_via_get_received(via):cain_sip_header_via_get_received(via);
-	int port=cain_sip_header_via_get_rport(via)>0?cain_sip_header_via_get_rport(via):cain_sip_header_via_get_listening_port(via);
-	cain_sip_hop_t* hop=cain_sip_hop_new(cain_sip_header_via_get_transport_lowercase(via),host,port);
-	return hop;
+	const char *host=cain_sip_header_via_get_received(via) ? cain_sip_header_via_get_received(via) : cain_sip_header_via_get_host(via);
+	int port=cain_sip_header_via_get_rport(via)>0 ? cain_sip_header_via_get_rport(via) : cain_sip_header_via_get_listening_port(via);
+	return cain_sip_hop_new(cain_sip_header_via_get_transport_lowercase(via),host,port);
 }
 
 int cain_sip_response_fix_contact(const cain_sip_response_t* response,cain_sip_header_contact_t* contact) {

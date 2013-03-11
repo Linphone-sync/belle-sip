@@ -43,6 +43,7 @@ struct cain_sip_listening_point{
 	cain_sip_uri_t* listening_uri;
 	cain_sip_source_t* keep_alive_timer;
 	cain_sip_channel_listener_t* channel_listener; /*initial channel listener used for channel creation, specially for socket server*/
+	int ai_family; /*AF_INET or AF_INET6*/
 };
 
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s,  const char *address, int port);

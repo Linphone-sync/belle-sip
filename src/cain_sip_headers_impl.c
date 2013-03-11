@@ -535,10 +535,11 @@ int cain_sip_header_via_set_port (cain_sip_header_via_t* obj,int  value) {
 
 int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via){
 	int ret=cain_sip_header_via_get_port(via);
-	if (ret==-1) ret=cain_sip_listening_point_get_well_known_port(via->protocol);
+	if (ret==0) ret=cain_sip_listening_point_get_well_known_port(via->transport);
 	return ret;
 }
-const char*	cain_sip_header_via_get_transport_lowercase(const cain_sip_header_via_t* via) {
+
+const char* cain_sip_header_via_get_transport_lowercase(const cain_sip_header_via_t* via) {
 	if (strcasecmp("udp",via->transport)==0) return "udp";
 	else if (strcasecmp("tcp",via->transport)==0) return "tcp";
 	else if (strcasecmp("tls",via->transport)==0) return "tls";

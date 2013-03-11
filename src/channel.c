@@ -84,8 +84,16 @@ static void fix_incoming_via(cain_sip_request_t *msg, const struct addrinfo* ori
 	}
 	via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header((cain_sip_message_t*)msg,"via"));
 	if (via){
-		cain_sip_header_via_set_received(via,received);
-		cain_sip_header_via_set_rport(via,atoi(rport));
+		const char* host = cain_sip_header_via_get_host(via);
+		
+		if (strcmp(host,received)!=0)
+				cain_sip_header_via_set_received(via,received);
+			
+		if (cain_sip_parameters_has_parameter(CAIN_SIP_PARAMETERS(via),"rport")){
+			int port = cain_sip_header_via_get_listening_port(via);
+			int rport_int=atoi(rport);
+			if (rport_int!=port) cain_sip_header_via_set_rport(via,atoi(rport));
+		}
 	}
 }
 static int get_message_start_pos(char *buff, size_t bufflen) {
@@ -495,7 +503,7 @@ static void channel_res_done(void *data, const char *name, struct addrinfo *res)
 
 void cain_sip_channel_resolve(cain_sip_channel_t *obj){
 	channel_set_state(obj,CAIN_SIP_CHANNEL_RES_IN_PROGRESS);
-	obj->resolver_id=cain_sip_resolve(obj->stack, obj->peer_name, obj->peer_port, 0, channel_res_done, obj, obj->stack->ml);
+	obj->resolver_id=cain_sip_resolve(obj->stack, obj->peer_name, obj->peer_port, obj->lp->ai_family, channel_res_done, obj, obj->stack->ml);
 	return ;
 }
 

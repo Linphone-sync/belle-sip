@@ -58,6 +58,7 @@ typedef struct endpoint {
 	const char* received;
 	int rport;
 	unsigned char unreconizable_contact;
+	int connection_family;
 } endpoint_t;
 
 
@@ -202,7 +203,7 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 			contact=cain_sip_header_contact_new();
 		}
 		if(endpoint->unreconizable_contact) {
-			/*put an unexopected address*/
+			/*put an unexpected address*/
 			cain_sip_uri_set_host(cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(contact)),"nimportequoi.com");
 		}
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(contact));
@@ -225,7 +226,20 @@ static void client_process_response_event(void *obj, const cain_sip_response_eve
 	int status = cain_sip_response_get_status_code(cain_sip_response_event_get_response(event));
 	cain_sip_message("caller_process_response_event [%i]",status);
 	switch (status) {
-	case 200:endpoint->stat.twoHundredOk++; break;
+	case 200:
+		endpoint->stat.twoHundredOk++;
+		if (endpoint->connection_family!=AF_UNSPEC){
+			const char *host;
+			int family_found;
+			cain_sip_header_contact_t *ct=cain_sip_message_get_header_by_type(
+				(cain_sip_message_t*)cain_sip_response_event_get_response(event),cain_sip_header_contact_t);
+			CU_ASSERT_PTR_NOT_NULL_FATAL(ct);
+			host=cain_sip_uri_get_host(cain_sip_header_address_get_uri((cain_sip_header_address_t*)ct));
+			if (strchr(host,':')) family_found=AF_INET6;
+			else family_found=AF_INET;
+			CU_ASSERT_TRUE(family_found==endpoint->connection_family);
+		}
+		break;
 	case 401:endpoint->stat.fourHundredOne++; break;
 	default: break;
 	}
@@ -261,13 +275,15 @@ static void cain_sip_refresher_listener ( const cain_sip_refresher_t* refresher
 	}
 }
 
-static endpoint_t* create_endpoint(int port,const char* transport,cain_sip_listener_callbacks_t* listener_callbacks) {
+static endpoint_t* create_endpoint(const char *ip, int port,const char* transport,cain_sip_listener_callbacks_t* listener_callbacks) {
 	endpoint_t* endpoint = cain_sip_new0(endpoint_t);
 	endpoint->stack=cain_sip_stack_new(NULL);
 	endpoint->listener_callbacks=listener_callbacks;
-	endpoint->lp=cain_sip_stack_create_listening_point(endpoint->stack,"0.0.0.0",port,transport);
-	CU_ASSERT_PTR_NOT_NULL_FATAL(endpoint->lp);
-	cain_sip_object_ref(endpoint->lp);
+	endpoint->lp=cain_sip_stack_create_listening_point(endpoint->stack,ip,port,transport);
+	endpoint->connection_family=AF_INET;
+	
+	if (endpoint->lp) cain_sip_object_ref(endpoint->lp);
+	
 	endpoint->provider=cain_sip_stack_create_provider(endpoint->stack,endpoint->lp);
 	cain_sip_provider_add_sip_listener(endpoint->provider,(endpoint->listener=cain_sip_listener_create_from_callbacks(endpoint->listener_callbacks,endpoint)));
 	sprintf(endpoint->nonce,"%p",endpoint); /*initial nonce*/
@@ -284,7 +300,9 @@ static void destroy_endpoint(endpoint_t* endpoint) {
 }
 
 static endpoint_t* create_udp_endpoint(int port,cain_sip_listener_callbacks_t* listener_callbacks) {
-	return create_endpoint(port,"udp",listener_callbacks);
+	endpoint_t *endpoint=create_endpoint("0.0.0.0",port,"udp",listener_callbacks);
+	CU_ASSERT_PTR_NOT_NULL_FATAL(endpoint->lp);
+	return endpoint;
 }
 
 static void register_base(endpoint_t* client,endpoint_t *server) {
@@ -302,7 +320,10 @@ static void register_base(endpoint_t* client,endpoint_t *server) {
 
 	
 	dest_uri=(cain_sip_uri_t*)cain_sip_object_clone((cain_sip_object_t*)cain_sip_listening_point_get_uri(server->lp));
-	cain_sip_uri_set_host(dest_uri,"127.0.0.1");
+	if (client->connection_family==AF_INET6)
+		cain_sip_uri_set_host(dest_uri,"::1");
+	else
+		cain_sip_uri_set_host(dest_uri,"127.0.0.1");
 	destination_route=cain_sip_header_route_create(cain_sip_header_address_create(NULL,dest_uri));
 
 
@@ -481,6 +502,48 @@ static void register_with_unrecognizable_contact(void) {
 	destroy_endpoint(server);
 }
 
+static int register_test_with_interfaces(const char *transport, const char *client_ip, const char *server_ip, int connection_family) {
+	int ret=0;
+	cain_sip_listener_callbacks_t client_callbacks;
+	cain_sip_listener_callbacks_t server_callbacks;
+	endpoint_t* client,*server;
+	memset(&client_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	memset(&server_callbacks,0,sizeof(cain_sip_listener_callbacks_t));
+	client_callbacks.process_response_event=client_process_response_event;
+	client_callbacks.process_auth_requested=client_process_auth_requested;
+	server_callbacks.process_request_event=server_process_request_event;
+	client = create_endpoint(client_ip,3452,transport,&client_callbacks);
+	client->connection_family=connection_family;
+	
+	server = create_endpoint(server_ip,6788,transport,&server_callbacks);
+	server->expire_in_contact=client->expire_in_contact=0;
+	server->auth=none;
+
+	if (client->lp==NULL || server->lp==NULL){
+		cain_sip_warning("Cannot check ipv6 because host has no ipv6 support.");
+		ret=-1;
+	}else register_base(client,server);
+	destroy_endpoint(client);
+	destroy_endpoint(server);
+	return ret;
+}
+
+static void register_test_ipv6_to_ipv4(void){
+	register_test_with_interfaces("udp","::0","0.0.0.0",AF_INET);
+}
+
+static void register_test_ipv4_to_ipv6(void){
+	register_test_with_interfaces("udp","0.0.0.0","::0",AF_INET);
+}
+
+static void register_test_ipv6_to_ipv6_with_ipv4(void){
+	register_test_with_interfaces("udp","::0","::0",AF_INET);
+}
+
+static void register_test_ipv6_to_ipv6_with_ipv6(void){
+	register_test_with_interfaces("udp","::0","::0",AF_INET6);
+}
+
 
 test_t refresher_tests[] = {
 	{ "REGISTER Expires header", register_expires_header },
@@ -489,6 +552,10 @@ test_t refresher_tests[] = {
 	{ "REGISTER Expires in Contact digest auth", register_expires_in_contact_header_digest_auth },
 	{ "SUBSCRIBE", subscribe_test },
 	{ "REGISTER with unrecognizable Contact", register_with_unrecognizable_contact },
+	{ "REGISTER UDP from ipv6 to ipv4", register_test_ipv6_to_ipv4 },
+	{ "REGISTER UDP from ipv4 to ipv6", register_test_ipv4_to_ipv6 },
+	{ "REGISTER UDP from ipv6 to ipv6 with ipv4", register_test_ipv6_to_ipv6_with_ipv4 },
+	{ "REGISTER UDP from ipv6 to ipv6 with ipv6", register_test_ipv6_to_ipv6_with_ipv6 }
 };
 
 test_suite_t refresher_test_suite = {

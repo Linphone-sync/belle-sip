@@ -29,13 +29,11 @@ void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stac
 }
 
 static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
-	
+	char *tmp=cain_sip_object_to_string((cain_sip_object_t*)CAIN_SIP_LISTENING_POINT(lp)->listening_uri);
 	cain_sip_listening_point_clean_channels(lp);
-	cain_sip_message("Listening point [%p] on [%s://%s:%i] destroyed"	,lp
-				,cain_sip_uri_get_transport_param(CAIN_SIP_LISTENING_POINT(lp)->listening_uri)
-				,cain_sip_uri_get_host(CAIN_SIP_LISTENING_POINT(lp)->listening_uri)
-				,cain_sip_uri_get_port(CAIN_SIP_LISTENING_POINT(lp)->listening_uri));
+	cain_sip_message("Listening point [%p] on [%s] destroyed",lp, tmp);
 	cain_sip_object_unref(lp->listening_uri);
+	cain_sip_free(tmp);
 	lp->channel_listener=NULL; /*does not unref provider*/
 	cain_sip_uninit_sockets();
 	cain_sip_listening_point_set_keep_alive(lp,-1);

@@ -276,7 +276,7 @@ CAINSIP_INTERNAL_EXPORT char *cain_sip_strdup_printf(const char *fmt,...);
 #define GET_SET_STRING_PARAM2(object_type,attribute,func_name) \
 	GET_STRING_PARAM2(object_type,attribute,func_name) \
 	void object_type##_set_##func_name (object_type##_t* obj,const char* value) {\
-	if (cain_sip_parameters_is_parameter(CAIN_SIP_PARAMETERS(obj),#attribute) && !value) {\
+	if (cain_sip_parameters_has_parameter(CAIN_SIP_PARAMETERS(obj),#attribute) && !value) {\
 		cain_sip_parameters_remove_parameter(CAIN_SIP_PARAMETERS(obj),#attribute); \
 	} else \
 		cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(obj),#attribute,value);\
@@ -349,7 +349,7 @@ CAINSIP_INTERNAL_EXPORT char *cain_sip_strdup_printf(const char *fmt,...);
 	}
 #define GET_SET_BOOL_PARAM2(object_type,attribute,getter,func_name) \
 	unsigned int object_type##_##getter##_##func_name (const object_type##_t* obj) {\
-		return cain_sip_parameters_is_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
+		return cain_sip_parameters_has_parameter(CAIN_SIP_PARAMETERS(obj),#attribute);\
 	}\
 	void object_type##_set_##func_name (object_type##_t* obj,unsigned int value) {\
 		cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(obj),#attribute,NULL);\

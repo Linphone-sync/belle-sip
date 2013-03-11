@@ -68,17 +68,18 @@ const char*	cain_sip_parameters_get_parameter_base(const cain_sip_parameters_t* 
 		return NULL;
 	}
 }
-const char*	cain_sip_parameters_get_parameter(const cain_sip_parameters_t* params,const char* name) {
+const char* cain_sip_parameters_get_parameter(const cain_sip_parameters_t* params,const char* name) {
 	return cain_sip_parameters_get_parameter_base(params,name,(cain_sip_compare_func)cain_sip_param_pair_comp_func);
 }
-const char*	cain_sip_parameters_get_case_parameter(const cain_sip_parameters_t* params,const char* name) {
+const char* cain_sip_parameters_get_case_parameter(const cain_sip_parameters_t* params,const char* name) {
 	return cain_sip_parameters_get_parameter_base(params,name,(cain_sip_compare_func)cain_sip_param_pair_case_comp_func);
 }
 
-unsigned int cain_sip_parameters_is_parameter(const cain_sip_parameters_t* params,const char* name) {
+unsigned int cain_sip_parameters_has_parameter(const cain_sip_parameters_t* params,const char* name) {
 	return cain_sip_list_find_custom(params->param_list, (cain_sip_compare_func)cain_sip_param_pair_comp_func, name) != NULL;
 }
-void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* params,const char* name,const char* value) {
+
+void cain_sip_parameters_set_parameter(cain_sip_parameters_t* params,const char* name,const char* value) {
 	/*1 check if present*/
 	cain_sip_param_pair_t* lNewpair;
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->paramnames_list, (cain_sip_compare_func)strcmp, name);
@@ -102,7 +103,7 @@ const cain_sip_list_t*	cain_sip_parameters_get_parameter_names(const cain_sip_pa
 	return params?params->paramnames_list:NULL;
 }
 
-void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* params,const char* name) {
+void cain_sip_parameters_remove_parameter(cain_sip_parameters_t* params,const char* name) {
 	/*1 check if present*/
 	cain_sip_list_t *  lResult = cain_sip_list_find_custom(params->paramnames_list, (cain_sip_compare_func)strcmp, name);
 	/* first remove from header names list*/

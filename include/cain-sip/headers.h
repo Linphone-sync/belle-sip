@@ -218,21 +218,21 @@ CAINSIP_EXPORT const char*	cain_sip_header_via_get_host(const cain_sip_header_vi
 CAINSIP_EXPORT int cain_sip_header_via_get_port(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT int cain_sip_header_via_get_listening_port(const cain_sip_header_via_t *via);
 
-const char*	cain_sip_header_via_get_maddr(const cain_sip_header_via_t* via);
+CAINSIP_EXPORT const char*	cain_sip_header_via_get_maddr(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT const char*	cain_sip_header_via_get_protocol(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT const char*	cain_sip_header_via_get_received(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT int cain_sip_header_via_get_rport(const cain_sip_header_via_t* via);
-int	cain_sip_header_via_get_ttl(const cain_sip_header_via_t* via);
+CAINSIP_EXPORT int	cain_sip_header_via_get_ttl(const cain_sip_header_via_t* via);
 
-void cain_sip_header_via_set_branch(cain_sip_header_via_t* via,const char* branch);
-void cain_sip_header_via_set_host(cain_sip_header_via_t* via, const char* host);
-int cain_sip_header_via_set_port(cain_sip_header_via_t* via,int port);
-void cain_sip_header_via_set_maddr(cain_sip_header_via_t* via, const char* maddr);
-void cain_sip_header_via_set_protocol(cain_sip_header_via_t* via, const char* protocol);
+CAINSIP_EXPORT void cain_sip_header_via_set_branch(cain_sip_header_via_t* via,const char* branch);
+CAINSIP_EXPORT void cain_sip_header_via_set_host(cain_sip_header_via_t* via, const char* host);
+CAINSIP_EXPORT int cain_sip_header_via_set_port(cain_sip_header_via_t* via,int port);
+CAINSIP_EXPORT void cain_sip_header_via_set_maddr(cain_sip_header_via_t* via, const char* maddr);
+CAINSIP_EXPORT void cain_sip_header_via_set_protocol(cain_sip_header_via_t* via, const char* protocol);
 CAINSIP_EXPORT void cain_sip_header_via_set_received(cain_sip_header_via_t* via, const char* received);
-int cain_sip_header_via_set_rport(cain_sip_header_via_t* via,int rport);
-void cain_sip_header_via_set_transport(cain_sip_header_via_t* via,const char* transport);
-int cain_sip_header_via_set_ttl(cain_sip_header_via_t* via, int ttl);
+CAINSIP_EXPORT int cain_sip_header_via_set_rport(cain_sip_header_via_t* via,int rport);
+CAINSIP_EXPORT void cain_sip_header_via_set_transport(cain_sip_header_via_t* via,const char* transport);
+CAINSIP_EXPORT int cain_sip_header_via_set_ttl(cain_sip_header_via_t* via, int ttl);
 #define CAIN_SIP_HEADER_VIA(t) CAIN_SIP_CAST(t,cain_sip_header_via_t)
 #define CAIN_SIP_VIA "Via"
 

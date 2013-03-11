@@ -36,23 +36,24 @@ CAINSIP_EXPORT void cain_sip_parameters_clean(cain_sip_parameters_t* params);
 CAINSIP_EXPORT const char*	cain_sip_parameters_get_parameter(const cain_sip_parameters_t* obj,const char* name);
 /*
  * same as #cain_sip_parameters_get_parameter but name is case insensitive */
-const char*	cain_sip_parameters_get_case_parameter(const cain_sip_parameters_t* params,const char* name);
+CAINSIP_EXPORT const char*	cain_sip_parameters_get_case_parameter(const cain_sip_parameters_t* params,const char* name);
 
 /**
  * returns 0 if not found
  */
-CAINSIP_EXPORT unsigned int cain_sip_parameters_is_parameter(const cain_sip_parameters_t* obj,const char* name);
+CAINSIP_EXPORT unsigned int cain_sip_parameters_has_parameter(const cain_sip_parameters_t* obj,const char* name);
 
 CAINSIP_EXPORT void	cain_sip_parameters_set_parameter(cain_sip_parameters_t* obj,const char* name,const char* value);
 
-const cain_sip_list_t *	cain_sip_parameters_get_parameter_names(const cain_sip_parameters_t* obj);
+CAINSIP_EXPORT const cain_sip_list_t *	cain_sip_parameters_get_parameter_names(const cain_sip_parameters_t* obj);
 
-const cain_sip_list_t *	cain_sip_parameters_get_parameters(const cain_sip_parameters_t* obj);
+CAINSIP_EXPORT const cain_sip_list_t *	cain_sip_parameters_get_parameters(const cain_sip_parameters_t* obj);
 
-void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* obj,const char* name);
+CAINSIP_EXPORT void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* obj,const char* name);
 
-int cain_sip_parameters_marshal(const cain_sip_parameters_t* obj, char* buff,unsigned int offset,unsigned int buff_size);
+CAINSIP_EXPORT int cain_sip_parameters_marshal(const cain_sip_parameters_t* obj, char* buff,unsigned int offset,unsigned int buff_size);
 
 #define CAIN_SIP_PARAMETERS(obj) CAIN_SIP_CAST(obj,cain_sip_parameters_t)
 
 #endif /*PARAMETERS_H_*/
+
