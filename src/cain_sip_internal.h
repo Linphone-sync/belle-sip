@@ -502,6 +502,7 @@ struct cain_sip_provider{
 	cain_sip_list_t *server_transactions;
 	cain_sip_list_t *dialogs;
 	cain_sip_list_t *auth_contexts;
+	int rport_enabled; /*0 if rport should not be set in via header*/
 };
 
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp);

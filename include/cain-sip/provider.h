@@ -66,7 +66,7 @@ CAINSIP_EXPORT int cain_sip_provider_add_authorization(cain_sip_provider_t *p, c
 
 /**
  * Can be used to simulate network recv error, for tests.
- * @param stack
+ * @param prov
  * @param recv_error if <=0, will cause channel error to be reported
 **/
 CAINSIP_EXPORT void cain_sip_provider_set_recv_error(cain_sip_provider_t *prov, int recv_error);
@@ -81,6 +81,20 @@ CAINSIP_EXPORT void cain_sip_provider_set_recv_error(cain_sip_provider_t *prov, 
  *
  **/
 CAINSIP_EXPORT cain_sip_dialog_t* cain_sip_provider_find_dialog(const cain_sip_provider_t *prov, const char* call_id,const char* from_tag,const char* to_tag);
+
+/**
+ * Enable rport in via header. Enabled by default
+ * @param prov
+ * @return enable 0 to disable
+**/
+CAINSIP_EXPORT void cain_sip_provider_enable_rport(cain_sip_provider_t *prov, int enable);
+/**
+ * get Enable rport in via header. Enabled by default
+ * @param prov
+ * @param enable 0 to disable
+**/
+CAINSIP_EXPORT int cain_sip_provider_is_rport_enabled(cain_sip_provider_t *prov);
+
 
 CAIN_SIP_END_DECLS
 

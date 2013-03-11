@@ -200,7 +200,7 @@ static void compute_hash_from_invariants(cain_sip_message_t *msg, char *branchid
 
 static void fix_outgoing_via(cain_sip_provider_t *p, cain_sip_channel_t *chan, cain_sip_message_t *msg){
 	cain_sip_header_via_t *via=CAIN_SIP_HEADER_VIA(cain_sip_message_get_header(msg,"via"));
-	cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(via),"rport",NULL);
+	if (p->rport_enabled) cain_sip_parameters_set_parameter(CAIN_SIP_PARAMETERS(via),"rport",NULL);
 
 	if (cain_sip_header_via_get_host(via)==NULL){
 		const char *local_ip;
@@ -275,6 +275,7 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_provider_t,cain_sip_object_t,cain_sip_provide
 cain_sip_provider_t *cain_sip_provider_new(cain_sip_stack_t *s, cain_sip_listening_point_t *lp){
 	cain_sip_provider_t *p=cain_sip_object_new(cain_sip_provider_t);
 	p->stack=s;
+	p->rport_enabled=1;
 	if (lp) cain_sip_provider_add_listening_point(p,lp);
 	return p;
 }
@@ -839,4 +840,11 @@ void cain_sip_provider_set_recv_error(cain_sip_provider_t *prov, int recv_error)
 			((cain_sip_source_t*)channels->data)->notify_required=(recv_error<=0);
 		}
 	}
+}
+void cain_sip_provider_enable_rport(cain_sip_provider_t *prov, int enable) {
+	prov->rport_enabled=enable;
+}
+
+int cain_sip_provider_is_rport_enabled(cain_sip_provider_t *prov) {
+	return prov->rport_enabled;
 }
