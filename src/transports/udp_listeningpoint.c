@@ -170,7 +170,7 @@ cain_sip_listening_point_t * cain_sip_udp_listening_point_new(cain_sip_stack_t *
 	cain_sip_udp_listening_point_t *lp=cain_sip_object_new(cain_sip_udp_listening_point_t);
 	cain_sip_udp_listening_point_init(lp,s,ipaddress, port);
 	if (lp->sock==(cain_sip_socket_t)-1){
-		cain_sip_object_unref(s);
+		cain_sip_object_unref(lp);
 		return NULL;
 	}
 	return (cain_sip_listening_point_t*)lp;
