@@ -439,18 +439,21 @@ struct _cain_sip_header_via  {
 	char* transport;
 	char* host;
 	int port;
+	char* received;
 };
 
 static void cain_sip_header_via_destroy(cain_sip_header_via_t* via) {
 	if (via->protocol) cain_sip_free(via->protocol);
 	if (via->transport) cain_sip_free(via->transport);
 	if (via->host) cain_sip_free(via->host);
+	DESTROY_STRING(via,received)
 }
 
 static void cain_sip_header_via_clone(cain_sip_header_via_t* via, const cain_sip_header_via_t*orig){
 	CLONE_STRING(cain_sip_header_via,protocol,via,orig)
 	CLONE_STRING(cain_sip_header_via,transport,via,orig)
 	CLONE_STRING(cain_sip_header_via,host,via,orig)
+	CLONE_STRING(cain_sip_header_via,received,via,orig)
 	via->port=orig->port;
 }
 
@@ -472,6 +475,10 @@ int cain_sip_header_via_marshal(cain_sip_header_via_t* via, char* buff,unsigned 
 	if (via->port > 0) {
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,":%i",via->port);
 	}
+	if (via->received) {
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,";received=%s",via->received);
+	}
+
 	current_offset+=cain_sip_parameters_marshal(&via->params_list, buff,current_offset, buff_size);
 	return current_offset-offset;
 }
@@ -491,11 +498,12 @@ CAIN_SIP_PARSE(header_via)
 GET_SET_STRING(cain_sip_header_via,protocol);
 GET_SET_STRING(cain_sip_header_via,transport);
 GET_SET_STRING(cain_sip_header_via,host);
+GET_SET_STRING(cain_sip_header_via,received);
 GET_SET_INT_PRIVATE(cain_sip_header_via,port,int,_);
 
 GET_SET_STRING_PARAM(cain_sip_header_via,branch);
 GET_SET_STRING_PARAM(cain_sip_header_via,maddr);
-GET_SET_STRING_PARAM(cain_sip_header_via,received);
+
 
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_via,rport,int,_)
 GET_SET_INT_PARAM_PRIVATE(cain_sip_header_via,ttl,int,_)
