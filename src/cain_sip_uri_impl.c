@@ -75,7 +75,9 @@ int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offs
 
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s:",uri->secure?"sips":"sip");
 	if (uri->user) {
-		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s@",uri->user);
+		char* escaped_username=cain_sip_to_escaped_string(uri->user);
+		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s@",escaped_username);
+		cain_sip_free(escaped_username);
 	}
 	if (uri->host) {
 		if (strchr(uri->host,':')) { /*ipv6*/

@@ -180,6 +180,20 @@ static void testSIMPLEURI_error(void) {
 
 }
 
+static void test_escaped_username(void) {
+	cain_sip_uri_t* L_tmp;
+	cain_sip_uri_t *  L_uri = cain_sip_uri_parse("sip:toto%40linphone.org@titi.com");
+	char* l_raw_uri = cain_sip_object_to_string(CAIN_SIP_OBJECT(L_uri));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
+	L_tmp = cain_sip_uri_parse(l_raw_uri);
+	L_uri = CAIN_SIP_URI(cain_sip_object_clone(CAIN_SIP_OBJECT(L_tmp)));
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_tmp));
+	cain_sip_free(l_raw_uri);
+	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_user(L_uri), "toto@linphone.org");
+	CU_ASSERT_STRING_EQUAL(cain_sip_uri_get_host(L_uri), "titi.com");
+	cain_sip_object_unref(CAIN_SIP_OBJECT(L_uri));
+}
+
 static void test_uri_equals(void) {
 	cain_sip_uri_t* a;
 	cain_sip_uri_t* b;
@@ -298,6 +312,7 @@ static void test_uri_equals(void) {
 test_t uri_tests[] = {
 	{ "Simple URI", testSIMPLEURI },
 	{ "Complex URI", testCOMPLEXURI },
+	{ "Escaped username", test_escaped_username },
 	{ "IP host", test_ip_host },
 	{ "lr", test_lr },
 	{ "maddr", test_maddr },

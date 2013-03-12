@@ -1244,7 +1244,12 @@ userinfo[cain_sip_uri_t* uri]
 scope { cain_sip_uri_t* current; }
 @init {$userinfo::current=uri;}
        :	user ( COLON password )? '@' ;
-user            :	  ( unreserved  | escaped | user_unreserved )+ {cain_sip_uri_set_user($userinfo::current,(const char *)$text->chars);};
+user            :	  ( unreserved  | escaped | user_unreserved )+ {
+                                                                  char* unescaped_username;
+                                                                  unescaped_username=cain_sip_to_unescaped_string((const char *)$text->chars);
+                                                                  cain_sip_uri_set_user($userinfo::current,unescaped_username);
+                                                                  cain_sip_free(unescaped_username);
+                                                                  };
 user_unreserved :  '&' | EQUAL | '+' | '$' | COMMA | SEMI | '?' | SLASH;
 password        :	  ( unreserved  |'&' | EQUAL | '+' | '$' | COMMA )*;
 hostport[cain_sip_uri_t* uri] 
