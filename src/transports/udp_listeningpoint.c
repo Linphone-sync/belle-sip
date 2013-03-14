@@ -64,6 +64,7 @@ static cain_sip_socket_t create_udp_socket(const char *addr, int port, int *fami
 	int err;
 	cain_sip_socket_t sock;
 	char portnum[10];
+	int optval=1;
 
 	snprintf(portnum,sizeof(portnum),"%i",port);
 	hints.ai_family=AF_UNSPEC;
@@ -82,6 +83,13 @@ static cain_sip_socket_t create_udp_socket(const char *addr, int port, int *fami
 		freeaddrinfo(res);
 		return -1;
 	}
+	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+			(char*)&optval, sizeof (optval));
+	if (err ==-1)
+	{
+		cain_sip_warning ("Fail to set SIP/UDP address reusable: %s.", cain_sip_get_socket_error_string());
+	}
+	
 	err=bind(sock,res->ai_addr,res->ai_addrlen);
 	if (err==-1){
 		cain_sip_error("udp bind() failed for %s port %i: %s",addr,port,cain_sip_get_socket_error_string());
