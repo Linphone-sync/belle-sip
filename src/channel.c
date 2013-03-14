@@ -127,7 +127,7 @@ static void cain_sip_channel_input_stream_reset(cain_sip_channel_input_stream_t*
 	input_stream->msg=NULL;
 }
 static size_t cain_sip_channel_input_stream_get_buff_length(cain_sip_channel_input_stream_t* input_stream) {
-	return MAX_CHANNEL_BUFF_SIZE - (input_stream->write_ptr-input_stream->read_ptr);
+	return MAX_CHANNEL_BUFF_SIZE - (input_stream->write_ptr-input_stream->buff);
 }
 
 int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
