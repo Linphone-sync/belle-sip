@@ -829,16 +829,16 @@ cain_sip_auth_event_t* cain_sip_auth_event_create(const char* realm,const char* 
 cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction);
 
 
+/*include private headers */
+#include "cain_sip_resolver.h"
 
 /*
  * returns a char, even if entry is escaped*/
 int cain_sip_get_char (const char*a,int n,char*out);
 /*return an escaped string*/
-char* cain_sip_to_escaped_string(const char* buff) ;
-char* cain_sip_to_unescaped_string(const char* buff) ;
+CAINSIP_INTERNAL_EXPORT	char* cain_sip_to_escaped_string(const char* buff) ;
+CAINSIP_INTERNAL_EXPORT	char* cain_sip_to_unescaped_string(const char* buff) ;
 
-/*include private headers */
-#include "cain_sip_resolver.h"
 
 #define CAIN_SIP_SOCKET_TIMEOUT 30000
 
