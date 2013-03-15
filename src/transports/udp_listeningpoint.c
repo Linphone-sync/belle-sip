@@ -85,8 +85,7 @@ static cain_sip_socket_t create_udp_socket(const char *addr, int port, int *fami
 	}
 	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
 			(char*)&optval, sizeof (optval));
-	if (err ==-1)
-	{
+	if (err == -1){
 		cain_sip_warning ("Fail to set SIP/UDP address reusable: %s.", cain_sip_get_socket_error_string());
 	}
 	

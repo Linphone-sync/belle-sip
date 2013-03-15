@@ -127,6 +127,7 @@ int finalize_stream_connection (cain_sip_socket_t sock, struct sockaddr *addr, s
 				cain_sip_error("Failed to retrieve sockname  for fd [%i]: cause [%s]",sock,cain_sip_get_socket_error_string());
 				return -1;
 			}
+			cain_sip_address_remove_v4_mapping(addr,addr,slen);
 			return 0;
 		}else{
 			cain_sip_error("Connection failed  for fd [%i]: cause [%s]",sock,cain_sip_get_socket_error_string_from_code(errnum));
@@ -134,6 +135,7 @@ int finalize_stream_connection (cain_sip_socket_t sock, struct sockaddr *addr, s
 		}
 	}
 }
+
 static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	struct sockaddr_storage ss;
 	socklen_t addrlen=sizeof(ss);
@@ -161,10 +163,34 @@ static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int reve
 	return CAIN_SIP_CONTINUE;
 }
 
-cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack,const char *bindip, int localport, const char *dest, int port){
+cain_sip_channel_t * cain_sip_stream_channel_new_client(cain_sip_stack_t *stack,const char *bindip, int localport, const char *dest, int port){
 	cain_sip_stream_channel_t *obj=cain_sip_object_new(cain_sip_stream_channel_t);
 	cain_sip_channel_init((cain_sip_channel_t*)obj
 							,stack
 							,bindip,localport,dest,port);
 	return (cain_sip_channel_t*)obj;
 }
+
+cain_sip_channel_t * cain_sip_stream_channel_new_child(cain_sip_stack_t *stack, cain_sip_socket_t sock, struct sockaddr *remote_addr, socklen_t slen){
+	struct sockaddr_storage localaddr;
+	socklen_t local_len=sizeof(localaddr);
+	cain_sip_stream_channel_t *obj;
+	
+	if (getsockname(sock,(struct sockaddr*)&localaddr,&local_len)==-1){
+		cain_sip_error("getsockname() failed: %s",cain_sip_get_socket_error_string());
+		return NULL;
+	}
+	cain_sip_address_remove_v4_mapping((struct sockaddr*)&localaddr,(struct sockaddr*)&localaddr,&local_len);
+	cain_sip_address_remove_v4_mapping(remote_addr,remote_addr,&slen);
+	
+	obj=cain_sip_object_new(cain_sip_stream_channel_t);
+	cain_sip_channel_init_with_addr((cain_sip_channel_t*)obj,stack,remote_addr,slen);
+	cain_sip_socket_set_nonblocking(sock);
+	cain_sip_channel_set_socket((cain_sip_channel_t*)obj,sock,(cain_sip_source_func_t)stream_channel_process_data);
+	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
+	cain_sip_channel_set_ready((cain_sip_channel_t*)obj,(struct sockaddr*)&localaddr,local_len);
+	cain_sip_main_loop_add_source(stack->ml,(cain_sip_source_t*)obj);
+	return (cain_sip_channel_t*)obj;
+}
+
+

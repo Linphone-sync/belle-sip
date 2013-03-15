@@ -117,6 +117,7 @@ int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);
 /*only used by channels implementation*/
 void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t slen);
 void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const char *bindip,int localport,const char *peername, int peer_port);
+void cain_sip_channel_init_with_addr(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const struct sockaddr *peer_addr, socklen_t addrlen);
 void cain_sip_channel_set_socket(cain_sip_channel_t *obj, cain_sip_socket_t sock, cain_sip_source_func_t datafunc);
 /*end of channel implementations*/
 /**

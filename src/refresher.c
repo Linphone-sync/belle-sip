@@ -324,7 +324,8 @@ void cain_sip_refresher_stop(cain_sip_refresher_t* refresher) {
 
 cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction) {
 	cain_sip_refresher_t* refresher;
-	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction)) != CAIN_SIP_TRANSACTION_COMPLETED) {
+	cain_sip_transaction_state_t state=cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction));
+	if (state != CAIN_SIP_TRANSACTION_COMPLETED && state!=CAIN_SIP_TRANSACTION_TERMINATED ) {
 		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED"
 					,cain_sip_transaction_state_to_string(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction)))
 					,transaction);

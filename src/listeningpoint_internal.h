@@ -66,7 +66,7 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
 /*stream*/
 typedef struct cain_sip_stream_listening_point cain_sip_stream_listening_point_t;
-cain_sip_channel_t * cain_sip_channel_new_tcp(cain_sip_stack_t *stack, const char *bindip, int localport,const char *name, int port);
+
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_stream_listening_point_t,cain_sip_listening_point_t)
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 #define CAIN_SIP_STREAM_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_stream_listening_point_t)
@@ -89,6 +89,7 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 cain_sip_listening_point_t * cain_sip_tls_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
 cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t* lp, const char *bindip, int localport,const char *name, int port);
 
+#include "transports/stream_channel.h"
 
 #endif /* LISTENINGPOINT_INTERNAL_H_ */
 
