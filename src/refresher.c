@@ -128,9 +128,12 @@ static void process_transaction_terminated(void *user_ctx, const cain_sip_transa
 }
 
 static void destroy(cain_sip_refresher_t *refresher){
+	cain_sip_refresher_stop(refresher);
 	cain_sip_provider_remove_internal_sip_listener(refresher->transaction->base.provider,refresher->sip_listener);
 	cain_sip_object_unref(refresher->transaction);
+	refresher->transaction=NULL;
 	cain_sip_object_unref(refresher->sip_listener);
+	refresher->sip_listener=NULL;
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_refresher_t);
