@@ -82,7 +82,18 @@ const char *cain_sip_transaction_get_branch_id(const cain_sip_transaction_t *t){
 cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_transaction_t *t){
 	return t->state;
 }
+int cain_sip_transaction_state_is_transient(const cain_sip_transaction_state_t state) {
+	switch(state){
+		case CAIN_SIP_TRANSACTION_INIT:
+		case CAIN_SIP_TRANSACTION_TRYING:
+		case CAIN_SIP_TRANSACTION_CALLING:
+		case CAIN_SIP_TRANSACTION_PROCEEDING:
+			return 1;
+		default:
+			return 0;
 
+	}
+}
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
 	t->state=CAIN_SIP_TRANSACTION_TERMINATED;
 	CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_terminate(t);
@@ -454,7 +465,7 @@ cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cai
 	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
 	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)) != CAIN_SIP_TRANSACTION_COMPLETED
 		&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)) != CAIN_SIP_TRANSACTION_TERMINATED) {
-		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED|CAIN_SIP_TRANSACTION_TERMINATED"
+		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED | CAIN_SIP_TRANSACTION_TERMINATED"
 					,cain_sip_transaction_state_to_string(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)))
 					,t);
 		return NULL;

@@ -32,13 +32,24 @@ typedef enum cain_sip_transaction_state{
 
 CAIN_SIP_BEGIN_DECLS
 
-const char *cain_sip_transaction_state_to_string(cain_sip_transaction_state_t state);
+CAINSIP_EXPORT const char *cain_sip_transaction_state_to_string(const cain_sip_transaction_state_t state);
+/*
+ * Transient state are:
+ * 	<br> CAIN_SIP_TRANSACTION_INIT,
+ *	<br> CAIN_SIP_TRANSACTION_CALLING,
+ *	<br> CAIN_SIP_TRANSACTION_PROCEEDING,
+ *	<br> CAIN_SIP_TRANSACTION_TRYING,
+ * @param state
+ * @return 0 if not transient
+ * */
+CAINSIP_EXPORT int cain_sip_transaction_state_is_transient(const cain_sip_transaction_state_t state);
+
 
 CAINSIP_EXPORT void *cain_sip_transaction_get_application_data(const cain_sip_transaction_t *t);
 CAINSIP_EXPORT void cain_sip_transaction_set_application_data(cain_sip_transaction_t *t, void *data);
-const char *cain_sip_transaction_get_branch_id(const cain_sip_transaction_t *t);
+CAINSIP_EXPORT const char *cain_sip_transaction_get_branch_id(const cain_sip_transaction_t *t);
 CAINSIP_EXPORT cain_sip_transaction_state_t cain_sip_transaction_get_state(const cain_sip_transaction_t *t);
-void cain_sip_transaction_terminate(cain_sip_transaction_t *t);
+CAINSIP_EXPORT void cain_sip_transaction_terminate(cain_sip_transaction_t *t);
 CAINSIP_EXPORT cain_sip_request_t *cain_sip_transaction_get_request(const cain_sip_transaction_t *t);
 CAINSIP_EXPORT cain_sip_response_t *cain_sip_transaction_get_response(const cain_sip_transaction_t *t);
 CAINSIP_EXPORT cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t);

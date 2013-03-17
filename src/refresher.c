@@ -155,6 +155,10 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 	cain_sip_uri_t* preset_route=refresher->transaction->preset_route;
 	cain_sip_provider_t* prov=refresher->transaction->base.provider;
 	cain_sip_header_contact_t* contact;
+	if (cain_sip_transaction_state_is_transient(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)))) {
+		cain_sip_warning("Cannot refresh [%p] because operation in progress",refresher);
+		return -1;
+	}
 	/*first remove timer if any*/
 	cain_sip_refresher_stop(refresher);
 	refresher->expires=expires;
