@@ -155,16 +155,24 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 	cain_sip_uri_t* preset_route=refresher->transaction->preset_route;
 	cain_sip_provider_t* prov=refresher->transaction->base.provider;
 	cain_sip_header_contact_t* contact;
-	if (cain_sip_transaction_state_is_transient(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)))) {
-		cain_sip_warning("Cannot refresh [%p] because operation in progress",refresher);
-		return -1;
-	}
 	/*first remove timer if any*/
 	cain_sip_refresher_stop(refresher);
 	refresher->expires=expires;
 	if (!dialog) {
+		const cain_sip_transaction_state_t state=cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction));
 		/*create new request*/
-		request=cain_sip_client_transaction_create_authenticated_request(refresher->transaction);
+		if (cain_sip_transaction_state_is_transient(state)) {
+			/*operation pending, cannot update authorization headers*/
+			cain_sip_header_cseq_t* cseq;
+			cain_sip_warning("Refresher [%p] already have transaction [%p] in state [%s]"	,refresher
+																							,refresher->transaction
+																							,cain_sip_transaction_state_to_string(state));
+			request=CAIN_SIP_REQUEST(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(refresher->transaction)))));
+			cseq=cain_sip_message_get_header_by_type(request,cain_sip_header_cseq_t);
+			cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
+		} else {
+			request=cain_sip_client_transaction_create_authenticated_request(refresher->transaction);
+		}
 	} else if (dialog && cain_sip_dialog_get_state(dialog)==CAIN_SIP_DIALOG_CONFIRMED) {
 		request=cain_sip_dialog_create_request_from(dialog,old_request);
 		if (strcmp(cain_sip_request_get_method(request),"SUBSCRIBE")==0) {
