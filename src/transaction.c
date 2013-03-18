@@ -305,7 +305,7 @@ int cain_sip_client_transaction_send_request_to(cain_sip_client_transaction_t *t
 			cain_sip_message("cain_sip_client_transaction_send_request(): waiting channel to be ready");
 			cain_sip_channel_prepare(chan);
 			/*the channel will notify us when it is ready*/
-		} else {
+		} else if (cain_sip_channel_get_state(chan)==CAIN_SIP_CHANNEL_READY){
 			/*otherwise we can send immediately*/
 			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
 		}
@@ -384,12 +384,16 @@ static void client_transaction_destroy(cain_sip_client_transaction_t *t ){
 static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_channel_t *chan, cain_sip_channel_state_t state){
 	cain_sip_client_transaction_t *t=(cain_sip_client_transaction_t*)l;
 	cain_sip_io_error_event_t ev;
+	cain_sip_transaction_state_t tr_state=cain_sip_transaction_get_state((cain_sip_transaction_t*)t);
+	
 	cain_sip_message("transaction [%p] channel state changed to [%s]"
 						,t
 						,cain_sip_channel_state_to_string(state));
 	switch(state){
 		case CAIN_SIP_CHANNEL_READY:
-			CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
+			if (tr_state==CAIN_SIP_TRANSACTION_INIT){
+				CAIN_SIP_OBJECT_VPTR(t,cain_sip_client_transaction_t)->send_request(t);
+			}
 		break;
 		case CAIN_SIP_CHANNEL_DISCONNECTED:
 		case CAIN_SIP_CHANNEL_ERROR:
@@ -398,10 +402,10 @@ static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_ch
 			ev.source=CAIN_SIP_OBJECT(t);
 			ev.port=chan->peer_port;
 			ev.host=chan->peer_name;
-			if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_COMPLETED
-				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_CONFIRMED
-				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_ACCEPTED
-				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_TERMINATED) {
+			if ( tr_state!=CAIN_SIP_TRANSACTION_COMPLETED
+				&& tr_state!=CAIN_SIP_TRANSACTION_CONFIRMED
+				&& tr_state!=CAIN_SIP_TRANSACTION_ACCEPTED
+				&& tr_state!=CAIN_SIP_TRANSACTION_TERMINATED) {
 				CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*)t),process_io_error,&ev);
 			}
 			if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_TERMINATED) /*avoid double notification*/
