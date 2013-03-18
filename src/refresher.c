@@ -164,7 +164,7 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 		if (cain_sip_transaction_state_is_transient(state)) {
 			/*operation pending, cannot update authorization headers*/
 			cain_sip_header_cseq_t* cseq;
-			cain_sip_warning("Refresher [%p] already have transaction [%p] in state [%s]"	,refresher
+			cain_sip_message("Refresher [%p] already have transaction [%p] in state [%s]"	,refresher
 																							,refresher->transaction
 																							,cain_sip_transaction_state_to_string(state));
 			request=CAIN_SIP_REQUEST(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(refresher->transaction)))));
