@@ -458,7 +458,7 @@ static void _cain_sip_object_pool_remove_from_stack(cain_sip_object_pool_t *pool
 	cain_sip_thread_t tid=cain_sip_thread_self();
 	
 	if (tid!=pool->thread_id){
-		cain_sip_fatal("It is forbidden to destroy a pool outside the thread that created it.");
+		cain_sip_warning("It is forbidden to destroy a pool outside the thread that created it.");
 		return;
 	}
 	
