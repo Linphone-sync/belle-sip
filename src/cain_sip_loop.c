@@ -251,7 +251,9 @@ static void cain_sip_main_loop_destroy(cain_sip_main_loop_t *ml){
 	while (ml->sources){
 		cain_sip_main_loop_remove_source(ml,(cain_sip_source_t*)ml->sources->data);
 	}
-	cain_sip_object_unref(ml->pool);
+	if (cain_sip_object_pool_cleanable(ml->pool)){
+		cain_sip_object_unref(ml->pool);
+	}
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_main_loop_t);

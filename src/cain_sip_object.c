@@ -394,7 +394,7 @@ void cain_sip_object_pool_remove(cain_sip_object_pool_t *pool, cain_sip_object_t
 }
 
 int cain_sip_object_pool_cleanable(cain_sip_object_pool_t *pool){
-	return cain_sip_thread_self()==pool->thread_id;
+	return pool->thread_id!=0 && cain_sip_thread_self()==pool->thread_id;
 }
 
 void cain_sip_object_pool_clean(cain_sip_object_pool_t *pool){
@@ -422,10 +422,25 @@ void cain_sip_object_pool_clean(cain_sip_object_pool_t *pool){
 	pool->objects=NULL;
 }
 
+static void cain_sip_object_pool_detach_from_thread(cain_sip_object_pool_t *pool){
+	cain_sip_object_pool_clean(pool);
+	pool->thread_id=(cain_sip_thread_t)0;
+}
+
 static void cleanup_pool_stack(void *data){
 	cain_sip_list_t **pool_stack=(cain_sip_list_t**)data;
-	cain_sip_list_free_with_data(*pool_stack, cain_sip_object_unref);
-	cain_sip_message("Object pools for thread [%u] cleaned while exiting",(unsigned long)cain_sip_thread_self());
+	if (*pool_stack){
+		/*
+		 * We would expect the pool_stack to be empty when the thread terminates.
+		 * Otherwise that means the management of object pool is not properly done by the application.
+		 * Since the object pools might be still referenced by the application, we can't destroy them.
+		 * Instead, we mark them as detached, so that when the thread that will attempt to destroy them will do it,
+		 * we'll accept (since anyway these object pool are no longer needed.
+		 */
+		cain_sip_warning("There were still [%i] object pools for thread [%u] while the thread exited. ",
+				 cain_sip_list_size(*pool_stack),(unsigned long)cain_sip_thread_self());
+		cain_sip_list_free_with_data(*pool_stack,(void (*)(void*)) cain_sip_object_pool_detach_from_thread);
+	}
 	*pool_stack=NULL;
 	cain_sip_free(pool_stack);
 }
