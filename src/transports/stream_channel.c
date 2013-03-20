@@ -20,17 +20,19 @@
 #include "cain-sip/mainloop.h"
 #include "stream_channel.h"
 
+
+
 /*************TCP********/
 
-static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
+static int stream_channel_process_data(cain_sip_stream_channel_t *obj,unsigned int revents);
 
 
 static void stream_channel_uninit(cain_sip_stream_channel_t *obj){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
-	if (sock!=(cain_sip_socket_t)-1) stream_channel_close((cain_sip_channel_t*)obj);
+	if (sock!=(cain_sip_socket_t)-1) stream_channel_close(obj);
 }
 
-int stream_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
+int stream_channel_send(cain_sip_stream_channel_t *obj, const void *buf, size_t buflen){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
 	int err;
 	err=send(sock,buf,buflen,0);
@@ -41,7 +43,7 @@ int stream_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen)
 	return err;
 }
 
-int stream_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
+int stream_channel_recv(cain_sip_stream_channel_t *obj, void *buf, size_t buflen){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
 	int err;
 	err=recv(sock,buf,buflen,0);
@@ -52,15 +54,54 @@ int stream_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 	return err;
 }
 
-void stream_channel_close(cain_sip_channel_t *obj){
+void stream_channel_close(cain_sip_stream_channel_t *obj){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
 	if (sock!=(cain_sip_socket_t)-1){
 		close_socket(sock);
 		cain_sip_source_uninit((cain_sip_source_t*)obj);
+#ifdef TARGET_OS_IPHONE
+		if (obj->read_stream != NULL) {
+			CFReadStreamClose (obj->read_stream);
+			CFRelease (obj->read_stream);
+			obj->read_stream=NULL;
+		}
+		if (obj->write_stream != NULL) {
+			CFWriteStreamClose (obj->write_stream);
+			CFRelease (obj->write_stream);
+			obj->write_stream=NULL;
+		}
+#endif
 	}
 }
 
-int stream_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
+#ifdef TARGET_OS_IPHONE
+static void stream_channel_enable_ios_background_mode(cain_sip_stream_channel_t *obj){
+	int sock=cain_sip_source_get_socket((cain_sip_source_t*)obj);
+	
+	CFStreamCreatePairWithSocket(kCFAllocatorDefault, sock, &obj->read_stream, &obj->write_stream);
+	if (obj->read_stream){
+		if (!CFReadStreamSetProperty (obj->read_stream, kCFStreamNetworkServiceType, kCFStreamNetworkServiceTypeVoIP)){
+			cain_sip_warning("CFReadStreamSetProperty() could not set VoIP service type on read stream.");
+		}
+	}else cain_sip_warning("CFStreamCreatePairWithSocket() could not create the read stream.");
+	if (obj->write_stream){
+		if (!CFWriteStreamSetProperty (obj->write_stream, kCFStreamNetworkServiceType, kCFStreamNetworkServiceTypeVoIP)){
+			cain_sip_warning("CFReadStreamSetProperty() could not set VoIP service type on write stream.");
+		}
+	}else cain_sip_warning("CFStreamCreatePairWithSocket() could not create the write stream.");
+	
+	if (!CFReadStreamOpen (obj->read_stream)) {
+		cain_sip_warning("CFReadStreamOpen() failed.");
+	}
+	
+	if (!CFWriteStreamOpen (obj->write_stream)) {
+		cain_sip_warning("CFWriteStreamOpen() failed.");
+	}
+}
+
+#endif
+
+int stream_channel_connect(cain_sip_stream_channel_t *obj, const struct addrinfo *ai){
 	int err;
 	int tmp;
 	cain_sip_socket_t sock;
@@ -78,7 +119,7 @@ int stream_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 		cain_sip_error("setsockopt TCP_NODELAY failed: [%s]",cain_sip_get_socket_error_string());
 	}
 	cain_sip_socket_set_nonblocking(sock);
-	cain_sip_channel_set_socket(obj,sock,(cain_sip_source_func_t)stream_channel_process_data);
+	cain_sip_channel_set_socket((cain_sip_channel_t*)obj,sock,(cain_sip_source_func_t)stream_channel_process_data);
 	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
 	
 	err = connect(sock,ai->ai_addr,ai->ai_addrlen);
@@ -87,8 +128,7 @@ int stream_channel_connect(cain_sip_channel_t *obj, const struct addrinfo *ai){
 		close_socket(sock);
 		return -1;
 	}
-	cain_sip_main_loop_add_source(obj->stack->ml,(cain_sip_source_t*)obj);
-
+	cain_sip_main_loop_add_source(obj->base.stack->ml,(cain_sip_source_t*)obj);
 	return 0;
 }
 
@@ -105,16 +145,18 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_stream_channel_t)=
 		},
 		"TCP",
 		1, /*is_reliable*/
-		stream_channel_connect,
-		stream_channel_send,
-		stream_channel_recv,
-		stream_channel_close,
+		(int (*)(cain_sip_channel_t *, const struct addrinfo *))stream_channel_connect,
+		(int (*)(cain_sip_channel_t *, const void *, size_t ))stream_channel_send,
+		(int (*)(cain_sip_channel_t *, void *, size_t ))stream_channel_recv,
+		(void (*)(cain_sip_channel_t *))stream_channel_close,
 	}
 };
 
-int finalize_stream_connection (cain_sip_socket_t sock, struct sockaddr *addr, socklen_t* slen) {
+int finalize_stream_connection(cain_sip_stream_channel_t *obj, struct sockaddr *addr, socklen_t* slen) {
 	int err, errnum;
 	socklen_t optlen=sizeof(errnum);
+	cain_sip_socket_t sock=cain_sip_source_get_socket((cain_sip_source_t*)obj);
+	
 	err=getsockopt(sock,SOL_SOCKET,SO_ERROR,(void*)&errnum,&optlen);
 	if (err!=0){
 		cain_sip_error("Failed to retrieve connection status for fd [%i]: cause [%s]",sock,cain_sip_get_socket_error_string());
@@ -128,6 +170,9 @@ int finalize_stream_connection (cain_sip_socket_t sock, struct sockaddr *addr, s
 				return -1;
 			}
 			cain_sip_address_remove_v4_mapping(addr,addr,slen);
+#if TARGET_OS_IPHONE
+			stream_channel_enable_ios_background_mode(obj);
+#endif
 			return 0;
 		}else{
 			cain_sip_error("Connection failed  for fd [%i]: cause [%s]",sock,cain_sip_get_socket_error_string_from_code(errnum));
@@ -136,28 +181,29 @@ int finalize_stream_connection (cain_sip_socket_t sock, struct sockaddr *addr, s
 	}
 }
 
-static int stream_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
+static int stream_channel_process_data(cain_sip_stream_channel_t *obj,unsigned int revents){
 	struct sockaddr_storage ss;
 	socklen_t addrlen=sizeof(ss);
-	cain_sip_socket_t fd=cain_sip_source_get_socket((cain_sip_source_t*)obj);
+	cain_sip_channel_state_t state=cain_sip_channel_get_state((cain_sip_channel_t*)obj);
+	cain_sip_channel_t *base=(cain_sip_channel_t*)obj;
 
 	cain_sip_message("TCP channel process_data");
 	
-	if (obj->state == CAIN_SIP_CHANNEL_CONNECTING && (revents&CAIN_SIP_EVENT_WRITE)) {
+	if (state == CAIN_SIP_CHANNEL_CONNECTING && (revents & CAIN_SIP_EVENT_WRITE)) {
 
-		if (finalize_stream_connection(fd,(struct sockaddr*)&ss,&addrlen)) {
-			cain_sip_error("Cannot connect to [%s://%s:%s]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
-			channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+		if (finalize_stream_connection(obj,(struct sockaddr*)&ss,&addrlen)) {
+			cain_sip_error("Cannot connect to [%s://%s:%s]",cain_sip_channel_get_transport_name(base),base->peer_name,base->peer_port);
+			channel_set_state(base,CAIN_SIP_CHANNEL_ERROR);
 			return CAIN_SIP_STOP;
 		}
 		cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_READ|CAIN_SIP_EVENT_ERROR);
-		cain_sip_channel_set_ready(obj,(struct sockaddr*)&ss,addrlen);
+		cain_sip_channel_set_ready(base,(struct sockaddr*)&ss,addrlen);
 		return CAIN_SIP_CONTINUE;
 
-	} else if ( obj->state == CAIN_SIP_CHANNEL_READY) {
-		return cain_sip_channel_process_data(obj,revents);
+	} else if (state == CAIN_SIP_CHANNEL_READY) {
+		return cain_sip_channel_process_data(base,revents);
 	} else {
-		cain_sip_warning("Unexpected event [%i], in state [%s] for channel [%p]",revents,cain_sip_channel_state_to_string(obj->state),obj);
+		cain_sip_warning("Unexpected event [%i], in state [%s] for channel [%p]",revents,cain_sip_channel_state_to_string(state),obj);
 		return CAIN_SIP_STOP;
 	}
 	return CAIN_SIP_CONTINUE;
