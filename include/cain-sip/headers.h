@@ -72,9 +72,9 @@ CAINSIP_EXPORT void cain_sip_header_address_set_displayname(cain_sip_header_addr
 
 typedef struct _cain_sip_header cain_sip_header_t;
 CAINSIP_EXPORT cain_sip_header_t* cain_sip_header_create (const char* name,const char* value);
-const char* cain_sip_header_get_name (const cain_sip_header_t* obj);
+CAINSIP_EXPORT const char* cain_sip_header_get_name (const cain_sip_header_t* obj);
 CAINSIP_EXPORT void cain_sip_header_set_name (cain_sip_header_t* obj,const char* value);
-int cain_sip_header_marshal(cain_sip_header_t* header, char* buff, unsigned int offset,unsigned int buff_size);
+CAINSIP_EXPORT int cain_sip_header_marshal(cain_sip_header_t* header, char* buff, unsigned int offset,unsigned int buff_size);
 
 #define CAIN_SIP_HEADER(t) CAIN_SIP_CAST(t,cain_sip_header_t)
 
@@ -91,7 +91,7 @@ CAINSIP_EXPORT cain_sip_header_allow_t* cain_sip_header_allow_parse (const char*
 CAINSIP_EXPORT cain_sip_header_allow_t* cain_sip_header_allow_create (const char* methods) ;
 
 CAINSIP_EXPORT const char* cain_sip_header_allow_get_method(const cain_sip_header_allow_t* allow);
-void cain_sip_header_allow_set_method(cain_sip_header_allow_t* allow,const char* method);
+CAINSIP_EXPORT void cain_sip_header_allow_set_method(cain_sip_header_allow_t* allow,const char* method);
 #define CAIN_SIP_HEADER_ALLOW(t) CAIN_SIP_CAST(t,cain_sip_header_allow_t)
 #define CAIN_SIP_ALLOW "Allow"
 
@@ -123,7 +123,7 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const 
   * Returns a boolean value that indicates if the contact header has the format of Contact: *.
   * @return true if this is a wildcard address, false otherwise.
   */
- unsigned int cain_sip_header_contact_is_wildcard(const cain_sip_header_contact_t* contact);
+ CAINSIP_EXPORT unsigned int cain_sip_header_contact_is_wildcard(const cain_sip_header_contact_t* contact);
  /**
  *
  */
@@ -131,23 +131,23 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const 
 /**
  *  Sets the qValue value of the Name Address.
  */
- int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float qvalue);
+ CAINSIP_EXPORT int cain_sip_header_contact_set_qvalue(cain_sip_header_contact_t* contact, float qvalue);
 /**
  * Sets a wildcard on this contact address that is "*" is assigned to the contact header so that the header will have the format of Contact: *.
  *
  */
- void cain_sip_header_contact_set_wildcard(cain_sip_header_contact_t* contact,unsigned int is_wildcard);
+ CAINSIP_EXPORT void cain_sip_header_contact_set_wildcard(cain_sip_header_contact_t* contact,unsigned int is_wildcard);
  /** Contact heaader equality function
   * @return 0 if not equals
   *
   * */
- unsigned int cain_sip_header_contact_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b);
+ CAINSIP_EXPORT unsigned int cain_sip_header_contact_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b);
 
  /** Contact heaader equality function, same as #cain_sip_header_contact_equals but return 0 if equals, very useful with #cain_sip_list
    * @return 0 if equals
    *
    * */
- unsigned int cain_sip_header_contact_not_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b);
+ CAINSIP_EXPORT unsigned int cain_sip_header_contact_not_equals(const cain_sip_header_contact_t* a,const cain_sip_header_contact_t* b);
 
 
 #define CAIN_SIP_RANDOM_TAG ((const char*)-1)
@@ -159,7 +159,7 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const 
  ******************************/
  typedef struct _cain_sip_header_from cain_sip_header_from_t;
 
- cain_sip_header_from_t* cain_sip_header_from_new();
+ CAINSIP_EXPORT cain_sip_header_from_t* cain_sip_header_from_new();
 
  CAINSIP_EXPORT cain_sip_header_from_t* cain_sip_header_from_create(const cain_sip_header_address_t* address, const char *tag);
 
@@ -167,11 +167,11 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const 
 
  CAINSIP_EXPORT cain_sip_header_from_t* cain_sip_header_from_parse(const char* from) ;
 
- void cain_sip_header_from_set_tag(cain_sip_header_from_t* from, const char* tag);
+ CAINSIP_EXPORT void cain_sip_header_from_set_tag(cain_sip_header_from_t* from, const char* tag);
 
  CAINSIP_EXPORT const char* cain_sip_header_from_get_tag(const cain_sip_header_from_t* from);
 
- void cain_sip_header_from_set_random_tag(cain_sip_header_from_t *obj);
+ CAINSIP_EXPORT void cain_sip_header_from_set_random_tag(cain_sip_header_from_t *obj);
 
 #define CAIN_SIP_HEADER_FROM(t) CAIN_SIP_CAST(t,cain_sip_header_from_t)
 #define CAIN_SIP_FROM "From"
@@ -181,7 +181,7 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const 
  ******************************/
  typedef struct _cain_sip_header_to cain_sip_header_to_t;
 
- cain_sip_header_to_t* cain_sip_header_to_new();
+ CAINSIP_EXPORT cain_sip_header_to_t* cain_sip_header_to_new();
 
  CAINSIP_EXPORT cain_sip_header_to_t* cain_sip_header_to_parse(const char* to) ;
 
@@ -189,11 +189,11 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const 
 
  CAINSIP_EXPORT cain_sip_header_to_t* cain_sip_header_to_create2(const char *address, const char *tag);
 
- void cain_sip_header_to_set_tag(cain_sip_header_to_t* from, const char* tag);
+ CAINSIP_EXPORT void cain_sip_header_to_set_tag(cain_sip_header_to_t* from, const char* tag);
 
  CAINSIP_EXPORT const char* cain_sip_header_to_get_tag(const cain_sip_header_to_t* from);
 
- void cain_sip_header_to_set_random_tag(cain_sip_header_to_t *obj);
+ CAINSIP_EXPORT void cain_sip_header_to_set_random_tag(cain_sip_header_to_t *obj);
 
 #define CAIN_SIP_HEADER_TO(t) CAIN_SIP_CAST(t,cain_sip_header_to_t)
 #define CAIN_SIP_TO "To"
@@ -205,7 +205,7 @@ CAINSIP_EXPORT cain_sip_header_contact_t* cain_sip_header_contact_create (const 
 typedef struct _cain_sip_header_via cain_sip_header_via_t;
 
 CAINSIP_EXPORT cain_sip_header_via_t* cain_sip_header_via_new();
-cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, const char *transport, const char *branch);
+CAINSIP_EXPORT cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, const char *transport, const char *branch);
 CAINSIP_EXPORT cain_sip_header_via_t* cain_sip_header_via_parse (const char* via) ;
 CAINSIP_EXPORT const char*	cain_sip_header_via_get_branch(const cain_sip_header_via_t* via);
 CAINSIP_EXPORT const char*	cain_sip_header_via_get_transport(const cain_sip_header_via_t* via);
@@ -242,11 +242,11 @@ CAINSIP_EXPORT int cain_sip_header_via_set_ttl(cain_sip_header_via_t* via, int t
  ******************************/
 typedef struct _cain_sip_header_call_id cain_sip_header_call_id_t;
 
-cain_sip_header_call_id_t* cain_sip_header_call_id_new();
+CAINSIP_EXPORT cain_sip_header_call_id_t* cain_sip_header_call_id_new();
 
 CAINSIP_EXPORT cain_sip_header_call_id_t* cain_sip_header_call_id_parse (const char* call_id) ;
 CAINSIP_EXPORT const char*	cain_sip_header_call_id_get_call_id(const cain_sip_header_call_id_t* call_id);
-void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* call_id,const char* id);
+CAINSIP_EXPORT void cain_sip_header_call_id_set_call_id(cain_sip_header_call_id_t* call_id,const char* id);
 unsigned int cain_sip_header_call_id_equals(const cain_sip_header_call_id_t* a,const cain_sip_header_call_id_t* b);
 #define CAIN_SIP_HEADER_CALL_ID(t) CAIN_SIP_CAST(t,cain_sip_header_call_id_t)
 #define CAIN_SIP_CALL_ID "Call-ID"
@@ -256,11 +256,11 @@ unsigned int cain_sip_header_call_id_equals(const cain_sip_header_call_id_t* a,c
  ******************************/
 typedef struct _cain_sip_header_cseq cain_sip_header_cseq_t;
 
-cain_sip_header_cseq_t* cain_sip_header_cseq_new();
+CAINSIP_EXPORT cain_sip_header_cseq_t* cain_sip_header_cseq_new();
 CAINSIP_EXPORT cain_sip_header_cseq_t* cain_sip_header_cseq_create(unsigned int number, const char *method);
 CAINSIP_EXPORT cain_sip_header_cseq_t* cain_sip_header_cseq_parse (const char* cseq) ;
 CAINSIP_EXPORT const char*	cain_sip_header_cseq_get_method(const cain_sip_header_cseq_t* cseq);
-void cain_sip_header_cseq_set_method(cain_sip_header_cseq_t* cseq,const char* method);
+CAINSIP_EXPORT void cain_sip_header_cseq_set_method(cain_sip_header_cseq_t* cseq,const char* method);
 CAINSIP_EXPORT unsigned int	cain_sip_header_cseq_get_seq_number(const cain_sip_header_cseq_t* cseq);
 CAINSIP_EXPORT void cain_sip_header_cseq_set_seq_number(cain_sip_header_cseq_t* cseq,unsigned int seq_number);
 #define CAIN_SIP_HEADER_CSEQ(t) CAIN_SIP_CAST(t,cain_sip_header_cseq_t)
@@ -271,15 +271,15 @@ CAINSIP_EXPORT void cain_sip_header_cseq_set_seq_number(cain_sip_header_cseq_t* 
  ******************************/
 typedef struct _cain_sip_header_content_type cain_sip_header_content_type_t;
 
-cain_sip_header_content_type_t* cain_sip_header_content_type_new();
+CAINSIP_EXPORT cain_sip_header_content_type_t* cain_sip_header_content_type_new();
 CAINSIP_EXPORT cain_sip_header_content_type_t* cain_sip_header_content_type_parse (const char* content_type) ;
 CAINSIP_EXPORT cain_sip_header_content_type_t* cain_sip_header_content_type_create (const char* type,const char* sub_type) ;
 
-cain_sip_header_content_type_t* cain_sip_header_content_type_parse (const char* content_type) ;
+CAINSIP_EXPORT cain_sip_header_content_type_t* cain_sip_header_content_type_parse (const char* content_type) ;
 CAINSIP_EXPORT const char*	cain_sip_header_content_type_get_type(const cain_sip_header_content_type_t* content_type);
-void cain_sip_header_content_type_set_type(cain_sip_header_content_type_t* content_type,const char* type);
+CAINSIP_EXPORT void cain_sip_header_content_type_set_type(cain_sip_header_content_type_t* content_type,const char* type);
 CAINSIP_EXPORT const char*	cain_sip_header_content_type_get_subtype(const cain_sip_header_content_type_t* content_type);
-void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* content_type,const char* sub_type);
+CAINSIP_EXPORT void cain_sip_header_content_type_set_subtype(cain_sip_header_content_type_t* content_type,const char* sub_type);
 #define CAIN_SIP_HEADER_CONTENT_TYPE(t) CAIN_SIP_CAST(t,cain_sip_header_content_type_t)
 #define CAIN_SIP_CONTENT_TYPE "Content-Type"
 /******************************
@@ -294,7 +294,7 @@ CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_new();
 CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_parse (const char* expires) ;
 CAINSIP_EXPORT int cain_sip_header_expires_get_expires(const cain_sip_header_expires_t* expires);
 CAINSIP_EXPORT void cain_sip_header_expires_set_expires(cain_sip_header_expires_t* expires,int value);
-int cain_sip_header_expires_decrement_expires(cain_sip_header_expires_t* expires);
+CAINSIP_EXPORT int cain_sip_header_expires_decrement_expires(cain_sip_header_expires_t* expires);
 CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_create(int expires);
 #define CAIN_SIP_HEADER_EXPIRES(t) CAIN_SIP_CAST(t,cain_sip_header_expires_t)
 #define CAIN_SIP_EXPIRES "Expires"
@@ -304,7 +304,7 @@ CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_create(int exp
  ******************************/
  typedef struct _cain_sip_header_route cain_sip_header_route_t;
 
- cain_sip_header_route_t* cain_sip_header_route_new();
+ CAINSIP_EXPORT cain_sip_header_route_t* cain_sip_header_route_new();
  CAINSIP_EXPORT cain_sip_header_route_t* cain_sip_header_route_parse (const char* route) ;
  CAINSIP_EXPORT cain_sip_header_route_t* cain_sip_header_route_create(const cain_sip_header_address_t* route);
 
@@ -316,7 +316,7 @@ CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_create(int exp
  ******************************/
  typedef struct _cain_sip_header_record_route cain_sip_header_record_route_t;
 
- cain_sip_header_record_route_t* cain_sip_header_record_route_new();
+ CAINSIP_EXPORT cain_sip_header_record_route_t* cain_sip_header_record_route_new();
  CAINSIP_EXPORT cain_sip_header_record_route_t* cain_sip_header_record_route_parse (const char* route) ;
 
 #define CAIN_SIP_HEADER_RECORD_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_record_route_t)
@@ -327,7 +327,7 @@ CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_create(int exp
   ******************************/
   typedef struct _cain_sip_header_service_route cain_sip_header_service_route_t;
 
-  cain_sip_header_service_route_t* cain_sip_header_service_route_new();
+  CAINSIP_EXPORT cain_sip_header_service_route_t* cain_sip_header_service_route_new();
   CAINSIP_EXPORT cain_sip_header_service_route_t* cain_sip_header_service_route_parse (const char* route) ;
 
  #define CAIN_SIP_HEADER_SERVICE_ROUTE(t) CAIN_SIP_CAST(t,cain_sip_header_service_route_t)
@@ -361,12 +361,12 @@ CAINSIP_EXPORT cain_sip_header_expires_t* cain_sip_header_expires_create(int exp
  ******************************/
 typedef struct _cain_sip_header_content_length cain_sip_header_content_length_t;
 
-cain_sip_header_content_length_t* cain_sip_header_content_length_new();
+CAINSIP_EXPORT cain_sip_header_content_length_t* cain_sip_header_content_length_new();
 
 CAINSIP_EXPORT cain_sip_header_content_length_t* cain_sip_header_content_length_parse (const char* content_length) ;
 CAINSIP_EXPORT cain_sip_header_content_length_t* cain_sip_header_content_length_create (int content_length) ;
 CAINSIP_EXPORT unsigned int cain_sip_header_content_length_get_content_length(const cain_sip_header_content_length_t* content_length);
-void cain_sip_header_content_length_set_content_length(cain_sip_header_content_length_t* content_length,unsigned int length);
+CAINSIP_EXPORT void cain_sip_header_content_length_set_content_length(cain_sip_header_content_length_t* content_length,unsigned int length);
 #define CAIN_SIP_HEADER_CONTENT_LENGTH(t) CAIN_SIP_CAST(t,cain_sip_header_content_length_t)
 #define CAIN_SIP_CONTENT_LENGTH "Content-Length"
 
@@ -376,7 +376,7 @@ void cain_sip_header_content_length_set_content_length(cain_sip_header_content_l
  ******************************/
 typedef struct _cain_sip_header_authorization cain_sip_header_authorization_t;
 
-cain_sip_header_authorization_t* cain_sip_header_authorization_new();
+CAINSIP_EXPORT cain_sip_header_authorization_t* cain_sip_header_authorization_new();
 CAINSIP_EXPORT cain_sip_header_authorization_t* cain_sip_header_authorization_parse(const char* authorization);
 CAINSIP_EXPORT const char*	cain_sip_header_authorization_get_algorithm(const cain_sip_header_authorization_t* authorization );
 CAINSIP_EXPORT const char*	cain_sip_header_authorization_get_cnonce(const cain_sip_header_authorization_t* authorization );
@@ -384,7 +384,7 @@ CAINSIP_EXPORT const char* cain_sip_header_authorization_get_nonce(const cain_si
 /*convert nonce count as string id present
  * @return 0 in case of success
  * */
-int cain_sip_header_authorization_get_nonce_count_as_string(const cain_sip_header_authorization_t* authorization,char nounce_count[9]);
+CAINSIP_EXPORT int cain_sip_header_authorization_get_nonce_count_as_string(const cain_sip_header_authorization_t* authorization,char nounce_count[9]);
 CAINSIP_EXPORT int	cain_sip_header_authorization_get_nonce_count(const cain_sip_header_authorization_t* authorization);
 CAINSIP_EXPORT const char*	cain_sip_header_authorization_get_opaque(const cain_sip_header_authorization_t* authorization);
 CAINSIP_EXPORT const char*	cain_sip_header_authorization_get_qop(const cain_sip_header_authorization_t* authorization);
@@ -393,18 +393,18 @@ CAINSIP_EXPORT const char*	cain_sip_header_authorization_get_response(const cain
 CAINSIP_EXPORT const char*	cain_sip_header_authorization_get_scheme(const cain_sip_header_authorization_t* authorization);
 CAINSIP_EXPORT cain_sip_uri_t* cain_sip_header_authorization_get_uri(const cain_sip_header_authorization_t* authorization);
 CAINSIP_EXPORT const char*	cain_sip_header_authorization_get_username(const cain_sip_header_authorization_t* authorization);
-void cain_sip_header_authorization_set_algorithm(cain_sip_header_authorization_t* authorization, const char* algorithm);
+CAINSIP_EXPORT void cain_sip_header_authorization_set_algorithm(cain_sip_header_authorization_t* authorization, const char* algorithm);
 CAINSIP_EXPORT void cain_sip_header_authorization_set_cnonce(cain_sip_header_authorization_t* authorization, const char* cNonce);
-void cain_sip_header_authorization_set_nonce(cain_sip_header_authorization_t* authorization, const char* nonce);
+CAINSIP_EXPORT void cain_sip_header_authorization_set_nonce(cain_sip_header_authorization_t* authorization, const char* nonce);
 CAINSIP_EXPORT void cain_sip_header_authorization_set_nonce_count(cain_sip_header_authorization_t* authorization, int nonceCount);
-void cain_sip_header_authorization_set_opaque(cain_sip_header_authorization_t* authorization, const char* opaque);
+CAINSIP_EXPORT void cain_sip_header_authorization_set_opaque(cain_sip_header_authorization_t* authorization, const char* opaque);
 CAINSIP_EXPORT void cain_sip_header_authorization_set_qop(cain_sip_header_authorization_t* authorization, const char* qop);
-void cain_sip_header_authorization_add_qop(cain_sip_header_authorization_t* authorization, const char* qop);
-void cain_sip_header_authorization_set_realm(cain_sip_header_authorization_t* authorization, const char* realm);
-void cain_sip_header_authorization_set_response(cain_sip_header_authorization_t* authorization, const char* response);
-void cain_sip_header_authorization_set_scheme(cain_sip_header_authorization_t* authorization, const char* scheme);
+CAINSIP_EXPORT void cain_sip_header_authorization_add_qop(cain_sip_header_authorization_t* authorization, const char* qop);
+CAINSIP_EXPORT void cain_sip_header_authorization_set_realm(cain_sip_header_authorization_t* authorization, const char* realm);
+CAINSIP_EXPORT void cain_sip_header_authorization_set_response(cain_sip_header_authorization_t* authorization, const char* response);
+CAINSIP_EXPORT void cain_sip_header_authorization_set_scheme(cain_sip_header_authorization_t* authorization, const char* scheme);
 CAINSIP_EXPORT void cain_sip_header_authorization_set_uri(cain_sip_header_authorization_t* authorization, cain_sip_uri_t* uri);
-void cain_sip_header_authorization_set_username(cain_sip_header_authorization_t* authorization, const char* username);
+CAINSIP_EXPORT void cain_sip_header_authorization_set_username(cain_sip_header_authorization_t* authorization, const char* username);
 
 #define CAIN_SIP_HEADER_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_authorization_t)
 #define CAIN_SIP_AUTHORIZATION "Authorization"
@@ -413,7 +413,7 @@ void cain_sip_header_authorization_set_username(cain_sip_header_authorization_t*
  * proxy_authorization inherit from Authorization
  */
 typedef struct _cain_sip_header_proxy_authorization cain_sip_header_proxy_authorization_t;
-cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_new();
+CAINSIP_EXPORT cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_new();
 CAINSIP_EXPORT cain_sip_header_proxy_authorization_t* cain_sip_header_proxy_authorization_parse(const char* proxy_authorization);
 #define CAIN_SIP_HEADER_PROXY_AUTHORIZATION(t) CAIN_SIP_CAST(t,cain_sip_header_proxy_authorization_t)
 #define CAIN_SIP_PROXY_AUTHORIZATION "Proxy-Authorization"
@@ -449,7 +449,7 @@ CAINSIP_EXPORT void cain_sip_header_www_authenticate_set_stale(cain_sip_header_w
  * proxy_authenticate inherit from www_authenticate
  */
 typedef struct _cain_sip_header_proxy_authenticate cain_sip_header_proxy_authenticate_t;
-cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authenticate_new();
+CAINSIP_EXPORT cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authenticate_new();
 CAINSIP_EXPORT cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authenticate_parse(const char* proxy_authenticate);
 #define CAIN_SIP_HEADER_PROXY_AUTHENTICATE(t) CAIN_SIP_CAST(t,cain_sip_header_proxy_authenticate_t)
 #define CAIN_SIP_PROXY_AUTHENTICATE "Proxy-Authenticate"
@@ -461,12 +461,12 @@ CAINSIP_EXPORT cain_sip_header_proxy_authenticate_t* cain_sip_header_proxy_authe
  ******************************/
 typedef struct _cain_sip_header_extension cain_sip_header_extension_t;
 
-cain_sip_header_extension_t* cain_sip_header_extension_new();
+CAINSIP_EXPORT cain_sip_header_extension_t* cain_sip_header_extension_new();
 
 CAINSIP_EXPORT cain_sip_header_extension_t* cain_sip_header_extension_parse (const char* extension) ;
-cain_sip_header_extension_t* cain_sip_header_extension_create (const char* name,const char* value);
+CAINSIP_EXPORT cain_sip_header_extension_t* cain_sip_header_extension_create (const char* name,const char* value);
 CAINSIP_EXPORT const char* cain_sip_header_extension_get_value(const cain_sip_header_extension_t* extension);
-void cain_sip_header_extension_set_value(cain_sip_header_extension_t* extension,const char* value);
+CAINSIP_EXPORT void cain_sip_header_extension_set_value(cain_sip_header_extension_t* extension,const char* value);
 #define CAIN_SIP_HEADER_EXTENSION(t) CAIN_SIP_CAST(t,cain_sip_header_extension_t)
 /******************************
  *
@@ -475,11 +475,11 @@ void cain_sip_header_extension_set_value(cain_sip_header_extension_t* extension,
  ******************************/
 typedef struct _cain_sip_header_max_forwards cain_sip_header_max_forwards_t;
 
-cain_sip_header_max_forwards_t* cain_sip_header_max_forwards_new();
+CAINSIP_EXPORT cain_sip_header_max_forwards_t* cain_sip_header_max_forwards_new();
 
 CAINSIP_EXPORT cain_sip_header_max_forwards_t* cain_sip_header_max_forwards_parse (const char* max_forwards) ;
 CAINSIP_EXPORT int cain_sip_header_max_forwards_get_max_forwards(const cain_sip_header_max_forwards_t* max_forwards);
-void cain_sip_header_max_forwards_set_max_forwards(cain_sip_header_max_forwards_t* max_forwards,int value);
+CAINSIP_EXPORT void cain_sip_header_max_forwards_set_max_forwards(cain_sip_header_max_forwards_t* max_forwards,int value);
 CAINSIP_EXPORT int cain_sip_header_max_forwards_decrement_max_forwards(cain_sip_header_max_forwards_t* max_forwards);
 #define CAIN_SIP_HEADER_MAX_FORWARDS(t) CAIN_SIP_CAST(t,cain_sip_header_max_forwards_t)
 #define CAIN_SIP_MAX_FORWARDS "Max-Forwards"
@@ -491,20 +491,20 @@ CAINSIP_EXPORT int cain_sip_header_max_forwards_decrement_max_forwards(cain_sip_
  ******************************/
 typedef struct _cain_sip_header_subscription_state cain_sip_header_subscription_state_t;
 
-cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_new();
+CAINSIP_EXPORT cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_new();
 
 CAINSIP_EXPORT cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_parse (const char* subscription_state) ;
 CAINSIP_EXPORT cain_sip_header_subscription_state_t* cain_sip_header_subscription_state_create (const char* subscription_state,int expires);
 
 CAINSIP_EXPORT const char* cain_sip_header_subscription_state_get_state(const cain_sip_header_subscription_state_t* subscription_state);
 CAINSIP_EXPORT int cain_sip_header_subscription_state_get_expires(const cain_sip_header_subscription_state_t* subscription_state);
-const char* cain_sip_header_subscription_state_get_reason(const cain_sip_header_subscription_state_t* subscription_state);
-int cain_sip_header_subscription_state_get_retry_after(const cain_sip_header_subscription_state_t* subscription_state);
+CAINSIP_EXPORT const char* cain_sip_header_subscription_state_get_reason(const cain_sip_header_subscription_state_t* subscription_state);
+CAINSIP_EXPORT int cain_sip_header_subscription_state_get_retry_after(const cain_sip_header_subscription_state_t* subscription_state);
 
-void cain_sip_header_subscription_state_set_state(cain_sip_header_subscription_state_t* subscription_state,const char* state);
-void cain_sip_header_subscription_state_set_expires(cain_sip_header_subscription_state_t* subscription_state,int expire);
-void cain_sip_header_subscription_state_set_reason(cain_sip_header_subscription_state_t* subscription_state, const char* reason);
-void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscription_state_t* subscription_state, int retry_after );
+CAINSIP_EXPORT void cain_sip_header_subscription_state_set_state(cain_sip_header_subscription_state_t* subscription_state,const char* state);
+CAINSIP_EXPORT void cain_sip_header_subscription_state_set_expires(cain_sip_header_subscription_state_t* subscription_state,int expire);
+CAINSIP_EXPORT void cain_sip_header_subscription_state_set_reason(cain_sip_header_subscription_state_t* subscription_state, const char* reason);
+CAINSIP_EXPORT void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscription_state_t* subscription_state, int retry_after );
 
 
 #define CAIN_SIP_HEADER_SUBSCRIPTION_STATE(t) CAIN_SIP_CAST(t,cain_sip_header_subscription_state_t)
@@ -518,7 +518,7 @@ void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscrip
  *
  ******************************/
  typedef struct _cain_sip_header_refer_to cain_sip_header_refer_to_t;
- cain_sip_header_refer_to_t* cain_sip_header_refer_to_new();
+ CAINSIP_EXPORT cain_sip_header_refer_to_t* cain_sip_header_refer_to_new();
  CAINSIP_EXPORT cain_sip_header_refer_to_t* cain_sip_header_refer_to_parse(const char* refer_to) ;
  CAINSIP_EXPORT cain_sip_header_refer_to_t* cain_sip_header_refer_to_create(const cain_sip_header_address_t *address);
 #define CAIN_SIP_HEADER_REFER_TO(t) CAIN_SIP_CAST(t,cain_sip_header_refer_to_t)
@@ -529,7 +529,7 @@ void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscrip
   *
   ******************************/
   typedef struct _cain_sip_header_referred_by cain_sip_header_referred_by_t;
-  cain_sip_header_referred_by_t* cain_sip_header_referred_by_new();
+  CAINSIP_EXPORT cain_sip_header_referred_by_t* cain_sip_header_referred_by_new();
   CAINSIP_EXPORT cain_sip_header_referred_by_t* cain_sip_header_referred_by_parse(const char* referred_by) ;
   CAINSIP_EXPORT cain_sip_header_referred_by_t* cain_sip_header_referred_by_create(const cain_sip_header_address_t *address);
  #define CAIN_SIP_HEADER_REFERRED_BY(t) CAIN_SIP_CAST(t,cain_sip_header_referred_by_t)
@@ -540,7 +540,7 @@ void cain_sip_header_subscription_state_set_retry_after(cain_sip_header_subscrip
    *
    ******************************/
 typedef struct _cain_sip_header_replaces cain_sip_header_replaces_t;
-cain_sip_header_replaces_t* cain_sip_header_replaces_new();
+CAINSIP_EXPORT cain_sip_header_replaces_t* cain_sip_header_replaces_new();
 CAINSIP_EXPORT cain_sip_header_replaces_t* cain_sip_header_replaces_parse(const char* replaces) ;
 
 CAINSIP_EXPORT cain_sip_header_replaces_t* cain_sip_header_replaces_create(const char* call_id,const char* from_tag,const char* to_tag);
