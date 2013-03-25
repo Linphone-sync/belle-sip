@@ -77,7 +77,7 @@ static void schedule_timer(cain_sip_refresher_t* refresher) {
 			cain_sip_main_loop_remove_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
 			cain_sip_object_unref(refresher->timer);
 		}
-		refresher->timer=cain_sip_timeout_source_new(timer_cb,refresher,refresher->expires*1000);
+		refresher->timer=cain_sip_timeout_source_new(timer_cb,refresher,refresher->expires*900);
 		cain_sip_object_set_name((cain_sip_object_t*)refresher->timer,"Refresher timeout");
 		cain_sip_main_loop_add_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
 	}
