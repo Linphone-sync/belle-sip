@@ -76,6 +76,9 @@ void cain_sip_listening_point_clean_channels(cain_sip_listening_point_t *lp){
 	lp->channels=cain_sip_list_free_with_data(lp->channels,(void (*)(void*))cain_sip_object_unref);
 }
 
+int cain_sip_listening_point_get_channel_count(const cain_sip_listening_point_t *lp){
+	return cain_sip_list_size(lp->channels);
+}
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_listening_point_t);
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_listening_point_t)={

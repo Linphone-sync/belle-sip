@@ -74,6 +74,7 @@ cain_sip_stack_t * cain_sip_stack_new(const char *properties){
 	stack->timer_config.T4=5000;
 	stack->transport_timeout=30000;
 	stack->dns_timeout=15000;
+	stack->inactive_transport_timeout=3600; /*one hour*/
 	return stack;
 }
 
@@ -165,3 +166,10 @@ const char* cain_sip_version_to_string() {
 	return PACKAGE_VERSION;
 }
 
+int cain_sip_stack_get_inactive_transport_timeout(const cain_sip_stack_t *stack){
+	return stack->inactive_transport_timeout;
+}
+
+void cain_sip_stack_set_inactive_transport_timeout(cain_sip_stack_t *stack, int seconds){
+	stack->inactive_transport_timeout=seconds;
+}

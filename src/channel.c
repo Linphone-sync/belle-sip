@@ -58,7 +58,11 @@ static void cain_sip_channel_destroy(cain_sip_channel_t *obj){
 	if (obj->local_ip) cain_sip_free(obj->local_ip);
 	obj->listeners=for_each_weak_unref_free(obj->listeners,(cain_sip_object_destroy_notify_t)cain_sip_channel_remove_listener,obj);
 	if (obj->resolver_id) cain_sip_resolve_cancel(cain_sip_stack_get_main_loop(obj->stack),obj->resolver_id);
-	cain_sip_message("channel [%p] destroyed",obj);
+	if (obj->inactivity_timer){
+		cain_sip_main_loop_remove_source(obj->stack->ml,obj->inactivity_timer);
+		cain_sip_object_unref(obj->inactivity_timer);
+	}
+	cain_sip_message("Channel [%p] destroyed",obj);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_channel_t);
@@ -72,6 +76,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_channel_t)=
 		NULL, /*marshall*/
 	}
 };
+
 static void fix_incoming_via(cain_sip_request_t *msg, const struct addrinfo* origin){
 	char received[NI_MAXHOST];
 	char rport[NI_MAXSERV];
@@ -96,6 +101,7 @@ static void fix_incoming_via(cain_sip_request_t *msg, const struct addrinfo* ori
 		}
 	}
 }
+
 static int get_message_start_pos(char *buff, size_t bufflen) {
 	/*FIXME still to optimize an better tested, specially REQUEST PATH and error path*/
 	int i;
@@ -126,6 +132,7 @@ static void cain_sip_channel_input_stream_reset(cain_sip_channel_input_stream_t*
 	input_stream->state=WAITING_MESSAGE_START;
 	input_stream->msg=NULL;
 }
+
 static size_t cain_sip_channel_input_stream_get_buff_length(cain_sip_channel_input_stream_t* input_stream) {
 	return MAX_CHANNEL_BUFF_SIZE - (input_stream->write_ptr-input_stream->buff);
 }
@@ -155,8 +162,6 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 		num=-1; /*to trigger an error*/
 	}
 	if (num>0){
-
-
 		if (obj->input_stream.state == WAITING_MESSAGE_START) {
 			/*search for request*/
 			if ((offset=get_message_start_pos(obj->input_stream.read_ptr,num)) >=0 ) {
@@ -247,6 +252,30 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	return CAIN_SIP_CONTINUE;
 }
 
+static int channel_inactive_timeout(void *data, unsigned int event){
+	cain_sip_channel_t *obj=(cain_sip_channel_t *)data;
+	channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
+	cain_sip_channel_close(obj);
+	return CAIN_SIP_STOP;
+}
+
+static void update_inactivity_timer(cain_sip_channel_t *obj){
+	int inactive_timeout=cain_sip_stack_get_inactive_transport_timeout(obj->stack)*1000;
+	if (inactive_timeout>0){
+		if (!obj->inactivity_timer ){
+			obj->inactivity_timer=cain_sip_main_loop_create_timeout(obj->stack->ml,channel_inactive_timeout,obj,inactive_timeout,"Channel inactivity timer");
+		}else{
+			/*restart the timer for new period*/
+			cain_sip_source_set_timeout(obj->inactivity_timer,inactive_timeout);
+		}
+	}else{
+		if (obj->inactivity_timer){
+			cain_sip_main_loop_remove_source(obj->stack->ml,obj->inactivity_timer);
+			cain_sip_object_unref(obj->inactivity_timer);
+			obj->inactivity_timer=NULL;
+		}
+	}
+}
 
 void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,const char *bindip,int localport,const char *peername, int peer_port){
 	obj->peer_name=cain_sip_strdup(peername);
@@ -257,6 +286,7 @@ void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,cons
 	obj->local_port=localport;
 	obj->recv_error=1;/*not set*/
 	cain_sip_channel_input_stream_reset(&obj->input_stream);
+	update_inactivity_timer(obj);
 }
 
 void cain_sip_channel_init_with_addr(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const struct sockaddr *peer_addr, socklen_t addrlen){
@@ -326,11 +356,15 @@ const char * cain_sip_channel_get_transport_name(const cain_sip_channel_t *obj){
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->transport;
 }
 
+
+
 int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
+	update_inactivity_timer(obj);
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->channel_send(obj,buf,buflen);
 }
 
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
+	update_inactivity_timer(obj);
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->channel_recv(obj,buf,buflen);
 }
 
@@ -541,7 +575,6 @@ int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *
 
 void cain_sip_channel_force_close(cain_sip_channel_t *obj){
 	obj->force_close=1;
-	/*first, every existing channel must be set to error*/
 	channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
 	cain_sip_channel_close(obj);
 }

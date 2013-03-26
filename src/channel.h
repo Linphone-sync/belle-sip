@@ -87,6 +87,7 @@ struct cain_sip_channel{
 	cain_sip_list_t *outgoing_messages;
 	cain_sip_list_t* incoming_messages;
 	cain_sip_channel_input_stream_t input_stream;
+	cain_sip_source_t *inactivity_timer;
 	unsigned int recv_error:1; /* used to simulate network error. if <=0, channel_recv will return this value*/
 	unsigned int force_close:1; /* used to simulate network error. if <=0, channel_recv will return this value*/
 };

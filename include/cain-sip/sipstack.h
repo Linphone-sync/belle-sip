@@ -76,6 +76,15 @@ CAINSIP_EXPORT void cain_sip_stack_set_resolver_tx_delay(cain_sip_stack_t *stack
 **/
 CAINSIP_EXPORT void cain_sip_stack_set_resolver_send_error(cain_sip_stack_t *stack, int send_error);
 
+/**
+ * Returns the time interval in seconds after which a connection must be closed when inactive.
+**/
+CAINSIP_EXPORT int cain_sip_stack_get_inactive_transport_timeout(const cain_sip_stack_t *stack);
+
+/**
+ * Sets the time interval in seconds after which a connection must be closed when inactive.
+**/
+CAINSIP_EXPORT void cain_sip_stack_set_inactive_transport_timeout(cain_sip_stack_t *stack, int seconds);
 
 void cain_sip_stack_push_pool(cain_sip_stack_t *stack);
 
