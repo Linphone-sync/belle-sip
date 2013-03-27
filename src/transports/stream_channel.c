@@ -179,6 +179,8 @@ int finalize_stream_connection(cain_sip_stream_channel_t *obj, struct sockaddr *
 #if TARGET_OS_IPHONE
 			stream_channel_enable_ios_background_mode(obj);
 #endif
+			if (obj->base.stack->dscp)
+				cain_sip_socket_set_dscp(sock,obj->base.lp->ai_family,obj->base.stack->dscp);
 			return 0;
 		}else{
 			cain_sip_error("Connection failed  for fd [%i]: cause [%s]",sock,cain_sip_get_socket_error_string_from_code(errnum));

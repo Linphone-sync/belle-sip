@@ -97,6 +97,11 @@ static cain_sip_socket_t create_server_socket(const char *addr, int port, int *f
 		return -1;
 	}
 	freeaddrinfo(res);
+	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+			(char*)&optval, sizeof (optval));
+	if (err == -1){
+		cain_sip_warning ("Fail to set SIP/UDP address reusable: %s.", cain_sip_get_socket_error_string());
+	}
 	err=listen(sock,64);
 	if (err==-1){
 		cain_sip_error("TCP listen() failed for %s port %i: %s",addr,port,cain_sip_get_socket_error_string());
@@ -109,6 +114,8 @@ void cain_sip_stream_listening_point_setup_server_socket(cain_sip_stream_listeni
 	obj->server_sock=create_server_socket(cain_sip_uri_get_host(obj->base.listening_uri),
 		cain_sip_uri_get_port(obj->base.listening_uri),&obj->base.ai_family);
 	if (obj->server_sock==(cain_sip_socket_t)-1) return;
+	if (obj->base.stack->dscp)
+		cain_sip_socket_set_dscp(obj->server_sock,obj->base.ai_family,obj->base.stack->dscp);
 	obj->source=cain_sip_socket_source_new(on_new_connection_cb,obj,obj->server_sock,CAIN_SIP_EVENT_READ,-1);
 	cain_sip_main_loop_add_source(obj->base.stack->ml,obj->source);
 }

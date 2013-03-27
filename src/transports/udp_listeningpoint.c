@@ -108,7 +108,8 @@ static int cain_sip_udp_listening_point_init_socket(cain_sip_udp_listening_point
 	if (lp->sock==(cain_sip_socket_t)-1){
 		return -1;
 	}
-	
+	if (lp->base.stack->dscp)
+		cain_sip_socket_set_dscp(lp->sock,lp->base.ai_family,lp->base.stack->dscp);
 	lp->source=cain_sip_socket_source_new((cain_sip_source_func_t)on_udp_data,lp,lp->sock,CAIN_SIP_EVENT_READ,-1);
 	cain_sip_main_loop_add_source(((cain_sip_listening_point_t*)lp)->stack->ml,lp->source);
 	return 0;

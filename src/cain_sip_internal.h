@@ -478,6 +478,7 @@ struct cain_sip_stack{
 	int send_error; /* used to simulate network error. if <0, channel_send will return this value*/
 	int resolver_tx_delay; /*used to simulate network transmission delay, for tests*/
 	int resolver_send_error;	/* used to simulate network error*/
+	int dscp;
 };
 
 cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char *cname, const char* host,int port);

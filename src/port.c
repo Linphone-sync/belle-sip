@@ -53,6 +53,11 @@ int cain_sip_socket_set_nonblocking (cain_sip_socket_t sock)
 	return ioctlsocket(sock, FIONBIO , &nonBlock);
 }
 
+int cain_sip_socket_set_dscp(cain_sip_socket_t sock, int ai_family, int dscp){
+	cain_sip_warning("cain_sip_socket_set_dscp(): not implemented.");
+	return -1;
+}
+
 const char *cain_sip_get_socket_error_string(){
 	return cain_sip_get_socket_error_string_from_code(WSAGetLastError());
 }
@@ -114,6 +119,36 @@ void cain_sip_uninit_sockets(){
 
 int cain_sip_socket_set_nonblocking(cain_sip_socket_t sock){
 	return fcntl (sock, F_SETFL, fcntl(sock,F_GETFL) | O_NONBLOCK);
+}
+
+int cain_sip_socket_set_dscp(cain_sip_socket_t sock, int ai_family, int dscp){
+	int tos;
+	int proto;
+	int value_type;
+	int retval;
+	
+	tos = (dscp << 2) & 0xFC;
+	switch (ai_family) {
+		case AF_INET:
+			proto=IPPROTO_IP;
+			value_type=IP_TOS;
+		break;
+		case AF_INET6:
+			proto=IPPROTO_IPV6;
+#ifdef IPV6_TCLASS /*seems not defined by my libc*/
+			value_type=IPV6_TCLASS;
+#else
+			value_type=IP_TOS;
+#endif
+		break;
+		default:
+			cain_sip_error("Cannot set DSCP because socket family is unspecified.");
+			return -1;
+	}
+	retval = setsockopt(sock, proto, value_type, (const char*)&tos, sizeof(tos));
+	if (retval==-1)
+		cain_sip_error("Fail to set DSCP value on socket: %s",cain_sip_get_socket_error_string());
+	return retval;
 }
 
 #endif

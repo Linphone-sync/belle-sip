@@ -183,3 +183,12 @@ int cain_sip_stack_get_inactive_transport_timeout(const cain_sip_stack_t *stack)
 void cain_sip_stack_set_inactive_transport_timeout(cain_sip_stack_t *stack, int seconds){
 	stack->inactive_transport_timeout=seconds;
 }
+
+void cain_sip_stack_set_default_dscp(cain_sip_stack_t *stack, int dscp){
+	stack->dscp=dscp;
+}
+
+int cain_sip_stack_get_default_dscp(cain_sip_stack_t *stack){
+	return stack->dscp;
+}
+

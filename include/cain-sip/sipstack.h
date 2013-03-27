@@ -86,9 +86,20 @@ CAINSIP_EXPORT int cain_sip_stack_get_inactive_transport_timeout(const cain_sip_
 **/
 CAINSIP_EXPORT void cain_sip_stack_set_inactive_transport_timeout(cain_sip_stack_t *stack, int seconds);
 
-void cain_sip_stack_push_pool(cain_sip_stack_t *stack);
 
-void cain_sip_stack_pop_pool(cain_sip_stack_t *stack);
+/**
+ * Set the default dscp value to be used for all SIP sockets created and used in the stack.
+**/
+CAINSIP_EXPORT void cain_sip_stack_set_default_dscp(cain_sip_stack_t *stack, int dscp);
+
+/**
+ * Get the default dscp value to be used for all SIP sockets created and used in the stack.
+**/
+CAINSIP_EXPORT int cain_sip_stack_get_default_dscp(cain_sip_stack_t *stack);
+
+CAINSIP_EXPORT void cain_sip_stack_push_pool(cain_sip_stack_t *stack);
+
+CAINSIP_EXPORT void cain_sip_stack_pop_pool(cain_sip_stack_t *stack);
 
 CAIN_SIP_END_DECLS
 

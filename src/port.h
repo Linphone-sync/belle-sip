@@ -70,6 +70,7 @@ typedef unsigned char uint8_t;
 CAINSIP_INTERNAL_EXPORT int cain_sip_init_sockets(void);
 CAINSIP_INTERNAL_EXPORT void cain_sip_uninit_sockets(void);
 int cain_sip_socket_set_nonblocking (cain_sip_socket_t sock);
+int cain_sip_socket_set_dscp(cain_sip_socket_t sock, int ai_family, int dscp);
  
 #if defined(WIN32)
 
