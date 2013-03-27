@@ -20,7 +20,13 @@
 #include "cain-sip/mainloop.h"
 #include "stream_channel.h"
 
-
+static void set_tcp_nodelay(cain_sip_socket_t sock){
+	int tmp=1;
+	int err=setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,(char*)&tmp,sizeof(tmp));
+	if (err == -1){
+		cain_sip_warning ("Fail to set TCP_NODELAY: %s.", cain_sip_get_socket_error_string());
+	}
+}
 
 /*************TCP********/
 
@@ -181,6 +187,7 @@ int finalize_stream_connection(cain_sip_stream_channel_t *obj, struct sockaddr *
 #endif
 			if (obj->base.stack->dscp)
 				cain_sip_socket_set_dscp(sock,obj->base.lp->ai_family,obj->base.stack->dscp);
+			set_tcp_nodelay(sock);
 			return 0;
 		}else{
 			cain_sip_error("Connection failed  for fd [%i]: cause [%s]",sock,cain_sip_get_socket_error_string_from_code(errnum));
@@ -232,6 +239,16 @@ cain_sip_channel_t * cain_sip_stream_channel_new_child(cain_sip_stack_t *stack, 
 	struct sockaddr_storage localaddr;
 	socklen_t local_len=sizeof(localaddr);
 	cain_sip_stream_channel_t *obj;
+	int err;
+	int optval=1;
+	
+	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+			(char*)&optval, sizeof (optval));
+	if (err == -1){
+		cain_sip_warning ("Fail to set SIP/TCP address reusable: %s.", cain_sip_get_socket_error_string());
+	}
+	
+	set_tcp_nodelay(sock);
 	
 	if (getsockname(sock,(struct sockaddr*)&localaddr,&local_len)==-1){
 		cain_sip_error("getsockname() failed: %s",cain_sip_get_socket_error_string());

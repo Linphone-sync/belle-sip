@@ -86,7 +86,7 @@ static cain_sip_socket_t create_server_socket(const char *addr, int port, int *f
 	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
 			(char*)&optval, sizeof (optval));
 	if (err == -1){
-		cain_sip_warning ("Fail to set SIP/UDP address reusable: %s.", cain_sip_get_socket_error_string());
+		cain_sip_warning ("Fail to set SIP/TCP address reusable: %s.", cain_sip_get_socket_error_string());
 	}
 	
 	err=bind(sock,res->ai_addr,res->ai_addrlen);
@@ -97,15 +97,12 @@ static cain_sip_socket_t create_server_socket(const char *addr, int port, int *f
 		return -1;
 	}
 	freeaddrinfo(res);
-	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
-			(char*)&optval, sizeof (optval));
-	if (err == -1){
-		cain_sip_warning ("Fail to set SIP/UDP address reusable: %s.", cain_sip_get_socket_error_string());
-	}
+	
 	err=listen(sock,64);
 	if (err==-1){
 		cain_sip_error("TCP listen() failed for %s port %i: %s",addr,port,cain_sip_get_socket_error_string());
 		close_socket(sock);
+		return -1;
 	}
 	return sock;
 }

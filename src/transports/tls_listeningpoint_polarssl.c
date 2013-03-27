@@ -38,7 +38,7 @@ CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_tls_listening_point_t);
 CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_tls_listening_point_t)={
 	{
 		{
-			CAIN_SIP_VPTR_INIT(cain_sip_tls_listening_point_t, cain_sip_listening_point_t,TRUE),
+			CAIN_SIP_VPTR_INIT(cain_sip_tls_listening_point_t, cain_sip_stream_listening_point_t,TRUE),
 			(cain_sip_object_destroy_t)cain_sip_tls_listening_point_uninit,
 			NULL,
 			NULL
