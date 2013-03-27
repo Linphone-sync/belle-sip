@@ -87,8 +87,6 @@ cain_sip_listening_point_t * cain_sip_stream_listening_point_new(cain_sip_stack_
 
 /*tls*/
 
-typedef struct cain_sip_tls_listening_point cain_sip_tls_listening_point_t;
-
 struct cain_sip_tls_listening_point{
 	cain_sip_stream_listening_point_t base;
 #ifdef HAVE_OPENSSL
