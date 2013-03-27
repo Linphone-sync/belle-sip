@@ -78,6 +78,7 @@ struct cain_sip_channel{
 	cain_sip_stack_t *stack;
 	cain_sip_channel_state_t state;
 	cain_sip_list_t *listeners;
+	char *peer_cname;
 	char *peer_name;
 	int peer_port;
 	char *local_ip;
@@ -99,7 +100,7 @@ void cain_sip_channel_add_listener(cain_sip_channel_t *chan, cain_sip_channel_li
 
 void cain_sip_channel_remove_listener(cain_sip_channel_t *obj, cain_sip_channel_listener_t *l);
 
-int cain_sip_channel_matches(const cain_sip_channel_t *obj, const char *peername, int peerport, const struct addrinfo *addr);
+int cain_sip_channel_matches(const cain_sip_channel_t *obj, const cain_sip_hop_t *hop, const struct addrinfo *addr);
 
 void cain_sip_channel_resolve(cain_sip_channel_t *obj);
 
@@ -117,7 +118,7 @@ int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t bufle
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen);
 /*only used by channels implementation*/
 void cain_sip_channel_set_ready(cain_sip_channel_t *obj, const struct sockaddr *addr, socklen_t slen);
-void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const char *bindip,int localport,const char *peername, int peer_port);
+void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const char *bindip,int localport, const char *peer_cname, const char *peername, int peer_port);
 void cain_sip_channel_init_with_addr(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const struct sockaddr *peer_addr, socklen_t addrlen);
 void cain_sip_channel_set_socket(cain_sip_channel_t *obj, cain_sip_socket_t sock, cain_sip_source_func_t datafunc);
 /*end of channel implementations*/

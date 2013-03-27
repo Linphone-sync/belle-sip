@@ -63,13 +63,13 @@ int cain_sip_auth_helper_compute_ha1(const char* userid,const char* realm,const 
 		 return -1;
 	}
 
-	md5_init(&state);
-	md5_append(&state,(const md5_byte_t *)userid,strlen(userid));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state,(const md5_byte_t *)realm,strlen(realm));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state,(const md5_byte_t *)password,strlen(password));
-	md5_finish(&state,out);
+	cain_sip_md5_init(&state);
+	cain_sip_md5_append(&state,(const md5_byte_t *)userid,strlen(userid));
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state,(const md5_byte_t *)realm,strlen(realm));
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state,(const md5_byte_t *)password,strlen(password));
+	cain_sip_md5_finish(&state,out);
 	for (di = 0; di < 16; ++di)
 			    sprintf(ha1 + di * 2, "%02x", out[di]);
 	ha1[32]='\0';
@@ -82,11 +82,11 @@ int cain_sip_auth_helper_compute_ha2(const char* method,const char* uri, char ha
 	int di;
 	ha2[32]='\0';
 	/*HA2=MD5(method:uri)*/
-	md5_init(&state);
-	md5_append(&state,(const md5_byte_t *)method,strlen(method));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state,(const md5_byte_t *)uri,strlen(uri));
-	md5_finish(&state,out);
+	cain_sip_md5_init(&state);
+	cain_sip_md5_append(&state,(const md5_byte_t *)method,strlen(method));
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state,(const md5_byte_t *)uri,strlen(uri));
+	cain_sip_md5_finish(&state,out);
 	for (di = 0; di < 16; ++di)
 				    sprintf(ha2 + di * 2, "%02x", out[di]);
 	return 0;
@@ -97,15 +97,15 @@ int cain_sip_auth_helper_compute_response(const char* ha1,const char* nonce, con
 	int di;
 	response[32]='\0';
 
-	md5_init(&state);
-	md5_append(&state,(const md5_byte_t *)ha1,strlen(ha1));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state
+	cain_sip_md5_init(&state);
+	cain_sip_md5_append(&state,(const md5_byte_t *)ha1,strlen(ha1));
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state
 			,(const md5_byte_t *)nonce
 			,strlen(nonce));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state,(const md5_byte_t *)ha2,strlen(ha2));
-		md5_finish(&state,out);
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state,(const md5_byte_t *)ha2,strlen(ha2));
+		cain_sip_md5_finish(&state,out);
 		/*copy values*/
 		for (di = 0; di < 16; ++di)
 			    sprintf(response + di * 2, "%02x", out[di]);
@@ -128,28 +128,28 @@ int cain_sip_auth_helper_compute_response_qop_auth(const char* ha1
 	snprintf(nounce_count_as_string,sizeof(nounce_count_as_string),"%08x",nonce_count);
 	/*response=MD5(HA1:nonce:nonce_count:cnonce:qop:HA2)*/
 
-	md5_init(&state);
-	md5_append(&state,(const md5_byte_t *)ha1,strlen(ha1));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state
+	cain_sip_md5_init(&state);
+	cain_sip_md5_append(&state,(const md5_byte_t *)ha1,strlen(ha1));
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state
 			,(const md5_byte_t *)nonce
 			,strlen(nonce));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state
 				,(const md5_byte_t *)nounce_count_as_string
 				,strlen(nounce_count_as_string));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state
 				,(const md5_byte_t *)cnonce
 				,strlen(cnonce));
-	md5_append(&state,(const md5_byte_t *)":",1);
-	md5_append(&state
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state
 				,(const md5_byte_t *)qop
 				,strlen(qop));
-	md5_append(&state,(const md5_byte_t *)":",1);
+	cain_sip_md5_append(&state,(const md5_byte_t *)":",1);
 
-	md5_append(&state,(const md5_byte_t *)ha2,strlen(ha2));
-	md5_finish(&state,out);
+	cain_sip_md5_append(&state,(const md5_byte_t *)ha2,strlen(ha2));
+	cain_sip_md5_finish(&state,out);
 	/*copy values*/
 	for (di = 0; di < 16; ++di)
 		    sprintf(response + di * 2, "%02x", out[di]);

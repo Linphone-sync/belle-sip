@@ -33,13 +33,13 @@ static void cain_sip_udp_listening_point_uninit(cain_sip_udp_listening_point_t *
 	}
 }
 
-static cain_sip_channel_t *udp_create_channel(cain_sip_listening_point_t *lp, const char *dest_ip, int port){
+static cain_sip_channel_t *udp_create_channel(cain_sip_listening_point_t *lp, const cain_sip_hop_t *hop){
 	cain_sip_channel_t *chan=cain_sip_channel_new_udp(lp->stack
 														,((cain_sip_udp_listening_point_t*)lp)->sock
 														,cain_sip_uri_get_host(lp->listening_uri)
 														,cain_sip_uri_get_port(lp->listening_uri)
-														,dest_ip
-														,port);
+														,hop->host
+														,hop->port);
 	return chan;
 }
 
@@ -145,7 +145,7 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 			ai.ai_family=((struct sockaddr*)&addr)->sa_family;
 			ai.ai_addr=(struct sockaddr*)&addr;
 			ai.ai_addrlen=addrlen;
-			chan=_cain_sip_listening_point_get_channel((cain_sip_listening_point_t*)lp,NULL,0,&ai);
+			chan=_cain_sip_listening_point_get_channel((cain_sip_listening_point_t*)lp,NULL,&ai);
 			if (chan==NULL){
 				/*TODO: should rather create the channel with real local ip and port and not just 0.0.0.0"*/
 				chan=cain_sip_channel_new_udp_with_addr(lp->base.stack

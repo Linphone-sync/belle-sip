@@ -39,7 +39,9 @@ struct cain_sip_stream_channel{
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_stream_channel_t,cain_sip_channel_t)
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
-cain_sip_channel_t * cain_sip_stream_channel_new_client(cain_sip_stack_t *stack, const char *bindip, int localport,const char *name, int port);
+void cain_sip_stream_channel_init_client(cain_sip_stream_channel_t *obj, cain_sip_stack_t *stack, const char *bindip, int localport,const char *peer_cname, const char *dest, int port);
+
+cain_sip_channel_t * cain_sip_stream_channel_new_client(cain_sip_stack_t *stack, const char *bindip, int localport, const char *peer_cname, const char *name, int port);
 cain_sip_channel_t * cain_sip_stream_channel_new_child(cain_sip_stack_t *stack, cain_sip_socket_t sock, struct sockaddr *remote_addr, socklen_t slen);
 
 void stream_channel_close(cain_sip_stream_channel_t *obj);

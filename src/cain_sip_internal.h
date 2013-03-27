@@ -457,6 +457,7 @@ void cain_sip_parameters_init(cain_sip_parameters_t *obj);
 
 struct cain_sip_hop{
 	cain_sip_object_t base;
+	char *cname;
 	char *host;
 	char *transport;
 	int port;
@@ -479,7 +480,7 @@ struct cain_sip_stack{
 	int resolver_send_error;	/* used to simulate network error*/
 };
 
-cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char* host,int port);
+cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char *cname, const char* host,int port);
 cain_sip_hop_t* cain_sip_hop_new_from_uri(const cain_sip_uri_t *uri);
 
 cain_sip_hop_t * cain_sip_stack_get_next_hop(cain_sip_stack_t *stack, cain_sip_request_t *req);
@@ -511,7 +512,7 @@ cain_sip_server_transaction_t * cain_sip_provider_find_matching_server_transacti
                                                                                    cain_sip_request_t *req);
 void cain_sip_provider_remove_server_transaction(cain_sip_provider_t *prov, cain_sip_server_transaction_t *t);
 void cain_sip_provider_set_transaction_terminated(cain_sip_provider_t *p, cain_sip_transaction_t *t);
-cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport);
+cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const cain_sip_hop_t *hop);
 void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
 void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog);
 void cain_sip_provider_release_channel(cain_sip_provider_t *p, cain_sip_channel_t *chan);

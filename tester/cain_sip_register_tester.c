@@ -118,6 +118,8 @@ int register_init(void) {
 	cain_sip_provider_add_listening_point(prov,lp);
 	lp=cain_sip_stack_create_listening_point(stack,"0.0.0.0",7061,"TLS");
 	if (lp) {
+		/* since test.linphone.org does not have proper certificates, don't verify anything*/
+		cain_sip_tls_listening_point_set_verify_exceptions(CAIN_SIP_TLS_LISTENING_POINT(lp),CAIN_SIP_TLS_LISTENING_POINT_BADCERT_ANY_REASON);
 		cain_sip_provider_add_listening_point(prov,lp);
 	}
 

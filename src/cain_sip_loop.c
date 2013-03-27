@@ -188,6 +188,8 @@ void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t fu
 	cain_sip_source_init(s,func,data,sock,events,timeout_value_ms);
 #endif
 	s->sock=sock;
+	if (sock!=(cain_sip_socket_t)-1)
+		cain_sip_socket_set_nonblocking(sock);
 }
 
 void cain_sip_fd_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_fd_t fd, unsigned int events, unsigned int timeout_value_ms){

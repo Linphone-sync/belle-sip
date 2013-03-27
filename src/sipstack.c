@@ -20,19 +20,23 @@
 #include "listeningpoint_internal.h"
 
 
-cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char* host,int port) {
+cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char *cname, const char* host,int port) {
 	cain_sip_hop_t* hop = cain_sip_object_new(cain_sip_hop_t);
 	if (transport) hop->transport=cain_sip_strdup(transport);
 	if (host) hop->host=cain_sip_strdup(host);
+	if (cname) hop->cname=cain_sip_strdup(cname);
 	hop->port=port;
 	return hop;
 }
 
 cain_sip_hop_t* cain_sip_hop_new_from_uri(const cain_sip_uri_t *uri){
 	const char *host;
+	const char *cname=NULL;
 	host=cain_sip_uri_get_maddr_param(uri);
 	if (!host) host=cain_sip_uri_get_host(uri);
+	else cname=cain_sip_uri_get_host(uri);
 	return cain_sip_hop_new(cain_sip_uri_get_transport_param(uri),
+				cname,
 				host,
 				cain_sip_uri_get_listening_port(uri));
 }
@@ -41,6 +45,10 @@ static void cain_sip_hop_destroy(cain_sip_hop_t *hop){
 	if (hop->host) {
 		cain_sip_free(hop->host);
 		hop->host=NULL;
+	}
+	if (hop->cname){
+		cain_sip_free(hop->cname);
+		hop->cname=NULL;
 	}
 	if (hop->transport){
 		cain_sip_free(hop->transport);
@@ -51,6 +59,8 @@ static void cain_sip_hop_destroy(cain_sip_hop_t *hop){
 static void cain_sip_hop_clone(cain_sip_hop_t *hop, const cain_sip_hop_t *orig){
 	if (orig->host)
 		hop->host=cain_sip_strdup(orig->host);
+	if (orig->cname)
+		hop->cname=cain_sip_strdup(orig->cname);
 	if (orig->transport)
 		hop->transport=cain_sip_strdup(orig->transport);
 	

@@ -59,6 +59,18 @@ CAINSIP_EXPORT void cain_sip_listening_point_clean_channels(cain_sip_listening_p
 CAINSIP_EXPORT int cain_sip_listening_point_get_channel_count(const cain_sip_listening_point_t *lp);
 CAINSIP_EXPORT int cain_sip_listening_point_get_well_known_port(const char *transport);
 
+int cain_sip_tls_listening_point_set_root_ca(cain_sip_tls_listening_point_t *s, const char *path);
+
+#define CAIN_SIP_TLS_LISTENING_POINT_BADCERT_CN_MISMATCH 	(1)
+#define CAIN_SIP_TLS_LISTENING_POINT_BADCERT_ANY_REASON 	(0xff)
+int cain_sip_tls_listening_point_set_verify_exceptions(cain_sip_tls_listening_point_t *s, int flags);
+
+
+
+#define CAIN_SIP_UDP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_udp_listening_point_t)
+#define CAIN_SIP_STREAM_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_stream_listening_point_t)
+#define CAIN_SIP_TLS_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_tls_listening_point_t)
+
 CAIN_SIP_END_DECLS
 
 

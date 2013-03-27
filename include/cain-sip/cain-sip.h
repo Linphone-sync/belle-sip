@@ -126,6 +126,7 @@ CAIN_SIP_END_DECLS
 /*these types are declared here because they are widely used in many headers included after*/
 
 typedef struct cain_sip_listening_point cain_sip_listening_point_t;
+typedef struct cain_sip_tls_listening_point cain_sip_tls_listening_point_t;
 typedef struct cain_sip_stack cain_sip_stack_t;
 typedef struct cain_sip_provider cain_sip_provider_t;
 typedef struct cain_sip_dialog cain_sip_dialog_t;

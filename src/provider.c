@@ -170,31 +170,31 @@ static void compute_hash_from_invariants(cain_sip_message_t *msg, char *branchid
 		requri=cain_sip_request_get_uri(CAIN_SIP_REQUEST(msg));
 	}
 	
-	md5_init(&ctx);
+	cain_sip_md5_init(&ctx);
 	if (initial)
-		md5_append(&ctx,(uint8_t*)initial,strlen(initial));
+		cain_sip_md5_append(&ctx,(uint8_t*)initial,strlen(initial));
 	if (requri){
 		cain_sip_object_marshal((cain_sip_object_t*)requri,tmp,0,sizeof(tmp)-1);
-		md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+		cain_sip_md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
 	}
 	if (from_tag)
-		md5_append(&ctx,(uint8_t*)from_tag,strlen(from_tag));
+		cain_sip_md5_append(&ctx,(uint8_t*)from_tag,strlen(from_tag));
 	if (to_tag)
-		md5_append(&ctx,(uint8_t*)to_tag,strlen(to_tag));
-	md5_append(&ctx,(uint8_t*)callid,strlen(callid));
-	md5_append(&ctx,(uint8_t*)&cseq,sizeof(cseq));
+		cain_sip_md5_append(&ctx,(uint8_t*)to_tag,strlen(to_tag));
+	cain_sip_md5_append(&ctx,(uint8_t*)callid,strlen(callid));
+	cain_sip_md5_append(&ctx,(uint8_t*)&cseq,sizeof(cseq));
 	if (is_request){
 		if (prev_via){
 			cain_sip_object_marshal((cain_sip_object_t*)prev_via,tmp,0,sizeof(tmp)-1);
-			md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+			cain_sip_md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
 		}
 	}else{
 		if (via){
 			cain_sip_object_marshal((cain_sip_object_t*)via,tmp,0,sizeof(tmp)-1);
-			md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
+			cain_sip_md5_append(&ctx,(uint8_t*)tmp,strlen(tmp));
 		}
 	}
-	md5_finish(&ctx,digest);
+	cain_sip_md5_finish(&ctx,digest);
 	cain_sip_octets_to_text(digest,sizeof(digest),branchid,branchid_size);
 }
 
@@ -285,7 +285,7 @@ int cain_sip_provider_add_listening_point(cain_sip_provider_t *p, cain_sip_liste
 		cain_sip_error("Cannot add NULL lp to provider [%p]",p);
 		return -1;
 	}
-	cain_sip_listener_set_channel_listener(lp,CAIN_SIP_CHANNEL_LISTENER(p));
+	cain_sip_listening_point_set_channel_listener(lp,CAIN_SIP_CHANNEL_LISTENER(p));
 	p->lps=cain_sip_list_append(p->lps,cain_sip_object_ref(lp));
 	return 0;
 }
@@ -458,24 +458,25 @@ cain_sip_stack_t *cain_sip_provider_get_sip_stack(cain_sip_provider_t *p){
 	return p->stack;
 }
 
-cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const char *name, int port, const char *transport){
+cain_sip_channel_t * cain_sip_provider_get_channel(cain_sip_provider_t *p, const cain_sip_hop_t *hop){
 	cain_sip_list_t *l;
 	cain_sip_listening_point_t *candidate=NULL,*lp;
 	cain_sip_channel_t *chan;
+	const char *transport=hop->transport;
 
 	if (transport==NULL) transport="UDP";
 	
 	for(l=p->lps;l!=NULL;l=l->next){
 		lp=(cain_sip_listening_point_t*)l->data;
 		if (strcasecmp(cain_sip_listening_point_get_transport(lp),transport)==0){
-			chan=cain_sip_listening_point_get_channel(lp,name,port);
+			chan=cain_sip_listening_point_get_channel(lp,hop);
 			if (chan) return chan;
 			candidate=lp;
 		}
 	}
 	if (candidate){
-		chan=cain_sip_listening_point_create_channel(candidate,name,port);
-		if (!chan) cain_sip_error("Could not create channel to %s:%s:%i",transport,name,port);
+		chan=cain_sip_listening_point_create_channel(candidate,hop);
+		if (!chan) cain_sip_error("Could not create channel to %s://%s:%i",transport,hop->host,hop->port);
 		return chan;
 	}
 	cain_sip_error("No listening point matching for transport %s",transport);
@@ -500,7 +501,7 @@ void cain_sip_provider_send_request(cain_sip_provider_t *p, cain_sip_request_t *
 	cain_sip_hop_t* hop;
 	cain_sip_channel_t *chan;
 	hop=cain_sip_stack_get_next_hop(p->stack,req);
-	chan=cain_sip_provider_get_channel(p,hop->host, hop->port, hop->transport);
+	chan=cain_sip_provider_get_channel(p,hop);
 	if (chan) {
 		cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(req));
 	}
@@ -517,7 +518,7 @@ void cain_sip_provider_send_response(cain_sip_provider_t *p, cain_sip_response_t
 		cain_sip_header_to_set_tag(to,token);
 	}
 	hop=cain_sip_response_get_return_hop(resp);
-	chan=cain_sip_provider_get_channel(p,hop->host, hop->port, hop->transport);
+	chan=cain_sip_provider_get_channel(p,hop);
 	if (chan) cain_sip_channel_queue_message(chan,CAIN_SIP_MESSAGE(resp));
 	cain_sip_object_unref(hop);
 }

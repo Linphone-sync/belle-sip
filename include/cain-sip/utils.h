@@ -133,6 +133,8 @@ CAINSIP_EXPORT void cain_sip_set_log_level(int level);
 
 CAINSIP_EXPORT char * cain_sip_random_token(char *ret, size_t size);
 
+unsigned char * cain_sip_random_bytes(unsigned char *ret, size_t size);
+
 char * cain_sip_octets_to_text(const unsigned char *hash, size_t hash_len, char *ret, size_t size);
 
 char * cain_sip_create_tag(char *ret, size_t size);

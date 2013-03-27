@@ -37,8 +37,11 @@ int stream_channel_send(cain_sip_stream_channel_t *obj, const void *buf, size_t 
 	int err;
 	err=send(sock,buf,buflen,0);
 	if (err==(cain_sip_socket_t)-1){
-		cain_sip_error("Could not send stream packet on channel [%p]: %s",obj,cain_sip_get_socket_error_string());
-		return -errno;
+		int errnum=get_socket_error();
+		if (errnum!=CAINSIP_EINPROGRESS && errnum!=CAINSIP_EWOULDBLOCK){
+			cain_sip_error("Could not send stream packet on channel [%p]: %s",obj,cain_sip_get_socket_error_string());
+		}
+		return -errnum;
 	}
 	return err;
 }
@@ -48,8 +51,11 @@ int stream_channel_recv(cain_sip_stream_channel_t *obj, void *buf, size_t buflen
 	int err;
 	err=recv(sock,buf,buflen,0);
 	if (err==(cain_sip_socket_t)-1){
-		cain_sip_error("Could not receive stream packet: %s",cain_sip_get_socket_error_string());
-		return -errno;
+		int errnum=get_socket_error();
+		if (errnum!=CAINSIP_EINPROGRESS && errnum!=CAINSIP_EWOULDBLOCK){
+			cain_sip_error("Could not receive stream packet: %s",cain_sip_get_socket_error_string());
+		}
+		return -errnum;
 	}
 	return err;
 }
@@ -209,11 +215,14 @@ static int stream_channel_process_data(cain_sip_stream_channel_t *obj,unsigned i
 	return CAIN_SIP_CONTINUE;
 }
 
-cain_sip_channel_t * cain_sip_stream_channel_new_client(cain_sip_stack_t *stack,const char *bindip, int localport, const char *dest, int port){
+void cain_sip_stream_channel_init_client(cain_sip_stream_channel_t *obj, cain_sip_stack_t *stack, const char *bindip, int localport, const char *peer_cname, const char *dest, int port){
+	cain_sip_channel_init((cain_sip_channel_t*)obj, stack
+					,bindip,localport,peer_cname,dest,port);
+}
+
+cain_sip_channel_t * cain_sip_stream_channel_new_client(cain_sip_stack_t *stack,const char *bindip, int localport, const char *peer_cname, const char *dest, int port){
 	cain_sip_stream_channel_t *obj=cain_sip_object_new(cain_sip_stream_channel_t);
-	cain_sip_channel_init((cain_sip_channel_t*)obj
-							,stack
-							,bindip,localport,dest,port);
+	cain_sip_stream_channel_init_client(obj,stack,bindip,localport,peer_cname,dest,port);
 	return (cain_sip_channel_t*)obj;
 }
 

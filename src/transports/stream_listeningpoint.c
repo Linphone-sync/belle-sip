@@ -20,13 +20,7 @@
 static int on_new_connection(void *userdata, unsigned int events);
 
 
-struct cain_sip_stream_listening_point{
-	cain_sip_listening_point_t base;
-	cain_sip_socket_t server_sock;
-	cain_sip_source_t *source;
-};
-
-static void destroy_server_socket(cain_sip_stream_listening_point_t *lp){
+void cain_sip_stream_listening_point_destroy_server_socket(cain_sip_stream_listening_point_t *lp){
 	if (lp->server_sock!=(cain_sip_socket_t)-1){
 		close_socket(lp->server_sock);
 		lp->server_sock=-1;
@@ -39,14 +33,14 @@ static void destroy_server_socket(cain_sip_stream_listening_point_t *lp){
 }
 
 static void cain_sip_stream_listening_point_uninit(cain_sip_stream_listening_point_t *lp){
-	destroy_server_socket(lp);
+	cain_sip_stream_listening_point_destroy_server_socket(lp);
 }
 
-static cain_sip_channel_t *stream_create_channel(cain_sip_listening_point_t *lp, const char *dest_ip, int port){
+static cain_sip_channel_t *stream_create_channel(cain_sip_listening_point_t *lp, const cain_sip_hop_t *hop){
 	cain_sip_channel_t *chan=cain_sip_stream_channel_new_client(lp->stack
 							,cain_sip_uri_get_host(lp->listening_uri)
 							,cain_sip_uri_get_port(lp->listening_uri)
-							,dest_ip,port);
+							,hop->cname,hop->host,hop->port);
 	return chan;
 }
 
@@ -111,11 +105,11 @@ static cain_sip_socket_t create_server_socket(const char *addr, int port, int *f
 	return sock;
 }
 
-static void setup_server_socket(cain_sip_stream_listening_point_t *obj){
+void cain_sip_stream_listening_point_setup_server_socket(cain_sip_stream_listening_point_t *obj, cain_sip_source_func_t on_new_connection_cb ){
 	obj->server_sock=create_server_socket(cain_sip_uri_get_host(obj->base.listening_uri),
 		cain_sip_uri_get_port(obj->base.listening_uri),&obj->base.ai_family);
 	if (obj->server_sock==(cain_sip_socket_t)-1) return;
-	obj->source=cain_sip_socket_source_new(on_new_connection,obj,obj->server_sock,CAIN_SIP_EVENT_READ,-1);
+	obj->source=cain_sip_socket_source_new(on_new_connection_cb,obj,obj->server_sock,CAIN_SIP_EVENT_READ,-1);
 	cain_sip_main_loop_add_source(obj->base.stack->ml,obj->source);
 }
 
@@ -129,8 +123,8 @@ static int on_new_connection(void *userdata, unsigned int events){
 	child=accept(lp->server_sock,(struct sockaddr*)&addr,&slen);
 	if (child==(cain_sip_socket_t)-1){
 		cain_sip_error("Listening point [%p] accept() failed on TCP server socket: %s",lp,cain_sip_get_socket_error_string());
-		destroy_server_socket(lp);
-		setup_server_socket(lp);
+		cain_sip_stream_listening_point_destroy_server_socket(lp);
+		cain_sip_stream_listening_point_setup_server_socket(lp,on_new_connection);
 		return CAIN_SIP_STOP;
 	}
 	cain_sip_message("New connection arriving !");
@@ -139,14 +133,14 @@ static int on_new_connection(void *userdata, unsigned int events){
 	return CAIN_SIP_CONTINUE;
 }
 
-void cain_sip_stream_listening_point_init(cain_sip_stream_listening_point_t *obj, cain_sip_stack_t *s, const char *ipaddress, int port){
+void cain_sip_stream_listening_point_init(cain_sip_stream_listening_point_t *obj, cain_sip_stack_t *s, const char *ipaddress, int port, cain_sip_source_func_t on_new_connection_cb ){
 	cain_sip_listening_point_init((cain_sip_listening_point_t*)obj,s,ipaddress,port);
-	setup_server_socket(obj);
+	cain_sip_stream_listening_point_setup_server_socket(obj, on_new_connection_cb);
 }
 
 cain_sip_listening_point_t * cain_sip_stream_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port){
 	cain_sip_stream_listening_point_t *lp=cain_sip_object_new(cain_sip_stream_listening_point_t);
-	cain_sip_stream_listening_point_init(lp,s,ipaddress,port);
+	cain_sip_stream_listening_point_init(lp,s,ipaddress,port,on_new_connection);
 	if (lp->server_sock==(cain_sip_socket_t)-1){
 		cain_sip_object_unref(lp);
 		return NULL;

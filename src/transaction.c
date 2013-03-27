@@ -161,7 +161,7 @@ void cain_sip_server_transaction_send_response(cain_sip_server_transaction_t *t,
 	cain_sip_object_ref(resp);
 	if (!base->last_response){
 		cain_sip_hop_t* hop=cain_sip_response_get_return_hop(resp);
-		base->channel=cain_sip_provider_get_channel(base->provider,hop->host, hop->port, hop->transport);
+		base->channel=cain_sip_provider_get_channel(base->provider,hop);
 		cain_sip_object_ref(base->channel);
 		cain_sip_object_unref(hop);
 	}
@@ -296,7 +296,7 @@ int cain_sip_client_transaction_send_request_to(cain_sip_client_transaction_t *t
 		/*next hop already preset, probably in case of CANCEL*/
 	}
 	cain_sip_provider_add_client_transaction(t->base.provider,t); /*add it in any case*/
-	chan=cain_sip_provider_get_channel(prov,t->next_hop->host, t->next_hop->port, t->next_hop->transport);
+	chan=cain_sip_provider_get_channel(prov,t->next_hop);
 	if (chan){
 		cain_sip_object_ref(chan);
 		cain_sip_channel_add_listener(chan,CAIN_SIP_CHANNEL_LISTENER(t));
