@@ -31,7 +31,7 @@ cain_sip_list_t * cain_sip_list_last_elem(const cain_sip_list_t *l);
 CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_free(cain_sip_list_t * elem);
 cain_sip_list_t * cain_sip_list_concat(cain_sip_list_t * first, cain_sip_list_t * second);
 cain_sip_list_t * cain_sip_list_remove(cain_sip_list_t * first, void *data);
-int cain_sip_list_size(const cain_sip_list_t * first);
+CAINSIP_EXPORT int cain_sip_list_size(const cain_sip_list_t * first);
 void cain_sip_list_for_each(const cain_sip_list_t * list, void (*func)(void *));
 CAINSIP_EXPORT void cain_sip_list_for_each2(const cain_sip_list_t * list, void (*func)(void *, void *), void *user_data);
 cain_sip_list_t * cain_sip_list_remove_link(cain_sip_list_t * list, cain_sip_list_t * elem);
