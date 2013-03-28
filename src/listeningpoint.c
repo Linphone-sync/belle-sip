@@ -20,12 +20,16 @@
 
 
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s, const char *address, int port){
+	char *tmp;
 	cain_sip_init_sockets();
 	lp->stack=s;
 	lp->listening_uri=cain_sip_uri_create(NULL,address);
 	cain_sip_object_ref(lp->listening_uri);
 	cain_sip_uri_set_port(lp->listening_uri,port);
 	cain_sip_uri_set_transport_param(lp->listening_uri,CAIN_SIP_OBJECT_VPTR(lp,cain_sip_listening_point_t)->transport);
+	tmp=cain_sip_object_to_string((cain_sip_object_t*)CAIN_SIP_LISTENING_POINT(lp)->listening_uri);
+	cain_sip_message("Creating listening point [%p] on [%s]",lp, tmp);
+	cain_sip_free(tmp);
 }
 
 static void cain_sip_listening_point_uninit(cain_sip_listening_point_t *lp){
