@@ -110,7 +110,10 @@ void cain_sip_sleep(unsigned int ms) {
 
 #else
 
+#include <signal.h>
+
 int cain_sip_init_sockets(){
+	signal(SIGPIPE,SIG_IGN);
 	return 0;
 }
 
