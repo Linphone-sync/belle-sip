@@ -41,6 +41,8 @@ static void cain_sip_dialog_uninit(cain_sip_dialog_t *obj){
 		cain_sip_object_unref(obj->last_out_invite);
 	if (obj->last_out_ack)
 		cain_sip_object_unref(obj->last_out_ack);
+	if (obj->last_transaction)
+		cain_sip_object_unref(obj->last_transaction);
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_dialog_t);
@@ -315,9 +317,15 @@ static void cain_sip_dialog_stop_200Ok_retrans(cain_sip_dialog_t *obj){
 /*
  * return 0 if message should be delivered to the next listener, otherwise, its a retransmision, just keep it
  * */
-int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_request_t *req, cain_sip_response_t *resp, int as_uas){
+int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_transaction_t* transaction, int as_uas){
 	int code;
 	int is_retransmition=FALSE;
+	cain_sip_request_t *req=cain_sip_transaction_get_request(transaction);
+	cain_sip_response_t *resp=cain_sip_transaction_get_response(transaction);
+	if (obj->last_transaction) cain_sip_object_unref(obj->last_transaction);
+	obj->last_transaction=transaction;
+	cain_sip_object_ref(obj->last_transaction);
+
 	/*first update local/remote cseq*/
 	if (as_uas) {
 		cain_sip_header_cseq_t* cseq=cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(req),cain_sip_header_cseq_t);
@@ -706,4 +714,7 @@ cain_sip_dialog_t* cain_sip_provider_find_dialog(const cain_sip_provider_t *prov
 		}
 	}
 	return NULL;
+}
+cain_sip_transaction_t* cain_sip_dialog_get_last_transaction(const cain_sip_dialog_t *dialog) {
+	return dialog->last_transaction;
 }

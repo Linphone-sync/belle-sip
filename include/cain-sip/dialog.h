@@ -44,13 +44,13 @@ CAINSIP_EXPORT cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialo
  */
 CAINSIP_EXPORT cain_sip_request_t * cain_sip_dialog_create_request_from(cain_sip_dialog_t *obj, const cain_sip_request_t *initial_req);
 
-void cain_sip_dialog_delete(cain_sip_dialog_t *dialog);
+CAINSIP_EXPORT void cain_sip_dialog_delete(cain_sip_dialog_t *dialog);
 
 CAINSIP_EXPORT void *cain_sip_dialog_get_application_data(const cain_sip_dialog_t *dialog);
 
 CAINSIP_EXPORT void cain_sip_dialog_set_application_data(cain_sip_dialog_t *dialog, void *data);
 
-const char *cain_sip_dialog_get_dialog_id(const cain_sip_dialog_t *dialog);
+CAINSIP_EXPORT const char *cain_sip_dialog_get_dialog_id(const cain_sip_dialog_t *dialog);
 
 CAINSIP_EXPORT const cain_sip_header_call_id_t *cain_sip_dialog_get_call_id(const cain_sip_dialog_t *dialog);
 
@@ -69,13 +69,13 @@ CAINSIP_EXPORT const char *cain_sip_dialog_get_local_tag(const cain_sip_dialog_t
 
 CAINSIP_EXPORT const char *cain_sip_dialog_get_remote_tag(const cain_sip_dialog_t *dialog);
 
-const cain_sip_header_address_t *cain_sip_dialog_get_remote_target(cain_sip_dialog_t *dialog);
+CAINSIP_EXPORT const cain_sip_header_address_t *cain_sip_dialog_get_remote_target(cain_sip_dialog_t *dialog);
 
-const cain_sip_list_t* cain_sip_dialog_get_route_set(cain_sip_dialog_t *dialog);
+CAINSIP_EXPORT const cain_sip_list_t* cain_sip_dialog_get_route_set(cain_sip_dialog_t *dialog);
 
 CAINSIP_EXPORT cain_sip_dialog_state_t cain_sip_dialog_get_state(const cain_sip_dialog_t *dialog);
 /*
- * return the dialog state before last transition. Can be usefull to detect early avorted dialogs
+ * return the dialog state before last transition. Can be useful to detect early avorted dialogs
  * @param dialog
  * @returns state
  * */
@@ -84,12 +84,17 @@ CAINSIP_EXPORT cain_sip_dialog_state_t cain_sip_dialog_get_previous_state(const 
 
 CAINSIP_EXPORT int cain_sip_dialog_is_server(const cain_sip_dialog_t *dialog);
 
-int cain_sip_dialog_is_secure(const cain_sip_dialog_t *dialog);
+CAINSIP_EXPORT int cain_sip_dialog_is_secure(const cain_sip_dialog_t *dialog);
 
 CAINSIP_EXPORT void cain_sip_dialog_send_ack(cain_sip_dialog_t *dialog, cain_sip_request_t *request);
 
-void cain_sip_dialog_terminate_on_bye(cain_sip_dialog_t *dialog, int val);
-
+CAINSIP_EXPORT void cain_sip_dialog_terminate_on_bye(cain_sip_dialog_t *dialog, int val);
+/*
+ * Give access to the last transaction processed by a dialog. Can be useful to get reason code for dialog terminated before reaching established state
+ * @param dialog
+ * @return last transaction
+ */
+CAINSIP_EXPORT cain_sip_transaction_t* cain_sip_dialog_get_last_transaction(const cain_sip_dialog_t *dialog);
 CAIN_SIP_END_DECLS
 
 #endif

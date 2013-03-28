@@ -303,7 +303,7 @@ static void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
 	if (ctx->R)
 		dns_res_close(ctx->R);
 	if (ctx->hosts)
-		free(ctx->hosts);
+		dns_hosts_release(ctx->hosts);
 	if (ctx->resconf)
 		free(ctx->resconf);
 }

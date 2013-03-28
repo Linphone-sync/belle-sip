@@ -402,13 +402,20 @@ void cain_sip_provider_add_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *
 	prov->dialogs=cain_sip_list_prepend(prov->dialogs,cain_sip_object_ref(dialog));
 }
 
+static void notify_dialog_terminated(cain_sip_dialog_terminated_event_t* ev) {
+	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(((cain_sip_provider_t*)ev->source)->listeners,process_dialog_terminated,ev);
+	cain_sip_object_unref(ev->dialog);
+	cain_sip_free(ev);
+}
 void cain_sip_provider_remove_dialog(cain_sip_provider_t *prov, cain_sip_dialog_t *dialog){
-	cain_sip_dialog_terminated_event_t ev;
-	ev.source=prov;
-	ev.dialog=dialog;
+	cain_sip_dialog_terminated_event_t* ev=cain_sip_malloc(sizeof(cain_sip_dialog_terminated_event_t));
+	ev->source=prov;
+	ev->dialog=dialog;
 	prov->dialogs=cain_sip_list_remove(prov->dialogs,dialog);
-	CAIN_SIP_PROVIDER_INVOKE_LISTENERS(prov->listeners,process_dialog_terminated,&ev);
-	cain_sip_object_unref(dialog);
+	cain_sip_main_loop_do_later(cain_sip_stack_get_main_loop(prov->stack)
+													,(cain_sip_callback_t) notify_dialog_terminated
+													, ev);
+
 }
 
 cain_sip_client_transaction_t *cain_sip_provider_get_new_client_transaction(cain_sip_provider_t *prov, cain_sip_request_t *req){

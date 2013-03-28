@@ -19,6 +19,8 @@
 #include "cain_sip_internal.h"
 #include "cain-sip/refresher-helper.h"
 
+#define DEFAULT_RETRY_AFTER 60000
+
 struct cain_sip_refresher {
 	cain_sip_object_t obj;
 	cain_sip_refresher_listener_t listener;
@@ -29,7 +31,30 @@ struct cain_sip_refresher {
 	cain_sip_listener_callbacks_t listener_callbacks;
 	cain_sip_listener_t *sip_listener;
 	void* user_data;
+	int retry_after;
 };
+static int set_expires_from_trans(cain_sip_refresher_t* refresher);
+
+static int timer_cb(void *user_data, unsigned int events) ;
+
+static void schedule_timer_at(cain_sip_refresher_t* refresher,int delay) {
+	if (delay>0) {
+		if (refresher->timer){
+			cain_sip_main_loop_remove_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
+			cain_sip_object_unref(refresher->timer);
+		}
+		refresher->timer=cain_sip_timeout_source_new(timer_cb,refresher,delay);
+		cain_sip_object_set_name((cain_sip_object_t*)refresher->timer,"Refresher timeout");
+		cain_sip_main_loop_add_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
+		refresher->started=1;
+	}
+
+}
+
+static void schedule_timer(cain_sip_refresher_t* refresher) {
+	schedule_timer_at(refresher,refresher->expires*900);
+}
+
 
 static void process_dialog_terminated(void *user_ctx, const cain_sip_dialog_terminated_event_t *event){
 	/*nop*/
@@ -40,25 +65,24 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 
 	if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t))) {
 		client_transaction=CAIN_SIP_CLIENT_TRANSACTION(cain_sip_io_error_event_get_source(event));
-		if (!refresher || (refresher && (!refresher->started || client_transaction !=refresher->transaction )))
+		if (!refresher || (refresher && ((!refresher->started && cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) != CAIN_SIP_TRANSACTION_TRYING)
+											|| client_transaction !=refresher->transaction )))
 				return; /*not for me or no longuer involved*/
 
-		/*first stop timer if any*/
-		cain_sip_refresher_stop(refresher);
+		schedule_timer_at(refresher,refresher->retry_after);
 		if (refresher->listener) refresher->listener(refresher,refresher->user_data,503, "io error");
 		return;
 	} else if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_provider_t))) {
 		/*something went wrong on this provider, checking if my channel is still up*/
-		if ((refresher->started  /*refresher started or trying to refresh */
-				|| cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) == CAIN_SIP_TRANSACTION_TRYING
-				|| cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) == CAIN_SIP_TRANSACTION_TRYING)
-			&&	(cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_DISCONNECTED
+		if (refresher->started  /*refresher started or trying to refresh */
+				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) == CAIN_SIP_TRANSACTION_TERMINATED /*else we are notified by transaction error*/
+				&&	(cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_DISCONNECTED
 								||cain_sip_channel_get_state(refresher->transaction->base.channel) == CAIN_SIP_CHANNEL_ERROR)) {
 			cain_sip_message("refresher [%p] has channel [%p] in state [%s], reporting error"
 								,refresher
 								,refresher->transaction->base.channel
 								,cain_sip_channel_state_to_string(cain_sip_channel_get_state(refresher->transaction->base.channel)));
-			cain_sip_refresher_stop(refresher);
+			schedule_timer_at(refresher,refresher->retry_after);
 			if (refresher->listener) refresher->listener(refresher,refresher->user_data,503, "io error");
 		}
 		return;
@@ -67,21 +91,7 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 	}
 }
 
-static int set_expires_from_trans(cain_sip_refresher_t* refresher);
 
-static int timer_cb(void *user_data, unsigned int events) ;
-
-static void schedule_timer(cain_sip_refresher_t* refresher) {
-	if (refresher->expires>0) {
-		if (refresher->timer){
-			cain_sip_main_loop_remove_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
-			cain_sip_object_unref(refresher->timer);
-		}
-		refresher->timer=cain_sip_timeout_source_new(timer_cb,refresher,refresher->expires*900);
-		cain_sip_object_set_name((cain_sip_object_t*)refresher->timer,"Refresher timeout");
-		cain_sip_main_loop_add_source(cain_sip_stack_get_main_loop(refresher->transaction->base.provider->stack),refresher->timer);
-	}
-}
 
 static void process_response_event(void *user_ctx, const cain_sip_response_event_t *event){
 	cain_sip_client_transaction_t* client_transaction = cain_sip_response_event_get_client_transaction(event);
@@ -105,6 +115,12 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 			cain_sip_refresher_refresh(refresher,refresher->expires); /*authorization is supposed to be available immediately*/
 			return;
 		}
+		case 408:
+		case 480:
+		case 503:
+		case 504:
+			schedule_timer_at(refresher,refresher->retry_after);
+			break;
 		default:
 			break;
 		}
@@ -118,8 +134,7 @@ static void process_timeout(void *user_ctx, const cain_sip_timeout_event_t *even
 	if (refresher && (client_transaction !=refresher->transaction))
 				return; /*not for me*/
 
-		/*first stop timer if any*/
-	cain_sip_refresher_stop(refresher);
+	cain_sip_refresher_refresh(refresher,refresher->expires); /*re-arm timer imediatly*/
 	if (refresher->listener) refresher->listener(refresher,refresher->user_data,408, "timeout");
 	return;
 }
@@ -349,6 +364,7 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 	refresher = (cain_sip_refresher_t*)cain_sip_object_new(cain_sip_refresher_t);
 	refresher->transaction=transaction;
 	cain_sip_object_ref(transaction);
+	refresher->retry_after=DEFAULT_RETRY_AFTER;
 	refresher->listener_callbacks.process_response_event=process_response_event;
 	refresher->listener_callbacks.process_timeout=process_timeout;
 	refresher->listener_callbacks.process_io_error=process_io_error;
@@ -364,4 +380,12 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 
 int cain_sip_refresher_get_expires(const cain_sip_refresher_t* refresher) {
 	return refresher->expires;
+}
+
+int cain_sip_refresher_get_retry_after(const cain_sip_refresher_t* refresher){
+	return refresher->retry_after;
+}
+
+void cain_sip_refresher_set_retry_after(cain_sip_refresher_t* refresher, int delay_ms) {
+	refresher->retry_after=delay_ms;
 }

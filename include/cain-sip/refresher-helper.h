@@ -58,4 +58,14 @@ CAINSIP_EXPORT int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,in
  */
 CAINSIP_EXPORT int cain_sip_refresher_get_expires(const cain_sip_refresher_t* refresher);
 
+/**
+ * returns  delay in ms after which the refresher will retry in case of recoverable error (I.E 408, 480, 503, 504, io error);
+ */
+CAINSIP_EXPORT int cain_sip_refresher_get_retry_after(const cain_sip_refresher_t* refresher);
+
+/**
+ * Delay in ms after which the refresher will retry in case of recoverable error (I.E 408, 480, 503, 504, io error);
+ */
+CAINSIP_EXPORT void cain_sip_refresher_set_retry_after(cain_sip_refresher_t* refresher, int delay_ms);
+
 #endif /* REFRESHER_HELPER_H_ */
