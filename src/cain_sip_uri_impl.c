@@ -152,6 +152,13 @@ int cain_sip_uri_get_listening_port(const cain_sip_uri_t *uri){
 	return port;
 }
 
+void cain_sip_uri_fix(cain_sip_uri_t *uri){
+	const char *transport=cain_sip_uri_get_transport_param(uri);
+	if (transport && strcasecmp(transport,"tls")==0){
+		cain_sip_uri_set_secure(uri,TRUE);
+	}
+}
+
 SIP_URI_GET_SET_BOOL(secure)
 
 SIP_URI_GET_SET_STRING(user)
