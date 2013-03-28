@@ -17,7 +17,7 @@ cain_sip_tester_SOURCES=	cain_sip_tester.c \
 				cain_sip_resolver_tester.c \
 				register_tester.h
 
-cain_sip_tester_CFLAGS=$(CUNIT_CFLAGS) $(STRICT_OPTIONS)
+cain_sip_tester_CFLAGS=$(CUNIT_CFLAGS) $(STRICT_OPTIONS) $(TLS_CFLAGS)
 
 cain_sip_tester_LDFLAGS=$(CUNIT_LIBS) $(AM_LDFLAGS)
 
