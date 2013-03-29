@@ -242,12 +242,10 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 		return CAIN_SIP_CONTINUE;
 	} else if (num == 0) {
 		channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
-		cain_sip_channel_close(obj);
 		return CAIN_SIP_STOP;
 	} else {
 		cain_sip_error("Receive error on channel [%p]",obj);
 		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
-		cain_sip_channel_close(obj);
 		return CAIN_SIP_STOP;
 	}
 	return CAIN_SIP_CONTINUE;
@@ -255,8 +253,8 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 
 static int channel_inactive_timeout(void *data, unsigned int event){
 	cain_sip_channel_t *obj=(cain_sip_channel_t *)data;
+	cain_sip_message("Channel [%p]: inactivity timeout reached.",obj);
 	channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
-	cain_sip_channel_close(obj);
 	return CAIN_SIP_STOP;
 }
 
@@ -397,6 +395,11 @@ cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj) {
 
 static void channel_invoke_state_listener(cain_sip_channel_t *obj){
 	cain_sip_list_t* list=cain_sip_list_copy(obj->listeners); /*copy list because error state alter this list (I.E by provider)*/
+	
+	if (obj->state==CAIN_SIP_CHANNEL_DISCONNECTED || obj->state==CAIN_SIP_CHANNEL_ERROR){
+		cain_sip_channel_close(obj);
+	}
+	
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(list,cain_sip_channel_listener_t,on_state_changed,obj,obj->state);
 	cain_sip_list_free(list);
 }
@@ -437,7 +440,6 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 				,obj->peer_name
 				,obj->peer_port);
 			channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
-			cain_sip_channel_close(obj);
 		}else{
 			cain_sip_message("channel [%p]: message sent to [%s://%s:%i] \n%s"
 								,obj
@@ -581,7 +583,6 @@ int cain_sip_channel_queue_message(cain_sip_channel_t *obj, cain_sip_message_t *
 void cain_sip_channel_force_close(cain_sip_channel_t *obj){
 	obj->force_close=1;
 	channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
-	cain_sip_channel_close(obj);
 }
 
 

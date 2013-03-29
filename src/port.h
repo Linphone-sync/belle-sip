@@ -137,7 +137,7 @@ static inline int get_socket_error(void){
 
 #endif
 
-
+#define cain_sip_error_code_is_would_block(err) ((err)==CAINSIP_EWOULDBLOCK || (err)==CAINSIP_EINPROGRESS)
 
 #endif
 

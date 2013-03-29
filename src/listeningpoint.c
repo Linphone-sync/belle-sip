@@ -149,7 +149,9 @@ static int send_keep_alive(cain_sip_channel_t* obj) {
 	/*keep alive*/
 	const char* crlfcrlf = "\r\n\r\n";
 	int size=strlen(crlfcrlf);
-	if (cain_sip_channel_send(obj,crlfcrlf,size)<0){
+	int err=cain_sip_channel_send(obj,crlfcrlf,size);
+	
+	if (err<=0 && !cain_sip_error_code_is_would_block(-err) && err!=-EINTR){
 		cain_sip_error("channel [%p]: could not send [%i] bytes of keep alive from [%s://%s:%i]  to [%s:%i]"	,obj
 			,size
 			,cain_sip_channel_get_transport_name(obj)
