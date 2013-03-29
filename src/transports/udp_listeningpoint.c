@@ -138,6 +138,8 @@ static int on_udp_data(cain_sip_udp_listening_point_t *lp, unsigned int events){
 					,cain_sip_get_socket_error_string());
 			cain_sip_free(tmp);
 			cain_sip_udp_listening_point_uninit(lp);
+			/*clean all udp channels that are actually sharing the server socket with the listening points*/
+			cain_sip_listening_point_clean_channels((cain_sip_listening_point_t*)lp);
 			cain_sip_udp_listening_point_init_socket(lp);
 		}else{
 			cain_sip_channel_t *chan;
