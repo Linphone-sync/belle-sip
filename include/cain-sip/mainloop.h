@@ -27,8 +27,8 @@
 
 typedef struct cain_sip_source cain_sip_source_t;
 
-int cain_sip_source_set_events(cain_sip_source_t* source, int event_mask);
-cain_sip_socket_t cain_sip_source_get_socket(const cain_sip_source_t* source);
+CAINSIP_EXPORT int cain_sip_source_set_events(cain_sip_source_t* source, int event_mask);
+CAINSIP_EXPORT cain_sip_socket_t cain_sip_source_get_socket(const cain_sip_source_t* source);
 
 /**
  * Callback function prototype for main loop notifications.
@@ -47,14 +47,14 @@ typedef struct cain_sip_main_loop cain_sip_main_loop_t;
 
 CAIN_SIP_BEGIN_DECLS
 
-void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
+CAINSIP_EXPORT void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
 
-void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
+CAINSIP_EXPORT void cain_sip_main_loop_remove_source(cain_sip_main_loop_t *ml, cain_sip_source_t *source);
 
 /**
  * Creates a mainloop.
 **/
-cain_sip_main_loop_t *cain_sip_main_loop_new(void);
+CAINSIP_EXPORT cain_sip_main_loop_t *cain_sip_main_loop_new(void);
 
 /**
  * Adds a timeout into the main loop
@@ -64,7 +64,7 @@ cain_sip_main_loop_t *cain_sip_main_loop_new(void);
  * @param timeout_value_ms duration of the timeout.
  * @returns timeout id
 **/
-unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
+CAINSIP_EXPORT unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
 
 /**
  * Adds a timeout into the main loop
@@ -77,7 +77,7 @@ unsigned long cain_sip_main_loop_add_timeout(cain_sip_main_loop_t *ml, cain_sip_
  * @param timer_name name of the timer, can be null
  * @returns timeout cain_sip_source_t  with ref count = 1
 **/
-cain_sip_source_t* cain_sip_main_loop_create_timeout(cain_sip_main_loop_t *ml
+CAINSIP_EXPORT cain_sip_source_t* cain_sip_main_loop_create_timeout(cain_sip_main_loop_t *ml
 							, cain_sip_source_func_t func
 							, void *data
 							, unsigned int timeout_value_ms
@@ -86,29 +86,29 @@ cain_sip_source_t* cain_sip_main_loop_create_timeout(cain_sip_main_loop_t *ml
 /**
  * Schedule an arbitrary task at next main loop iteration.
 **/
-void cain_sip_main_loop_do_later(cain_sip_main_loop_t *ml, cain_sip_callback_t func, void *data);
+CAINSIP_EXPORT void cain_sip_main_loop_do_later(cain_sip_main_loop_t *ml, cain_sip_callback_t func, void *data);
 
 /**
  * Creates a timeout source, similarly to cain_sip_main_loop_add_timeout().
  * However in this case the timeout must be entered manually using cain_sip_main_loop_add_source().
  * Its pointer can be used to remove it from the source (that is cancelling it).
 **/
-cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
+CAINSIP_EXPORT cain_sip_source_t * cain_sip_timeout_source_new(cain_sip_source_func_t func, void *data, unsigned int timeout_value_ms);
 
-void cain_sip_source_set_timeout(cain_sip_source_t *s, unsigned int value_ms);
+CAINSIP_EXPORT void cain_sip_source_set_timeout(cain_sip_source_t *s, unsigned int value_ms);
 
-unsigned int cain_sip_source_get_timeout(const cain_sip_source_t *s);
+CAINSIP_EXPORT unsigned int cain_sip_source_get_timeout(const cain_sip_source_t *s);
 
-cain_sip_source_t * cain_sip_socket_source_new(cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms);
+CAINSIP_EXPORT cain_sip_source_t * cain_sip_socket_source_new(cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms);
 
-unsigned long cain_sip_source_get_id(cain_sip_source_t *s);
+CAINSIP_EXPORT unsigned long cain_sip_source_get_id(cain_sip_source_t *s);
 
-cain_sip_source_t *cain_sip_main_loop_find_source(cain_sip_main_loop_t *ml, unsigned long id);
+CAINSIP_EXPORT cain_sip_source_t *cain_sip_main_loop_find_source(cain_sip_main_loop_t *ml, unsigned long id);
 
 /**
  * Executes the main loop forever (or until cain_sip_main_loop_quit() is called)
 **/
-void cain_sip_main_loop_run(cain_sip_main_loop_t *ml);
+CAINSIP_EXPORT void cain_sip_main_loop_run(cain_sip_main_loop_t *ml);
 
 /**
  * Executes the main loop for the time specified in milliseconds.
@@ -123,7 +123,7 @@ CAINSIP_EXPORT int cain_sip_main_loop_quit(cain_sip_main_loop_t *ml);
 /**
  * Cancel (removes) a source. It is not freed.
 **/
-void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id);
+CAINSIP_EXPORT void cain_sip_main_loop_cancel_source(cain_sip_main_loop_t *ml, unsigned long id);
 
 CAIN_SIP_END_DECLS
 
