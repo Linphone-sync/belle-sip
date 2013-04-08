@@ -38,12 +38,12 @@ typedef enum auth_mode {
 	,digest_auth
 }auth_mode_t;
 
-typedef struct _stat {
+typedef struct _status {
 	int twoHundredOk;
 	int fourHundredOne;
 	int refreshOk;
 	int refreshKo;
-}stat_t;
+}status_t;
 
 typedef struct endpoint {
 	cain_sip_stack_t* stack;
@@ -52,7 +52,7 @@ typedef struct endpoint {
 	cain_sip_listening_point_t *lp;
 	cain_sip_listener_t *listener;
 	auth_mode_t auth;
-	stat_t stat;
+	status_t stat;
 	unsigned char expire_in_contact;
 	char nonce[32];
 	unsigned int nonce_count;
