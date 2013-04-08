@@ -190,7 +190,7 @@ CAINSIP_EXPORT void cain_sdp_media_description_append_values_from_mime_parameter
  **************************************************************************************/
 typedef struct _cain_sdp_origin cain_sdp_origin_t;
 cain_sdp_origin_t* cain_sdp_origin_new();
-cain_sdp_origin_t* cain_sdp_origin_parse (const char* origin);
+CAINSIP_EXPORT cain_sdp_origin_t* cain_sdp_origin_parse (const char* origin);
 CAINSIP_EXPORT cain_sdp_origin_t* cain_sdp_origin_create(const char* user_name
 											, unsigned int session_id
 											, unsigned int session_version
