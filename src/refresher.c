@@ -36,6 +36,7 @@ struct cain_sip_refresher {
 static int set_expires_from_trans(cain_sip_refresher_t* refresher);
 
 static int timer_cb(void *user_data, unsigned int events) ;
+static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,int expires,int auth_mandatory, cain_sip_list_t** auth_infos);
 
 static void schedule_timer_at(cain_sip_refresher_t* refresher,int delay) {
 	if (delay>0) {
@@ -98,6 +99,7 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 	cain_sip_response_t* response = cain_sip_response_event_get_response(event);
 	int response_code = cain_sip_response_get_status_code(response);
 	cain_sip_refresher_t* refresher=(cain_sip_refresher_t*)user_ctx;
+	cain_sip_list_t* auth_info=NULL;
 	if (refresher && (client_transaction !=refresher->transaction))
 		return; /*not for me*/
 
@@ -112,8 +114,11 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 		}
 		case 401:
 		case 407:{
-			cain_sip_refresher_refresh(refresher,refresher->expires); /*authorization is supposed to be available immediately*/
-			return;
+			if (cain_sip_refresher_refresh_internal(refresher,refresher->expires,TRUE,&auth_info))
+				break; /*Notify user of registration failure*/
+			else
+				return; /*ok, keep 401 internal*/
+
 		}
 		case 408:
 		case 480:
@@ -159,8 +164,11 @@ void cain_sip_refresher_set_listener(cain_sip_refresher_t* refresher, cain_sip_r
 	refresher->listener=listener;
 	refresher->user_data=user_pointer;
 }
-
 int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
+	cain_sip_refresher_stop(refresher);
+	return cain_sip_refresher_refresh_internal(refresher,expires,FALSE,NULL);
+}
+static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,int expires,int auth_mandatory, cain_sip_list_t** auth_infos) {
 	cain_sip_request_t*old_request=cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(refresher->transaction));
 	cain_sip_response_t*old_response=cain_sip_transaction_get_response(CAIN_SIP_TRANSACTION(refresher->transaction));
 	cain_sip_dialog_t* dialog = cain_sip_transaction_get_dialog(CAIN_SIP_TRANSACTION(refresher->transaction));
@@ -171,7 +179,7 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 	cain_sip_provider_t* prov=refresher->transaction->base.provider;
 	cain_sip_header_contact_t* contact;
 	/*first remove timer if any*/
-	cain_sip_refresher_stop(refresher);
+
 	refresher->expires=expires;
 	if (!dialog) {
 		const cain_sip_transaction_state_t state=cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction));
@@ -186,7 +194,7 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 			cseq=cain_sip_message_get_header_by_type(request,cain_sip_header_cseq_t);
 			cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
 		} else {
-			request=cain_sip_client_transaction_create_authenticated_request(refresher->transaction);
+			request=cain_sip_client_transaction_create_authenticated_request(refresher->transaction,auth_infos);
 		}
 	} else if (dialog && cain_sip_dialog_get_state(dialog)==CAIN_SIP_DIALOG_CONFIRMED) {
 		request=cain_sip_dialog_create_request_from(dialog,old_request);
@@ -199,12 +207,18 @@ int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 
 
 		}
-		cain_sip_provider_add_authorization(prov,request,old_response,NULL);
+		cain_sip_provider_add_authorization(prov,request,old_response,auth_infos);
 	} else {
 		cain_sip_error("Unexpected dialog state [%s] for dialog [%p], cannot refresh [%s]"
 				,cain_sip_dialog_state_to_string(cain_sip_dialog_get_state(dialog))
 				,dialog
 				,cain_sip_request_get_method(old_request));
+		return -1;
+	}
+
+	if (auth_mandatory && auth_infos && (*auth_infos!=NULL || cain_sip_list_size(*auth_infos)) >0) {
+		cain_sip_message("Auth info not found for this refresh operation on [%p]",refresher);
+		if (request) cain_sip_object_unref(request);
 		return -1;
 	}
 	/*update expires in any cases*/
@@ -247,6 +261,8 @@ static cain_sip_header_contact_t* get_matching_contact(const cain_sip_transactio
 	cain_sip_header_contact_t* fixed_local_contact;
 	char* tmp_string;
 	char* tmp_string2;
+	if (!response)
+		return NULL;
 	/*we assume, there is only one contact in request*/
 	unfixed_local_contact= cain_sip_message_get_header_by_type(CAIN_SIP_MESSAGE(request),cain_sip_header_contact_t);
 	fixed_local_contact= CAIN_SIP_HEADER_CONTACT(cain_sip_object_clone(CAIN_SIP_OBJECT(unfixed_local_contact)));
@@ -304,7 +320,7 @@ static int set_expires_from_trans(cain_sip_refresher_t* refresher) {
 		}
 		if (refresher->expires==-1){
 			/*no contact with expire or not relevant, looking for Expires header*/
-			if ((expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(response),CAIN_SIP_EXPIRES))) {
+			if (response && (expires_header=(cain_sip_header_expires_t*)cain_sip_message_get_header(CAIN_SIP_MESSAGE(response),CAIN_SIP_EXPIRES))) {
 				refresher->expires = cain_sip_header_expires_get_expires(expires_header);
 			}
 		}
@@ -355,8 +371,10 @@ void cain_sip_refresher_stop(cain_sip_refresher_t* refresher) {
 cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* transaction) {
 	cain_sip_refresher_t* refresher;
 	cain_sip_transaction_state_t state=cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction));
-	if (state != CAIN_SIP_TRANSACTION_COMPLETED && state!=CAIN_SIP_TRANSACTION_TERMINATED ) {
-		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED"
+	if (	state != CAIN_SIP_TRANSACTION_COMPLETED
+			&& state!=CAIN_SIP_TRANSACTION_TERMINATED
+			&& state != CAIN_SIP_TRANSACTION_TRYING) {
+		cain_sip_error("Invalid state [%s] for transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED/CAIN_SIP_TRANSACTION_TERMINATED/CAIN_SIP_TRANSACTION_TRYNG"
 					,cain_sip_transaction_state_to_string(cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction)))
 					,transaction);
 		return NULL;
@@ -374,6 +392,10 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 	cain_sip_provider_add_internal_sip_listener(transaction->base.provider,refresher->sip_listener);
 	if (set_expires_from_trans(refresher)){
 		cain_sip_error("Unable to extract refresh value from transaction [%p]",transaction);
+	}
+	if (cain_sip_transaction_state_is_transient(state)) {
+		cain_sip_message(" refresher [%p] takes ownership of transaction [%p]",refresher,transaction);
+		transaction->base.is_internal=1;
 	}
 	return refresher;
 }

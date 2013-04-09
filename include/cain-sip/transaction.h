@@ -74,8 +74,10 @@ CAINSIP_EXPORT cain_sip_refresher_t* cain_sip_client_transaction_create_refreshe
  * Create an authenticated request based on an existing terminated transaction.
  * <br>This function, update cseq, put route set and try to fill authorization headers. Initial request is not cloned.
  * @param transaction . must be in state completed
+ * @param auth_infos  if auth infos cannot be added for an authenticate header,
+ * a newly allocated cain_sip_auth_info_t object is added to this list. These object contains useful information like realm and username. May be NULL
  * */
-CAINSIP_EXPORT cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cain_sip_client_transaction_t *t);
+CAINSIP_EXPORT cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cain_sip_client_transaction_t *t,cain_sip_list_t** auth_infos);
 
 #define CAIN_SIP_TRANSACTION(t) CAIN_SIP_CAST(t,cain_sip_transaction_t)
 #define CAIN_SIP_SERVER_TRANSACTION(t) CAIN_SIP_CAST(t,cain_sip_server_transaction_t)

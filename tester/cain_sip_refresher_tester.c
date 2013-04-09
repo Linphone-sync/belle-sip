@@ -367,7 +367,7 @@ static void register_base(endpoint_t* client,endpoint_t *server) {
 		} else {
 			CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.fourHundredOne,1,1000));
 			/*update cseq*/
-			req=cain_sip_client_transaction_create_authenticated_request(trans);
+			req=cain_sip_client_transaction_create_authenticated_request(trans,NULL);
 			cain_sip_object_unref(trans);
 			trans=cain_sip_provider_get_new_client_transaction(client->provider,req);
 			cain_sip_object_ref(trans);
@@ -462,7 +462,7 @@ static void subscribe_test(void) {
 
 	CU_ASSERT_TRUE(wait_for(server->stack,client->stack,&client->stat.fourHundredOne,1,1000));
 
-	req=cain_sip_client_transaction_create_authenticated_request(trans);
+	req=cain_sip_client_transaction_create_authenticated_request(trans,NULL);
 	cain_sip_object_unref(trans);
 	trans=cain_sip_provider_get_new_client_transaction(client->provider,req);
 	cain_sip_object_ref(trans);
