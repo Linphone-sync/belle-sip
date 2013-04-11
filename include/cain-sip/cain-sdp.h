@@ -303,6 +303,7 @@ CAINSIP_EXPORT cain_sdp_session_description_t* cain_sdp_session_description_pars
  * */
 CAINSIP_EXPORT cain_sdp_session_description_t* cain_sdp_session_description_create(cain_sip_message_t* message);
 const char*	cain_sdp_session_description_get_attribute_value(const cain_sdp_session_description_t* session_description, const char* name);
+CAINSIP_EXPORT const cain_sdp_attribute_t*	cain_sdp_session_description_get_attribute(const cain_sdp_session_description_t* session_description, const char* name);
 CAINSIP_EXPORT int	cain_sdp_session_description_get_bandwidth(const cain_sdp_session_description_t* session_description, const char* name);
 cain_sip_list_t*	cain_sdp_session_description_get_bandwidths(const cain_sdp_session_description_t* session_description);
 CAINSIP_EXPORT cain_sdp_connection_t*	cain_sdp_session_description_get_connection(const cain_sdp_session_description_t* session_description);
