@@ -31,7 +31,7 @@ static int nict_on_timer_K(cain_sip_nict_t *obj){
 static void nict_set_completed(cain_sip_nict_t *obj, cain_sip_response_t *resp){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
-	base->state=CAIN_SIP_TRANSACTION_COMPLETED;
+	cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_COMPLETED);
 	if (obj->timer_K) cain_sip_fatal("Should never happen.");
 
 	cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
@@ -50,7 +50,7 @@ static void nict_on_response(cain_sip_nict_t *obj, cain_sip_response_t *resp){
 	switch(base->state){
 		case CAIN_SIP_TRANSACTION_TRYING:
 			if (code<200){
-				base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
+				cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_PROCEEDING);
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 			}
 			else {
@@ -131,7 +131,7 @@ static void nict_send_request(cain_sip_nict_t *obj){
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
 	
-	base->state=CAIN_SIP_TRANSACTION_TRYING;
+	cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_TRYING);
 	obj->timer_F=cain_sip_timeout_source_new((cain_sip_source_func_t)nict_on_timer_F,obj,cfg->T1*64);
 	cain_sip_object_set_name((cain_sip_object_t*)obj->timer_F,"timer_F");
 	cain_sip_transaction_start_timer(base,obj->timer_F);

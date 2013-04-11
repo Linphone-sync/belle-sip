@@ -58,7 +58,7 @@ static int nist_send_new_response(cain_sip_nist_t *obj, cain_sip_response_t *res
 	switch(base->state){
 		case CAIN_SIP_TRANSACTION_TRYING:
 			if (code<200){
-				base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
+				cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_PROCEEDING);
 				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
 				break;
 			}
@@ -116,6 +116,6 @@ cain_sip_nist_t *cain_sip_nist_new(cain_sip_provider_t *prov, cain_sip_request_t
 	cain_sip_nist_t *obj=cain_sip_object_new(cain_sip_nist_t);
 	cain_sip_transaction_t *base=(cain_sip_transaction_t*)obj;
 	cain_sip_server_transaction_init((cain_sip_server_transaction_t*)obj,prov,req);
-	base->state=CAIN_SIP_TRANSACTION_TRYING;
+	cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_TRYING);
 	return obj;
 }

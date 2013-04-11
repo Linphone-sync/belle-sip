@@ -572,6 +572,8 @@ void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t);
 
 void cain_sip_transaction_set_dialog(cain_sip_transaction_t *t, cain_sip_dialog_t *dialog);
 
+void cain_sip_transaction_set_state(cain_sip_transaction_t *t, cain_sip_transaction_state_t state);
+
 /*
  *
  *

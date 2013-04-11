@@ -68,4 +68,40 @@ CAINSIP_EXPORT int cain_sip_refresher_get_retry_after(const cain_sip_refresher_t
  */
 CAINSIP_EXPORT void cain_sip_refresher_set_retry_after(cain_sip_refresher_t* refresher, int delay_ms);
 
+/**
+ * get current client transaction
+ * @param refresher object
+ * @return transaction
+ */
+CAINSIP_EXPORT const cain_sip_client_transaction_t* cain_sip_refresher_get_transaction(const cain_sip_refresher_t* refresher);
+
+/**
+ * get current list of auth info if any. Contains the list of filled #cain_sip_auth_event_t in case of a 401 or 407 is repported to the #cain_sip_refresher_listener_t  ;
+ * @param refresher object
+ * @return list of #cain_sip_auth_info_t
+ */
+CAINSIP_EXPORT const cain_sip_list_t* cain_sip_refresher_get_auth_events(const cain_sip_refresher_t* refresher);
+
+/**
+ * get current public address as reported by received/rport in case of NAT.
+ * @param refresher object
+ * @return nated contact header or NULL if not determined
+ */
+CAINSIP_EXPORT const cain_sip_header_contact_t* cain_sip_refresher_get_nated_contact(const cain_sip_refresher_t* refresher);
+/**
+ * Activate contact rewriting based on received/rport
+ * @param refresher object
+ * @param enable 0 to disable
+ *
+ * */
+CAINSIP_EXPORT void cain_sip_refresher_enable_nat_helper(cain_sip_refresher_t* refresher,int enable);
+/**
+ * Contact rewriting statebased on received/rport
+ * @param refresher object
+ * @return  0 to disable
+ *
+ * */
+CAINSIP_EXPORT int cain_sip_refresher_is_nat_helper_enabled(const cain_sip_refresher_t* refresher);
+
+
 #endif /* REFRESHER_HELPER_H_ */

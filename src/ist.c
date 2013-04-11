@@ -96,7 +96,7 @@ int cain_sip_ist_process_ack(cain_sip_ist_t *obj, cain_sip_message_t *ack){
 				cain_sip_object_unref(obj->timer_G);
 				obj->timer_G=NULL;
 			}
-			base->state=CAIN_SIP_TRANSACTION_CONFIRMED;
+			cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_CONFIRMED);
 			if (!cain_sip_channel_is_reliable(base->channel)){
 				const cain_sip_timer_config_t *cfg=cain_sip_transaction_get_timer_config(base);
 				obj->timer_I=cain_sip_timeout_source_new((cain_sip_source_func_t)ist_on_timer_I,obj,cfg->T4);
@@ -123,11 +123,11 @@ static int ist_send_new_response(cain_sip_ist_t *obj, cain_sip_response_t *resp)
 				ret=0;
 				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)resp);
 				if (code>=200 && code<300){
-					base->state=CAIN_SIP_TRANSACTION_ACCEPTED;
+					cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_ACCEPTED);
 					obj->timer_L=cain_sip_timeout_source_new((cain_sip_source_func_t)ist_on_timer_L,obj,64*cfg->T1);
 					cain_sip_transaction_start_timer(base,obj->timer_L);
 				}else if (code>=300){
-					base->state=CAIN_SIP_TRANSACTION_COMPLETED;
+					cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_COMPLETED);
 					if (!cain_sip_channel_is_reliable(base->channel)){
 						obj->timer_G=cain_sip_timeout_source_new((cain_sip_source_func_t)ist_on_timer_G,obj,cfg->T1);
 						cain_sip_transaction_start_timer(base,obj->timer_G);
@@ -185,7 +185,7 @@ cain_sip_ist_t *cain_sip_ist_new(cain_sip_provider_t *prov, cain_sip_request_t *
 	cain_sip_response_t *resp;
 
 	cain_sip_server_transaction_init((cain_sip_server_transaction_t*)obj,prov,req);
-	base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
+	cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_PROCEEDING);
 	resp=cain_sip_response_create_from_request(req,100);
 	cain_sip_server_transaction_send_response((cain_sip_server_transaction_t*)obj,resp);
 	return obj;

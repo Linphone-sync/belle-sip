@@ -41,6 +41,12 @@ const char *cain_sip_transaction_state_to_string(cain_sip_transaction_state_t st
 	return "INVALID";
 }
 
+void cain_sip_transaction_set_state(cain_sip_transaction_t *t, cain_sip_transaction_state_t state) {
+	cain_sip_message("Changing transaction [%p], from state [%s] to [%s]",t
+																		,cain_sip_transaction_state_to_string(t->state)
+																		,cain_sip_transaction_state_to_string(state));
+	t->state=state;
+}
 static void cain_sip_transaction_init(cain_sip_transaction_t *t, cain_sip_provider_t *prov, cain_sip_request_t *req){
 	t->request=(cain_sip_request_t*)cain_sip_object_ref(req);
 	t->provider=prov;
@@ -95,7 +101,7 @@ int cain_sip_transaction_state_is_transient(const cain_sip_transaction_state_t s
 	}
 }
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
-	t->state=CAIN_SIP_TRANSACTION_TERMINATED;
+	cain_sip_transaction_set_state(t,CAIN_SIP_TRANSACTION_TERMINATED);
 	cain_sip_message("%s%s %s transaction [%p] terminated"	,CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_client_transaction_t)?"Client":"Server"
 															,t->is_internal?" internal":""
 															,cain_sip_request_get_method(cain_sip_transaction_get_request(t))
