@@ -209,7 +209,7 @@ static int stream_channel_process_data(cain_sip_stream_channel_t *obj,unsigned i
 	if (state == CAIN_SIP_CHANNEL_CONNECTING && (revents & CAIN_SIP_EVENT_WRITE)) {
 
 		if (finalize_stream_connection(obj,(struct sockaddr*)&ss,&addrlen)) {
-			cain_sip_error("Cannot connect to [%s://%s:%s]",cain_sip_channel_get_transport_name(base),base->peer_name,base->peer_port);
+			cain_sip_error("Cannot connect to [%s://%s:%i]",cain_sip_channel_get_transport_name(base),base->peer_name,base->peer_port);
 			channel_set_state(base,CAIN_SIP_CHANNEL_ERROR);
 			return CAIN_SIP_STOP;
 		}
