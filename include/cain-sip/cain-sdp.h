@@ -181,7 +181,7 @@ void cain_sdp_media_description_set_connection(cain_sdp_media_description_t* med
 void cain_sdp_media_description_set_info(cain_sdp_media_description_t* media_description,cain_sdp_info_t* i);
 /*void cain_sdp_media_description_set_key(cain_sdp_media_description_t* media_description,cain_sdp_key_t* key);*/
 CAINSIP_EXPORT void cain_sdp_media_description_set_media(cain_sdp_media_description_t* media_description, cain_sdp_media_t* media);
-CAINSIP_EXPORT void cain_sdp_media_description_append_values_from_mime_parameter(cain_sdp_media_description_t* media_description, cain_sdp_mime_parameter_t* mime_parameter);
+CAINSIP_EXPORT void cain_sdp_media_description_append_values_from_mime_parameter(cain_sdp_media_description_t* media_description, const cain_sdp_mime_parameter_t* mime_parameter);
 #define CAIN_SDP_MEDIA_DESCRIPTION(t) CAIN_SDP_CAST(t,cain_sdp_media_description_t);
 
 /***************************************************************************************

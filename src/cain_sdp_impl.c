@@ -689,7 +689,7 @@ cain_sip_list_t* cain_sdp_media_description_build_mime_parameters(const cain_sdp
 }
 #define MAX_FMTP_LENGH 64
 
-void cain_sdp_media_description_append_values_from_mime_parameter(cain_sdp_media_description_t* media_description, cain_sdp_mime_parameter_t* mime_parameter) {
+void cain_sdp_media_description_append_values_from_mime_parameter(cain_sdp_media_description_t* media_description, const cain_sdp_mime_parameter_t* mime_parameter) {
 	cain_sdp_media_t* media = cain_sdp_media_description_get_media(media_description);
 	char atribute_value [MAX_FMTP_LENGH];
 	cain_sdp_media_set_media_formats(media,cain_sip_list_append(cain_sdp_media_get_media_formats(media)
