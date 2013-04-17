@@ -66,6 +66,8 @@ CAINSIP_EXPORT int cain_sip_tls_listening_point_set_root_ca(cain_sip_tls_listeni
 CAINSIP_EXPORT int cain_sip_tls_listening_point_set_verify_exceptions(cain_sip_tls_listening_point_t *s, int flags);
 
 
+CAINSIP_EXPORT cain_sip_listening_point_t * cain_sip_tunnel_listening_point_new(cain_sip_stack_t *s, void *tunnelclient);
+
 
 #define CAIN_SIP_UDP_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_udp_listening_point_t)
 #define CAIN_SIP_STREAM_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_stream_listening_point_t)

@@ -96,6 +96,10 @@ struct cain_sip_channel{
 #define CAIN_SIP_CHANNEL(obj)		CAIN_SIP_CAST(obj,cain_sip_channel_t)
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void cain_sip_channel_add_listener(cain_sip_channel_t *chan, cain_sip_channel_listener_t *l);
 
 void cain_sip_channel_remove_listener(cain_sip_channel_t *obj, cain_sip_channel_listener_t *l);
@@ -147,6 +151,11 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
 
 /*this function is to be used only in cain_sip_listening_point_clean_channels()*/
 void cain_sip_channel_force_close(cain_sip_channel_t *obj);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_channel_t,cain_sip_source_t)
 	const char *transport;

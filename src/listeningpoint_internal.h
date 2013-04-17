@@ -50,7 +50,13 @@ struct cain_sip_listening_point{
 	int ai_family; /*AF_INET or AF_INET6*/
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s,  const char *address, int port);
+#ifdef __cplusplus
+}
+#endif
 cain_sip_channel_t *_cain_sip_listening_point_get_channel(cain_sip_listening_point_t *lp,const cain_sip_hop_t *hop, const struct addrinfo *addr);
 cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *ip, const cain_sip_hop_t *hop);
 void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
@@ -103,6 +109,15 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 #define CAIN_SIP_TLS_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_tls_listening_point_t)
 cain_sip_listening_point_t * cain_sip_tls_listening_point_new(cain_sip_stack_t *s, const char *ipaddress, int port);
 cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t* lp, const char *bindip, int localport,const char *cname, const char *name, int port);
+
+/*tunnel*/
+#ifdef HAVE_TUNNEL
+typedef struct cain_sip_tunnel_listening_point cain_sip_tunnel_listening_point_t;
+CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_tunnel_listening_point_t,cain_sip_listening_point_t)
+CAIN_SIP_DECLARE_CUSTOM_VPTR_END
+#define CAIN_SIP_TUNNEL_LISTENING_POINT(obj) CAIN_SIP_CAST(obj,cain_sip_tunnel_listening_point_t)
+cain_sip_channel_t * cain_sip_channel_new_tunnel(cain_sip_stack_t *s, void *tunnelclient, const char *bindip, int localport, const char *name, int port);
+#endif
 
 #include "transports/stream_channel.h"
 

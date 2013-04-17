@@ -14,6 +14,10 @@
 /*inherite from cain_sip_parameters_t*/
 typedef struct _cain_sip_uri cain_sip_uri_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  *
  */
@@ -186,6 +190,11 @@ int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offs
  *
  * */
 CAINSIP_EXPORT int cain_sip_uri_equals(const cain_sip_uri_t* uri_a,const cain_sip_uri_t* uri_b);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif  /*CAIN_SIP_URI_H_*/
 
