@@ -142,7 +142,21 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 			break; /*Notify user of registration failure*/
 		else
 			return; /*ok, keep 401 internal*/
-
+	}
+	case 423:{
+		cain_sip_header_extension_t *min_expires=CAIN_SIP_HEADER_EXTENSION(cain_sip_message_get_header((cain_sip_message_t*)response,"Min-Expires"));
+		if (min_expires){
+			const char *value=cain_sip_header_extension_get_value(min_expires);
+			if (value){
+				int new_expires=atoi(value);
+				if (new_expires>0){
+					refresher->expires=new_expires;
+					cain_sip_refresher_refresh(refresher,refresher->expires);
+					return;
+				}
+			}
+		}else cain_sip_warning("Receiving 423 but no min-expires header.");
+		break;
 	}
 	case 408:
 	case 480:
