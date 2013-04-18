@@ -212,7 +212,16 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 			cain_sip_uri_set_host(cain_sip_header_address_get_uri(CAIN_SIP_HEADER_ADDRESS(contact)),"nimportequoi.com");
 		}
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(contact));
-
+		if (strcmp(cain_sip_request_get_method(req),"PUBLISH")==0) {
+			cain_sip_header_t* etag=cain_sip_message_get_header(CAIN_SIP_MESSAGE(resp),"SIP-ETag");
+			if (etag) {
+				/*etag already, check for sip_if_match*/
+				cain_sip_header_t* sip_if_match=cain_sip_message_get_header(CAIN_SIP_MESSAGE(resp),"SIP-If-Match");
+				CU_ASSERT_PTR_NOT_NULL(sip_if_match);
+				if (sip_if_match) CU_ASSERT_EQUAL(cain_sip_header_extension_get_value(CAIN_SIP_HEADER_EXTENSION(sip_if_match)),"blablietag");
+			}
+			cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),cain_sip_header_create("SIP-ETag","blablietag"));
+		}
 	} else {
 		resp=cain_sip_response_create_from_request(cain_sip_request_event_get_request(event),401);
 		if (www_authenticate)
@@ -320,7 +329,8 @@ static endpoint_t* create_udp_endpoint(int port,cain_sip_listener_callbacks_t* l
 	return endpoint;
 }
 
-static void register_base(endpoint_t* client,endpoint_t *server) {
+
+static void refresher_base(endpoint_t* client,endpoint_t *server, const char* method) {
 	cain_sip_request_t* req;
 	cain_sip_client_transaction_t* trans;
 	cain_sip_header_route_t* destination_route;
@@ -344,9 +354,9 @@ static void register_base(endpoint_t* client,endpoint_t *server) {
 
 	req=cain_sip_request_create(
 		                    cain_sip_uri_parse(domain),
-		                    "REGISTER",
+		                    method,
 		                    cain_sip_provider_get_new_call_id(client->provider),
-		                    cain_sip_header_cseq_create(20,"REGISTER"),
+		                    cain_sip_header_cseq_create(20,method),
 		                    cain_sip_header_from_create2(identity,CAIN_SIP_RANDOM_TAG),
 		                    cain_sip_header_to_create2(identity,NULL),
 		                    cain_sip_header_via_new(),
@@ -393,7 +403,10 @@ static void register_base(endpoint_t* client,endpoint_t *server) {
 	cain_sip_object_unref(refresher);
 }
 
-static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t auth_mode) {
+static void register_base(endpoint_t* client,endpoint_t *server) {
+	refresher_base(client,server,"REGISTER");
+}
+static void refresher_base_with_param(const char* method, unsigned char expire_in_contact,auth_mode_t auth_mode) {
 	cain_sip_listener_callbacks_t client_callbacks;
 	cain_sip_listener_callbacks_t server_callbacks;
 	endpoint_t* client,*server;
@@ -406,11 +419,13 @@ static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t
 	server = create_udp_endpoint(6788,&server_callbacks);
 	server->expire_in_contact=client->expire_in_contact=expire_in_contact;
 	server->auth=auth_mode;
-	register_base(client,server);
+	refresher_base(client,server,method);
 	destroy_endpoint(client);
 	destroy_endpoint(server);
 }
-
+static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t auth_mode) {
+	refresher_base_with_param("REGISTER",expire_in_contact,auth_mode);
+}
 static void subscribe_test(void) {
 	cain_sip_listener_callbacks_t client_callbacks;
 	cain_sip_listener_callbacks_t server_callbacks;
@@ -621,7 +636,9 @@ static void register_tcp_test_ipv6_to_ipv6_with_ipv6(void){
 	register_test_with_interfaces("tcp","::0","::0",AF_INET6);
 }
 
-
+static void simple_publish() {
+	refresher_base_with_param("PUBLISH",FALSE,TRUE);
+}
 
 test_t refresher_tests[] = {
 	{ "REGISTER Expires header", register_expires_header },
@@ -631,6 +648,7 @@ test_t refresher_tests[] = {
 	{ "REGISTER with failure", register_with_failure },
 	{ "REGISTER with early refresher",register_early_refresher},
 	{ "SUBSCRIBE", subscribe_test },
+	{ "PUBLISH", simple_publish },
 	{ "REGISTER with unrecognizable Contact", register_with_unrecognizable_contact },
 	{ "REGISTER UDP from ipv6 to ipv4", register_test_ipv6_to_ipv4 },
 	{ "REGISTER UDP from ipv4 to ipv6", register_test_ipv4_to_ipv6 },

@@ -128,6 +128,18 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 	switch (response_code) {
 	case 200: {
 		/*great, success*/
+		if (strcmp(cain_sip_request_get_method(request),"PUBLISH")==0) {
+			/*search for etag*/
+			cain_sip_header_t* etag=cain_sip_message_get_header(CAIN_SIP_MESSAGE(response),"SIP-ETag");
+			if (etag) {
+				cain_sip_header_t* sip_if_match = cain_sip_header_create("SIP-If-Match",cain_sip_header_extension_get_value(CAIN_SIP_HEADER_EXTENSION(etag)));
+				/*update request for next refresh*/
+				cain_sip_message_remove_header(CAIN_SIP_MESSAGE(request),"SIP-If-Match");
+				cain_sip_message_add_header(CAIN_SIP_MESSAGE(request),sip_if_match);
+			} else {
+				cain_sip_warning("Refresher [%p] receive 200ok to a publish without etag");
+			}
+		}
 		/*update expire if needed*/
 		set_expires_from_trans(refresher);
 		schedule_timer(refresher); /*re-arm timer*/
@@ -275,7 +287,7 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 	if (expires_header)
 		cain_sip_header_expires_set_expires(expires_header,refresher->expires);
 	contact=cain_sip_message_get_header_by_type(request,cain_sip_header_contact_t);
-	if (cain_sip_header_contact_get_expires(contact)>=0)
+	if (contact && cain_sip_header_contact_get_expires(contact)>=0)
 		cain_sip_header_contact_set_expires(contact,refresher->expires);
 
 	client_transaction = cain_sip_provider_get_new_client_transaction(prov,request);
@@ -350,13 +362,13 @@ static int set_expires_from_trans(cain_sip_refresher_t* refresher) {
 	cain_sip_transaction_t* transaction = CAIN_SIP_TRANSACTION(refresher->transaction);
 	cain_sip_response_t*response=transaction->last_response;
 	cain_sip_request_t*request=cain_sip_transaction_get_request(transaction);
-	cain_sip_header_expires_t* expires_header;
+	cain_sip_header_expires_t*  expires_header=cain_sip_message_get_header_by_type(request,cain_sip_header_expires_t);
 	cain_sip_header_contact_t* contact_header;
 
 	refresher->expires=-1;
 	
 	if (strcmp("REGISTER",cain_sip_request_get_method(request))==0
-			|| strcmp("SUBSCRIBE",cain_sip_request_get_method(request))==0) {
+			|| expires_header /*if request has an expire header, refresher can always work*/) {
 
 		/*An "expires" parameter on the "Contact" header has no semantics for
 		*   SUBSCRIBE and is explicitly not equivalent to an "Expires" header in
@@ -424,6 +436,7 @@ cain_sip_refresher_t* cain_sip_refresher_new(cain_sip_client_transaction_t* tran
 	cain_sip_transaction_state_t state=cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(transaction));
 	cain_sip_request_t* request = cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(transaction));
 	if ( strcmp("REGISTER",cain_sip_request_get_method(request))!=0
+			&& strcmp("PUBLISH",cain_sip_request_get_method(request))!=0
 			&& state!=CAIN_SIP_TRANSACTION_TERMINATED
 			&& state != CAIN_SIP_TRANSACTION_COMPLETED) {
 		cain_sip_error("Invalid state [%s] for %s transaction [%p], should be CAIN_SIP_TRANSACTION_COMPLETED/CAIN_SIP_TRANSACTION_TERMINATED"

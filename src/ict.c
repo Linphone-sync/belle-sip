@@ -100,11 +100,11 @@ static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
 
 	switch (base->state){
 		case CAIN_SIP_TRANSACTION_CALLING:
-			base->state=CAIN_SIP_TRANSACTION_PROCEEDING;
+			cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_PROCEEDING);
 			/* no break*/
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			if (code>=300){
-				base->state=CAIN_SIP_TRANSACTION_COMPLETED;
+				cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_COMPLETED);
 				cain_sip_channel_queue_message(base->channel,(cain_sip_message_t*)make_ack(obj,resp));
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 				obj->timer_D=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_D,obj,cfg->T1*64);
@@ -112,7 +112,7 @@ static void ict_on_response(cain_sip_ict_t *obj, cain_sip_response_t *resp){
 			}else if (code>=200){
 				obj->timer_M=cain_sip_timeout_source_new((cain_sip_source_func_t)ict_on_timer_M,obj,cfg->T1*64);
 				cain_sip_transaction_start_timer(base,obj->timer_M);
-				base->state=CAIN_SIP_TRANSACTION_ACCEPTED;
+				cain_sip_transaction_set_state(base,CAIN_SIP_TRANSACTION_ACCEPTED);
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
 			}else if (code>=100){
 				cain_sip_client_transaction_notify_response((cain_sip_client_transaction_t*)obj,resp);
