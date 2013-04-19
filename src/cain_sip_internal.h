@@ -556,15 +556,15 @@ CAIN_SIP_DECLARE_CUSTOM_VPTR_BEGIN(cain_sip_transaction_t,cain_sip_object_t)
 	void (*on_terminate)(cain_sip_transaction_t *obj);
 CAIN_SIP_DECLARE_CUSTOM_VPTR_END
 
-static inline const cain_sip_timer_config_t * cain_sip_transaction_get_timer_config(cain_sip_transaction_t *obj){
+static CAINSIP_INLINE const cain_sip_timer_config_t * cain_sip_transaction_get_timer_config(cain_sip_transaction_t *obj){
 	return cain_sip_stack_get_timer_config(obj->provider->stack);
 }
 
-static inline void cain_sip_transaction_start_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
+static CAINSIP_INLINE void cain_sip_transaction_start_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
 	cain_sip_main_loop_add_source(obj->provider->stack->ml,timer);
 }
 /** */
-static inline void cain_sip_transaction_stop_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
+static CAINSIP_INLINE void cain_sip_transaction_stop_timer(cain_sip_transaction_t *obj, cain_sip_source_t *timer){
 	cain_sip_main_loop_remove_source(obj->provider->stack->ml,timer);
 }
 

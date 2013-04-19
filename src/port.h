@@ -86,11 +86,11 @@ const void* cain_sip_thread_getspecific(cain_sip_thread_key_t key);
 int cain_sip_thread_key_delete(cain_sip_thread_key_t key);
 
 
-static inline void close_socket(cain_sip_socket_t s){
+static CAINSIP_INLINE void close_socket(cain_sip_socket_t s){
 	closesocket(s);
 }
 
-static inline int get_socket_error(void){
+static CAINSIP_INLINE int get_socket_error(void){
 	return WSAGetLastError();
 }
 
@@ -104,7 +104,7 @@ CAINSIP_INTERNAL_EXPORT void cain_sip_sleep(unsigned int ms);
 #endif
 
 #define usleep(us) Sleep((us)/1000)
-static inline int inet_aton(const char *ip, struct in_addr *p){
+static CAINSIP_INLINE int inet_aton(const char *ip, struct in_addr *p){
 	*(long*)p=inet_addr(ip);
 	return 0;
 }
@@ -123,11 +123,11 @@ typedef pthread_key_t cain_sip_thread_key_t;
 #define cain_sip_thread_getspecific(key)			pthread_getspecific(key)
 #define cain_sip_thread_key_delete(key)				pthread_key_delete(key)
 
-static inline void close_socket(cain_sip_socket_t s){
+static CAINSIP_INLINE void close_socket(cain_sip_socket_t s){
 	close(s);
 }
 
-static inline int get_socket_error(void){
+static CAINSIP_INLINE int get_socket_error(void){
 	return errno;
 }
 #define cain_sip_get_socket_error_string() strerror(errno)

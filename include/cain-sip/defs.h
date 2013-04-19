@@ -28,7 +28,9 @@
 #endif
 
 #ifdef _MSC_VER
-#define inline __inline
+#define CAINSIP_INLINE __inline
+#else
+#define CAINSIP_INLINE inline
 #endif
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) || defined(__WIN32__)
