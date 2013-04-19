@@ -715,6 +715,7 @@ cain_sip_dialog_t* cain_sip_provider_find_dialog(const cain_sip_provider_t *prov
 	}
 	return NULL;
 }
+
 cain_sip_transaction_t* cain_sip_dialog_get_last_transaction(const cain_sip_dialog_t *dialog) {
 	return dialog->last_transaction;
 }

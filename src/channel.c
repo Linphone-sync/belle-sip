@@ -32,6 +32,8 @@ const char *cain_sip_channel_state_to_string(cain_sip_channel_state_t state){
 			return "RES_DONE";
 		case CAIN_SIP_CHANNEL_CONNECTING:
 			return "CONNECTING";
+		case CAIN_SIP_CHANNEL_RETRY:
+			return "RETRY";
 		case CAIN_SIP_CHANNEL_READY:
 			return "READY";
 		case CAIN_SIP_CHANNEL_ERROR:
@@ -53,7 +55,7 @@ static cain_sip_list_t * for_each_weak_unref_free(cain_sip_list_t *l, cain_sip_o
 }
 
 static void cain_sip_channel_destroy(cain_sip_channel_t *obj){
-	if (obj->peer) freeaddrinfo(obj->peer);
+	if (obj->peer_list) freeaddrinfo(obj->peer_list);
 	cain_sip_free(obj->peer_cname);
 	cain_sip_free(obj->peer_name);
 	if (obj->local_ip) cain_sip_free(obj->local_ip);
@@ -191,7 +193,7 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 					if (obj->input_stream.msg && read_size > 0){
 						cain_sip_message("channel [%p] [%i] bytes parsed",obj,read_size);
 						cain_sip_object_ref(obj->input_stream.msg);
-						if (cain_sip_message_is_request(obj->input_stream.msg)) fix_incoming_via(CAIN_SIP_REQUEST(obj->input_stream.msg),obj->peer);
+						if (cain_sip_message_is_request(obj->input_stream.msg)) fix_incoming_via(CAIN_SIP_REQUEST(obj->input_stream.msg),obj->current_peer);
 						/*check for body*/
 						if ((content_length_header = (cain_sip_header_content_length_t*)cain_sip_message_get_header(obj->input_stream.msg,CAIN_SIP_CONTENT_LENGTH)) != NULL
 								&& cain_sip_header_content_length_get_content_length(content_length_header)>0) {
@@ -300,7 +302,7 @@ void cain_sip_channel_init_with_addr(cain_sip_channel_t *obj, cain_sip_stack_t *
 	ai.ai_addrlen=addrlen;
 	cain_sip_addrinfo_to_ip(&ai,remoteip,sizeof(remoteip),&peer_port);
 	cain_sip_channel_init(obj,stack,NULL,0,NULL,remoteip,peer_port);
-	obj->peer=cain_sip_ip_address_to_addrinfo(ai.ai_family, obj->peer_name,obj->peer_port);
+	obj->peer_list=obj->current_peer=cain_sip_ip_address_to_addrinfo(ai.ai_family, obj->peer_name,obj->peer_port);
 }
 
 void cain_sip_channel_set_socket(cain_sip_channel_t *obj, cain_sip_socket_t sock, cain_sip_source_func_t datafunc){
@@ -329,8 +331,8 @@ int cain_sip_channel_matches(const cain_sip_channel_t *obj, const cain_sip_hop_t
 			return 0; /*cname mismatch*/
 		return 1;
 	}
-	if (addr && obj->peer) 
-		return addr->ai_addrlen==obj->peer->ai_addrlen && memcmp(addr->ai_addr,obj->peer->ai_addr,addr->ai_addrlen)==0;
+	if (addr && obj->current_peer) 
+		return addr->ai_addrlen==obj->current_peer->ai_addrlen && memcmp(addr->ai_addr,obj->current_peer->ai_addr,addr->ai_addrlen)==0;
 	return 0;
 }
 
@@ -375,7 +377,7 @@ void cain_sip_channel_close(cain_sip_channel_t *obj){
 }
 
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj){
-	return obj->peer;
+	return obj->current_peer;
 }
 
 cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj) {
@@ -407,18 +409,34 @@ static void channel_invoke_state_listener_defered(cain_sip_channel_t *obj){
 	cain_sip_object_unref(obj);
 }
 
-void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) {
-	cain_sip_message("channel %p: state %s",obj,cain_sip_channel_state_to_string(state));
-	obj->state=state;
-	if (state==CAIN_SIP_CHANNEL_ERROR){
-		/*Because error notification will in practice trigger the destruction of possible transactions and this channel,
+static void cain_sip_channel_handle_error(cain_sip_channel_t *obj){
+	/* see if you can retry on an alternate ip address.*/
+	if (obj->current_peer->ai_next){
+		obj->current_peer=obj->current_peer->ai_next;
+		channel_set_state(obj,CAIN_SIP_CHANNEL_RETRY);
+		cain_sip_channel_connect(obj);
+		return;
+	}
+	/*otherwise we have already tried all the ip addresses, so give up and notify the error*/
+	
+	obj->state=CAIN_SIP_CHANNEL_ERROR;
+	/*Because error notification will in practice trigger the destruction of possible transactions and this channel,
 		 * it is safer to invoke the listener outside the current call stack.
 		 * Indeed the channel encounters network errors while being called for transmiting by a transaction.
 		 */
-		cain_sip_object_ref(obj);
-		cain_sip_main_loop_do_later(obj->stack->ml,(cain_sip_callback_t)channel_invoke_state_listener_defered,obj);
-	}else
+	cain_sip_object_ref(obj);
+	cain_sip_main_loop_do_later(obj->stack->ml,(cain_sip_callback_t)channel_invoke_state_listener_defered,obj);
+}
+
+void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) {
+	cain_sip_message("channel %p: state %s",obj,cain_sip_channel_state_to_string(state));
+	
+	if (state==CAIN_SIP_CHANNEL_ERROR){
+		cain_sip_channel_handle_error(obj);
+	}else{
+		obj->state=state;
 		channel_invoke_state_listener(obj);
+	}
 }
 
 static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
@@ -550,7 +568,8 @@ static void channel_res_done(void *data, const char *name, struct addrinfo *res)
 	cain_sip_channel_t *obj=(cain_sip_channel_t*)data;
 	obj->resolver_id=0;
 	if (res){
-		obj->peer=res;
+		obj->peer_list=res;
+		obj->current_peer=res;
 		channel_set_state(obj,CAIN_SIP_CHANNEL_RES_DONE);
 		channel_prepare_continue(obj);
 	}else{
@@ -565,8 +584,13 @@ void cain_sip_channel_resolve(cain_sip_channel_t *obj){
 }
 
 void cain_sip_channel_connect(cain_sip_channel_t *obj){
+	char ip[64];
+	
 	channel_set_state(obj,CAIN_SIP_CHANNEL_CONNECTING);
-	if(CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->connect(obj,obj->peer)) {
+	cain_sip_addrinfo_to_ip(obj->current_peer,ip,sizeof(ip),NULL);
+	cain_sip_message("Trying to connect to [%s://%s:%i]",cain_sip_channel_get_transport_name(obj),ip,obj->peer_port);
+	
+	if(CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->connect(obj,obj->current_peer)) {
 		cain_sip_error("Cannot connect to [%s://%s:%i]",cain_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);
 		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
 	}

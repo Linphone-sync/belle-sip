@@ -32,6 +32,7 @@ typedef enum cain_sip_channel_state{
 	CAIN_SIP_CHANNEL_RES_IN_PROGRESS,
 	CAIN_SIP_CHANNEL_RES_DONE,
 	CAIN_SIP_CHANNEL_CONNECTING,
+	CAIN_SIP_CHANNEL_RETRY,
 	CAIN_SIP_CHANNEL_READY,
 	CAIN_SIP_CHANNEL_ERROR,
 	CAIN_SIP_CHANNEL_DISCONNECTED
@@ -84,7 +85,8 @@ struct cain_sip_channel{
 	char *local_ip;
 	int local_port;
 	unsigned long resolver_id;
-	struct addrinfo *peer;
+	struct addrinfo *peer_list;
+	struct addrinfo *current_peer;
 	cain_sip_list_t *outgoing_messages;
 	cain_sip_list_t* incoming_messages;
 	cain_sip_channel_input_stream_t input_stream;
