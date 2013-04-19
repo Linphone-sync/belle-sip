@@ -16,18 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define DNS_H /* do not include dns.h in a CPP file! */
 #include "cain_sip_internal.h"
 
 #ifdef HAVE_TUNNEL
 
-#include <tunnel/client.hh>
-
-using namespace belledonnecomm;
-
 struct cain_sip_tunnel_listening_point{
 	cain_sip_listening_point_t base;
-	TunnelClient *tunnelclient;
+	void *tunnelclient;
 };
 
 
@@ -53,7 +48,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_tunnel_listening_point_t)={
 };
 
 
-static void cain_sip_tunnel_listening_point_init(cain_sip_tunnel_listening_point_t *lp, cain_sip_stack_t *s, TunnelClient *tunnelclient) {
+static void cain_sip_tunnel_listening_point_init(cain_sip_tunnel_listening_point_t *lp, cain_sip_stack_t *s, void *tunnelclient) {
 	cain_sip_listening_point_init((cain_sip_listening_point_t*)lp,s,"0.0.0.0",5060);
 	lp->tunnelclient = tunnelclient;
 }
@@ -61,7 +56,7 @@ static void cain_sip_tunnel_listening_point_init(cain_sip_tunnel_listening_point
 
 cain_sip_listening_point_t * cain_sip_tunnel_listening_point_new(cain_sip_stack_t *s, void *tunnelclient){
 	cain_sip_tunnel_listening_point_t *lp=cain_sip_object_new(cain_sip_tunnel_listening_point_t);
-	cain_sip_tunnel_listening_point_init(lp,s,static_cast<TunnelClient *>(tunnelclient));
+	cain_sip_tunnel_listening_point_init(lp,s,tunnelclient);
 	return (cain_sip_listening_point_t*)lp;
 }
 
