@@ -51,9 +51,7 @@ struct cain_sip_resolver_context{
 	uint8_t done;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+CAIN_SIP_BEGIN_DECLS
 
 int cain_sip_addrinfo_to_ip(const struct addrinfo *ai, char *ip, size_t ip_size, int *port);
 CAINSIP_INTERNAL_EXPORT struct addrinfo * cain_sip_ip_address_to_addrinfo(int family, const char *ipaddress, int port);
@@ -73,9 +71,7 @@ void cain_sip_get_src_addr_for(const struct sockaddr *dest, socklen_t destlen, s
 **/ 
 void cain_sip_address_remove_v4_mapping(const struct sockaddr *v6, struct sockaddr *result, socklen_t *result_len);
 
-#ifdef __cplusplus
-}
-#endif
+CAIN_SIP_END_DECLS
 
 
 #endif

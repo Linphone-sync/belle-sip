@@ -50,13 +50,8 @@ struct cain_sip_listening_point{
 	int ai_family; /*AF_INET or AF_INET6*/
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+CAIN_SIP_BEGIN_DECLS
 void cain_sip_listening_point_init(cain_sip_listening_point_t *lp, cain_sip_stack_t *s,  const char *address, int port);
-#ifdef __cplusplus
-}
-#endif
 cain_sip_channel_t *_cain_sip_listening_point_get_channel(cain_sip_listening_point_t *lp,const cain_sip_hop_t *hop, const struct addrinfo *addr);
 cain_sip_channel_t *cain_sip_listening_point_create_channel(cain_sip_listening_point_t *ip, const cain_sip_hop_t *hop);
 void cain_sip_listening_point_remove_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
@@ -64,6 +59,7 @@ int cain_sip_listening_point_get_well_known_port(const char *transport);
 cain_sip_channel_t *cain_sip_listening_point_get_channel(cain_sip_listening_point_t *lp, const cain_sip_hop_t *hop);
 void cain_sip_listening_point_add_channel(cain_sip_listening_point_t *lp, cain_sip_channel_t *chan);
 void cain_sip_listening_point_set_channel_listener(cain_sip_listening_point_t *lp,cain_sip_channel_listener_t* channel_listener);
+CAIN_SIP_END_DECLS
 
 /**udp*/
 typedef struct cain_sip_udp_listening_point cain_sip_udp_listening_point_t;
