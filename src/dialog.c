@@ -334,7 +334,7 @@ int cain_sip_dialog_update(cain_sip_dialog_t *obj,cain_sip_transaction_t* transa
 	switch (obj->state){
 		case CAIN_SIP_DIALOG_NULL:
 		case CAIN_SIP_DIALOG_EARLY:
-			if (strcmp(cain_sip_request_get_method(req),"INVITE")==0)
+			if (strcmp(cain_sip_request_get_method(req),"INVITE")==0 || strcmp(cain_sip_request_get_method(req),"SUBSCRIBE")==0)
 				cain_sip_dialog_establish(obj,req,resp);
 			break;
 		case CAIN_SIP_DIALOG_CONFIRMED:
