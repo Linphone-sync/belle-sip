@@ -441,8 +441,8 @@ int cain_sip_main_loop_quit(cain_sip_main_loop_t *ml){
 }
 
 void cain_sip_main_loop_sleep(cain_sip_main_loop_t *ml, int milliseconds){
-	unsigned long timer_id = cain_sip_main_loop_add_timeout(ml,(cain_sip_source_func_t)cain_sip_main_loop_quit,ml,milliseconds);
+	cain_sip_source_t * s=cain_sip_main_loop_create_timeout(ml,(cain_sip_source_func_t)cain_sip_main_loop_quit,ml,milliseconds,"Main loop sleep timer");
 	cain_sip_main_loop_run(ml);
-	cain_sip_main_loop_cancel_source(ml,timer_id);
+	cain_sip_main_loop_remove_source(ml,s);
 }
 

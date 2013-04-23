@@ -18,6 +18,7 @@
 
 #ifndef REFRESHER_HELPER_H_
 #define REFRESHER_HELPER_H_
+#define CAIN_SIP_REFRESHER_REUSE_EXPIRES -1
 
 typedef struct cain_sip_refresher cain_sip_refresher_t;
 /**
@@ -49,7 +50,7 @@ CAINSIP_EXPORT void cain_sip_refresher_stop(cain_sip_refresher_t* refresher);
 /**
  * Manually initiate a new transaction .
  * @param refresher object
- * @param expires -1 means value extrated from the transaction
+ * @param expires #CAIN_SIP_REFRESHER_REUSE_EXPIRES means value extracted from the transaction
  * @return 0 if succeed
  */
 CAINSIP_EXPORT int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires);
