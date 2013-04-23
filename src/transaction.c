@@ -474,7 +474,8 @@ cain_sip_refresher_t* cain_sip_client_transaction_create_refresher(cain_sip_clie
 }
 
 cain_sip_request_t* cain_sip_client_transaction_create_authenticated_request(cain_sip_client_transaction_t *t,cain_sip_list_t** auth_infos) {
-	cain_sip_request_t* req=CAIN_SIP_REQUEST(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(t)))));
+	cain_sip_request_t* initial_request=cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(t));
+	cain_sip_request_t* req=cain_sip_request_clone_with_body(initial_request);
 	cain_sip_header_cseq_t* cseq=cain_sip_message_get_header_by_type(req,cain_sip_header_cseq_t);
 	cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
 	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t)) != CAIN_SIP_TRANSACTION_COMPLETED

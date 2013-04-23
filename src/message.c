@@ -596,3 +596,16 @@ int cain_sip_response_fix_contact(const cain_sip_response_t* response,cain_sip_h
 	}
 	return 0;
 }
+cain_sip_request_t * cain_sip_request_clone_with_body(const cain_sip_request_t *initial_req) {
+	cain_sip_request_t* req=CAIN_SIP_REQUEST(cain_sip_object_clone(CAIN_SIP_OBJECT(initial_req)));
+	if (cain_sip_message_get_body(CAIN_SIP_MESSAGE(initial_req))) {
+		cain_sip_header_content_length_t* content_lenth=cain_sip_message_get_header_by_type(initial_req,cain_sip_header_content_length_t);
+		if (content_lenth)
+			cain_sip_message_set_body(CAIN_SIP_MESSAGE(req)
+										,cain_sip_message_get_body(CAIN_SIP_MESSAGE(initial_req))
+										,cain_sip_header_content_length_get_content_length(content_lenth));
+		else
+			cain_sip_error("Cannot clone body from request [%p] because no content lenght header",initial_req);
+	}
+	return req;
+}

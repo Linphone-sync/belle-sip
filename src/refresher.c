@@ -246,7 +246,7 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 			cain_sip_message("Refresher [%p] already have transaction [%p] in state [%s]"	,refresher
 																							,refresher->transaction
 																							,cain_sip_transaction_state_to_string(state));
-			request=CAIN_SIP_REQUEST(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(refresher->transaction)))));
+			request=cain_sip_request_clone_with_body(cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(refresher->transaction)));
 			cseq=cain_sip_message_get_header_by_type(request,cain_sip_header_cseq_t);
 			cain_sip_header_cseq_set_seq_number(cseq,cain_sip_header_cseq_get_seq_number(cseq)+1);
 		} else {

@@ -36,6 +36,8 @@ CAINSIP_EXPORT cain_sip_message_t* cain_sip_message_parse(const char* raw);
  */
 CAINSIP_EXPORT cain_sip_message_t* cain_sip_message_parse_raw (const char* buff, size_t buff_length,size_t* message_length );
 
+
+
 CAINSIP_EXPORT int cain_sip_message_is_request(cain_sip_message_t *msg);
 CAINSIP_EXPORT cain_sip_request_t* cain_sip_request_new();
 cain_sip_request_t* cain_sip_request_parse(const char* raw);
@@ -61,6 +63,13 @@ void cain_sip_request_set_method(cain_sip_request_t* request,const char* method)
  * @ return a newly allocated uri
  * */
 CAINSIP_EXPORT cain_sip_uri_t* cain_sip_request_extract_origin(const cain_sip_request_t* req);
+
+/**
+ * Clone all sip headers + body if any
+ * @param  req message to be cloned
+ * @return newly allocated request
+ */
+CAINSIP_EXPORT cain_sip_request_t * cain_sip_request_clone_with_body(const cain_sip_request_t *initial_req);
 
 int cain_sip_message_is_response(const cain_sip_message_t *msg);
 

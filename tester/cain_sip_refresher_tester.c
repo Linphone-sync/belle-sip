@@ -32,6 +32,17 @@
 #define PASSWD "secret"
 
 
+static char publish_body[]=
+	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	"<impp:presence xmlns:impp=\"urn:ietf:params:xml:ns:pidf entity=\"pres:someone@example.com\">\n"
+	"	<impp:tuple id=\"sg89ae\">\n"
+	"		<impp:status>\n"
+	"			<impp:basic>open</impp:basic>\n"
+	"		</impp:status>\n"
+	"		<impp:contact priority=\"0.8\">tel:+09012345678</impp:contact>\n"
+	"	</impp:tuple>\n"
+	"</impp:presence>\n";
+
 typedef enum auth_mode {
 	none
 	,digest
@@ -213,13 +224,18 @@ static void server_process_request_event(void *obj, const cain_sip_request_event
 		}
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),CAIN_SIP_HEADER(contact));
 		if (strcmp(cain_sip_request_get_method(req),"PUBLISH")==0) {
-			cain_sip_header_t* etag=cain_sip_message_get_header(CAIN_SIP_MESSAGE(resp),"SIP-ETag");
-			if (etag) {
-				/*etag already, check for sip_if_match*/
-				cain_sip_header_t* sip_if_match=cain_sip_message_get_header(CAIN_SIP_MESSAGE(resp),"SIP-If-Match");
-				CU_ASSERT_PTR_NOT_NULL(sip_if_match);
-				if (sip_if_match) CU_ASSERT_EQUAL(cain_sip_header_extension_get_value(CAIN_SIP_HEADER_EXTENSION(sip_if_match)),"blablietag");
+
+			cain_sip_header_t* sip_if_match=cain_sip_message_get_header(CAIN_SIP_MESSAGE(resp),"SIP-If-Match");
+			if (sip_if_match) {
+				CU_ASSERT_EQUAL(cain_sip_header_extension_get_value(CAIN_SIP_HEADER_EXTENSION(sip_if_match)),"blablietag");
 			}
+			/*check for body*/
+			CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_body(CAIN_SIP_MESSAGE(req)));
+			if (cain_sip_message_get_body(CAIN_SIP_MESSAGE(req))) {
+				CU_ASSERT_STRING_EQUAL(cain_sip_message_get_body(CAIN_SIP_MESSAGE(req)),publish_body);
+			}
+			CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header_by_type(req,cain_sip_header_content_type_t));
+			CU_ASSERT_PTR_NOT_NULL(cain_sip_message_get_header_by_type(req,cain_sip_header_content_length_t));
 			cain_sip_message_add_header(CAIN_SIP_MESSAGE(resp),cain_sip_header_create("SIP-ETag","blablietag"));
 		}
 	} else {
@@ -330,7 +346,11 @@ static endpoint_t* create_udp_endpoint(int port,cain_sip_listener_callbacks_t* l
 }
 
 
-static void refresher_base(endpoint_t* client,endpoint_t *server, const char* method) {
+static void refresher_base_with_body(endpoint_t* client
+										,endpoint_t *server
+										, const char* method
+										, cain_sip_header_content_type_t* content_type
+										,const char* body) {
 	cain_sip_request_t* req;
 	cain_sip_client_transaction_t* trans;
 	cain_sip_header_route_t* destination_route;
@@ -366,6 +386,12 @@ static void refresher_base(endpoint_t* client,endpoint_t *server, const char* me
 		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_expires_create(1)));
 
 	cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(destination_route));
+	if (content_type && body) {
+		size_t body_lenth=strlen(body);
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(content_type));
+		cain_sip_message_add_header(CAIN_SIP_MESSAGE(req),CAIN_SIP_HEADER(cain_sip_header_content_length_create(body_lenth)));
+		cain_sip_message_set_body(CAIN_SIP_MESSAGE(req),body,body_lenth);
+	}
 	trans=cain_sip_provider_get_new_client_transaction(client->provider,req);
 	cain_sip_object_ref(trans);/*to avoid trans from being deleted before refresher can use it*/
 	cain_sip_client_transaction_send_request(trans);
@@ -402,11 +428,18 @@ static void refresher_base(endpoint_t* client,endpoint_t *server, const char* me
 	cain_sip_refresher_stop(refresher);
 	cain_sip_object_unref(refresher);
 }
-
+static void refresher_base(endpoint_t* client,endpoint_t *server, const char* method) {
+	refresher_base_with_body(client,server,method,NULL,NULL);
+}
 static void register_base(endpoint_t* client,endpoint_t *server) {
 	refresher_base(client,server,"REGISTER");
 }
-static void refresher_base_with_param(const char* method, unsigned char expire_in_contact,auth_mode_t auth_mode) {
+static void refresher_base_with_param_and_body(const char* method
+												, unsigned char expire_in_contact
+												, auth_mode_t auth_mode
+												, int early_refresher
+												, cain_sip_header_content_type_t* content_type
+												,const char* body){
 	cain_sip_listener_callbacks_t client_callbacks;
 	cain_sip_listener_callbacks_t server_callbacks;
 	endpoint_t* client,*server;
@@ -419,9 +452,14 @@ static void refresher_base_with_param(const char* method, unsigned char expire_i
 	server = create_udp_endpoint(6788,&server_callbacks);
 	server->expire_in_contact=client->expire_in_contact=expire_in_contact;
 	server->auth=auth_mode;
-	refresher_base(client,server,method);
+	client->early_refresher=early_refresher;
+	refresher_base_with_body(client,server,method,content_type,body);
 	destroy_endpoint(client);
 	destroy_endpoint(server);
+}
+static void refresher_base_with_param(const char* method, unsigned char expire_in_contact,auth_mode_t auth_mode) {
+	refresher_base_with_param_and_body(method,expire_in_contact,auth_mode,FALSE,NULL,NULL);
+
 }
 static void register_test_with_param(unsigned char expire_in_contact,auth_mode_t auth_mode) {
 	refresher_base_with_param("REGISTER",expire_in_contact,auth_mode);
@@ -637,7 +675,14 @@ static void register_tcp_test_ipv6_to_ipv6_with_ipv6(void){
 }
 
 static void simple_publish() {
-	refresher_base_with_param("PUBLISH",FALSE,TRUE);
+	cain_sip_header_content_type_t* content_type=cain_sip_header_content_type_create("application","pidf+xml");
+	refresher_base_with_param_and_body("PUBLISH",FALSE,TRUE,FALSE, content_type,publish_body);
+
+}
+static void simple_publish_with_early_refresher() {
+	cain_sip_header_content_type_t* content_type=cain_sip_header_content_type_create("application","pidf+xml");
+	refresher_base_with_param_and_body("PUBLISH",FALSE,TRUE,TRUE, content_type,publish_body);
+
 }
 
 test_t refresher_tests[] = {
@@ -649,6 +694,7 @@ test_t refresher_tests[] = {
 	{ "REGISTER with early refresher",register_early_refresher},
 	{ "SUBSCRIBE", subscribe_test },
 	{ "PUBLISH", simple_publish },
+	{ "PUBLISH with early refresher", simple_publish_with_early_refresher },
 	{ "REGISTER with unrecognizable Contact", register_with_unrecognizable_contact },
 	{ "REGISTER UDP from ipv6 to ipv4", register_test_ipv6_to_ipv4 },
 	{ "REGISTER UDP from ipv4 to ipv6", register_test_ipv4_to_ipv6 },
