@@ -509,7 +509,7 @@ cain_sip_object_pool_t *cain_sip_object_pool_get_current(void){
 	if (*pools==NULL ){
 		if (first_time) {
 			cain_sip_warning("There is no object pool created in thread [%ul]. "
-			"Use cain_sip_stack_push_pool() to create one. Unowned objects not unref'd will be leaked.",
+			"Use cain_sip_object_pool_push() to create one. Unowned objects not unref'd will be leaked.",
 			(unsigned long)cain_sip_thread_self());
 		}
 		return NULL;

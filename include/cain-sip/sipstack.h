@@ -97,10 +97,6 @@ CAINSIP_EXPORT void cain_sip_stack_set_default_dscp(cain_sip_stack_t *stack, int
 **/
 CAINSIP_EXPORT int cain_sip_stack_get_default_dscp(cain_sip_stack_t *stack);
 
-CAINSIP_EXPORT void cain_sip_stack_push_pool(cain_sip_stack_t *stack);
-
-CAINSIP_EXPORT void cain_sip_stack_pop_pool(cain_sip_stack_t *stack);
-
 CAIN_SIP_END_DECLS
 
 #endif
