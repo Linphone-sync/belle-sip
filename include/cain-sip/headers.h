@@ -22,6 +22,7 @@
 #include "cain-sip/defs.h"
 #include "cain-sip/uri.h"
 
+#include <time.h>
 
 
 /***************************************************************************************
@@ -564,6 +565,26 @@ CAINSIP_EXPORT char* cain_sip_header_replaces_value_to_escaped_string(const cain
 #define CAIN_SIP_HEADER_REPLACES(t) CAIN_SIP_CAST(t,cain_sip_header_replaces_t)
 #define CAIN_SIP_REPLACES "Replaces"
 
+/*******
+ * Date header
+ *******/
 
+typedef struct cain_sip_header_date cain_sip_header_date_t;
+
+CAINSIP_EXPORT cain_sip_header_date_t* cain_sip_header_date_new();
+CAINSIP_EXPORT cain_sip_header_date_t* cain_sip_header_date_parse(const char* date) ;
+
+CAINSIP_EXPORT cain_sip_header_date_t* cain_sip_header_date_create_from_time(const time_t *utc_time);
+
+CAINSIP_EXPORT time_t cain_sip_header_date_get_time(cain_sip_header_date_t *obj);
+
+CAINSIP_EXPORT void cain_sip_header_date_set_time(cain_sip_header_date_t *obj, const time_t *utc_time);
+
+CAINSIP_EXPORT const char * cain_sip_header_date_get_date(const cain_sip_header_date_t *obj);
+
+CAINSIP_EXPORT void cain_sip_header_date_set_date(cain_sip_header_date_t *obj, const char *date);
+
+#define CAIN_SIP_HEADER_DATE(obj)	CAIN_SIP_CAST(obj,cain_sip_header_date_t)
+#define CAIN_SIP_DATE "Date"
 
 #endif /* HEADERS_H_ */

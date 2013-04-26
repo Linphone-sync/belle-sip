@@ -1235,7 +1235,7 @@ HEADER_TO_LIKE_IMPL(referred_by,CAIN_SIP_REFERRED_BY)
 */
 struct _cain_sip_header_replaces  {
 	cain_sip_parameters_t parameters;
-	const char* call_id;
+	char* call_id;
 };
 
 static void cain_sip_header_replaces_destroy(cain_sip_header_replaces_t* replaces) {
@@ -1289,6 +1289,7 @@ char* cain_sip_header_replaces_value_to_escaped_string(const cain_sip_header_rep
 	buff[current_offset]='\0';
 	return cain_sip_to_escaped_string(buff);
 }
+
 cain_sip_header_replaces_t* cain_sip_header_replaces_create(const char* call_id,const char* from_tag,const char* to_tag) {
 	cain_sip_header_replaces_t* replaces=cain_sip_header_replaces_new();
 	cain_sip_header_replaces_set_call_id(replaces,call_id);
@@ -1296,3 +1297,88 @@ cain_sip_header_replaces_t* cain_sip_header_replaces_create(const char* call_id,
 	cain_sip_header_replaces_set_to_tag(replaces,to_tag);
 	return replaces;
 }
+
+struct cain_sip_header_date{
+	cain_sip_header_t base;
+	char *date;
+};
+
+static void cain_sip_header_date_destroy(cain_sip_header_date_t* obj) {
+	DESTROY_STRING(obj,date);
+}
+
+static void cain_sip_header_date_clone(cain_sip_header_date_t* obj,
+                                                 const cain_sip_header_date_t *orig ) {
+	CLONE_STRING(cain_sip_header_date,date,obj,orig);
+}
+
+int cain_sip_header_date_marshal(cain_sip_header_date_t* obj, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(obj), buff,current_offset, buff_size);
+	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",obj->date);
+	return current_offset-offset;
+}
+
+CAIN_SIP_NEW_HEADER(header_date,header,CAIN_SIP_DATE)
+CAIN_SIP_PARSE(header_date)
+
+CAINSIP_EXPORT cain_sip_header_date_t* cain_sip_header_date_create_from_time(const time_t *utc_time){
+	cain_sip_header_date_t *obj=cain_sip_header_date_new();
+	cain_sip_header_date_set_time(obj,utc_time);
+	return obj;
+}
+
+static const char *days[]={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+static const char *months[]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
+
+CAINSIP_EXPORT time_t cain_sip_header_date_get_time(cain_sip_header_date_t *obj){
+	struct tm ret={0};
+	char tmp1[16]={0};
+	char tmp2[16]={0};
+	int i,j;
+	time_t seconds;
+	
+	sscanf(obj->date,"%3c,%d %16s %d %d:%d:%d",tmp1,&ret.tm_mday,tmp2,
+		&ret.tm_year,&ret.tm_hour,&ret.tm_min,&ret.tm_sec);
+	ret.tm_year-=1900;
+	for(i=0;i<7;i++) { 
+		if(strcmp(tmp1,days[i])==0) {
+			ret.tm_wday=i;
+			for(j=0;j<12;j++) { 
+				if(strcmp(tmp2,months[j])==0) {
+					ret.tm_mon=j;
+					goto success;
+				}
+			}
+		}
+	}
+	cain_sip_warning("Failed to parse date %s",obj->date);
+	return (time_t)-1;
+success:
+	
+	ret.tm_isdst=0;
+	seconds=mktime(&ret);
+	if (seconds==(time_t)-1){
+		cain_sip_error("mktime() failed: %s",strerror(errno));
+		return (time_t)-1;
+	}
+	return seconds-timezone;
+}
+
+CAINSIP_EXPORT void cain_sip_header_date_set_time(cain_sip_header_date_t *obj, const time_t *utc_time){
+	
+	struct tm *ret;
+#ifndef WIN32
+	struct tm gmt;
+	ret=gmtime_r(utc_time,&gmt);
+#else
+	ret=gmtime(utc_time);
+#endif
+	/*cannot use strftime because it is locale dependant*/
+	cain_sip_header_date_set_date(obj,
+		cain_sip_strdup_printf("%s, %i %s %i %02i:%02i:%02i GMT",
+			days[ret->tm_wday],ret->tm_mday,months[ret->tm_mon],1900+ret->tm_year,ret->tm_hour,ret->tm_min,ret->tm_sec));
+}
+
+GET_SET_STRING(cain_sip_header_date,date);
+

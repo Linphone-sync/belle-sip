@@ -183,6 +183,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_header_service_route_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_refer_to_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_referred_by_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_replaces_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_date_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_hop_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_object_pool_t);
 
@@ -258,8 +259,7 @@ CAINSIP_INTERNAL_EXPORT char *cain_sip_strdup_printf(const char *fmt,...);
 	void object_type##_set_##attribute (object_type##_t* obj,const char* value) {\
 		if (obj->attribute != NULL) cain_sip_free((void*)obj->attribute);\
 		if (value) {\
-			obj->attribute=cain_sip_malloc(strlen(value)+1);\
-			strcpy((char*)(obj->attribute),value);\
+			obj->attribute=cain_sip_strdup(value); \
 		} else obj->attribute=NULL;\
 	}
 /*#define GET_SET_STRING_PARAM_NULL_ALLOWED(object_type,attribute) \
