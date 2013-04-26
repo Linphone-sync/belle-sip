@@ -196,7 +196,7 @@ struct cain_sip_source{
 	cain_sip_list_t node;
 	unsigned long id;
 	cain_sip_fd_t fd;
-	unsigned int events;
+	unsigned short events,revents;
 	int timeout;
 	void *data;
 	uint64_t expire_ms;
@@ -206,8 +206,8 @@ struct cain_sip_source{
 	unsigned char cancelled;
 	unsigned char expired;
 	unsigned char oneshot;
+	unsigned char notify_required; /*for testing purpose, use to ask for being scheduled*/
 	cain_sip_socket_t sock;
-	unsigned int notify_required; /*for testing purpose, use to ask for being scheduled*/
 };
 
 void cain_sip_socket_source_init(cain_sip_source_t *s, cain_sip_source_func_t func, void *data, cain_sip_socket_t fd, unsigned int events, unsigned int timeout_value_ms);
@@ -548,7 +548,7 @@ struct cain_sip_transaction{
 	cain_sip_transaction_state_t state;
 	uint64_t start_time;
 	void *appdata;
-	unsigned int  is_internal;
+	unsigned int is_internal;
 };
 
 
