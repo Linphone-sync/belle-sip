@@ -1220,6 +1220,8 @@ header_extension[ANTLR3_BOOLEAN check_for_known_header]  returns [cain_sip_heade
                      $ret = CAIN_SIP_HEADER(cain_sip_header_referred_by_parse((const char*)$header_extension.text->chars));
                     }else if (check_for_known_header && strcasecmp(CAIN_SIP_REPLACES,(const char*)$header_name.text->chars) == 0) {
                      $ret = CAIN_SIP_HEADER(cain_sip_header_replaces_parse((const char*)$header_extension.text->chars));
+                    }else if (check_for_known_header && strcasecmp(CAIN_SIP_DATE,(const char*)$header_name.text->chars) == 0) {
+                     $ret = CAIN_SIP_HEADER(cain_sip_header_date_parse((const char*)$header_extension.text->chars));
                     }else {
                       $ret =  CAIN_SIP_HEADER(cain_sip_header_extension_new());
                       cain_sip_header_extension_set_value((cain_sip_header_extension_t*)$ret,(const char*)$header_value.text->chars);
