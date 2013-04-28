@@ -260,8 +260,6 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 				expires_header = cain_sip_header_expires_new();
 				cain_sip_message_add_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_HEADER(expires_header));
 			}
-
-
 		}
 		cain_sip_provider_add_authorization(prov,request,old_response,auth_infos);
 	} else {
@@ -290,6 +288,15 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 	if (contact && cain_sip_header_contact_get_expires(contact)>=0)
 		cain_sip_header_contact_set_expires(contact,refresher->expires);
 
+	/*update the Date header if it exists*/
+	{
+		cain_sip_header_date_t *date=cain_sip_message_get_header_by_type(request,cain_sip_header_date_t);
+		if (date){
+			time_t curtime=time(NULL);
+			cain_sip_header_date_set_time(date,&curtime);
+		}
+	}
+	
 	client_transaction = cain_sip_provider_get_new_client_transaction(prov,request);
 	client_transaction->base.is_internal=1;
 	cain_sip_transaction_set_application_data(CAIN_SIP_TRANSACTION(client_transaction),refresher);
