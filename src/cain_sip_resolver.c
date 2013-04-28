@@ -104,9 +104,11 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 	if (revents & CAIN_SIP_EVENT_TIMEOUT) {
 		cain_sip_error("%s timed-out", __FUNCTION__);
 		ctx->cb(ctx->cb_data, ctx->name, NULL);
+		ctx->done=TRUE;
 		return CAIN_SIP_STOP;
 	}
 	if (ctx->cancelled) {
+		ctx->done=TRUE;
 		return CAIN_SIP_STOP;
 	}
 
@@ -124,8 +126,7 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 			if (rr.section == section) {
 				if ((error = dns_any_parse(dns_any_init(&any, sizeof(any)), &rr, ans))) {
 					cain_sip_error("%s dns_any_parse error: %s", __FUNCTION__, dns_strerror(error));
-					free(ans);
-					return CAIN_SIP_STOP;
+					break;
 				}
 				if ((ctx->family == AF_INET6) && (rr.class == DNS_C_IN) && (rr.type == DNS_T_AAAA)) {
 					struct dns_aaaa *aaaa = &any.aaaa;
@@ -137,7 +138,6 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 					if (getnameinfo((struct sockaddr *)&sin6, sizeof(sin6), host, sizeof(host), service, sizeof(service), NI_NUMERICHOST) != 0)
 						continue;
 					ctx->ai = cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port);
-					ctx->done=TRUE;
 					cain_sip_message("%s has address %s", ctx->name, host);
 					break;
 				} else {
@@ -151,7 +151,6 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 						if (getnameinfo((struct sockaddr *)&sin, sizeof(sin), host, sizeof(host), service, sizeof(service), NI_NUMERICHOST) != 0)
 							continue;
 						ctx->ai = cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port);
-						ctx->done=TRUE;
 						cain_sip_message("%s has address %s", ctx->name, host);
 						break;
 					}
@@ -160,10 +159,12 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 		}
 		free(ans);
 		ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
+		ctx->done=TRUE;
 		return CAIN_SIP_STOP;
 	}
 	if (error != DNS_EAGAIN) {
 		cain_sip_error("%s dns_res_check error: %s (%d)", __FUNCTION__, dns_strerror(error), error);
+		ctx->done=TRUE;
 		return CAIN_SIP_STOP;
 	}
 

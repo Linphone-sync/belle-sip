@@ -272,6 +272,10 @@ void cain_sip_main_loop_add_source(cain_sip_main_loop_t *ml, cain_sip_source_t *
 		cain_sip_fatal("Source is already linked somewhere else.");
 		return;
 	}
+	if (source->node.data!=source){
+		cain_sip_fatal("Insane source passed to cain_sip_main_loop_add_source() !");
+		return;
+	}
 	cain_sip_object_ref(source);
 	if (source->timeout>=0){
 		source->expire_ms=cain_sip_time_ms()+source->timeout;
