@@ -21,6 +21,9 @@
 
 #ifdef HAVE_POLARSSL
 
+/* Uncomment to get very verbose polarssl logs*/
+//#define ENABLE_POLARSSL_LOGS
+
 #include <polarssl/error.h>
 
 /*************tls********/
@@ -34,6 +37,7 @@ struct cain_sip_tls_channel{
 	struct sockaddr_storage ss;
 	socklen_t socklen;
 	int socket_connected;
+	char *cur_debug_msg;
 };
 
 static void tls_channel_close(cain_sip_tls_channel_t *obj){
@@ -49,6 +53,8 @@ static void tls_channel_uninit(cain_sip_tls_channel_t *obj){
 		tls_channel_close(obj);
 	ssl_free(&obj->sslctx);
 	x509_free(&obj->root_ca);
+	if (obj->cur_debug_msg)
+		cain_sip_free(obj->cur_debug_msg);
 }
 
 static int tls_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
@@ -236,6 +242,36 @@ static int cain_sip_tls_channel_load_root_ca(cain_sip_tls_channel_t *obj, const 
 	return -1;
 }
 
+#ifdef ENABLE_POLARSSL_LOGS
+/*
+ * polarssl does a lot of logs, some with newline, some without.
+ * We need to concatenate logs without new line until a new line is found.
+ */
+static void ssl_debug_to_cain_sip(void *context, int level, const char *str){
+	cain_sip_tls_channel_t *chan=(cain_sip_tls_channel_t*)context;
+	int len=strlen(str);
+	
+	if (len>0 && (str[len-1]=='\n' || str[len-1]=='\r')){
+		/*eliminate the newline*/
+		char *tmp=cain_sip_strdup(str);
+		tmp[len-1]=0;
+		if (chan->cur_debug_msg){
+			cain_sip_message("ssl: %s%s",chan->cur_debug_msg,tmp);
+			cain_sip_free(chan->cur_debug_msg);
+			chan->cur_debug_msg=NULL;
+		}else cain_sip_message("ssl: %s",tmp);
+		cain_sip_free(tmp);
+	}else{
+		if (chan->cur_debug_msg){
+			char *tmp=cain_sip_strdup_printf("%s%s",chan->cur_debug_msg,str);
+			cain_sip_free(chan->cur_debug_msg);
+			chan->cur_debug_msg=tmp;
+		}else chan->cur_debug_msg=cain_sip_strdup(str);
+	}
+}
+
+#endif
+
 cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp,const char *bindip, int localport, const char *peer_cname, const char *dest, int port){
 	cain_sip_tls_channel_t *obj=cain_sip_object_new(cain_sip_tls_channel_t);
 	cain_sip_stream_channel_t* super=(cain_sip_stream_channel_t*)obj;
@@ -244,6 +280,9 @@ cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp
 					,((cain_sip_listening_point_t*)lp)->stack
 					,bindip,localport,peer_cname,dest,port);
 	ssl_init(&obj->sslctx);
+#ifdef ENABLE_POLARSSL_LOGS
+	ssl_set_dbg(&obj->sslctx,ssl_debug_to_cain_sip,obj);
+#endif
 	ssl_set_endpoint(&obj->sslctx,SSL_IS_CLIENT);
 	ssl_set_authmode(&obj->sslctx,SSL_VERIFY_REQUIRED);
 	ssl_set_bio(&obj->sslctx,polarssl_read,obj,polarssl_write,obj);
