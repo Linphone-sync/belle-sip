@@ -68,6 +68,7 @@ libcainsip_la_SOURCES=				\
 
 
 libcainsip_la_CFLAGS=$(STRICT_OPTIONS) $(ANTLR_CFLAGS) $(TLS_CFLAGS) $(TUNNEL_CFLAGS) $(LIBCAINSIP_CFLAGS)
+libcainsip_la_CXXFLAGS=$(STRICT_OPTIONS) $(TLS_CFLAGS) $(TUNNEL_CFLAGS) $(LIBCAINSIP_CFLAGS)
 
 libcainsip_la_LIBADD=libcainsip_generated.la $(ANTLR_LIBS) $(TLS_LIBS) $(TUNNEL_LIBS)
 
