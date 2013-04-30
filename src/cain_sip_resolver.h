@@ -29,8 +29,12 @@ typedef struct cain_sip_resolver_context cain_sip_resolver_context_t;
 #define CAIN_SIP_RESOLVER_CONTEXT(obj) CAIN_SIP_CAST(obj,cain_sip_resolver_context_t)
 
 /**
- * Callback prototype for asynchronous DNS resolution. The results_list contains addrinfo elements that must be
+ * Callback prototype for asynchronous DNS resolution.
+ * The results_list contents depends on the type of DNS query.
+ * If the DNS query is of type A or AAAA, the results_list contains addrinfo elements that must be
  * taken and (possibly later) freed by the callee, using freeaddrinfo().
+ * If the DNS query is of type SRV, the results_list contains struct dns_srv elements that must be
+ * taken and (possibly later) freed by the callee, using cain_sip_free().
 **/
 typedef void (*cain_sip_resolver_callback_t)(void *data, const char *name, cain_sip_list_t *results_list);
 
@@ -43,9 +47,11 @@ struct cain_sip_resolver_context{
 	struct dns_resolv_conf *resconf;
 	struct dns_hosts *hosts;
 	struct dns_resolver *R;
+	enum dns_type type;
 	char *name;
 	int port;
 	cain_sip_list_t *ai_list;
+	cain_sip_list_t *srv_list;
 	int family;
 	uint8_t cancelled;
 	uint8_t done;
@@ -55,7 +61,8 @@ CAIN_SIP_BEGIN_DECLS
 
 int cain_sip_addrinfo_to_ip(const struct addrinfo *ai, char *ip, size_t ip_size, int *port);
 CAINSIP_INTERNAL_EXPORT struct addrinfo * cain_sip_ip_address_to_addrinfo(int family, const char *ipaddress, int port);
-CAINSIP_INTERNAL_EXPORT unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int port, int family, cain_sip_resolver_callback_t cb , void *data, cain_sip_main_loop_t *ml);
+CAINSIP_INTERNAL_EXPORT unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int port, int family, cain_sip_resolver_callback_t cb, void *data, cain_sip_main_loop_t *ml);
+CAINSIP_INTERNAL_EXPORT unsigned long cain_sip_resolve_srv(cain_sip_stack_t *stack, const char *name, const char *transport, cain_sip_resolver_callback_t cb, void *data, cain_sip_main_loop_t *ml);
 void cain_sip_resolve_cancel(cain_sip_main_loop_t *ml, unsigned long id);
 
 /**

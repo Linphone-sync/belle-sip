@@ -93,13 +93,13 @@ struct dns_cache *cache(cain_sip_resolver_context_t *ctx) {
 	return NULL;
 }
 
-static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned int revents) {
+static int resolver_process_data(cain_sip_resolver_context_t *ctx, unsigned int revents) {
 	char host[NI_MAXHOST + 1];
 	char service[NI_MAXSERV + 1];
 	struct dns_packet *ans;
 	struct dns_rr_i *I;
-	int error;
 	struct dns_rr_i dns_rr_it;
+	int error;
 
 	if (revents & CAIN_SIP_EVENT_TIMEOUT) {
 		cain_sip_error("%s timed-out", __FUNCTION__);
@@ -128,7 +128,7 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 					cain_sip_error("%s dns_any_parse error: %s", __FUNCTION__, dns_strerror(error));
 					break;
 				}
-				if ((ctx->family == AF_INET6) && (rr.class == DNS_C_IN) && (rr.type == DNS_T_AAAA)) {
+				if ((ctx->type == DNS_T_AAAA) && (rr.class == DNS_C_IN) && (rr.type == DNS_T_AAAA)) {
 					struct dns_aaaa *aaaa = &any.aaaa;
 					struct sockaddr_in6 sin6;
 					memset(&sin6, 0, sizeof(sin6));
@@ -139,24 +139,33 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 						continue;
 					ctx->ai_list = cain_sip_list_append(ctx->ai_list, cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port));
 					cain_sip_message("%s resolved to %s", ctx->name, host);
-				} else {
-					if ((rr.class == DNS_C_IN) && (rr.type == DNS_T_A)) {
-						struct dns_a *a = &any.a;
-						struct sockaddr_in sin;
-						memset(&sin, 0, sizeof(sin));
-						memcpy(&sin.sin_addr, &a->addr, sizeof(sin.sin_addr));
-						sin.sin_family = AF_INET;
-						sin.sin_port = ctx->port;
-						if (getnameinfo((struct sockaddr *)&sin, sizeof(sin), host, sizeof(host), service, sizeof(service), NI_NUMERICHOST) != 0)
-							continue;
-						ctx->ai_list = cain_sip_list_append(ctx->ai_list, cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port));
-						cain_sip_message("%s resolved to %s", ctx->name, host);
-					}
+				} else if ((ctx->type == DNS_T_A) && (rr.class == DNS_C_IN) && (rr.type == DNS_T_A)) {
+					struct dns_a *a = &any.a;
+					struct sockaddr_in sin;
+					memset(&sin, 0, sizeof(sin));
+					memcpy(&sin.sin_addr, &a->addr, sizeof(sin.sin_addr));
+					sin.sin_family = AF_INET;
+					sin.sin_port = ctx->port;
+					if (getnameinfo((struct sockaddr *)&sin, sizeof(sin), host, sizeof(host), service, sizeof(service), NI_NUMERICHOST) != 0)
+						continue;
+					ctx->ai_list = cain_sip_list_append(ctx->ai_list, cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port));
+					cain_sip_message("%s resolved to %s", ctx->name, host);
+				} else if ((ctx->type == DNS_T_SRV) && (rr.class == DNS_C_IN) && (rr.type == DNS_T_SRV)) {
+					struct dns_srv *srv = &any.srv;
+					struct dns_srv *res = cain_sip_malloc(sizeof(struct dns_srv));
+					memcpy(res, srv, sizeof(res));
+					snprintf(host, sizeof(host), "[target:%s port:%d prio:%d weight:%d]", srv->target, srv->port, srv->priority, srv->weight);
+					ctx->srv_list = cain_sip_list_append(ctx->srv_list, res);
+					cain_sip_message("SRV %s resolved to %s", ctx->name, host);
 				}
 			}
 		}
 		free(ans);
-		ctx->cb(ctx->cb_data, ctx->name, ctx->ai_list);
+		if ((ctx->type == DNS_T_A) || (ctx->type == DNS_T_AAAA)) {
+			ctx->cb(ctx->cb_data, ctx->name, ctx->ai_list);
+		} else if (ctx->type == DNS_T_SRV) {
+			ctx->cb(ctx->cb_data, ctx->name, ctx->srv_list);
+		}
 		ctx->done=TRUE;
 		return CAIN_SIP_STOP;
 	}
@@ -170,11 +179,11 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 	return CAIN_SIP_CONTINUE;
 }
 
-static int _resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_source_func_t datafunc, enum dns_type type, int timeout) {
+static int _resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_source_func_t datafunc, int timeout) {
 	int error;
 
 	if (!ctx->stack->resolver_send_error) {
-		error = dns_res_submit(ctx->R, ctx->name, type, DNS_C_IN);
+		error = dns_res_submit(ctx->R, ctx->name, ctx->type, DNS_C_IN);
 		if (error)
 			cain_sip_error("%s dns_res_submit error [%s]: %s", __FUNCTION__, ctx->name, dns_strerror(error));
 	} else {
@@ -196,19 +205,18 @@ static int _resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_sour
 typedef struct delayed_send {
 	cain_sip_resolver_context_t *ctx;
 	cain_sip_source_func_t datafunc;
-	enum dns_type type;
 	int timeout;
 } delayed_send_t;
 
 static int on_delayed_send_do(delayed_send_t *ds) {
 	cain_sip_message("%s sending now", __FUNCTION__);
-	_resolver_start_query(ds->ctx, ds->datafunc, ds->type, ds->timeout);
+	_resolver_start_query(ds->ctx, ds->datafunc, ds->timeout);
 	cain_sip_object_unref(ds->ctx);
 	cain_sip_free(ds);
 	return FALSE;
 }
 
-static int resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_source_func_t datafunc, enum dns_type type, int timeout) {
+static int resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_source_func_t datafunc, int timeout) {
 	struct dns_hints *(*hints)() = &dns_hints_local;
 	struct dns_options *opts;
 #ifndef HAVE_C99
@@ -237,14 +245,13 @@ static int resolver_start_query(cain_sip_resolver_context_t *ctx, cain_sip_sourc
 		delayed_send_t *ds = cain_sip_new(delayed_send_t);
 		ds->ctx = (cain_sip_resolver_context_t *)cain_sip_object_ref(ctx);
 		ds->datafunc = datafunc;
-		ds->type = type;
 		ds->timeout = timeout;
 		cain_sip_main_loop_add_timeout(ctx->stack->ml, (cain_sip_source_func_t)on_delayed_send_do, ds, ctx->stack->resolver_tx_delay);
 		cain_sip_socket_source_init((cain_sip_source_t*)ctx, datafunc, ctx, dns_res_pollfd(ctx->R), CAIN_SIP_EVENT_READ | CAIN_SIP_EVENT_TIMEOUT, ctx->stack->resolver_tx_delay + 1000);
 		cain_sip_message("%s DNS resolution delayed by %d ms", __FUNCTION__, ctx->stack->resolver_tx_delay);
 		return 0;
 	} else {
-		return _resolver_start_query(ctx, datafunc, type, timeout);
+		return _resolver_start_query(ctx, datafunc, timeout);
 	}
 }
 
@@ -300,7 +307,7 @@ CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_resolver_context_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_resolver_context_t, cain_sip_source_t,cain_sip_resolver_context_destroy, NULL, NULL,FALSE);
 
 unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int port, int family, cain_sip_resolver_callback_t cb , void *data, cain_sip_main_loop_t *ml) {
-	struct addrinfo *res = cain_sip_ip_address_to_addrinfo(family,name, port);
+	struct addrinfo *res = cain_sip_ip_address_to_addrinfo(family, name, port);
 	if (res == NULL) {
 		/* Then perform asynchronous DNS query */
 		cain_sip_resolver_context_t *ctx = cain_sip_object_new(cain_sip_resolver_context_t);
@@ -309,19 +316,18 @@ unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int po
 		ctx->cb = cb;
 		ctx->name = cain_sip_strdup(name);
 		ctx->port = port;
-		ctx->ai_list = NULL;
 		if (family == 0) family = AF_UNSPEC;
 		ctx->family = family;
+		ctx->type = (ctx->family == AF_INET6) ? DNS_T_AAAA : DNS_T_A;
 		if (resolver_start_query(ctx,
-				(cain_sip_source_func_t)resolver_process_a_data,
-				(ctx->family == AF_INET6) ? DNS_T_AAAA : DNS_T_A,
+				(cain_sip_source_func_t)resolver_process_data,
 				cain_sip_stack_get_dns_timeout(stack)) < 0) {
 			cain_sip_object_unref(ctx);
 			return 0;
 		}
 		if (ctx->done == FALSE) {
 			/* The resolver context must never be removed manually from the main loop */
-			cain_sip_main_loop_add_source(ml,(cain_sip_source_t*)ctx);
+			cain_sip_main_loop_add_source(ml, (cain_sip_source_t *)ctx);
 			cain_sip_object_unref(ctx);	/* The main loop has a ref on it */
 			return ctx->source.id;
 		} else {
@@ -331,6 +337,39 @@ unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int po
 		cain_sip_list_t *ai_list = cain_sip_list_append(NULL, res);
 		cb(data, name, ai_list);
 		return 0;
+	}
+}
+
+unsigned long cain_sip_resolve_srv(cain_sip_stack_t *stack, const char *name, const char *transport, cain_sip_resolver_callback_t cb, void *data, cain_sip_main_loop_t *ml) {
+	cain_sip_resolver_context_t *ctx = cain_sip_object_new(cain_sip_resolver_context_t);
+	char *prefix;
+	if (strcasecmp(transport, "udp") == 0) {
+		prefix = "_sip._udp.";
+	} else if (strcasecmp(transport, "tcp") == 0) {
+		prefix = "_sip._tcp.";
+	} else if (strcasecmp(transport, "tls") == 0) {
+		prefix = "_sips._tcp.";
+	} else {
+		prefix = "_sip._udp.";
+	}
+	ctx->stack = stack;
+	ctx->cb_data = data;
+	ctx->cb = cb;
+	ctx->name = cain_sip_concat(prefix, name, NULL);
+	ctx->type = DNS_T_SRV;
+	if (resolver_start_query(ctx,
+			(cain_sip_source_func_t)resolver_process_data,
+			cain_sip_stack_get_dns_timeout(stack)) < 0) {
+		cain_sip_object_unref(ctx);
+		return 0;
+	}
+	if (ctx->done == FALSE) {
+		/* The resolver context must never be removed manually from the main loop */
+		cain_sip_main_loop_add_source(ml, (cain_sip_source_t *)ctx);
+		cain_sip_object_unref(ctx);	/* The main loop has a ref on it */
+		return ctx->source.id;
+	} else {
+		return 0; /*resolution done synchronously*/
 	}
 }
 
