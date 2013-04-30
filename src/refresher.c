@@ -307,7 +307,7 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 
 	if (cain_sip_client_transaction_send_request_to(client_transaction,preset_route)) {
 		cain_sip_error("Cannot send refresh method [%s] for refresher [%p]"
-				,cain_sip_request_get_method(old_request)
+				,cain_sip_request_get_method(request)
 				,refresher);
 		return -1;
 	}
