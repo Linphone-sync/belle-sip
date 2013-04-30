@@ -29,10 +29,10 @@ typedef struct cain_sip_resolver_context cain_sip_resolver_context_t;
 #define CAIN_SIP_RESOLVER_CONTEXT(obj) CAIN_SIP_CAST(obj,cain_sip_resolver_context_t)
 
 /**
- * Callback prototype for asynchronous DNS resolution. The result addrinfo must be taken and (possibly later) freed by 
- * the callee, using freeaddrinfo().
+ * Callback prototype for asynchronous DNS resolution. The results_list contains addrinfo elements that must be
+ * taken and (possibly later) freed by the callee, using freeaddrinfo().
 **/
-typedef void (*cain_sip_resolver_callback_t)(void *data, const char *name, struct addrinfo *result);
+typedef void (*cain_sip_resolver_callback_t)(void *data, const char *name, cain_sip_list_t *results_list);
 
 
 struct cain_sip_resolver_context{
@@ -45,7 +45,7 @@ struct cain_sip_resolver_context{
 	struct dns_resolver *R;
 	char *name;
 	int port;
-	struct addrinfo *ai;
+	cain_sip_list_t *ai_list;
 	int family;
 	uint8_t cancelled;
 	uint8_t done;

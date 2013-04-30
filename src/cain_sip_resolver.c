@@ -137,9 +137,8 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 					sin6.sin6_port = ctx->port;
 					if (getnameinfo((struct sockaddr *)&sin6, sizeof(sin6), host, sizeof(host), service, sizeof(service), NI_NUMERICHOST) != 0)
 						continue;
-					ctx->ai = cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port);
-					cain_sip_message("%s has address %s", ctx->name, host);
-					break;
+					ctx->ai_list = cain_sip_list_append(ctx->ai_list, cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port));
+					cain_sip_message("%s resolved to %s", ctx->name, host);
 				} else {
 					if ((rr.class == DNS_C_IN) && (rr.type == DNS_T_A)) {
 						struct dns_a *a = &any.a;
@@ -150,15 +149,14 @@ static int resolver_process_a_data(cain_sip_resolver_context_t *ctx, unsigned in
 						sin.sin_port = ctx->port;
 						if (getnameinfo((struct sockaddr *)&sin, sizeof(sin), host, sizeof(host), service, sizeof(service), NI_NUMERICHOST) != 0)
 							continue;
-						ctx->ai = cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port);
-						cain_sip_message("%s has address %s", ctx->name, host);
-						break;
+						ctx->ai_list = cain_sip_list_append(ctx->ai_list, cain_sip_ip_address_to_addrinfo(ctx->family, host, ctx->port));
+						cain_sip_message("%s resolved to %s", ctx->name, host);
 					}
 				}
 			}
 		}
 		free(ans);
-		ctx->cb(ctx->cb_data, ctx->name, ctx->ai);
+		ctx->cb(ctx->cb_data, ctx->name, ctx->ai_list);
 		ctx->done=TRUE;
 		return CAIN_SIP_STOP;
 	}
@@ -285,8 +283,8 @@ struct addrinfo * cain_sip_ip_address_to_addrinfo(int family, const char *ipaddr
 
 
 static void cain_sip_resolver_context_destroy(cain_sip_resolver_context_t *ctx){
-	/* Do not free ctx->ai with freeaddrinfo(). Let the caller do it, otherwise
-	   it will not be able to use it after the resolver has been destroyed. */
+	/* Do not free elements of ctx->ai_list with freeaddrinfo(). Let the caller do it, otherwise
+	   it will not be able to use them after the resolver has been destroyed. */
 	if (ctx->name)
 		cain_sip_free(ctx->name);
 	if (ctx->R)
@@ -311,7 +309,7 @@ unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int po
 		ctx->cb = cb;
 		ctx->name = cain_sip_strdup(name);
 		ctx->port = port;
-		ctx->ai = NULL;
+		ctx->ai_list = NULL;
 		if (family == 0) family = AF_UNSPEC;
 		ctx->family = family;
 		if (resolver_start_query(ctx,
@@ -330,7 +328,8 @@ unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int po
 			return 0; /*resolution done synchronously*/
 		}
 	} else {
-		cb(data, name, res);
+		cain_sip_list_t *ai_list = cain_sip_list_append(NULL, res);
+		cb(data, name, ai_list);
 		return 0;
 	}
 }
