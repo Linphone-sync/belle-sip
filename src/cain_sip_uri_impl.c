@@ -74,10 +74,13 @@ int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offs
 	const cain_sip_list_t* list=cain_sip_parameters_get_parameters(uri->header_list);
 
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s:",uri->secure?"sips":"sip");
+	if (current_offset>=buff_size) goto end;
+	
 	if (uri->user) {
 		char* escaped_username=cain_sip_to_escaped_string(uri->user);
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s@",escaped_username);
 		cain_sip_free(escaped_username);
+		if (current_offset>=buff_size) goto end;
 	}
 	if (uri->host) {
 		if (strchr(uri->host,':')) { /*ipv6*/
@@ -85,13 +88,16 @@ int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offs
 		} else {
 			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",uri->host);
 		}
+		if (current_offset>=buff_size) goto end;
 	} else {
 		cain_sip_warning("no host found in this uri");
 	}
 	if (uri->port>0) {
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,":%i",uri->port);
+		if (current_offset>=buff_size) goto end;
 	}
 	current_offset+=cain_sip_parameters_marshal(&uri->params,buff,current_offset,buff_size);
+	if (current_offset>=buff_size) goto end;
 
 	for(;list!=NULL;list=list->next){
 		cain_sip_param_pair_t* container = list->data;
@@ -102,9 +108,12 @@ int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offs
 			//subsequent headers
 			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"&%s=%s",container->name,container->value);
 		}
+		if (current_offset>=buff_size) goto end;
 	}
+end:	
 	return current_offset-offset;
 }
+
 CAIN_SIP_PARSE(uri);
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_uri_t);

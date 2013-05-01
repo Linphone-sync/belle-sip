@@ -255,10 +255,15 @@ int cain_sip_headers_marshal(cain_sip_message_t *message, char* buff,unsigned in
 				;header_list=header_list->next)	{
 			cain_sip_header_t *h=CAIN_SIP_HEADER(header_list->data);
 			current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(h),buff,current_offset,buff_size);
+			if (current_offset>=buff_size) goto end;
 			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","\r\n");
+			if (current_offset>=buff_size) goto end;
 		}
 	}
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s","\r\n");
+	if (current_offset>=buff_size) goto end;
+	
+end:
 	return current_offset-offset;
 }
 
@@ -284,12 +289,18 @@ static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_r
 int cain_sip_request_marshal(cain_sip_request_t* request, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s ",cain_sip_request_get_method(request));
+	if (current_offset>=buff_size) goto end;
 	current_offset+=cain_sip_uri_marshal(cain_sip_request_get_uri(request),buff,current_offset,buff_size);
+	if (current_offset>=buff_size) goto end;
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset," %s","SIP/2.0\r\n");
+	if (current_offset>=buff_size) goto end;
 	current_offset+=cain_sip_headers_marshal(CAIN_SIP_MESSAGE(request),buff,current_offset,buff_size);
+	if (current_offset>=buff_size) goto end;
 	if (CAIN_SIP_MESSAGE(request)->body) {
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset, "%s",CAIN_SIP_MESSAGE(request)->body);
+		if (current_offset>=buff_size) goto end;
 	}
+end:
 	return current_offset-offset;
 }
 
@@ -464,10 +475,14 @@ int cain_sip_response_marshal(cain_sip_response_t *resp, char* buff,unsigned int
 								,"SIP/2.0 %i %s\r\n"
 								,cain_sip_response_get_status_code(resp)
 								,cain_sip_response_get_reason_phrase(resp));
+	if (current_offset>=buff_size) goto end;
 	current_offset+=cain_sip_headers_marshal(CAIN_SIP_MESSAGE(resp),buff,current_offset,buff_size);
+	if (current_offset>=buff_size) goto end;
 	if (CAIN_SIP_MESSAGE(resp)->body) {
 		current_offset+=snprintf(buff+current_offset,buff_size-current_offset, "%s",CAIN_SIP_MESSAGE(resp)->body);
+		if (current_offset>=buff_size) goto end;
 	}
+end:
 	return current_offset-offset;
 }
 CAIN_SIP_NEW(response,message);

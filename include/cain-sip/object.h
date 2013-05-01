@@ -124,6 +124,7 @@ struct _cain_sip_object_vptr{
 	cain_sip_object_destroy_t destroy;
 	cain_sip_object_clone_t clone;
 	cain_sip_object_marshal_t marshal;
+	int tostring_bufsize_hint; /*optimization: you can suggest here the typical size for a to_string() result.*/
 };
 
 typedef struct _cain_sip_object_vptr cain_sip_object_vptr_t;
@@ -223,7 +224,7 @@ CAINSIP_EXPORT void *cain_sip_object_cast(cain_sip_object_t *obj, cain_sip_type_
  * WHen the object is a sip header, uri or message, this is the textual representation of the header, uri or message.
  * This function internally calls cain_sip_object_marshal().
 **/
-CAINSIP_EXPORT char* cain_sip_object_to_string(cain_sip_object_t* obj);
+CAINSIP_EXPORT char* cain_sip_object_to_string(void* obj);
 
 /**
  * Writes a string representation of the object into the supplied buffer.
