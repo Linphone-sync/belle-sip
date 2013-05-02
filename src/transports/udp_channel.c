@@ -117,7 +117,7 @@ cain_sip_channel_t * cain_sip_channel_new_udp_with_addr(cain_sip_stack_t *stack,
 	if (err!=0){
 		cain_sip_error("getaddrinfo() failed for udp channel [%p] error [%s]",obj,gai_strerror(err));
 	}
-	obj->base.peer_list=cain_sip_list_prepend(obj->base.peer_list,obj->base.current_peer);
+	obj->base.peer_list=obj->base.current_peer;
 	return (cain_sip_channel_t*)obj;
 }
 
