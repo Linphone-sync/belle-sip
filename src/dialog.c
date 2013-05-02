@@ -675,8 +675,7 @@ static int cain_sip_dialog_handle_200Ok(cain_sip_dialog_t *obj, cain_sip_respons
 				cain_sip_message("Dialog retransmitting last ack automatically");
 				cain_sip_provider_send_request(obj->provider,obj->last_out_ack);
 				return 0;
-			}else cain_sip_message("No ACK matching 200Ok for dialog [%p]",obj);
-
+			}else cain_sip_message("No already created ACK matching 200Ok for dialog [%p]",obj);
 		}
 	}
 	return -1;

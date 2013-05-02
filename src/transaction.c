@@ -126,11 +126,14 @@ static void notify_timeout(cain_sip_transaction_t *t){
 }
 
 void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
-	/*report the channel as dead. If an alternate IP can be tryied, the channel will notify us with the RETRY state.
+	/*report the channel as possibly dead. If an alternate IP can be tryied, the channel will notify us with the RETRY state.
 	 * Otherwise it will report the error.
 	**/
-	t->timed_out=1;
-	cain_sip_channel_report_as_dead(t->channel);
+	cain_sip_warning("Transaction [%p] reporting timeout, reporting to channel.",t);
+	
+	if (cain_sip_channel_notify_timeout(t->channel)==TRUE){
+		t->timed_out=TRUE;
+	}else notify_timeout(t);
 }
 
 cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t) {

@@ -260,7 +260,7 @@ static int channel_inactive_timeout(void *data, unsigned int event){
 	return CAIN_SIP_STOP;
 }
 
-static void update_inactivity_timer(cain_sip_channel_t *obj){
+static void update_inactivity_timer(cain_sip_channel_t *obj, int from_recv){
 	int inactive_timeout=cain_sip_stack_get_inactive_transport_timeout(obj->stack)*1000;
 	if (inactive_timeout>0){
 		if (!obj->inactivity_timer ){
@@ -276,6 +276,8 @@ static void update_inactivity_timer(cain_sip_channel_t *obj){
 			obj->inactivity_timer=NULL;
 		}
 	}
+	if (from_recv)
+		obj->last_recv_time=cain_sip_time_ms();
 }
 
 void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,const char *bindip,int localport,const char *peer_cname, const char *peername, int peer_port){
@@ -288,7 +290,7 @@ void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,cons
 	obj->local_port=localport;
 	obj->recv_error=1;/*not set*/
 	cain_sip_channel_input_stream_reset(&obj->input_stream);
-	update_inactivity_timer(obj);
+	update_inactivity_timer(obj,FALSE);
 }
 
 void cain_sip_channel_init_with_addr(cain_sip_channel_t *obj, cain_sip_stack_t *stack, const struct sockaddr *peer_addr, socklen_t addrlen){
@@ -331,7 +333,7 @@ int cain_sip_channel_matches(const cain_sip_channel_t *obj, const cain_sip_hop_t
 			return 0; /*cname mismatch*/
 		return 1;
 	}
-	if (addr && obj->current_peer) 
+	if (addr && obj->current_peer)
 		return addr->ai_addrlen==obj->current_peer->ai_addrlen && memcmp(addr->ai_addr,obj->current_peer->ai_addr,addr->ai_addrlen)==0;
 	return 0;
 }
@@ -362,12 +364,12 @@ const char * cain_sip_channel_get_transport_name(const cain_sip_channel_t *obj){
 }
 
 int cain_sip_channel_send(cain_sip_channel_t *obj, const void *buf, size_t buflen){
-	update_inactivity_timer(obj);
+	update_inactivity_timer(obj,FALSE);
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->channel_send(obj,buf,buflen);
 }
 
 int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
-	update_inactivity_timer(obj);
+	update_inactivity_timer(obj,TRUE);
 	return CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->channel_recv(obj,buf,buflen);
 }
 
@@ -428,8 +430,14 @@ static void cain_sip_channel_handle_error(cain_sip_channel_t *obj){
 	cain_sip_main_loop_do_later(obj->stack->ml,(cain_sip_callback_t)channel_invoke_state_listener_defered,obj);
 }
 
-void cain_sip_channel_report_as_dead(cain_sip_channel_t *obj){
-	channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+int cain_sip_channel_notify_timeout(cain_sip_channel_t *obj){
+	const int too_long=60;
+	if (cain_sip_time_ms() - obj->last_recv_time>=(too_long * 1000)){
+		cain_sip_message("A timeout related to this channel occured and no message received during last %i seconds. This channel is suspect, moving to error state",too_long);
+		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) {
