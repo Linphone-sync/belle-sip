@@ -45,6 +45,7 @@ typedef void (*cain_sip_resolver_srv_callback_t)(void *data, const char *name, c
 struct cain_sip_resolver_context{
 	cain_sip_source_t source;
 	cain_sip_stack_t *stack;
+	cain_sip_main_loop_t *ml;
 	cain_sip_resolver_callback_t cb;
 	cain_sip_resolver_srv_callback_t srv_cb;
 	void *cb_data;
@@ -58,6 +59,7 @@ struct cain_sip_resolver_context{
 	cain_sip_list_t *srv_list;
 	int family;
 	uint8_t cancelled;
+	uint8_t started;
 	uint8_t done;
 };
 
@@ -65,7 +67,8 @@ CAIN_SIP_BEGIN_DECLS
 
 int cain_sip_addrinfo_to_ip(const struct addrinfo *ai, char *ip, size_t ip_size, int *port);
 CAINSIP_INTERNAL_EXPORT struct addrinfo * cain_sip_ip_address_to_addrinfo(int family, const char *ipaddress, int port);
-CAINSIP_INTERNAL_EXPORT unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, int port, int family, cain_sip_resolver_callback_t cb, void *data, cain_sip_main_loop_t *ml);
+CAINSIP_INTERNAL_EXPORT unsigned long cain_sip_resolve(cain_sip_stack_t *stack, const char *name, const char *transport, int port, int family, cain_sip_resolver_callback_t cb, void *data, cain_sip_main_loop_t *ml);
+CAINSIP_INTERNAL_EXPORT unsigned long cain_sip_resolve_a(cain_sip_stack_t *stack, const char *name, int port, int family, cain_sip_resolver_callback_t cb, void *data, cain_sip_main_loop_t *ml);
 CAINSIP_INTERNAL_EXPORT unsigned long cain_sip_resolve_srv(cain_sip_stack_t *stack, const char *name, const char *transport, cain_sip_resolver_srv_callback_t cb, void *data, cain_sip_main_loop_t *ml);
 void cain_sip_resolve_cancel(cain_sip_main_loop_t *ml, unsigned long id);
 
