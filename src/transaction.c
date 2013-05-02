@@ -116,12 +116,21 @@ cain_sip_request_t *cain_sip_transaction_get_request(const cain_sip_transaction_
 cain_sip_response_t *cain_sip_transaction_get_response(const cain_sip_transaction_t *t) {
 	return t->last_response;
 }
-void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
+
+static void notify_timeout(cain_sip_transaction_t *t){
 	cain_sip_timeout_event_t ev;
 	ev.source=t->provider;
 	ev.transaction=t;
 	ev.is_server_transaction=CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_server_transaction_t);
 	CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(t,process_timeout,&ev);
+}
+
+void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
+	/*report the channel as dead. If an alternate IP can be tryied, the channel will notify us with the RETRY state.
+	 * Otherwise it will report the error.
+	**/
+	t->timed_out=1;
+	cain_sip_channel_report_as_dead(t->channel);
 }
 
 cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t) {
@@ -407,7 +416,6 @@ static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_ch
 		break;
 		case CAIN_SIP_CHANNEL_DISCONNECTED:
 		case CAIN_SIP_CHANNEL_ERROR:
-
 			ev.transport=cain_sip_channel_get_transport_name(chan);
 			ev.source=CAIN_SIP_OBJECT(t);
 			ev.port=chan->peer_port;
@@ -418,6 +426,8 @@ static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_ch
 				&& tr_state!=CAIN_SIP_TRANSACTION_TERMINATED) {
 				CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(((cain_sip_transaction_t*)t),process_io_error,&ev);
 			}
+			if (t->base.timed_out)
+				notify_timeout((cain_sip_transaction_t*)t);
 			if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_TERMINATED) /*avoid double notification*/
 				cain_sip_transaction_terminate(CAIN_SIP_TRANSACTION(t));
 		break;

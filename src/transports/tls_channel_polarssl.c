@@ -42,7 +42,7 @@ struct cain_sip_tls_channel{
 
 static void tls_channel_close(cain_sip_tls_channel_t *obj){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
-	if (sock!=-1)
+	if (sock!=-1 && cain_sip_channel_get_state((cain_sip_channel_t*)obj)!=CAIN_SIP_CHANNEL_ERROR)
 		ssl_close_notify(&obj->sslctx);
 	stream_channel_close((cain_sip_stream_channel_t*)obj);
 }

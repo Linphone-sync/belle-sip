@@ -157,7 +157,6 @@ static int ict_on_timer_B(cain_sip_ict_t *obj){
 	switch (base->state){
 		case CAIN_SIP_TRANSACTION_CALLING:
 			cain_sip_transaction_notify_timeout(base);
-			cain_sip_transaction_terminate(base);
 		break;
 		default:
 		break;

@@ -115,6 +115,7 @@ int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buf
 			if (current_offset>=buff_size) goto end;
 		}
 		current_offset+=cain_sip_uri_marshal(header->uri,buff,current_offset,buff_size);
+		if (current_offset>=buff_size) goto end;
 		if (header->displayname
 				|| cain_sip_parameters_get_parameter_names((cain_sip_parameters_t*)header->uri)
 				|| cain_sip_uri_get_header_names(header->uri)

@@ -152,6 +152,11 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents);
 /*this function is to be used only in cain_sip_listening_point_clean_channels()*/
 void cain_sip_channel_force_close(cain_sip_channel_t *obj);
 
+/*this function is for transactions to report that a channel seems non working because a timeout occured for example.
+ It results in the channel entering error state, so that it gets cleaned. Next transactions will re-open a new one and
+ get a better chance of receiving an answer*/
+void cain_sip_channel_report_as_dead(cain_sip_channel_t *obj);
+
 CAIN_SIP_END_DECLS
 
 

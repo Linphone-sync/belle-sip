@@ -548,7 +548,8 @@ struct cain_sip_transaction{
 	cain_sip_transaction_state_t state;
 	uint64_t start_time;
 	void *appdata;
-	unsigned int is_internal;
+	unsigned int is_internal:1;
+	unsigned int timed_out:1; 
 };
 
 

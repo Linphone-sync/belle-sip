@@ -92,7 +92,6 @@ static int nict_on_timer_F(cain_sip_nict_t *obj){
 		case CAIN_SIP_TRANSACTION_TRYING:
 		case CAIN_SIP_TRANSACTION_PROCEEDING:
 			cain_sip_transaction_notify_timeout(base);
-			cain_sip_transaction_terminate(base);
 		break;
 		default:
 		break;
