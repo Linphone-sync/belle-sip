@@ -43,15 +43,14 @@ int cain_sdp_attribute_marshal(cain_sdp_attribute_t* attribute, char* buff,unsig
 								,buff_size-current_offset
 								,"a=%s"
 								,attribute->name);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 	if (attribute->value) {
 		current_offset+=snprintf(	buff+current_offset
 									,buff_size-current_offset
 									,":%s"
 									,attribute->value);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset;
 	}
-end:
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(attribute,cain_sip_object)
@@ -90,7 +89,7 @@ int cain_sdp_bandwidth_marshal(cain_sdp_bandwidth_t* bandwidth, char* buff,unsig
 								,buff_size-current_offset
 								,"b=%s:%i"
 								,bandwidth->type,bandwidth->value);
-
+	if (current_offset>=buff_size) return buff_size-offset;
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(bandwidth,cain_sip_object)
@@ -128,6 +127,7 @@ int cain_sdp_connection_marshal(cain_sdp_connection_t* connection, char* buff,un
 								,connection->network_type
 								,connection->address_type
 								,connection->address);
+	if (current_offset>=buff_size) return buff_size-offset;
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(connection,cain_sip_object)
@@ -163,6 +163,7 @@ int cain_sdp_email_marshal(cain_sdp_email_t* email, char* buff,unsigned int offs
 								,buff_size-current_offset
 								,"e=%s"
 								,email->value);
+	if (current_offset>=buff_size) return buff_size-offset; 
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(email,cain_sip_object)
@@ -189,6 +190,7 @@ int cain_sdp_info_marshal(cain_sdp_info_t* info, char* buff,unsigned int offset,
 								,buff_size-current_offset
 								,"i=%s"
 								,info->value);
+	if (current_offset>=buff_size) return buff_size-offset; 
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(info,cain_sip_object)
@@ -237,27 +239,26 @@ int cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff,unsigned int offs
 								,media->media_type
 								,media->media_port
 								);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset; 
 	if (media->port_count>1) {
 		current_offset+=snprintf(buff+current_offset
 								,buff_size-current_offset
 								,"/%i"
 								,media->port_count);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 	}
 	current_offset+=snprintf(	buff+current_offset
 								,buff_size-current_offset
 								," %s"
 								,media->protocol);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset; 
 	for(;list!=NULL;list=list->next){
 		current_offset+=snprintf(	buff+current_offset
 									,buff_size-current_offset
 									," %li"
 									,(long)list->data);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 	}
-end:
 	return current_offset-offset;
 }
 CAIN_SDP_NEW_WITH_CTR(media,cain_sip_object)
@@ -319,27 +320,26 @@ int cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_descript
 //	cain_sip_list_t* attributes;
 	if (base_description->info) {
 		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(base_description->info),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 	}
 	if (base_description->connection) {
 		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(base_description->connection),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 	}
 	for(bandwidths=base_description->bandwidths;bandwidths!=NULL;bandwidths=bandwidths->next){
 		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(bandwidths->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 	}
 //	for(attributes=base_description->attributes;attributes!=NULL;attributes=attributes->next){
 //		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,current_offset,buff_size);
 //		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
 //	}
-end:
 	return current_offset-offset;
 }
 
@@ -461,22 +461,23 @@ void cain_sdp_media_description_clone(cain_sdp_media_description_t *media_descri
 int cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_description, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	cain_sip_list_t* attributes;
+	
 	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(media_description->media),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset; 
 	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset; 
 	current_offset+=cain_sdp_base_description_marshal(CAIN_SIP_CAST(media_description,cain_sdp_base_description_t),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset; 
 
 	for(attributes=media_description->base_description.attributes;attributes!=NULL;attributes=attributes->next){
 		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset; 
 	}
-end:
 	return current_offset-offset;
 }
+
 CAIN_SDP_NEW(media_description,cain_sdp_base_description)
 cain_sdp_media_description_t* cain_sdp_media_description_create(const char* media_type
                          	 	 	 	 	 	 	 	 	 	 ,int media_port
@@ -831,6 +832,7 @@ int cain_sdp_origin_marshal(cain_sdp_origin_t* origin, char* buff,unsigned int o
 									,origin->network_type
 									,origin->address_type
 									,origin->address);
+	if (current_offset>=buff_size) return buff_size-offset;
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(origin,cain_sip_object)
@@ -877,6 +879,7 @@ int cain_sdp_session_name_marshal(cain_sdp_session_name_t* session_name, char* b
 								,buff_size-current_offset
 								,"s=%s"
 								,session_name->value);
+	if (current_offset>=buff_size) return buff_size-offset;
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(session_name,cain_sip_object)
@@ -951,44 +954,43 @@ int cain_sdp_session_description_marshal(cain_sdp_session_description_t* session
 	cain_sip_list_t* attributes;
 
 	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->version),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 
 	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->origin),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 
 	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->session_name),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 
 	current_offset+=cain_sdp_base_description_marshal((cain_sdp_base_description_t*)(&session_description->base_description),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 	
 	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "t=");
-	if (current_offset>=buff_size) goto end;
+	if (current_offset>=buff_size) return buff_size-offset;
 	for(times=session_description->times;times!=NULL;times=times->next){
 		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(times->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset;
 		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset;
 	}
 
 	for(attributes=session_description->base_description.attributes;attributes!=NULL;attributes=attributes->next){
 		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset;
 		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset;
 	}
 
 	for(media_descriptions=session_description->media_descriptions;media_descriptions!=NULL;media_descriptions=media_descriptions->next){
 		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(media_descriptions->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset;
 	}
-end:
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(session_description,cain_sdp_base_description)
@@ -1139,6 +1141,7 @@ int cain_sdp_time_marshal(cain_sdp_time_t* time, char* buff,unsigned int offset,
 								,"%i %i"
 								,time->start
 								,time->stop);
+	if (current_offset>=buff_size) return buff_size-offset;
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(time,cain_sip_object)
@@ -1165,6 +1168,7 @@ void cain_sdp_time_description_clone(cain_sdp_time_description_t *time_descripti
 int cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_description, char* buff,unsigned int offset,unsigned int buff_size) {
 	unsigned int current_offset=offset;
 	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(time_description->time),buff,current_offset,buff_size);
+	if (current_offset>=buff_size) return buff_size-offset;
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(time_description,cain_sip_object)
@@ -1212,6 +1216,7 @@ int cain_sdp_version_marshal(cain_sdp_version_t* version, char* buff,unsigned in
 								,buff_size-current_offset
 								,"v=%i"
 								,version->version);
+	if (current_offset>=buff_size) return buff_size-offset;
 	return current_offset-offset;
 }
 CAIN_SDP_NEW(version,cain_sip_object)

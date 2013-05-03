@@ -51,9 +51,8 @@ int cain_sip_parameters_marshal(const cain_sip_parameters_t* params, char* buff,
 		} else {
 			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,";%s",container->name);
 		}
-		if (current_offset>=buff_size) goto end;
+		if (current_offset>=buff_size) return buff_size-offset;
 	}
-end:
 	return current_offset-offset;
 }
 CAIN_SIP_NEW_HEADER(parameters,header,"parameters")

@@ -127,7 +127,7 @@ int cain_sip_header_address_marshal(cain_sip_header_address_t* header, char* buf
 	current_offset+=cain_sip_parameters_marshal(&header->base,buff,current_offset,buff_size);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 
 CAIN_SIP_NEW_HEADER(header_address,parameters,"header_address")
@@ -184,7 +184,7 @@ int cain_sip_header_allow_marshal(cain_sip_header_allow_t* allow, char* buff,uns
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",allow->method);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 
 }
 CAIN_SIP_NEW_HEADER(header_allow,header,"Allow")
@@ -222,7 +222,7 @@ int cain_sip_header_contact_marshal(cain_sip_header_contact_t* contact, char* bu
 	}
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_contact,header_address,CAIN_SIP_CONTACT)
 CAIN_SIP_PARSE(header_contact)
@@ -275,7 +275,7 @@ unsigned int cain_sip_header_contact_not_equals(const cain_sip_header_contact_t*
 		current_offset+=cain_sip_header_address_marshal(&header->address, buff,current_offset, buff_size); \
 		if (current_offset>=buff_size) goto end;\
 		end:\
-		return current_offset-offset;
+		return MIN(current_offset-offset,buff_size-offset);
 
 struct _cain_sip_header_from  {
 	cain_sip_header_address_t address;
@@ -409,7 +409,7 @@ int cain_sip_header_user_agent_marshal(cain_sip_header_user_agent_t* user_agent,
 		if (current_offset>=buff_size) goto end;
 	}
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 
 }
 CAIN_SIP_NEW_HEADER(header_user_agent,header,"User-Agent")
@@ -504,7 +504,7 @@ int cain_sip_header_via_marshal(cain_sip_header_via_t* via, char* buff,unsigned 
 	if (current_offset>=buff_size) goto end;
 	
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 
 cain_sip_header_via_t* cain_sip_header_via_create(const char *host, int port, const char *transport, const char *branch){
@@ -604,7 +604,7 @@ int cain_sip_header_call_id_marshal(cain_sip_header_call_id_t* call_id, char* bu
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",call_id->call_id);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 unsigned int cain_sip_header_call_id_equals(const cain_sip_header_call_id_t* a,const cain_sip_header_call_id_t* b) {
 	return strcasecmp(a->call_id,b->call_id) == 0;
@@ -637,7 +637,7 @@ int cain_sip_header_cseq_marshal(cain_sip_header_cseq_t* cseq, char* buff,unsign
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i %s",cseq->seq_number,cseq->method);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 cain_sip_header_cseq_t * cain_sip_header_cseq_create(unsigned int number, const char *method){
 	cain_sip_header_cseq_t *cseq=cain_sip_header_cseq_new();
@@ -678,7 +678,7 @@ int cain_sip_header_content_type_marshal(cain_sip_header_content_type_t* content
 	if (current_offset>=buff_size) goto end;
 	
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_content_type,parameters,CAIN_SIP_CONTENT_TYPE)
 CAIN_SIP_PARSE(header_content_type)
@@ -776,7 +776,7 @@ int cain_sip_header_content_length_marshal(cain_sip_header_content_length_t* con
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i",content_length->content_length);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_content_length,header,CAIN_SIP_CONTENT_LENGTH)
 CAIN_SIP_PARSE(header_content_length)
@@ -811,7 +811,7 @@ int cain_sip_header_expires_marshal(cain_sip_header_expires_t* expires, char* bu
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i",expires->expires);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_expires,header,CAIN_SIP_EXPIRES)
 CAIN_SIP_PARSE(header_expires)
@@ -844,7 +844,7 @@ int cain_sip_header_extension_marshal(cain_sip_header_extension_t* extension, ch
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",extension->value);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 
 }
 CAIN_SIP_NEW_HEADER(header_extension,header,NULL)
@@ -1045,7 +1045,7 @@ int cain_sip_header_authorization_marshal(cain_sip_header_authorization_t* autho
 		if (current_offset>=buff_size) goto end;
 	}
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_authorization,parameters,CAIN_SIP_AUTHORIZATION)
 CAIN_SIP_PARSE(header_authorization)
@@ -1143,7 +1143,7 @@ int cain_sip_header_www_authenticate_marshal(cain_sip_header_www_authenticate_t*
 		border=", ";
 	}
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 #define SET_ADD_STRING_LIST(header,name) \
 void header##_set_##name(header##_t* obj, cain_sip_list_t*  value) {\
@@ -1219,7 +1219,7 @@ int cain_sip_header_max_forwards_marshal(cain_sip_header_max_forwards_t* max_for
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%i",max_forwards->max_forwards);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_max_forwards,header,"Max-Forwards")
 CAIN_SIP_PARSE(header_max_forwards)
@@ -1254,7 +1254,7 @@ int cain_sip_header_subscription_state_marshal(cain_sip_header_subscription_stat
 	current_offset+=cain_sip_parameters_marshal(CAIN_SIP_PARAMETERS(subscription_state), buff,current_offset, buff_size);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_subscription_state,parameters,CAIN_SIP_SUBSCRIPTION_STATE)
 CAIN_SIP_PARSE(header_subscription_state)
@@ -1329,7 +1329,7 @@ int cain_sip_header_replaces_marshal(cain_sip_header_replaces_t* replaces, char*
 	current_offset+=cain_sip_parameters_marshal(CAIN_SIP_PARAMETERS(replaces), buff,current_offset, buff_size);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 CAIN_SIP_NEW_HEADER(header_replaces,parameters,CAIN_SIP_REPLACES)
 CAIN_SIP_PARSE(header_replaces)
@@ -1401,7 +1401,7 @@ int cain_sip_header_date_marshal(cain_sip_header_date_t* obj, char* buff,unsigne
 	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",obj->date);
 	if (current_offset>=buff_size) goto end;
 end:
-	return current_offset-offset;
+	return MIN(current_offset-offset,buff_size-offset);
 }
 
 CAIN_SIP_NEW_HEADER(header_date,header,CAIN_SIP_DATE)
