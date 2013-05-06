@@ -49,7 +49,7 @@ static void tls_channel_close(cain_sip_tls_channel_t *obj){
 
 static void tls_channel_uninit(cain_sip_tls_channel_t *obj){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
-	if (sock!=-1)
+	if (sock!=(cain_sip_socket_t)-1)
 		tls_channel_close(obj);
 	ssl_free(&obj->sslctx);
 	x509_free(&obj->root_ca);
@@ -138,9 +138,10 @@ static int tls_process_data(cain_sip_channel_t *obj,unsigned int revents){
 		}
 		
 	} else if ( obj->state == CAIN_SIP_CHANNEL_READY) {
-		cain_sip_channel_process_data(obj,revents);
+		return cain_sip_channel_process_data(obj,revents);
 	} else {
 		cain_sip_warning("Unexpected event [%i], for channel [%p]",revents,channel);
+		return CAIN_SIP_STOP;
 	}
 	return CAIN_SIP_CONTINUE;
 	
