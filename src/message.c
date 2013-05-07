@@ -365,7 +365,7 @@ const char* cain_sip_message_get_body(cain_sip_message_t *msg) {
 
 void cain_sip_message_set_body(cain_sip_message_t *msg,const char* body,unsigned int size) {
 	if (msg->body) {
-		cain_sip_free((void*)body);
+		cain_sip_free((void*)msg->body);
 	}
 	msg->body = cain_sip_malloc(size+1);
 	memcpy(msg->body,body,size);

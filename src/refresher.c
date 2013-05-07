@@ -79,8 +79,10 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 
 	if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t))) {
 		client_transaction=CAIN_SIP_CLIENT_TRANSACTION(cain_sip_io_error_event_get_source(event));
-		if (!refresher || (refresher && ((refresher->state==stopped && cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) != CAIN_SIP_TRANSACTION_TRYING)
-											|| client_transaction !=refresher->transaction )))
+		if (!refresher || (refresher && ((refresher->state==stopped
+											&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) != CAIN_SIP_TRANSACTION_TRYING
+											&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) != CAIN_SIP_TRANSACTION_INIT /*to cover dns or certificate error*/)
+										|| client_transaction !=refresher->transaction )))
 				return; /*not for me or no longuer involved*/
 
 		if (refresher->expires>0) retry_after(refresher);
