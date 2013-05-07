@@ -70,18 +70,18 @@
 
 #define __CAIN_SIP_INVOKE_LISTENER_BEGIN(list,interface_name,method) \
 	if (list!=NULL) {\
-		const cain_sip_list_t *__elem=list;\
+		cain_sip_list_t *__copy=cain_sip_list_copy_with_data((list), (void* (*)(void*))cain_sip_object_ref);\
+		const cain_sip_list_t *__elem=__copy;\
 		do{\
 			void *__method;\
 			interface_name *__obj=(interface_name*)__elem->data;\
-			cain_sip_object_ref(__obj);\
 			__method=CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->method;\
 			if (__method) CAIN_SIP_INTERFACE_GET_METHODS(__obj,interface_name)->
 
 #define __CAIN_SIP_INVOKE_LISTENER_END \
 			__elem=__elem->next;\
-			cain_sip_object_unref(__obj);\
 		}while(__elem!=NULL);\
+		cain_sip_list_free_with_data(__copy,cain_sip_object_unref);\
 	}
 
 #define CAIN_SIP_INVOKE_LISTENERS_VOID(list,interface_name,method) \
@@ -430,7 +430,8 @@ void cain_sip_header_address_set_quoted_displayname(cain_sip_header_address_t* a
 struct _cain_sip_header {
 	cain_sip_object_t base;
 	cain_sip_header_t* next;
-	const char* name;
+	char *name;
+	char *unparsed_value;
 };
 
 void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next);
@@ -527,7 +528,7 @@ typedef struct listener_ctx{
 }listener_ctx_t;
 
 #define CAIN_SIP_PROVIDER_INVOKE_LISTENERS_FOR_TRANSACTION(t,callback,event) \
-		CAIN_SIP_PROVIDER_INVOKE_LISTENERS((t)->is_internal?t->provider->internal_listeners:t->provider->listeners,callback,event)
+		CAIN_SIP_PROVIDER_INVOKE_LISTENERS((t)->is_internal?(t)->provider->internal_listeners:(t)->provider->listeners,callback,event)
 
 #define CAIN_SIP_PROVIDER_INVOKE_LISTENERS(listeners,callback,event) \
 	CAIN_SIP_INVOKE_LISTENERS_ARG((listeners),cain_sip_listener_t,callback,(event))

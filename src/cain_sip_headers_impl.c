@@ -37,26 +37,49 @@ GET_SET_STRING(cain_sip_header,name);
 cain_sip_header_t* cain_sip_header_create (const char* name,const char* value) {
 	return CAIN_SIP_HEADER(cain_sip_header_extension_create(name,value));
 }
+
 void cain_sip_header_init(cain_sip_header_t *header) {
 
 }
+
 static void cain_sip_header_clone(cain_sip_header_t *header, const cain_sip_header_t *orig){
 	CLONE_STRING(cain_sip_header,name,header,orig)
 	if (cain_sip_header_get_next(orig)) {
 		cain_sip_header_set_next(header,CAIN_SIP_HEADER(cain_sip_object_clone(CAIN_SIP_OBJECT(cain_sip_header_get_next(orig))))) ;
 	}
 }
+
 static void cain_sip_header_destroy(cain_sip_header_t *header){
-	if (header->name) cain_sip_free((void*)header->name);
+	if (header->name) cain_sip_free(header->name);
+	if (header->unparsed_value) cain_sip_free(header->unparsed_value);
 	if (header->next) cain_sip_object_unref(CAIN_SIP_OBJECT(header->next));
 }
+
 void cain_sip_header_set_next(cain_sip_header_t* header,cain_sip_header_t* next) {
 	if (next) cain_sip_object_ref(next);
 	if(header->next) cain_sip_object_unref(header->next);
 	header->next = next;
 }
+
 cain_sip_header_t* cain_sip_header_get_next(const cain_sip_header_t* header) {
 	return header->next;
+}
+
+const char *cain_sip_header_get_unparsed_value(cain_sip_header_t* obj){
+	char *tmp=cain_sip_object_to_string(obj);
+	char *ret;
+	char *end;
+	if (obj->unparsed_value){
+		cain_sip_free(obj->unparsed_value);
+		obj->unparsed_value=NULL;
+	}
+	obj->unparsed_value=tmp;
+	ret=tmp;
+	ret+=strlen(obj->name)+1; /* name + semicolon*/
+	for(;*ret==' ';ret++){};/*skip spaces*/
+	end=strchr(ret,'\r');
+	if (end) *end='\0'; /*remove \r\n*/
+	return ret;
 }
 
 int cain_sip_header_marshal(cain_sip_header_t* header, char* buff,unsigned int offset,unsigned int buff_size) {

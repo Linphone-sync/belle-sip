@@ -396,14 +396,10 @@ cain_sip_message_t* cain_sip_channel_pick_message(cain_sip_channel_t *obj) {
 }
 
 static void channel_invoke_state_listener(cain_sip_channel_t *obj){
-	cain_sip_list_t* list=cain_sip_list_copy(obj->listeners); /*copy list because error state alter this list (I.E by provider)*/
-	
 	if (obj->state==CAIN_SIP_CHANNEL_DISCONNECTED || obj->state==CAIN_SIP_CHANNEL_ERROR){
 		cain_sip_channel_close(obj);
 	}
-	
-	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(list,cain_sip_channel_listener_t,on_state_changed,obj,obj->state);
-	cain_sip_list_free(list);
+	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_state_changed,obj,obj->state);
 }
 
 static void channel_invoke_state_listener_defered(cain_sip_channel_t *obj){
