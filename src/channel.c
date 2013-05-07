@@ -60,7 +60,7 @@ static void cain_sip_channel_destroy(cain_sip_channel_t *obj){
 	cain_sip_free(obj->peer_name);
 	if (obj->local_ip) cain_sip_free(obj->local_ip);
 	obj->listeners=for_each_weak_unref_free(obj->listeners,(cain_sip_object_destroy_notify_t)cain_sip_channel_remove_listener,obj);
-	if (obj->resolver_id) cain_sip_resolve_cancel(cain_sip_stack_get_main_loop(obj->stack),obj->resolver_id);
+	if (obj->resolver_id>0) cain_sip_resolve_cancel(cain_sip_stack_get_main_loop(obj->stack),obj->resolver_id);
 	if (obj->inactivity_timer){
 		cain_sip_main_loop_remove_source(obj->stack->ml,obj->inactivity_timer);
 		cain_sip_object_unref(obj->inactivity_timer);
@@ -597,6 +597,9 @@ static void channel_res_done(void *data, const char *name, struct addrinfo *ai_l
 void cain_sip_channel_resolve(cain_sip_channel_t *obj){
 	channel_set_state(obj,CAIN_SIP_CHANNEL_RES_IN_PROGRESS);
 	obj->resolver_id=cain_sip_resolve_a(obj->stack, obj->peer_name, obj->peer_port, obj->lp->ai_family, channel_res_done, obj, obj->stack->ml);
+	if (obj->resolver_id==-1){
+		channel_set_state(obj,CAIN_SIP_CHANNEL_ERROR);
+	}
 	return ;
 }
 
