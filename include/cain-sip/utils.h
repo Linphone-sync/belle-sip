@@ -128,6 +128,7 @@ static CAINSIP_INLINE void cain_sip_fatal(const char *fmt,...)
 CAINSIP_EXPORT void cain_sip_set_log_file(FILE *file);
 CAINSIP_EXPORT void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
+CAINSIP_EXPORT char *cain_sip_strdup_printf(const char *fmt,...);
 
 CAINSIP_EXPORT void cain_sip_set_log_level(int level);
 

@@ -248,8 +248,6 @@ CAINSIP_INTERNAL_EXPORT uint64_t cain_sip_time_ms(void);
 
 CAINSIP_INTERNAL_EXPORT unsigned int cain_sip_random(void);
 
-CAINSIP_INTERNAL_EXPORT char *cain_sip_strdup_printf(const char *fmt,...);
-
 
 /*parameters accessors*/
 #define GET_SET_STRING(object_type,attribute) \
