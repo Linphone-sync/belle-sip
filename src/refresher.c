@@ -39,6 +39,7 @@ struct cain_sip_refresher {
 	cain_sip_list_t* auth_events;
 	cain_sip_header_contact_t* nated_contact;
 	int enable_nat_helper;
+	int auth_failures;
 };
 static int set_expires_from_trans(cain_sip_refresher_t* refresher);
 
@@ -61,7 +62,7 @@ static void schedule_timer_at(cain_sip_refresher_t* refresher,int delay) {
 	}
 
 }
-static void retry_after(cain_sip_refresher_t* refresher) {
+static void retry_later(cain_sip_refresher_t* refresher) {
 	schedule_timer_at(refresher,refresher->retry_after);
 	refresher->state=recovering;
 }
@@ -85,7 +86,7 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 										|| client_transaction !=refresher->transaction )))
 				return; /*not for me or no longuer involved*/
 
-		if (refresher->expires>0) retry_after(refresher);
+		if (refresher->expires>0) retry_later(refresher);
 		if (refresher->listener) refresher->listener(refresher,refresher->user_data,503, "io error");
 		return;
 	} else if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_provider_t))) {
@@ -98,7 +99,7 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 								,refresher
 								,refresher->transaction->base.channel
 								,cain_sip_channel_state_to_string(cain_sip_channel_get_state(refresher->transaction->base.channel)));
-			if (refresher->expires>0) retry_after(refresher);
+			if (refresher->expires>0) retry_later(refresher);
 			if (refresher->listener) refresher->listener(refresher,refresher->user_data,503, "io error");
 		}
 		return;
@@ -128,7 +129,8 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 	}
 	/*handle authorization*/
 	switch (response_code) {
-	case 200: {
+	case 200:
+		refresher->auth_failures=0;
 		/*great, success*/
 		if (strcmp(cain_sip_request_get_method(request),"PUBLISH")==0) {
 			/*search for etag*/
@@ -146,9 +148,15 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 		set_expires_from_trans(refresher);
 		schedule_timer(refresher); /*re-arm timer*/
 		break;
-	}
 	case 401:
-	case 407:{
+	case 407:
+		refresher->auth_failures++;
+		if (refresher->auth_failures>3){
+			/*avoid looping with 407 or 401 */
+			cain_sip_warning("Authentication is failling constantly, giving up.");
+			if (refresher->expires>0) retry_later(refresher);
+			break;
+		}
 		if (refresher->auth_events) {
 			refresher->auth_events=cain_sip_list_free_with_data(refresher->auth_events,(void (*)(void*))cain_sip_auth_event_destroy);
 		}
@@ -156,7 +164,6 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 			break; /*Notify user of registration failure*/
 		else
 			return; /*ok, keep 401 internal*/
-	}
 	case 423:{
 		cain_sip_header_extension_t *min_expires=CAIN_SIP_HEADER_EXTENSION(cain_sip_message_get_header((cain_sip_message_t*)response,"Min-Expires"));
 		if (min_expires){
@@ -176,7 +183,7 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 	case 480:
 	case 503:
 	case 504:
-		if (refresher->expires>0) retry_after(refresher);
+		if (refresher->expires>0) retry_later(refresher);
 		break;
 	default:
 		break;
@@ -322,6 +329,7 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 
 static int timer_cb(void *user_data, unsigned int events) {
 	cain_sip_refresher_t* refresher = (cain_sip_refresher_t*)user_data;
+	refresher->auth_failures=0;/*reset the auth_failures to get a chance to authenticate again*/
 	cain_sip_refresher_refresh(refresher,refresher->expires);
 	return CAIN_SIP_STOP;
 }
