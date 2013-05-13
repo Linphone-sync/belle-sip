@@ -34,7 +34,7 @@ CAIN_SIP_BEGIN_DECLS
 
 CAINSIP_EXPORT const char *cain_sip_transaction_state_to_string(const cain_sip_transaction_state_t state);
 /*
- * Transient state are:
+ * Transient states are:
  * 	<br> CAIN_SIP_TRANSACTION_INIT,
  *	<br> CAIN_SIP_TRANSACTION_CALLING,
  *	<br> CAIN_SIP_TRANSACTION_PROCEEDING,
