@@ -40,7 +40,7 @@ CAINSIP_EXPORT cain_sip_message_t* cain_sip_message_parse_raw (const char* buff,
 
 CAINSIP_EXPORT int cain_sip_message_is_request(cain_sip_message_t *msg);
 CAINSIP_EXPORT cain_sip_request_t* cain_sip_request_new();
-cain_sip_request_t* cain_sip_request_parse(const char* raw);
+CAINSIP_EXPORT cain_sip_request_t* cain_sip_request_parse(const char* raw);
 
 CAINSIP_EXPORT cain_sip_request_t* cain_sip_request_create(cain_sip_uri_t *requri, const char* method,
                                          cain_sip_header_call_id_t *callid,
@@ -54,9 +54,9 @@ CAINSIP_EXPORT cain_sip_request_t* cain_sip_request_create(cain_sip_uri_t *requr
 
 
 CAINSIP_EXPORT cain_sip_uri_t* cain_sip_request_get_uri(cain_sip_request_t* request);
-void cain_sip_request_set_uri(cain_sip_request_t* request, cain_sip_uri_t* uri);
+CAINSIP_EXPORT void cain_sip_request_set_uri(cain_sip_request_t* request, cain_sip_uri_t* uri);
 CAINSIP_EXPORT const char* cain_sip_request_get_method(const cain_sip_request_t* request);
-void cain_sip_request_set_method(cain_sip_request_t* request,const char* method);
+CAINSIP_EXPORT void cain_sip_request_set_method(cain_sip_request_t* request,const char* method);
 /**
  * Guess the origin of the received sip message from VIA header (thanks to received/rport)
  * @param req request to be analyzed
@@ -71,7 +71,7 @@ CAINSIP_EXPORT cain_sip_uri_t* cain_sip_request_extract_origin(const cain_sip_re
  */
 CAINSIP_EXPORT cain_sip_request_t * cain_sip_request_clone_with_body(const cain_sip_request_t *initial_req);
 
-int cain_sip_message_is_response(const cain_sip_message_t *msg);
+CAINSIP_EXPORT int cain_sip_message_is_response(const cain_sip_message_t *msg);
 
 CAINSIP_EXPORT cain_sip_header_t *cain_sip_message_get_header(const cain_sip_message_t *msg, const char *header_name);
 
@@ -80,13 +80,13 @@ CAINSIP_EXPORT cain_sip_object_t *_cain_sip_message_get_header_by_type_id(const 
 #define cain_sip_message_get_header_by_type(msg,header_type)\
 	(header_type*)_cain_sip_message_get_header_by_type_id(CAIN_SIP_MESSAGE(msg),CAIN_SIP_TYPE_ID(header_type))
 
-const cain_sip_list_t* cain_sip_message_get_headers(const cain_sip_message_t *message,const char* header_name);
+CAINSIP_EXPORT const cain_sip_list_t* cain_sip_message_get_headers(const cain_sip_message_t *message,const char* header_name);
 /**
  * Get list of all headers present in the message.
  * @param message
  * @return a newly allocated list of cain_sip_header_t
  * */
-cain_sip_list_t* cain_sip_message_get_all_headers(const cain_sip_message_t *message);
+CAINSIP_EXPORT cain_sip_list_t* cain_sip_message_get_all_headers(const cain_sip_message_t *message);
 /**
  * add an header to this message
  * @param msg
@@ -94,27 +94,27 @@ cain_sip_list_t* cain_sip_message_get_all_headers(const cain_sip_message_t *mess
  */
 CAINSIP_EXPORT void cain_sip_message_add_header(cain_sip_message_t *msg, cain_sip_header_t* header);
 
-void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_list_t *header_list);
+CAINSIP_EXPORT void cain_sip_message_add_headers(cain_sip_message_t *message, const cain_sip_list_t *header_list);
 
-void cain_sip_message_set_header(cain_sip_message_t *msg, cain_sip_header_t* header);
+CAINSIP_EXPORT void cain_sip_message_set_header(cain_sip_message_t *msg, cain_sip_header_t* header);
 
-void cain_sip_message_remove_first(cain_sip_message_t *msg, const char *header_name);
+CAINSIP_EXPORT void cain_sip_message_remove_first(cain_sip_message_t *msg, const char *header_name);
 
-void cain_sip_message_remove_last(cain_sip_message_t *msg, const char *header_name);
+CAINSIP_EXPORT void cain_sip_message_remove_last(cain_sip_message_t *msg, const char *header_name);
 
 CAINSIP_EXPORT void cain_sip_message_remove_header(cain_sip_message_t *msg, const char *header_name);
 
-char *cain_sip_message_to_string(cain_sip_message_t *msg);
+CAINSIP_EXPORT char *cain_sip_message_to_string(cain_sip_message_t *msg);
 CAINSIP_EXPORT const char* cain_sip_message_get_body(cain_sip_message_t *msg);
 CAINSIP_EXPORT void cain_sip_message_set_body(cain_sip_message_t *msg,const char* body,unsigned int size);
 /*message keep ownership of the null terminated body buffer
 void cain_sip_message_assign_body(cain_sip_message_t *msg,char* body);*/
 
 CAINSIP_EXPORT int cain_sip_response_get_status_code(const cain_sip_response_t *response);
-void cain_sip_response_set_status_code(cain_sip_response_t *response,int status);
+CAINSIP_EXPORT void cain_sip_response_set_status_code(cain_sip_response_t *response,int status);
 
 CAINSIP_EXPORT const char* cain_sip_response_get_reason_phrase(const cain_sip_response_t *response);
-void cain_sip_response_set_reason_phrase(cain_sip_response_t *response,const char* reason_phrase);
+CAINSIP_EXPORT void cain_sip_response_set_reason_phrase(cain_sip_response_t *response,const char* reason_phrase);
 
 
 CAINSIP_EXPORT cain_sip_response_t *cain_sip_response_new(void);
@@ -126,7 +126,7 @@ CAINSIP_EXPORT cain_sip_response_t *cain_sip_response_create_from_request(cain_s
  * @param contact contact to be updated
  * @returns 0 if no error
  * */
-int cain_sip_response_fix_contact(const cain_sip_response_t* response,cain_sip_header_contact_t* contact);
+CAINSIP_EXPORT int cain_sip_response_fix_contact(const cain_sip_response_t* response,cain_sip_header_contact_t* contact);
 
 
 CAIN_SIP_END_DECLS
