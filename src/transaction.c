@@ -128,10 +128,11 @@ static void notify_timeout(cain_sip_transaction_t *t){
 void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
 	/*report the channel as possibly dead. If an alternate IP can be tryied, the channel will notify us with the RETRY state.
 	 * Otherwise it will report the error.
+	 * We limit this dead channel reporting to REGISTER transactions, who are unlikely to be unresponded.
 	**/
 	cain_sip_warning("Transaction [%p] reporting timeout, reporting to channel.",t);
 	
-	if (cain_sip_channel_notify_timeout(t->channel)==TRUE){
+	if (strcmp(cain_sip_request_get_method(t->request),"REGISTER")==0 && cain_sip_channel_notify_timeout(t->channel)==TRUE){
 		t->timed_out=TRUE;
 	}else notify_timeout(t);
 }

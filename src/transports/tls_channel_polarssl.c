@@ -45,6 +45,8 @@ static void tls_channel_close(cain_sip_tls_channel_t *obj){
 	if (sock!=-1 && cain_sip_channel_get_state((cain_sip_channel_t*)obj)!=CAIN_SIP_CHANNEL_ERROR)
 		ssl_close_notify(&obj->sslctx);
 	stream_channel_close((cain_sip_stream_channel_t*)obj);
+	ssl_session_reset(&obj->sslctx);
+	obj->socket_connected=0;
 }
 
 static void tls_channel_uninit(cain_sip_tls_channel_t *obj){
@@ -209,7 +211,7 @@ static const char *polarssl_certflags_to_string(char *buf, size_t size, int flag
 
 static int cain_sip_ssl_verify(void *data , x509_cert *cert , int depth, int *flags){
 	cain_sip_tls_listening_point_t *lp=(cain_sip_tls_listening_point_t*)data;
-	char tmp[256];
+	char tmp[512];
 	char flags_str[128];
 	
 	x509parse_cert_info(tmp,sizeof(tmp),"",cert);

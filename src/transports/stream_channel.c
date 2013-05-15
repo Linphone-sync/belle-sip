@@ -72,7 +72,6 @@ void stream_channel_close(cain_sip_stream_channel_t *obj){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
 	if (sock!=(cain_sip_socket_t)-1){
 		close_socket(sock);
-		cain_sip_source_uninit((cain_sip_source_t*)obj);
 #ifdef TARGET_OS_IPHONE
 		if (obj->read_stream != NULL) {
 			CFReadStreamClose (obj->read_stream);

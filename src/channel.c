@@ -376,6 +376,8 @@ int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 void cain_sip_channel_close(cain_sip_channel_t *obj){
 	if (CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close)
 		CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close(obj); /*udp channel don't have close function*/
+	cain_sip_main_loop_remove_source(obj->stack->ml,(cain_sip_source_t*)obj);
+	cain_sip_source_uninit((cain_sip_source_t*)obj);
 }
 
 const struct addrinfo * cain_sip_channel_get_peer(cain_sip_channel_t *obj){
@@ -408,20 +410,23 @@ static void channel_invoke_state_listener_defered(cain_sip_channel_t *obj){
 }
 
 static void cain_sip_channel_handle_error(cain_sip_channel_t *obj){
-	/* see if you can retry on an alternate ip address.*/
-	if (obj->current_peer && obj->current_peer->ai_next){ /*obj->current_peer may be null in case of dns error*/
-		obj->current_peer=obj->current_peer->ai_next;
-		channel_set_state(obj,CAIN_SIP_CHANNEL_RETRY);
-		cain_sip_channel_connect(obj);
-		return;
-	}
-	/*otherwise we have already tried all the ip addresses, so give up and notify the error*/
+	if (obj->state!=CAIN_SIP_CHANNEL_READY){
+		/* Previous connection attempts were failed (channel could not get ready).*/
+		/* See if you can retry on an alternate ip address.*/
+		if (obj->current_peer && obj->current_peer->ai_next){ /*obj->current_peer may be null in case of dns error*/
+			obj->current_peer=obj->current_peer->ai_next;
+			channel_set_state(obj,CAIN_SIP_CHANNEL_RETRY);
+			cain_sip_channel_close(obj);
+			cain_sip_channel_connect(obj);
+			return;
+		}/*else we have already tried all the ip addresses, so give up and notify the error*/
+	}/*else the channel was previously working good with the current ip address but now fails, so let's notify the error*/
 	
 	obj->state=CAIN_SIP_CHANNEL_ERROR;
 	/*Because error notification will in practice trigger the destruction of possible transactions and this channel,
-		 * it is safer to invoke the listener outside the current call stack.
-		 * Indeed the channel encounters network errors while being called for transmiting by a transaction.
-		 */
+	* it is safer to invoke the listener outside the current call stack.
+	* Indeed the channel encounters network errors while being called for transmiting by a transaction.
+	*/
 	cain_sip_object_ref(obj);
 	cain_sip_main_loop_do_later(obj->stack->ml,(cain_sip_callback_t)channel_invoke_state_listener_defered,obj);
 }
