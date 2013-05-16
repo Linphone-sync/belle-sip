@@ -822,15 +822,15 @@ int cain_sip_provider_add_authorization(cain_sip_provider_t *p, cain_sip_request
 				} else
 					cain_sip_message_add_header(CAIN_SIP_MESSAGE(request),CAIN_SIP_HEADER(authorization));
 				result=1;
-				cain_sip_auth_event_destroy(auth_event);
 		} else {
 			cain_sip_message("No auth info found for call id [%s]",cain_sip_header_call_id_get_call_id(call_id));
-			if (auth_infos) {
-				/*stored to give user information on realm/username which requires authentications*/
-				*auth_infos=cain_sip_list_append(*auth_infos,auth_event);
-			} else {
-				cain_sip_auth_event_destroy(auth_event);
-			}
+		}
+		/*provides auth info in any cases, uasefull even if found because auth info can contains wrong password*/
+		if (auth_infos) {
+			/*stored to give user information on realm/username which requires authentications*/
+			*auth_infos=cain_sip_list_append(*auth_infos,auth_event);
+		} else {
+			cain_sip_auth_event_destroy(auth_event);
 		}
 
 		}

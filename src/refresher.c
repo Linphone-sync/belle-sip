@@ -149,7 +149,7 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 		refresher->auth_failures++;
 		if (refresher->auth_failures>3){
 			/*avoid looping with 407 or 401 */
-			cain_sip_warning("Authentication is failling constantly, giving up.");
+			cain_sip_warning("Authentication is failing constantly, giving up.");
 			if (refresher->expires>0) retry_later(refresher);
 			break;
 		}
@@ -229,7 +229,10 @@ void cain_sip_refresher_set_listener(cain_sip_refresher_t* refresher, cain_sip_r
 int cain_sip_refresher_refresh(cain_sip_refresher_t* refresher,int expires) {
 	return cain_sip_refresher_refresh_internal(refresher,expires,FALSE,NULL);
 }
-
+static int unfilled_auth_info(const void* info,const void* userptr) {
+	cain_sip_auth_event_t* auth_info = (cain_sip_auth_event_t*)info;
+	return auth_info->passwd || auth_info->ha1;
+}
 static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,int expires,int auth_mandatory, cain_sip_list_t** auth_infos) {
 	cain_sip_request_t*old_request=cain_sip_transaction_get_request(CAIN_SIP_TRANSACTION(refresher->transaction));
 	cain_sip_response_t*old_response=cain_sip_transaction_get_response(CAIN_SIP_TRANSACTION(refresher->transaction));
@@ -279,7 +282,7 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 		return -1;
 	}
 
-	if (auth_mandatory && auth_infos && (*auth_infos!=NULL || cain_sip_list_size(*auth_infos)) >0) {
+	if (auth_mandatory && auth_infos && cain_sip_list_find_custom(*auth_infos, unfilled_auth_info, NULL)) {
 		cain_sip_message("Auth info not found for this refresh operation on [%p]",refresher);
 		if (request) cain_sip_object_unref(request);
 		return -1;

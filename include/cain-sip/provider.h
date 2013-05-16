@@ -57,8 +57,7 @@ CAINSIP_EXPORT void cain_sip_provider_clean_channels(cain_sip_provider_t *p);
  * @param p object
  * @param request to be updated
  * @param resp response to take authentication values from, might be NULL
- * @param auth_infos  if auth infos cannot be added for an authenticate header, (I.E case where this method return TRUE),
- * a newly allocated cain_sip_auth_info_t object is added to this list. These object contains useful information like realm and username.
+ * @param auth_infos  A newly allocated cain_sip_auth_info_t object is added to this list. These object contains useful information like realm and username.
  * @returns 0 in case of success,
  *
  **/
