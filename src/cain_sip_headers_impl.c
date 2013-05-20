@@ -1367,11 +1367,12 @@ static void escaped_to_ascii(const char*a,char*b,size_t n) {
 	while (a[index_a]!='\0'&& index_a<n)
 		index_a+=cain_sip_get_char(a+index_a,n-index_a,b+index_b++);
 }
-#define REPLACES_PREF_OFFSET 10
+
+#define REPLACES_PREF_OFFSET (strlen(CAIN_SIP_REPLACES)+2)
 cain_sip_header_replaces_t* cain_sip_header_replaces_create2(const char* escaped_replace) {
 	cain_sip_header_replaces_t* replaces;
 	size_t len=strlen(escaped_replace);
-	char* out=cain_sip_malloc(REPLACES_PREF_OFFSET+len);
+	char* out=cain_sip_malloc0(REPLACES_PREF_OFFSET+len+1);
 	strcpy(out,CAIN_SIP_REPLACES ": ");
 	escaped_to_ascii(escaped_replace,out+REPLACES_PREF_OFFSET,len);
 	/*now we can parse*/

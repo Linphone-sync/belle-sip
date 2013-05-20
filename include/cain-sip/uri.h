@@ -101,16 +101,23 @@ CAINSIP_EXPORT unsigned int	cain_sip_uri_has_lr_param(const cain_sip_uri_t* uri)
  *
  */
 CAINSIP_EXPORT unsigned int	cain_sip_uri_is_secure(const cain_sip_uri_t* uri) ;
-/**
- * 	          Removes the port part of this SipURI.
- *
- */
-CAINSIP_EXPORT void	cain_sip_uri_remove_port(cain_sip_uri_t* uri) ;
+
 /**
  * 	          Sets the value of the specified header fields to be included in a request constructed from the URI.
  *
  */
 CAINSIP_EXPORT void	cain_sip_uri_set_header(cain_sip_uri_t* uri,const char*name, const char*value) ;
+
+/**
+ * Removes specified header from uri.
+**/
+CAINSIP_EXPORT void cain_sip_uri_remove_header(cain_sip_uri_t *uri, const char *name);
+
+/**
+ * 	          Removes the port part of this SipURI.
+ *
+ */
+CAINSIP_EXPORT void	cain_sip_uri_remove_port(cain_sip_uri_t* uri) ;
 /**
  * 	          Set the host part of this SipURI to the newly supplied host parameter.
  *

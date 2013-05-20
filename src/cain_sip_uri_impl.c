@@ -148,6 +148,10 @@ void cain_sip_uri_set_header(cain_sip_uri_t* uri,const char* name,const char* va
 	cain_sip_parameters_set_parameter(uri->header_list,name,value);
 }
 
+void cain_sip_uri_remove_header(cain_sip_uri_t *uri, const char *name){
+	cain_sip_parameters_remove_parameter(uri->header_list,name);
+}
+
 const cain_sip_list_t*	cain_sip_uri_get_header_names(const cain_sip_uri_t* uri) {
 	return cain_sip_parameters_get_parameter_names(uri->header_list);
 }
