@@ -99,7 +99,8 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 		}
 		return;
 	}else {
-		cain_sip_error("Refresher process_io_error not implemented yet for non transaction/provider source");
+		/*cain_sip_error("Refresher process_io_error not implemented yet for non transaction/provider source");*/
+		/*nop, because already handle at transaction layer*/
 	}
 }
 
