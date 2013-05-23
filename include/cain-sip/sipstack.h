@@ -77,6 +77,19 @@ CAINSIP_EXPORT void cain_sip_stack_set_resolver_tx_delay(cain_sip_stack_t *stack
 CAINSIP_EXPORT void cain_sip_stack_set_resolver_send_error(cain_sip_stack_t *stack, int send_error);
 
 /**
+ * Get the additional DNS hosts file.
+ * @return The path to the additional DNS hosts file.
+**/
+CAINSIP_EXPORT const char * cain_sip_stack_get_dns_user_hosts_file(const cain_sip_stack_t *stack);
+
+/**
+ * Can be used to load an additional DNS hosts file for tests.
+ * @param stack
+ * @param hosts_file The path to the additional DNS hosts file to load.
+**/
+CAINSIP_EXPORT void cain_sip_stack_set_dns_user_hosts_file(cain_sip_stack_t *stack, const char *hosts_file);
+
+/**
  * Returns the time interval in seconds after which a connection must be closed when inactive.
 **/
 CAINSIP_EXPORT int cain_sip_stack_get_inactive_transport_timeout(const cain_sip_stack_t *stack);

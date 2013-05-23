@@ -86,6 +86,13 @@ static struct dns_hosts *hosts(cain_sip_resolver_context_t *ctx) {
 		return NULL;
 	}
 
+	if (ctx->stack->dns_user_hosts_file) {
+		error = dns_hosts_loadpath(ctx->hosts, ctx->stack->dns_user_hosts_file);
+		if (error) {
+			cain_sip_error("%s dns_hosts_loadfile(\"%s\"): %s", __FUNCTION__, dns_strerror(error));
+		}
+	}
+
 	return ctx->hosts;
 }
 
