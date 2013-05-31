@@ -140,32 +140,25 @@ static size_t cain_sip_channel_input_stream_get_buff_length(cain_sip_channel_inp
 	return MAX_CHANNEL_BUFF_SIZE - (input_stream->write_ptr-input_stream->buff);
 }
 
-int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
-	int num;
+static void cain_sip_channel_message_ready(cain_sip_channel_t *obj){
+	obj->incoming_messages=cain_sip_list_append(obj->incoming_messages,obj->input_stream.msg);
+	obj->input_stream.msg=NULL;
+	obj->input_stream.state=WAITING_MESSAGE_START;
+	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_event,obj,CAIN_SIP_EVENT_READ/*always a read event*/);
+	if (obj->input_stream.write_ptr-obj->input_stream.read_ptr<=0) {
+		cain_sip_channel_input_stream_reset(&obj->input_stream); /*end of strem, back to home*/
+	}
+}
+
+static void cain_sip_channel_parse_stream(cain_sip_channel_t *obj){
 	int offset;
-	int i;
 	size_t read_size=0;
 	cain_sip_header_content_length_t* content_length_header;
 	int content_length;
-
-	if (revents & CAIN_SIP_EVENT_READ) {
-		if (obj->simulated_recv_return>0) {
-			num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_length(&obj->input_stream)-1);
-			/*write ptr is only incremented if data were acquired from the transport*/
-			obj->input_stream.write_ptr+=num;
-			/*first null terminate the read buff*/
-			*obj->input_stream.write_ptr='\0';
-		} else {
-			cain_sip_message("channel [%p]: simulating recv() returning %i",obj,obj->simulated_recv_return);
-			num=obj->simulated_recv_return;
-		}
-	} else if (!revents) {
-		num=obj->input_stream.write_ptr-obj->input_stream.read_ptr;
-	} else {
-		cain_sip_error("Unexpected event [%i] on channel [%p]",revents,obj);
-		num=-1; /*to trigger an error*/
-	}
-	if (num>0){
+	int num;
+	
+	while ((num=(obj->input_stream.write_ptr-obj->input_stream.read_ptr))>0){
+	
 		if (obj->input_stream.state == WAITING_MESSAGE_START) {
 			/*search for request*/
 			if ((offset=get_message_start_pos(obj->input_stream.read_ptr,num)) >=0 ) {
@@ -178,40 +171,39 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 			} else {
 				cain_sip_debug("Unexpected [%s] received on channel [%p], trashing",obj->input_stream.read_ptr,obj);
 				cain_sip_channel_input_stream_reset(&obj->input_stream);
+				continue;
 			}
 		}
 
 		if (obj->input_stream.state==MESSAGE_AQUISITION) {
 			/*search for \r\n\r\n*/
-			for (i=0;i<obj->input_stream.write_ptr-obj->input_stream.read_ptr;i++) {
-				if (strncmp("\r\n\r\n",&obj->input_stream.read_ptr[i],4)==0) {
-					/*end of message found*/
-					cain_sip_message("channel [%p] read message from %s:%i\n%s",obj, obj->peer_name,obj->peer_port,obj->input_stream.read_ptr);
-					obj->input_stream.msg=cain_sip_message_parse_raw(obj->input_stream.read_ptr
-											,obj->input_stream.write_ptr-obj->input_stream.read_ptr
-											,&read_size);
-					obj->input_stream.read_ptr+=read_size;
-					if (obj->input_stream.msg && read_size > 0){
-						cain_sip_message("channel [%p] [%i] bytes parsed",obj,read_size);
-						cain_sip_object_ref(obj->input_stream.msg);
-						if (cain_sip_message_is_request(obj->input_stream.msg)) fix_incoming_via(CAIN_SIP_REQUEST(obj->input_stream.msg),obj->current_peer);
-						/*check for body*/
-						if ((content_length_header = (cain_sip_header_content_length_t*)cain_sip_message_get_header(obj->input_stream.msg,CAIN_SIP_CONTENT_LENGTH)) != NULL
-								&& cain_sip_header_content_length_get_content_length(content_length_header)>0) {
+			if (strstr(obj->input_stream.read_ptr,"\r\n\r\n")){
+				/*end of message found*/
+				cain_sip_message("channel [%p] read message from %s:%i\n%s",obj, obj->peer_name,obj->peer_port,obj->input_stream.read_ptr);
+				obj->input_stream.msg=cain_sip_message_parse_raw(obj->input_stream.read_ptr
+										,obj->input_stream.write_ptr-obj->input_stream.read_ptr
+										,&read_size);
+				obj->input_stream.read_ptr+=read_size;
+				if (obj->input_stream.msg && read_size > 0){
+					cain_sip_message("channel [%p] [%i] bytes parsed",obj,read_size);
+					cain_sip_object_ref(obj->input_stream.msg);
+					if (cain_sip_message_is_request(obj->input_stream.msg)) fix_incoming_via(CAIN_SIP_REQUEST(obj->input_stream.msg),obj->current_peer);
+					/*check for body*/
+					if ((content_length_header = (cain_sip_header_content_length_t*)cain_sip_message_get_header(obj->input_stream.msg,CAIN_SIP_CONTENT_LENGTH)) != NULL
+							&& cain_sip_header_content_length_get_content_length(content_length_header)>0) {
 
-							obj->input_stream.state=BODY_AQUISITION;
-							break; /*don't avoid to exist from loop, because 2 response can be linked*/
-						} else {
-							/*no body*/
-							goto message_ready;
-						}
-
-					}else{
-						cain_sip_error("Could not parse [%s], resetting channel [%p]",obj->input_stream.read_ptr,obj);
-						cain_sip_channel_input_stream_reset(&obj->input_stream);
+						obj->input_stream.state=BODY_AQUISITION;
+					} else {
+						/*no body*/
+						cain_sip_channel_message_ready(obj);
+						continue;
 					}
+				}else{
+					cain_sip_error("Could not parse [%s], resetting channel [%p]",obj->input_stream.read_ptr,obj);
+					cain_sip_channel_input_stream_reset(&obj->input_stream);
+					continue;
 				}
-			}
+			}else break; /*The message isn't finished to be receive, we need more data*/
 		}
 
 		if (obj->input_stream.state==BODY_AQUISITION) {
@@ -219,30 +211,41 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 			if (content_length <= obj->input_stream.write_ptr-obj->input_stream.read_ptr) {
 				/*great body completed*/
 				cain_sip_message("channel [%p] read [%i] bytes of body from %s:%i\n%s"	,obj
-																						,content_length
-																						,obj->peer_name
-																						,obj->peer_port
-																						,obj->input_stream.read_ptr);
+					,content_length
+					,obj->peer_name
+					,obj->peer_port
+					,obj->input_stream.read_ptr);
 				cain_sip_message_set_body(obj->input_stream.msg,obj->input_stream.read_ptr,content_length);
-				read_size+=content_length; /*read size is used in message ready to compute residu*/
 				obj->input_stream.read_ptr+=content_length;
-				goto message_ready;
-
+				cain_sip_channel_message_ready(obj);
+			}else{
+				/*body is not finished, we need more data*/
+				break;
 			}
 		}
-		return CAIN_SIP_CONTINUE;
-	message_ready:
-		obj->incoming_messages=cain_sip_list_append(obj->incoming_messages,obj->input_stream.msg);
-		obj->input_stream.msg=NULL;
-		obj->input_stream.state=WAITING_MESSAGE_START;
-		CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_event,obj,CAIN_SIP_EVENT_READ/*always a read event*/);
-		if (obj->input_stream.write_ptr-obj->input_stream.read_ptr>0) {
-			/*process residu*/
-			cain_sip_channel_process_data(obj,0);
+	}
+}
+
+int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
+	int num;
+
+	if (revents & CAIN_SIP_EVENT_READ) {
+		if (obj->simulated_recv_return>0) {
+			num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_length(&obj->input_stream)-1);
 		} else {
-			cain_sip_channel_input_stream_reset(&obj->input_stream); /*end of strem, back to home*/
+			cain_sip_message("channel [%p]: simulating recv() returning %i",obj,obj->simulated_recv_return);
+			num=obj->simulated_recv_return;
 		}
-		return CAIN_SIP_CONTINUE;
+	} else {
+		cain_sip_error("Unexpected event [%i] on channel [%p]",revents,obj);
+		num=-1; /*to trigger an error*/
+	}
+	if (num>0){
+		obj->input_stream.write_ptr+=num;
+		/*first null terminate the read buff*/
+		*obj->input_stream.write_ptr='\0';
+		cain_sip_channel_parse_stream(obj);
+		
 	} else if (num == 0) {
 		channel_set_state(obj,CAIN_SIP_CHANNEL_DISCONNECTED);
 		return CAIN_SIP_STOP;
