@@ -149,14 +149,15 @@ int cain_sip_channel_process_data(cain_sip_channel_t *obj,unsigned int revents){
 	int content_length;
 
 	if (revents & CAIN_SIP_EVENT_READ) {
-		if (obj->recv_error>0) {
+		if (obj->simulated_recv_return>0) {
 			num=cain_sip_channel_recv(obj,obj->input_stream.write_ptr,cain_sip_channel_input_stream_get_buff_length(&obj->input_stream)-1);
 			/*write ptr is only incremented if data were acquired from the transport*/
 			obj->input_stream.write_ptr+=num;
 			/*first null terminate the read buff*/
 			*obj->input_stream.write_ptr='\0';
 		} else {
-			num=obj->recv_error;
+			cain_sip_message("channel [%p]: simulating recv() returning %i",obj,obj->simulated_recv_return);
+			num=obj->simulated_recv_return;
 		}
 	} else if (!revents) {
 		num=obj->input_stream.write_ptr-obj->input_stream.read_ptr;
@@ -288,7 +289,7 @@ void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,cons
 	if (bindip && strcmp(bindip,"::0")!=0 && strcmp(bindip,"0.0.0.0")!=0)
 		obj->local_ip=cain_sip_strdup(bindip);
 	obj->local_port=localport;
-	obj->recv_error=1;/*not set*/
+	obj->simulated_recv_return=1;/*not set*/
 	cain_sip_channel_input_stream_reset(&obj->input_stream);
 	update_inactivity_timer(obj,FALSE);
 }

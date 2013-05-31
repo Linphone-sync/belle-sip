@@ -845,7 +845,7 @@ void cain_sip_provider_set_recv_error(cain_sip_provider_t *prov, int recv_error)
 	cain_sip_list_t *channels;
 	for(lps=prov->lps;lps!=NULL;lps=lps->next){
 		for(channels=((cain_sip_listening_point_t*)lps->data)->channels;channels!=NULL;channels=channels->next){
-			((cain_sip_channel_t*)channels->data)->recv_error=recv_error;
+			((cain_sip_channel_t*)channels->data)->simulated_recv_return=recv_error;
 			((cain_sip_source_t*)channels->data)->notify_required=(recv_error<=0);
 		}
 	}

@@ -70,6 +70,7 @@ CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_hop_t);
 CAIN_SIP_INSTANCIATE_VPTR(cain_sip_hop_t,cain_sip_object_t,cain_sip_hop_destroy,cain_sip_hop_clone,NULL,TRUE);
 
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
+	cain_sip_message("stack [%p] destroyed.",stack);
 	cain_sip_object_unref(stack->ml);
 }
 
