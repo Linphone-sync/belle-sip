@@ -40,6 +40,7 @@ struct cain_sip_refresher {
 	cain_sip_header_contact_t* nated_contact;
 	int enable_nat_helper;
 	int auth_failures;
+	int on_io_error; /*flag to avoid multiple error notification*/
 };
 static int set_expires_from_trans(cain_sip_refresher_t* refresher);
 
@@ -72,7 +73,9 @@ static void process_dialog_terminated(void *user_ctx, const cain_sip_dialog_term
 static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *event){
 	cain_sip_refresher_t* refresher=(cain_sip_refresher_t*)user_ctx;
 	cain_sip_client_transaction_t*client_transaction;
-
+	if (refresher->on_io_error==1) {
+		return; /*refresher already on error*/
+	}
 	if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_client_transaction_t))) {
 		client_transaction=CAIN_SIP_CLIENT_TRANSACTION(cain_sip_io_error_event_get_source(event));
 		if (!refresher || (refresher && ((refresher->state==stopped
@@ -83,6 +86,7 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 
 		if (refresher->state==started) retry_later(refresher);
 		if (refresher->listener) refresher->listener(refresher,refresher->user_data,503, "io error");
+		refresher->on_io_error=1;
 		return;
 	} else if (cain_sip_object_is_instance_of(CAIN_SIP_OBJECT(cain_sip_io_error_event_get_source(event)),CAIN_SIP_TYPE_ID(cain_sip_provider_t))) {
 		/*something went wrong on this provider, checking if my channel is still up*/
@@ -96,6 +100,7 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 								,cain_sip_channel_state_to_string(cain_sip_channel_get_state(refresher->transaction->base.channel)));
 			if (refresher->state==started) retry_later(refresher);
 			if (refresher->listener) refresher->listener(refresher,refresher->user_data,503, "io error");
+			refresher->on_io_error=1;
 		}
 		return;
 	}else {
@@ -250,6 +255,8 @@ static int cain_sip_refresher_refresh_internal(cain_sip_refresher_t* refresher,i
 	} else {
 		/*-1 keep last value*/
 	}
+	refresher->on_io_error=0; /*reset this flag*/
+
 	if (!dialog) {
 		const cain_sip_transaction_state_t state=cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction));
 		/*create new request*/

@@ -478,7 +478,7 @@ struct cain_sip_stack{
 	int resolver_tx_delay; /*used to simulate network transmission delay, for tests*/
 	int resolver_send_error;	/* used to simulate network error*/
 	int dscp;
-	const char *dns_user_hosts_file; /* used to load additional hosts file for tests */
+	char *dns_user_hosts_file; /* used to load additional hosts file for tests */
 };
 
 cain_sip_hop_t* cain_sip_hop_new(const char* transport, const char *cname, const char* host,int port);

@@ -71,6 +71,7 @@ CAIN_SIP_INSTANCIATE_VPTR(cain_sip_hop_t,cain_sip_object_t,cain_sip_hop_destroy,
 
 static void cain_sip_stack_destroy(cain_sip_stack_t *stack){
 	cain_sip_message("stack [%p] destroyed.",stack);
+	if (stack->dns_user_hosts_file) cain_sip_free(stack->dns_user_hosts_file);
 	cain_sip_object_unref(stack->ml);
 }
 
@@ -178,7 +179,8 @@ const char * cain_sip_stack_get_dns_user_hosts_file(const cain_sip_stack_t *stac
 }
 
 void cain_sip_stack_set_dns_user_hosts_file(cain_sip_stack_t *stack, const char *hosts_file) {
-	stack->dns_user_hosts_file = hosts_file;
+	if (stack->dns_user_hosts_file) cain_sip_free(stack->dns_user_hosts_file);
+	stack->dns_user_hosts_file = hosts_file?cain_sip_strdup(hosts_file):NULL;
 }
 
 const char* cain_sip_version_to_string() {
