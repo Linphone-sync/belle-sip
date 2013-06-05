@@ -84,6 +84,11 @@ static void process_io_error(void *user_ctx, const cain_sip_io_error_event_t *ev
 										|| client_transaction !=refresher->transaction )))
 				return; /*not for me or no longuer involved*/
 
+		if (refresher->expires==0
+				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) != CAIN_SIP_TRANSACTION_TRYING
+				&& cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(refresher->transaction)) != CAIN_SIP_TRANSACTION_INIT ) {
+			return; /*not for me or no longuer involved because expire=0*/
+		}
 		if (refresher->state==started) retry_later(refresher);
 		if (refresher->listener) refresher->listener(refresher,refresher->user_data,503, "io error");
 		refresher->on_io_error=1;
@@ -147,6 +152,9 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 		}
 		/*update expire if needed*/
 		set_expires_from_trans(refresher);
+		if (refresher->expires<=0) {
+			cain_sip_refresher_stop(refresher); /*doesn not make sens to refresh if expire =0;*/
+		}
 		if (refresher->state==started) schedule_timer(refresher); /*re-arm timer*/
 		else cain_sip_message("Refresher [%p] not scheduling next refresh, because it was stopped");
 		break;
