@@ -147,7 +147,7 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 				cain_sip_message_remove_header(CAIN_SIP_MESSAGE(request),"SIP-If-Match");
 				cain_sip_message_add_header(CAIN_SIP_MESSAGE(request),sip_if_match);
 			} else {
-				cain_sip_warning("Refresher [%p] receive 200ok to a publish without etag");
+				cain_sip_warning("Refresher [%p] receive 200ok to a publish without etag",refresher);
 			}
 		}
 		/*update expire if needed*/
@@ -156,7 +156,7 @@ static void process_response_event(void *user_ctx, const cain_sip_response_event
 			cain_sip_refresher_stop(refresher); /*doesn not make sens to refresh if expire =0;*/
 		}
 		if (refresher->state==started) schedule_timer(refresher); /*re-arm timer*/
-		else cain_sip_message("Refresher [%p] not scheduling next refresh, because it was stopped");
+		else cain_sip_message("Refresher [%p] not scheduling next refresh, because it was stopped",refresher);
 		break;
 	case 401:
 	case 407:

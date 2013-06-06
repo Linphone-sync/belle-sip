@@ -436,7 +436,7 @@ cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t){
 			obj->route_set=cain_sip_list_append(obj->route_set,cain_sip_object_ref(predefined_routes->data));	
 		}
 	}
-	cain_sip_message("New %s dialog [%x] , local tag [%s], remote tag [%s]"
+	cain_sip_message("New %s dialog [%p] , local tag [%s], remote tag [%s]"
 			,obj->is_server?"server":"client"
 			,obj
 			,obj->local_tag

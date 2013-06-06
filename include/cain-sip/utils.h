@@ -40,6 +40,13 @@ typedef enum {
 
 typedef void (*cain_sip_log_function_t)(cain_sip_log_level lev, const char *fmt, va_list args);
 
+
+#ifdef __GNUC__
+#define CAIN_SIP_CHECK_FORMAT_ARGS(m,n) __attribute__((format(printf,m,n)))
+#else
+#define CAIN_SIP_CHECK_FORMAT_ARGS(m,n)
+#endif
+
 CAIN_SIP_BEGIN_DECLS
 
 extern cain_sip_log_function_t cain_sip_logv_out;
@@ -82,14 +89,14 @@ static CAINSIP_INLINE void cain_sip_debug(const char *fmt,...)
 
 #else
 
-static CAINSIP_INLINE void cain_sip_log(cain_sip_log_level lev, const char *fmt,...){
+static CAINSIP_INLINE void CAIN_SIP_CHECK_FORMAT_ARGS(2,3) cain_sip_log(cain_sip_log_level lev, const char *fmt,...){
         va_list args;
         va_start (args, fmt);
         cain_sip_logv(lev, fmt, args);
         va_end (args);
 }
 
-static CAINSIP_INLINE void cain_sip_message(const char *fmt,...)
+static CAINSIP_INLINE void CAIN_SIP_CHECK_FORMAT_ARGS(1,2) cain_sip_message(const char *fmt,...)
 {
         va_list args;
         va_start (args, fmt);
@@ -97,7 +104,7 @@ static CAINSIP_INLINE void cain_sip_message(const char *fmt,...)
         va_end (args);
 }
 
-static CAINSIP_INLINE void cain_sip_warning(const char *fmt,...)
+static CAINSIP_INLINE void CAIN_SIP_CHECK_FORMAT_ARGS(1,2) cain_sip_warning(const char *fmt,...)
 {
         va_list args;
         va_start (args, fmt);
@@ -107,7 +114,7 @@ static CAINSIP_INLINE void cain_sip_warning(const char *fmt,...)
 
 #endif
 
-static CAINSIP_INLINE void cain_sip_error(const char *fmt,...)
+static CAINSIP_INLINE void CAIN_SIP_CHECK_FORMAT_ARGS(1,2) cain_sip_error(const char *fmt,...)
 {
         va_list args;
         va_start (args, fmt);
@@ -115,7 +122,7 @@ static CAINSIP_INLINE void cain_sip_error(const char *fmt,...)
         va_end (args);
 }
 
-static CAINSIP_INLINE void cain_sip_fatal(const char *fmt,...)
+static CAINSIP_INLINE void CAIN_SIP_CHECK_FORMAT_ARGS(1,2) cain_sip_fatal(const char *fmt,...)
 {
         va_list args;
         va_start (args, fmt);
@@ -128,7 +135,7 @@ static CAINSIP_INLINE void cain_sip_fatal(const char *fmt,...)
 CAINSIP_EXPORT void cain_sip_set_log_file(FILE *file);
 CAINSIP_EXPORT void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
-CAINSIP_EXPORT char *cain_sip_strdup_printf(const char *fmt,...);
+CAINSIP_EXPORT char * CAIN_SIP_CHECK_FORMAT_ARGS(1,2) cain_sip_strdup_printf(const char *fmt,...);
 
 CAINSIP_EXPORT void cain_sip_set_log_level(int level);
 

@@ -185,7 +185,7 @@ static void cain_sip_channel_parse_stream(cain_sip_channel_t *obj){
 										,&read_size);
 				obj->input_stream.read_ptr+=read_size;
 				if (obj->input_stream.msg && read_size > 0){
-					cain_sip_message("channel [%p] [%i] bytes parsed",obj,read_size);
+					cain_sip_message("channel [%p] [%i] bytes parsed",obj,(int)read_size);
 					cain_sip_object_ref(obj->input_stream.msg);
 					if (cain_sip_message_is_request(obj->input_stream.msg)) fix_incoming_via(CAIN_SIP_REQUEST(obj->input_stream.msg),obj->current_peer);
 					/*check for body*/

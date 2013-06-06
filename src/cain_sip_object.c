@@ -466,7 +466,7 @@ void cain_sip_object_pool_clean(cain_sip_object_pool_t *pool){
 	cain_sip_list_t *elem,*next;
 	
 	if (!cain_sip_object_pool_cleanable(pool)){
-		cain_sip_warning("Thread pool [%p] cannot be cleaned from thread [%ul] because it was created for thread [%ul]",
+		cain_sip_warning("Thread pool [%p] cannot be cleaned from thread [%lu] because it was created for thread [%lu]",
 				 pool,(unsigned long)cain_sip_thread_self(),(unsigned long)pool->thread_id);
 		return;
 	}
@@ -502,7 +502,7 @@ static void cleanup_pool_stack(void *data){
 		 * Instead, we mark them as detached, so that when the thread that will attempt to destroy them will do it,
 		 * we'll accept (since anyway these object pool are no longer needed.
 		 */
-		cain_sip_warning("There were still [%i] object pools for thread [%u] while the thread exited. ",
+		cain_sip_warning("There were still [%i] object pools for thread [%lu] while the thread exited. ",
 				 cain_sip_list_size(*pool_stack),(unsigned long)cain_sip_thread_self());
 		cain_sip_list_free_with_data(*pool_stack,(void (*)(void*)) cain_sip_object_pool_detach_from_thread);
 	}
@@ -573,7 +573,7 @@ cain_sip_object_pool_t *cain_sip_object_pool_get_current(void){
 	if (pools==NULL) return NULL;
 	if (*pools==NULL ){
 		if (first_time) {
-			cain_sip_warning("There is no object pool created in thread [%ul]. "
+			cain_sip_warning("There is no object pool created in thread [%lu]. "
 			"Use cain_sip_object_pool_push() to create one. Unowned objects not unref'd will be leaked.",
 			(unsigned long)cain_sip_thread_self());
 		}
