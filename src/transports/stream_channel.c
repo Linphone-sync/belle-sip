@@ -71,7 +71,6 @@ int stream_channel_recv(cain_sip_stream_channel_t *obj, void *buf, size_t buflen
 void stream_channel_close(cain_sip_stream_channel_t *obj){
 	cain_sip_socket_t sock = cain_sip_source_get_socket((cain_sip_source_t*)obj);
 	if (sock!=(cain_sip_socket_t)-1){
-		close_socket(sock);
 #ifdef TARGET_OS_IPHONE
 		if (obj->read_stream != NULL) {
 			CFReadStreamClose (obj->read_stream);
@@ -84,6 +83,7 @@ void stream_channel_close(cain_sip_stream_channel_t *obj){
 			obj->write_stream=NULL;
 		}
 #endif
+		close_socket(sock);
 	}
 }
 
@@ -132,8 +132,6 @@ int stream_channel_connect(cain_sip_stream_channel_t *obj, const struct addrinfo
 		cain_sip_error("setsockopt TCP_NODELAY failed: [%s]",cain_sip_get_socket_error_string());
 	}
 	cain_sip_socket_set_nonblocking(sock);
-	cain_sip_channel_set_socket((cain_sip_channel_t*)obj,sock,(cain_sip_source_func_t)stream_channel_process_data);
-	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
 	
 	err = connect(sock,ai->ai_addr,ai->ai_addrlen);
 	if (err != 0 && get_socket_error()!=CAINSIP_EINPROGRESS && get_socket_error()!=CAINSIP_EWOULDBLOCK) {
@@ -141,6 +139,8 @@ int stream_channel_connect(cain_sip_stream_channel_t *obj, const struct addrinfo
 		close_socket(sock);
 		return -1;
 	}
+	cain_sip_channel_set_socket((cain_sip_channel_t*)obj,sock,(cain_sip_source_func_t)stream_channel_process_data);
+	cain_sip_source_set_events((cain_sip_source_t*)obj,CAIN_SIP_EVENT_WRITE|CAIN_SIP_EVENT_ERROR);
 	cain_sip_main_loop_add_source(obj->base.stack->ml,(cain_sip_source_t*)obj);
 	return 0;
 }

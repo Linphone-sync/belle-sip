@@ -379,7 +379,7 @@ int cain_sip_channel_recv(cain_sip_channel_t *obj, void *buf, size_t buflen){
 
 void cain_sip_channel_close(cain_sip_channel_t *obj){
 	if (CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close)
-		CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close(obj); /*udp channel don't have close function*/
+		CAIN_SIP_OBJECT_VPTR(obj,cain_sip_channel_t)->close(obj); /*udp channel doesn't have close function*/
 	cain_sip_main_loop_remove_source(obj->stack->ml,(cain_sip_source_t*)obj);
 	cain_sip_source_uninit((cain_sip_source_t*)obj);
 }
