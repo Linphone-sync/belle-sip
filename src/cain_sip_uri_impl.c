@@ -69,48 +69,48 @@ static void cain_sip_uri_clone(cain_sip_uri_t* uri, const cain_sip_uri_t *orig){
 	
 }
 
-int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
+cain_sip_error_code cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff, size_t buff_size, unsigned int *offset) {
 	const cain_sip_list_t* list=cain_sip_parameters_get_parameters(uri->header_list);
+	cain_sip_error_code error=CAIN_SIP_OK;
 
-	current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s:",uri->secure?"sips":"sip");
-	if (current_offset>=buff_size) return buff_size-offset;
+	error=cain_sip_snprintf(buff,buff_size,offset,"%s:",uri->secure?"sips":"sip");
+	if (error!=CAIN_SIP_OK) return error;
 	
 	if (uri->user) {
 		char* escaped_username=cain_sip_to_escaped_string(uri->user);
-		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s@",escaped_username);
+		error=cain_sip_snprintf(buff,buff_size,offset,"%s@",escaped_username);
 		cain_sip_free(escaped_username);
-		if (current_offset>=buff_size) return buff_size-offset;
+		if (error!=CAIN_SIP_OK) return error;
 	}
 	if (uri->host) {
 		if (strchr(uri->host,':')) { /*ipv6*/
-			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"[%s]",uri->host);
+			error=cain_sip_snprintf(buff,buff_size,offset,"[%s]",uri->host);
 		} else {
-			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"%s",uri->host);
+			error=cain_sip_snprintf(buff,buff_size,offset,"%s",uri->host);
 		}
-		if (current_offset>=buff_size) return buff_size-offset;
+		if (error!=CAIN_SIP_OK) return error;
 	} else {
 		cain_sip_warning("no host found in this uri");
 	}
 	if (uri->port>0) {
-		current_offset+=snprintf(buff+current_offset,buff_size-current_offset,":%i",uri->port);
-		if (current_offset>=buff_size) return buff_size-offset;
+		error=cain_sip_snprintf(buff,buff_size,offset,":%i",uri->port);
+		if (error!=CAIN_SIP_OK) return error;
 	}
-	current_offset+=cain_sip_parameters_marshal(&uri->params,buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset;
+	error=cain_sip_parameters_marshal(&uri->params,buff,buff_size,offset);
+	if (error!=CAIN_SIP_OK) return error;
 
 	for(;list!=NULL;list=list->next){
 		cain_sip_param_pair_t* container = list->data;
 		if (list == cain_sip_parameters_get_parameters(uri->header_list)) {
 			//first case
-			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"?%s=%s",container->name,container->value);
+			error=cain_sip_snprintf(buff,buff_size,offset,"?%s=%s",container->name,container->value);
 		} else {
 			//subsequent headers
-			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,"&%s=%s",container->name,container->value);
+			error=cain_sip_snprintf(buff,buff_size,offset,"&%s=%s",container->name,container->value);
 		}
-		if (current_offset>=buff_size) return buff_size-offset;
+		if (error!=CAIN_SIP_OK) return error;
 	}
-	return current_offset-offset;
+	return error;
 }
 
 CAIN_SIP_PARSE(uri);

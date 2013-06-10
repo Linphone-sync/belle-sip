@@ -458,12 +458,13 @@ void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) 
 
 static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 	char buffer[cain_sip_network_buffer_size];
-	int len;
+	unsigned int len=0;
 	int ret=0;
+	cain_sip_error_code error=CAIN_SIP_OK;
 	
 	CAIN_SIP_INVOKE_LISTENERS_ARG1_ARG2(obj->listeners,cain_sip_channel_listener_t,on_sending,obj,msg);
-	len=cain_sip_object_marshal((cain_sip_object_t*)msg,buffer,0,sizeof(buffer));
-	if (len>0){
+	error=cain_sip_object_marshal((cain_sip_object_t*)msg,buffer,sizeof(buffer),&len);
+	if ((error==CAIN_SIP_OK) && (len>0)){
 		if (!obj->stack->send_error)
 			ret=cain_sip_channel_send(obj,buffer,len);
 		else

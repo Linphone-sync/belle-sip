@@ -41,6 +41,13 @@ typedef enum {
 typedef void (*cain_sip_log_function_t)(cain_sip_log_level lev, const char *fmt, va_list args);
 
 
+typedef enum {
+	CAIN_SIP_NOT_IMPLEMENTED = -2,
+	CAIN_SIP_BUFFER_OVERFLOW = -1,
+	CAIN_SIP_OK = 0
+} cain_sip_error_code;
+
+
 #ifdef __GNUC__
 #define CAIN_SIP_CHECK_FORMAT_ARGS(m,n) __attribute__((format(printf,m,n)))
 #else
@@ -136,6 +143,8 @@ CAINSIP_EXPORT void cain_sip_set_log_file(FILE *file);
 CAINSIP_EXPORT void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
 CAINSIP_EXPORT char * CAIN_SIP_CHECK_FORMAT_ARGS(1,2) cain_sip_strdup_printf(const char *fmt,...);
+
+CAINSIP_EXPORT cain_sip_error_code cain_sip_snprintf(char *buff, unsigned int buff_size, unsigned int *offset, const char *fmt, ...);
 
 CAINSIP_EXPORT void cain_sip_set_log_level(int level);
 

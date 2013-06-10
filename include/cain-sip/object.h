@@ -20,6 +20,7 @@
 #define cain_sip_object_h
 
 #include "cain-sip/defs.h"
+#include "cain-sip/utils.h"
 
 /*
  * typedefs, macros and functions for object definition and manipulation.
@@ -113,7 +114,7 @@ typedef struct _cain_sip_object cain_sip_object_t;
 
 typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
 typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_object_t *orig);
-typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
+typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff, size_t buff_size, unsigned int *offset);
 
 struct _cain_sip_object_vptr{
 	cain_sip_type_id_t id;
@@ -230,7 +231,7 @@ CAINSIP_EXPORT char* cain_sip_object_to_string(void* obj);
  * Writes a string representation of the object into the supplied buffer.
  * Same as cain_sip_object_to_string(), but without allocating space for the output string.
 **/
-CAINSIP_EXPORT int cain_sip_object_marshal(cain_sip_object_t* obj, char* buff,unsigned int offset,size_t buff_size);
+CAINSIP_EXPORT cain_sip_error_code cain_sip_object_marshal(cain_sip_object_t* obj, char* buff, size_t buff_size, unsigned int *offset);
 
 CAINSIP_EXPORT int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
 

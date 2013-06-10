@@ -37,22 +37,17 @@ void cain_sdp_attribute_clone(cain_sdp_attribute_t *attribute, const cain_sdp_at
 	CLONE_STRING(cain_sdp_attribute,name,attribute,orig)
 	CLONE_STRING(cain_sdp_attribute,value,attribute,orig)
 }
-int cain_sdp_attribute_marshal(cain_sdp_attribute_t* attribute, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"a=%s"
-								,attribute->name);
-	if (current_offset>=buff_size) return buff_size-offset;
+
+cain_sip_error_code cain_sdp_attribute_marshal(cain_sdp_attribute_t* attribute, char* buff, size_t buff_size, unsigned int *offset) {
+	cain_sip_error_code error=cain_sip_snprintf(buff,buff_size,offset,"a=%s",attribute->name);
+	if (error!=CAIN_SIP_OK) return error;
 	if (attribute->value) {
-		current_offset+=snprintf(	buff+current_offset
-									,buff_size-current_offset
-									,":%s"
-									,attribute->value);
-		if (current_offset>=buff_size) return buff_size-offset;
+		error=cain_sip_snprintf(buff,buff_size,offset,":%s",attribute->value);
+		if (error!=CAIN_SIP_OK) return error;
 	}
-	return current_offset-offset;
+	return error;
 }
+
 CAIN_SDP_NEW(attribute,cain_sip_object)
 cain_sdp_attribute_t* cain_sdp_attribute_create (const char* name,const char* value) {
 	cain_sdp_attribute_t* attribute = cain_sdp_attribute_new();
@@ -83,15 +78,11 @@ void cain_sdp_bandwidth_clone(cain_sdp_bandwidth_t *bandwidth, const cain_sdp_ba
 	CLONE_STRING(cain_sdp_bandwidth,type,bandwidth,orig)
 	bandwidth->value=orig->value;
 }
-int cain_sdp_bandwidth_marshal(cain_sdp_bandwidth_t* bandwidth, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"b=%s:%i"
-								,bandwidth->type,bandwidth->value);
-	if (current_offset>=buff_size) return buff_size-offset;
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_bandwidth_marshal(cain_sdp_bandwidth_t* bandwidth, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(buff,buff_size,offset,"b=%s:%i",bandwidth->type,bandwidth->value);
 }
+
 CAIN_SDP_NEW(bandwidth,cain_sip_object)
 CAIN_SDP_PARSE(bandwidth)
 GET_SET_STRING(cain_sdp_bandwidth,type);
@@ -119,17 +110,11 @@ void cain_sdp_connection_clone(cain_sdp_connection_t *connection, const cain_sdp
 	CLONE_STRING(cain_sdp_connection,address,connection,orig)
 
 }
-int cain_sdp_connection_marshal(cain_sdp_connection_t* connection, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"c=%s %s %s"
-								,connection->network_type
-								,connection->address_type
-								,connection->address);
-	if (current_offset>=buff_size) return buff_size-offset;
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_connection_marshal(cain_sdp_connection_t* connection, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(buff,buff_size,offset,"c=%s %s %s",connection->network_type,connection->address_type,connection->address);
 }
+
 CAIN_SDP_NEW(connection,cain_sip_object)
 CAIN_SDP_PARSE(connection)
 cain_sdp_connection_t* cain_sdp_connection_create(const char* net_type, const char* addr_type, const char* addr) {
@@ -157,15 +142,11 @@ void cain_sdp_email_destroy(cain_sdp_email_t* email) {
 void cain_sdp_email_clone(cain_sdp_email_t *email, const cain_sdp_email_t *orig){
 	CLONE_STRING(cain_sdp_email,value,email,orig)
 }
-int cain_sdp_email_marshal(cain_sdp_email_t* email, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"e=%s"
-								,email->value);
-	if (current_offset>=buff_size) return buff_size-offset; 
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_email_marshal(cain_sdp_email_t* email, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(buff,buff_size,offset,"e=%s",email->value);
 }
+
 CAIN_SDP_NEW(email,cain_sip_object)
 CAIN_SDP_PARSE(email)
 GET_SET_STRING(cain_sdp_email,value);
@@ -184,15 +165,11 @@ void cain_sdp_info_destroy(cain_sdp_info_t* info) {
 void cain_sdp_info_clone(cain_sdp_info_t *info, const cain_sdp_info_t *orig){
 	CLONE_STRING(cain_sdp_info,value,info,orig)
 }
-int cain_sdp_info_marshal(cain_sdp_info_t* info, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"i=%s"
-								,info->value);
-	if (current_offset>=buff_size) return buff_size-offset; 
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_info_marshal(cain_sdp_info_t* info, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(buff,buff_size,offset,"i=%s",info->value);
 }
+
 CAIN_SDP_NEW(info,cain_sip_object)
 CAIN_SDP_PARSE(info)
 GET_SET_STRING(cain_sdp_info,value);
@@ -230,37 +207,24 @@ void cain_sdp_media_clone(cain_sdp_media_t *media, const cain_sdp_media_t *orig)
 	media->port_count=orig->port_count;
 	CLONE_STRING(cain_sdp_media,protocol,media,orig)
 }
-int cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
+
+cain_sip_error_code cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff, size_t buff_size, unsigned int *offset) {
 	cain_sip_list_t* list=media->media_formats;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"m=%s %i"
-								,media->media_type
-								,media->media_port
-								);
-	if (current_offset>=buff_size) return buff_size-offset; 
+	cain_sip_error_code error=cain_sip_snprintf(buff,buff_size,offset,"m=%s %i",media->media_type,media->media_port);
+	if (error!=CAIN_SIP_OK) return error; 
 	if (media->port_count>1) {
-		current_offset+=snprintf(buff+current_offset
-								,buff_size-current_offset
-								,"/%i"
-								,media->port_count);
-		if (current_offset>=buff_size) return buff_size-offset; 
+		error=cain_sip_snprintf(buff,buff_size,offset,"/%i",media->port_count);
+		if (error!=CAIN_SIP_OK) return error; 
 	}
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								," %s"
-								,media->protocol);
-	if (current_offset>=buff_size) return buff_size-offset; 
+	error=cain_sip_snprintf(buff,buff_size,offset," %s",media->protocol);
+	if (error!=CAIN_SIP_OK) return error;
 	for(;list!=NULL;list=list->next){
-		current_offset+=snprintf(	buff+current_offset
-									,buff_size-current_offset
-									," %li"
-									,(long)list->data);
-		if (current_offset>=buff_size) return buff_size-offset; 
+		error=cain_sip_snprintf(buff,buff_size,offset," %li",(long)list->data);
+		if (error!=CAIN_SIP_OK) return error; 
 	}
-	return current_offset-offset;
+	return error;
 }
+
 CAIN_SDP_NEW_WITH_CTR(media,cain_sip_object)
 CAIN_SDP_PARSE(media)
 cain_sdp_media_t* cain_sdp_media_create(const char* media_type
@@ -314,33 +278,34 @@ static void cain_sdp_base_description_clone(cain_sdp_base_description_t *base_de
 	base_description->attributes = cain_sip_list_copy_with_data(orig->attributes,cain_sip_object_copyfunc);
 
 }
-int cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_description, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
+
+cain_sip_error_code cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_description, char* buff, size_t buff_size, unsigned int *offset) {
+	cain_sip_error_code error=CAIN_SIP_OK;
 	cain_sip_list_t* bandwidths;
 //	cain_sip_list_t* attributes;
 	if (base_description->info) {
-		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(base_description->info),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) return buff_size-offset; 
-		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) return buff_size-offset; 
+		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(base_description->info),buff,buff_size,offset);
+		if (error!=CAIN_SIP_OK) return error;
+		error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+		if (error!=CAIN_SIP_OK) return error; 
 	}
 	if (base_description->connection) {
-		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(base_description->connection),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) return buff_size-offset; 
-		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) return buff_size-offset; 
+		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(base_description->connection),buff,buff_size,offset);
+		if (error!=CAIN_SIP_OK) return error;
+		error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+		if (error!=CAIN_SIP_OK) return error;
 	}
 	for(bandwidths=base_description->bandwidths;bandwidths!=NULL;bandwidths=bandwidths->next){
-		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(bandwidths->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) return buff_size-offset; 
-		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) return buff_size-offset; 
+		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(bandwidths->data),buff,buff_size,offset);
+		if (error!=CAIN_SIP_OK) return error;
+		error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+		if (error!=CAIN_SIP_OK) return error;
 	}
 //	for(attributes=base_description->attributes;attributes!=NULL;attributes=attributes->next){
 //		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,current_offset,buff_size);
 //		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
 //	}
-	return current_offset-offset;
+	return error;
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sdp_base_description_t);
@@ -458,24 +423,23 @@ void cain_sdp_media_description_destroy(cain_sdp_media_description_t* media_desc
 void cain_sdp_media_description_clone(cain_sdp_media_description_t *media_description, const cain_sdp_media_description_t *orig){
 	if (orig->media) media_description->media = CAIN_SDP_MEDIA(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT((orig->media))));
 }
-int cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_description, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
+
+cain_sip_error_code cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_description, char* buff, size_t buff_size, unsigned int *offset) {
 	cain_sip_list_t* attributes;
-	
-	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(media_description->media),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset; 
-	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) return buff_size-offset; 
-	current_offset+=cain_sdp_base_description_marshal(CAIN_SIP_CAST(media_description,cain_sdp_base_description_t),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset; 
+	cain_sip_error_code error=cain_sip_object_marshal(CAIN_SIP_OBJECT(media_description->media),buff,buff_size,offset);
+	if (error!=CAIN_SIP_OK) return error;
+	error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+	if (error!=CAIN_SIP_OK) return error;
+	error=cain_sdp_base_description_marshal(CAIN_SIP_CAST(media_description,cain_sdp_base_description_t),buff,buff_size,offset);
+	if (error!=CAIN_SIP_OK) return error;
 
 	for(attributes=media_description->base_description.attributes;attributes!=NULL;attributes=attributes->next){
-		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) return buff_size-offset; 
-		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) return buff_size-offset; 
+		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,buff_size,offset);
+		if (error!=CAIN_SIP_OK) return error;
+		error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+		if (error!=CAIN_SIP_OK) return error;
 	}
-	return current_offset-offset;
+	return error;
 }
 
 CAIN_SDP_NEW(media_description,cain_sdp_base_description)
@@ -854,20 +818,20 @@ void cain_sdp_origin_clone(cain_sdp_origin_t *origin, const cain_sdp_origin_t *o
 	origin->session_id = orig->session_id;
 	origin->session_version = orig->session_version;
 }
-int cain_sdp_origin_marshal(cain_sdp_origin_t* origin, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-									,buff_size-current_offset
-									,"o=%s %i %i %s %s %s"
-									,origin->username
-									,origin->session_id
-									,origin->session_version
-									,origin->network_type
-									,origin->address_type
-									,origin->address);
-	if (current_offset>=buff_size) return buff_size-offset;
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_origin_marshal(cain_sdp_origin_t* origin, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(	buff
+								,buff_size
+								,offset
+								,"o=%s %i %i %s %s %s"
+								,origin->username
+								,origin->session_id
+								,origin->session_version
+								,origin->network_type
+								,origin->address_type
+								,origin->address);
 }
+
 CAIN_SDP_NEW(origin,cain_sip_object)
 cain_sdp_origin_t* cain_sdp_origin_create(const char* user_name
 											, unsigned int session_id
@@ -906,15 +870,11 @@ void cain_sdp_session_name_destroy(cain_sdp_session_name_t* session_name) {
 void cain_sdp_session_name_clone(cain_sdp_session_name_t *session_name, const cain_sdp_session_name_t *orig){
 	CLONE_STRING(cain_sdp_session_name,value,session_name,orig);
 }
-int cain_sdp_session_name_marshal(cain_sdp_session_name_t* session_name, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"s=%s"
-								,session_name->value);
-	if (current_offset>=buff_size) return buff_size-offset;
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_session_name_marshal(cain_sdp_session_name_t* session_name, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(buff,buff_size,offset,"s=%s",session_name->value);
 }
+
 CAIN_SDP_NEW(session_name,cain_sip_object)
 cain_sdp_session_name_t* cain_sdp_session_name_create (const char* name) {
 	cain_sdp_session_name_t* n=cain_sdp_session_name_new();
@@ -964,7 +924,8 @@ void cain_sdp_session_description_clone(cain_sdp_session_description_t *session_
 	if (orig->zone_adjustments) session_description->zone_adjustments = CAIN_SDP_URI(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->zone_adjustments)));
 	session_description->media_descriptions = cain_sip_list_copy_with_data(orig->media_descriptions,cain_sip_object_copyfunc);
 }
-int cain_sdp_session_description_marshal(cain_sdp_session_description_t* session_description, char* buff,unsigned int offset,unsigned int buff_size) {
+
+cain_sip_error_code cain_sdp_session_description_marshal(cain_sdp_session_description_t* session_description, char* buff, size_t buff_size, unsigned int *offset) {
 /*session_description:   proto_version CR LF
                          origin_field
                          session_name_field
@@ -981,51 +942,52 @@ int cain_sdp_session_description_marshal(cain_sdp_session_description_t* session
                          (attribute CR LF)*
                          media_descriptions;
  */
-	unsigned int current_offset=offset;
+	cain_sip_error_code error=CAIN_SIP_OK;
 	cain_sip_list_t* media_descriptions;
 	cain_sip_list_t* times;
 	cain_sip_list_t* attributes;
 
-	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->version),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset;
-	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) return buff_size-offset;
+	error=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->version),buff,buff_size,offset);
+	if (error!=CAIN_SIP_OK) return error;
+	error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+	if (error!=CAIN_SIP_OK) return error;
 
-	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->origin),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset;
-	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) return buff_size-offset;
+	error=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->origin),buff,buff_size,offset);
+	if (error!=CAIN_SIP_OK) return error;
+	error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+	if (error!=CAIN_SIP_OK) return error;
 
-	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->session_name),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset;
-	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-	if (current_offset>=buff_size) return buff_size-offset;
+	error=cain_sip_object_marshal(CAIN_SIP_OBJECT(session_description->session_name),buff,buff_size,offset);
+	if (error!=CAIN_SIP_OK) return error;
+	error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+	if (error!=CAIN_SIP_OK) return error;
 
-	current_offset+=cain_sdp_base_description_marshal((cain_sdp_base_description_t*)(&session_description->base_description),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset;
+	error=cain_sdp_base_description_marshal((cain_sdp_base_description_t*)(&session_description->base_description),buff,buff_size, offset);
+	if (error!=CAIN_SIP_OK) return error;
 	
-	current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "t=");
-	if (current_offset>=buff_size) return buff_size-offset;
+	error=cain_sip_snprintf(buff, buff_size, offset, "t=");
+	if (error!=CAIN_SIP_OK) return error;
 	for(times=session_description->times;times!=NULL;times=times->next){
-		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(times->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) return buff_size-offset;
-		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) return buff_size-offset;
+		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(times->data),buff,buff_size,offset);
+		if (error!=CAIN_SIP_OK) return error;
+		error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+		if (error!=CAIN_SIP_OK) return error;
 	}
 
 	for(attributes=session_description->base_description.attributes;attributes!=NULL;attributes=attributes->next){
-		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) return buff_size-offset;
-		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
-		if (current_offset>=buff_size) return buff_size-offset;
+		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,buff_size,offset);
+		if (error!=CAIN_SIP_OK) return error;
+		error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
+		if (error!=CAIN_SIP_OK) return error;
 	}
 
 	for(media_descriptions=session_description->media_descriptions;media_descriptions!=NULL;media_descriptions=media_descriptions->next){
-		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(media_descriptions->data),buff,current_offset,buff_size);
-		if (current_offset>=buff_size) return buff_size-offset;
+		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(media_descriptions->data),buff,buff_size,offset);
+		if (error!=CAIN_SIP_OK) return error;
 	}
-	return current_offset-offset;
+	return error;
 }
+
 CAIN_SDP_NEW(session_description,cain_sdp_base_description)
 CAIN_SDP_PARSE(session_description)
 
@@ -1167,16 +1129,11 @@ void cain_sdp_time_clone(cain_sdp_time_t *time, const cain_sdp_time_t *orig){
 	time->start=orig->start;
 	time->stop=orig->stop;
 }
-int cain_sdp_time_marshal(cain_sdp_time_t* time, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"%i %i"
-								,time->start
-								,time->stop);
-	if (current_offset>=buff_size) return buff_size-offset;
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_time_marshal(cain_sdp_time_t* time, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(buff,buff_size,offset,"%i %i",time->start,time->stop);
 }
+
 CAIN_SDP_NEW(time,cain_sip_object)
 //CAIN_SDP_PARSE(version)
 GET_SET_INT(cain_sdp_time,start,int);
@@ -1198,12 +1155,11 @@ void cain_sdp_time_description_destroy(cain_sdp_time_description_t* time_descrip
 void cain_sdp_time_description_clone(cain_sdp_time_description_t *time_description, const cain_sdp_time_description_t *orig){
 	if (orig->time) time_description->time = CAIN_SDP_TIME(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->time)));
 }
-int cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_description, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(time_description->time),buff,current_offset,buff_size);
-	if (current_offset>=buff_size) return buff_size-offset;
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_description, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_object_marshal(CAIN_SIP_OBJECT(time_description->time),buff,buff_size,offset);
 }
+
 CAIN_SDP_NEW(time_description,cain_sip_object)
 
 cain_sdp_time_description_t* cain_sdp_time_description_create (int start,int stop) {
@@ -1243,15 +1199,11 @@ void cain_sdp_version_destroy(cain_sdp_version_t* version) {
 void cain_sdp_version_clone(cain_sdp_version_t *version, const cain_sdp_version_t *orig){
 	version->version = orig->version;
 }
-int cain_sdp_version_marshal(cain_sdp_version_t* version, char* buff,unsigned int offset,unsigned int buff_size) {
-	unsigned int current_offset=offset;
-	current_offset+=snprintf(	buff+current_offset
-								,buff_size-current_offset
-								,"v=%i"
-								,version->version);
-	if (current_offset>=buff_size) return buff_size-offset;
-	return current_offset-offset;
+
+cain_sip_error_code cain_sdp_version_marshal(cain_sdp_version_t* version, char* buff, size_t buff_size, unsigned int *offset) {
+	return cain_sip_snprintf(buff,buff_size,offset,"v=%i",version->version);
 }
+
 CAIN_SDP_NEW(version,cain_sip_object)
 cain_sdp_version_t* cain_sdp_version_create(int version) {
 	cain_sdp_version_t* v = cain_sdp_version_new();

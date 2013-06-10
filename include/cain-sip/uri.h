@@ -10,6 +10,7 @@
 
 #include "cain-sip/defs.h"
 #include "cain-sip/list.h"
+#include "cain-sip/utils.h"
 
 /*inherite from cain_sip_parameters_t*/
 typedef struct _cain_sip_uri cain_sip_uri_t;
@@ -184,7 +185,7 @@ CAINSIP_EXPORT void cain_sip_uri_fix(cain_sip_uri_t *uri);
  */
 CAINSIP_EXPORT char*	cain_sip_uri_to_string(cain_sip_uri_t* uri) ;
 
-int cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff,unsigned int offset,unsigned int buff_size);
+cain_sip_error_code cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff, size_t buff_size, unsigned int *offset);
 
 #define CAIN_SIP_URI(obj) CAIN_SIP_CAST(obj,cain_sip_uri_t)
 

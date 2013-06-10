@@ -41,19 +41,19 @@ static void cain_sip_parameters_clone(cain_sip_parameters_t *params, const cain_
 	}
 }
 
-int cain_sip_parameters_marshal(const cain_sip_parameters_t* params, char* buff,unsigned int offset,unsigned int buff_size) {
+cain_sip_error_code cain_sip_parameters_marshal(const cain_sip_parameters_t* params, char* buff,unsigned int buff_size,unsigned int *offset) {
 	cain_sip_list_t* list=params->param_list;
-	unsigned int current_offset=offset;
+	cain_sip_error_code error=CAIN_SIP_OK;
 	for(;list!=NULL;list=list->next){
 		cain_sip_param_pair_t* container = (cain_sip_param_pair_t* )(list->data);
 		if (container->value) {
-			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,";%s=%s",container->name,container->value);
+			error=cain_sip_snprintf(buff,buff_size,offset,";%s=%s",container->name,container->value);
 		} else {
-			current_offset+=snprintf(buff+current_offset,buff_size-current_offset,";%s",container->name);
+			error=cain_sip_snprintf(buff,buff_size,offset,";%s",container->name);
 		}
-		if (current_offset>=buff_size) return buff_size-offset;
+		if (error!=CAIN_SIP_OK) return error;
 	}
-	return current_offset-offset;
+	return error;
 }
 CAIN_SIP_NEW_HEADER(parameters,header,"parameters")
 const cain_sip_list_t *	cain_sip_parameters_get_parameters(const cain_sip_parameters_t* obj) {

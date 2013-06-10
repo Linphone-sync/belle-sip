@@ -19,6 +19,7 @@
 #ifndef PARAMETERS_H_
 #define PARAMETERS_H_
 
+#include "cain-sip/utils.h"
 #include "cain-sip/list.h"
 /***
  *  parameters
@@ -51,7 +52,7 @@ CAINSIP_EXPORT const cain_sip_list_t *	cain_sip_parameters_get_parameters(const 
 
 CAINSIP_EXPORT void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* obj,const char* name);
 
-CAINSIP_EXPORT int cain_sip_parameters_marshal(const cain_sip_parameters_t* obj, char* buff,unsigned int offset,unsigned int buff_size);
+CAINSIP_EXPORT cain_sip_error_code cain_sip_parameters_marshal(const cain_sip_parameters_t* obj, char* buff, size_t buff_size, unsigned int *offset);
 
 #define CAIN_SIP_PARAMETERS(obj) CAIN_SIP_CAST(obj,cain_sip_parameters_t)
 
