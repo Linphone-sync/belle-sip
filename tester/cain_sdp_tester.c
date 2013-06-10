@@ -387,11 +387,7 @@ static void test_overflow(void){
 	const unsigned int orig_buffsize=1024;
 	unsigned int buffsize=orig_buffsize;
 	char *buffer=cain_sip_malloc0(buffsize);
-<<<<<<< HEAD
-	cain_sip_error_code err;
-=======
 	unsigned int offset=0;
->>>>>>> fix compilation issue
 	
 	sdp=cain_sdp_session_description_parse(big_sdp);
 	CU_ASSERT_PTR_NOT_NULL(sdp);
@@ -402,17 +398,10 @@ static void test_overflow(void){
 	for(i=0;i<16;i++){
 		cain_sdp_media_description_add_attribute(vmd,cain_sdp_attribute_create("candidate","2 1 UDP 1694498815 82.65.223.97 9078 typ srflx raddr 192.168.0.2 rport 9078"));
 	}
-<<<<<<< HEAD
-	err=cain_sip_object_marshal(CAIN_SIP_OBJECT(sdp),buffer,0,&buffsize);
-	CU_ASSERT_TRUE(err==CAIN_SIP_OK);
-	cain_sip_message("marshal size is %i",(int)buffsize);
-	CU_ASSERT_TRUE(orig_buffsize==buffsize);
-=======
 
 	CU_ASSERT_EQUAL(cain_sip_object_marshal(CAIN_SIP_OBJECT(sdp),buffer,buffsize,&offset),CAIN_SIP_BUFFER_OVERFLOW);
 	cain_sip_message("marshal size is %i",offset);
 	CU_ASSERT_TRUE(offset==buffsize);
->>>>>>> fix compilation issue
 	cain_sip_object_unref(sdp);
 	cain_sip_free(buffer);
 }
