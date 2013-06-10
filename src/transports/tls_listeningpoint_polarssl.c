@@ -88,6 +88,8 @@ int cain_sip_tls_listening_point_set_root_ca(cain_sip_tls_listening_point_t *lp,
 	if (path){
 		lp->root_ca=cain_sip_strdup(path);
 		cain_sip_message("Root ca path set to %s",lp->root_ca);
+	} else {
+		cain_sip_message("Root ca path disabled");
 	}
 	return 0;
 }

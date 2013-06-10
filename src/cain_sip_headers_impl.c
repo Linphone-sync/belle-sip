@@ -1493,3 +1493,31 @@ CAINSIP_EXPORT void cain_sip_header_date_set_time(cain_sip_header_date_t *obj, c
 
 GET_SET_STRING(cain_sip_header_date,date);
 
+/************************
+ * header_p_prefered_identity
+ ***********************/
+struct _cain_sip_header_p_preferred_identity {
+	cain_sip_header_address_t address;
+ };
+
+void cain_sip_header_p_preferred_identity_destroy(cain_sip_header_p_preferred_identity_t* p_preferred_identity) {
+}
+
+void cain_sip_header_p_preferred_identity_clone(cain_sip_header_p_preferred_identity_t *p_preferred_identity, const cain_sip_header_p_preferred_identity_t *orig){
+
+}
+int cain_sip_header_p_preferred_identity_marshal(cain_sip_header_p_preferred_identity_t* p_preferred_identity, char* buff,unsigned int offset,unsigned int buff_size) {
+	unsigned int current_offset=offset;
+	current_offset+=cain_sip_header_marshal(CAIN_SIP_HEADER(p_preferred_identity), buff,offset, buff_size);
+	current_offset+=cain_sip_header_address_marshal(&p_preferred_identity->address, buff,current_offset, buff_size);
+	return MIN(current_offset-offset,buff_size-offset);
+}
+CAIN_SIP_NEW_HEADER(header_p_preferred_identity,header_address,CAIN_SIP_P_PREFERRED_IDENTITY)
+CAIN_SIP_PARSE(header_p_preferred_identity)
+cain_sip_header_p_preferred_identity_t* cain_sip_header_p_preferred_identity_create (const cain_sip_header_address_t* p_preferred_identity) {
+	cain_sip_header_p_preferred_identity_t* header = cain_sip_header_p_preferred_identity_new();
+	_cain_sip_object_copy(CAIN_SIP_OBJECT(header),CAIN_SIP_OBJECT(p_preferred_identity));
+	cain_sip_header_set_name(CAIN_SIP_HEADER(header),CAIN_SIP_P_PREFERRED_IDENTITY); /*restaure header name*/
+	return header;
+}
+

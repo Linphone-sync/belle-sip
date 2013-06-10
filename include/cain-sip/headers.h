@@ -588,4 +588,19 @@ CAINSIP_EXPORT void cain_sip_header_date_set_date(cain_sip_header_date_t *obj, c
 #define CAIN_SIP_HEADER_DATE(obj)	CAIN_SIP_CAST(obj,cain_sip_header_date_t)
 #define CAIN_SIP_DATE "Date"
 
+/******************************
+* To header object inherent from header_address
+*
+******************************/
+typedef struct _cain_sip_header_p_preferred_identity cain_sip_header_p_preferred_identity_t;
+
+CAINSIP_EXPORT cain_sip_header_p_preferred_identity_t* cain_sip_header_p_preferred_identity_new();
+
+CAINSIP_EXPORT cain_sip_header_p_preferred_identity_t* cain_sip_header_p_preferred_identity_parse(const char* p_preferred_identity) ;
+
+CAINSIP_EXPORT cain_sip_header_p_preferred_identity_t* cain_sip_header_p_preferred_identity_create(const cain_sip_header_address_t *address);
+
+#define CAIN_SIP_HEADER_P_PREFERRED_IDENTITY(t) CAIN_SIP_CAST(t,cain_sip_header_p_preferred_identity_t)
+#define CAIN_SIP_P_PREFERRED_IDENTITY "P-Preferred-Identity"
+
 #endif /* HEADERS_H_ */

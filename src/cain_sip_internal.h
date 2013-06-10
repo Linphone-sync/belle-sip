@@ -186,6 +186,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_header_replaces_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_date_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_hop_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_object_pool_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_p_preferred_identity_t);
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 
@@ -729,6 +730,7 @@ cain_sip_hop_t* cain_sip_response_get_return_hop(cain_sip_response_t *msg);
 		strcasecmp(#token,(const char*)(INPUT->toStringTT(INPUT,LT(1),LT(strlen(#token)))->chars)) == 0:0)
 char* _cain_sip_str_dup_and_unquote_string(const char* quoted_string);
 
+#define IS_HEADER_NAMED(name,compressed_name)    IS_TOKEN(name) || (compressed_name && IS_TOKEN(compressed_name))
 /*********************************************************
  * SDP
  */
