@@ -346,7 +346,7 @@ char * _cain_sip_object_describe_type(cain_sip_object_vptr_t *vptr){
 	const int maxbufsize=2048;
 	char *ret=cain_sip_malloc(maxbufsize);
 	cain_sip_object_vptr_t *it;
-	int pos=0;
+	unsigned int pos=0;
 	cain_sip_list_t *l=NULL,*elem;
 	cain_sip_snprintf(ret,maxbufsize,&pos,"Ownership:\n");
 	cain_sip_snprintf(ret,maxbufsize,&pos,"\t%s is created initially %s\n",vptr->type_name,
