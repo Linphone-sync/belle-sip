@@ -1512,3 +1512,47 @@ cain_sip_header_p_preferred_identity_t* cain_sip_header_p_preferred_identity_cre
 	return header;
 }
 
+/******************************
+ * Privacy header inherits from header
+ *
+ ******************************/
+struct _cain_sip_header_privacy  {
+	cain_sip_header_t header;
+	cain_sip_list_t* privacy;
+};
+
+static void cain_sip_header_privacy_destroy(cain_sip_header_privacy_t* p) {
+	cain_sip_header_privacy_set_privacy(p,NULL);
+}
+
+static void cain_sip_header_privacy_clone(cain_sip_header_privacy_t* p, const cain_sip_header_privacy_t* orig){
+	cain_sip_list_t* list=orig->privacy;
+	for(;list!=NULL;list=list->next){
+		cain_sip_header_privacy_add_privacy(p,(const char *)list->data);
+	}
+}
+
+cain_sip_error_code cain_sip_header_privacy_marshal(cain_sip_header_privacy_t* p, char* buff, size_t buff_size, unsigned int *offset) {
+	cain_sip_error_code error=CAIN_SIP_OK;
+	cain_sip_list_t* list = p->privacy;
+	error=cain_sip_header_marshal(CAIN_SIP_HEADER(p), buff, buff_size, offset);
+	if (error!=CAIN_SIP_OK) return error;
+	for(;list!=NULL;list=list->next){
+		error=cain_sip_snprintf(buff,buff_size,offset,list==p->privacy ? "%s" : ";%s",(const char *)list->data);
+		if (error!=CAIN_SIP_OK) return error;
+	}
+	return error;
+}
+
+CAIN_SIP_NEW_HEADER(header_privacy,header,CAIN_SIP_PRIVACY)
+CAIN_SIP_PARSE(header_privacy)
+cain_sip_list_t* cain_sip_header_privacy_get_privacy(const cain_sip_header_privacy_t* p) {
+	return p->privacy;
+}
+SET_ADD_STRING_LIST(cain_sip_header_privacy,privacy)
+
+cain_sip_header_privacy_t* cain_sip_header_privacy_create(const char* privacy) {
+	cain_sip_header_privacy_t* privacy_header=cain_sip_header_privacy_new();
+	cain_sip_header_privacy_add_privacy(privacy_header,privacy);
+	return privacy_header;
+}

@@ -1180,7 +1180,17 @@ header_p_preferred_identity returns [cain_sip_header_p_preferred_identity_t* ret
   :  {IS_HEADER_NAMED(P-Preferred-Identity,NULL)}? token /*"P-Preferred-Identity"*/ 
  hcolon header_address_base[(cain_sip_header_address_t*)cain_sip_header_p_preferred_identity_new()] {$ret=(cain_sip_header_p_preferred_identity_t*)$header_address_base.ret;}; 
   
-
+header_privacy  returns [cain_sip_header_privacy_t* ret]   
+scope { cain_sip_header_privacy_t* current; }
+@init { $header_privacy::current = cain_sip_header_privacy_new();$ret = $header_privacy::current;}
+  :   {IS_TOKEN(Privacy)}? token /*'Privacy'*/ hcolon privacy_val (semi privacy_val)*;
+catch [ANTLR3_MISMATCHED_TOKEN_EXCEPTION]
+{
+   cain_sip_message("[\%s]  reason [\%s]",(const char*)EXCEPTION->name,(const char*)EXCEPTION->message);
+   cain_sip_object_unref($ret);
+   $ret=NULL;
+} 
+privacy_val: token {cain_sip_header_privacy_add_privacy($header_privacy::current,(const char*)$token.text->chars);};
 
 
 //********************************************************************************************//
@@ -1237,6 +1247,8 @@ header_extension[ANTLR3_BOOLEAN check_for_known_header]  returns [cain_sip_heade
                      $ret = CAIN_SIP_HEADER(cain_sip_header_date_parse((const char*)$header_extension.text->chars));
                     }else if (check_for_known_header && strcasecmp(CAIN_SIP_P_PREFERRED_IDENTITY,(const char*)$header_name.text->chars) == 0) {
                      $ret = CAIN_SIP_HEADER(cain_sip_header_p_preferred_identity_parse((const char*)$header_extension.text->chars));
+                    }else if (check_for_known_header && strcasecmp(CAIN_SIP_PRIVACY,(const char*)$header_name.text->chars) == 0) {
+                     $ret = CAIN_SIP_HEADER(cain_sip_header_privacy_parse((const char*)$header_extension.text->chars));
                     }else {
                       $ret =  CAIN_SIP_HEADER(cain_sip_header_extension_new());
                       cain_sip_header_extension_set_value((cain_sip_header_extension_t*)$ret,(const char*)$header_value.text->chars);

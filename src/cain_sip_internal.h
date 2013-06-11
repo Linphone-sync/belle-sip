@@ -187,6 +187,7 @@ CAIN_SIP_DECLARE_VPTR(cain_sip_header_date_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_hop_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_object_pool_t);
 CAIN_SIP_DECLARE_VPTR(cain_sip_header_p_preferred_identity_t);
+CAIN_SIP_DECLARE_VPTR(cain_sip_header_privacy_t);
 
 typedef void (*cain_sip_source_remove_callback_t)(cain_sip_source_t *);
 

@@ -590,7 +590,7 @@ CAINSIP_EXPORT void cain_sip_header_date_set_date(cain_sip_header_date_t *obj, c
 #define CAIN_SIP_DATE "Date"
 
 /******************************
-* To header object inherent from header_address
+* P-Preferred-Identity header object inherent from header_address
 *
 ******************************/
 typedef struct _cain_sip_header_p_preferred_identity cain_sip_header_p_preferred_identity_t;
@@ -603,5 +603,27 @@ CAINSIP_EXPORT cain_sip_header_p_preferred_identity_t* cain_sip_header_p_preferr
 
 #define CAIN_SIP_HEADER_P_PREFERRED_IDENTITY(t) CAIN_SIP_CAST(t,cain_sip_header_p_preferred_identity_t)
 #define CAIN_SIP_P_PREFERRED_IDENTITY "P-Preferred-Identity"
+
+/******************************
+* Privacy header object inherent from header
+*
+******************************/
+typedef struct _cain_sip_header_privacy cain_sip_header_privacy_t;
+
+CAINSIP_EXPORT cain_sip_header_privacy_t* cain_sip_header_privacy_new();
+
+CAINSIP_EXPORT cain_sip_header_privacy_t* cain_sip_header_privacy_parse(const char* privacy) ;
+
+CAINSIP_EXPORT cain_sip_header_privacy_t* cain_sip_header_privacy_create(const char* privacy);
+
+CAINSIP_EXPORT void cain_sip_header_privacy_add_privacy(cain_sip_header_privacy_t* privacy, const char* value);
+
+CAINSIP_EXPORT void cain_sip_header_privacy_set_privacy(cain_sip_header_privacy_t* privacy, cain_sip_list_t* privacy_values);
+
+CAINSIP_EXPORT cain_sip_list_t* cain_sip_header_privacy_get_privacy(const cain_sip_header_privacy_t* privacy);
+
+
+#define CAIN_SIP_HEADER_PRIVACY(t) CAIN_SIP_CAST(t,cain_sip_header_privacy_t)
+#define CAIN_SIP_PRIVACY "Privacy"
 
 #endif /* HEADERS_H_ */
