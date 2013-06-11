@@ -1532,7 +1532,7 @@ static void cain_sip_header_privacy_clone(cain_sip_header_privacy_t* p, const ca
 	}
 }
 
-cain_sip_error_code cain_sip_header_privacy_marshal(cain_sip_header_privacy_t* p, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sip_header_privacy_marshal(cain_sip_header_privacy_t* p, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_error_code error=CAIN_SIP_OK;
 	cain_sip_list_t* list = p->privacy;
 	error=cain_sip_header_marshal(CAIN_SIP_HEADER(p), buff, buff_size, offset);
