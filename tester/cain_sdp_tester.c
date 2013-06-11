@@ -400,7 +400,7 @@ static void test_overflow(void){
 	}
 
 	CU_ASSERT_EQUAL(cain_sip_object_marshal(CAIN_SIP_OBJECT(sdp),buffer,buffsize,&offset),CAIN_SIP_BUFFER_OVERFLOW);
-	cain_sip_message("marshal size is %i",offset);
+	cain_sip_message("marshal size is %i",(int)offset);
 	CU_ASSERT_TRUE(offset==buffsize);
 	cain_sip_object_unref(sdp);
 	cain_sip_free(buffer);

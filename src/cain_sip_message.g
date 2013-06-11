@@ -1178,7 +1178,7 @@ catch [ANTLR3_MISMATCHED_TOKEN_EXCEPTION]
 
 header_p_preferred_identity returns [cain_sip_header_p_preferred_identity_t* ret]   
   :  {IS_HEADER_NAMED(P-Preferred-Identity,NULL)}? token /*"P-Preferred-Identity"*/ 
- hcolon header_address_base[cain_sip_header_p_preferred_identity_new()] {$ret=$header_address_base.ret;}; 
+ hcolon header_address_base[(cain_sip_header_address_t*)cain_sip_header_p_preferred_identity_new()] {$ret=(cain_sip_header_p_preferred_identity_t*)$header_address_base.ret;}; 
   
 
 

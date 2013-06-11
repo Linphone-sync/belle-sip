@@ -473,7 +473,7 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 
 		if (ret<0){
 			cain_sip_error("channel [%p]: could not send [%i] bytes from [%s://%s:%i]  to [%s:%i]"	,obj
-				,len
+				,(int)len
 				,cain_sip_channel_get_transport_name(obj)
 				,obj->local_ip
 				,obj->local_port
@@ -495,7 +495,7 @@ static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 								,obj->peer_name
 								,obj->peer_port
 								,ret
-								,len
+								,(int)len
 								,buffer);
 		}
 	}

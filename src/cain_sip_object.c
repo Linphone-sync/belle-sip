@@ -279,14 +279,14 @@ static cain_sip_error_code checked_marshal(cain_sip_object_vptr_t *vptr, cain_si
 	written=i-initial_offset;
 	if (error==CAIN_SIP_BUFFER_OVERFLOW){
 		cain_sip_error("Object of type %s commited a buffer overflow by marshalling %i bytes",
-			vptr->type_name,*offset-initial_offset);
+			vptr->type_name,(int)(*offset-initial_offset));
 	} else if (error!=CAIN_SIP_OK){
 		cain_sip_error("Object of type %s produced an error during marshalling: %i",
 			vptr->type_name,error);
 	}
 	if (written!=(*offset-initial_offset) && written!=(buff_size-initial_offset-1)){ /*this is because snprintf won't allow you to write a non null character at the end of the buffer*/
 		cain_sip_fatal("Object of type %s marshalled %i bytes but said it marshalled %i bytes !",
-			vptr->type_name,written,*offset-initial_offset);
+			vptr->type_name,(int)written,(int)(*offset-initial_offset));
 	}
 	memcpy(buff+initial_offset,p+initial_offset,*offset-initial_offset);
 	cain_sip_free(p);
@@ -352,7 +352,7 @@ char * _cain_sip_object_describe_type(cain_sip_object_vptr_t *vptr){
 	const int maxbufsize=2048;
 	char *ret=cain_sip_malloc(maxbufsize);
 	cain_sip_object_vptr_t *it;
-	unsigned int pos=0;
+	size_t pos=0;
 	cain_sip_list_t *l=NULL,*elem;
 	cain_sip_snprintf(ret,maxbufsize,&pos,"Ownership:\n");
 	cain_sip_snprintf(ret,maxbufsize,&pos,"\t%s is created initially %s\n",vptr->type_name,

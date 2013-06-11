@@ -449,7 +449,7 @@ void cain_sip_header_user_agent_add_product(cain_sip_header_user_agent_t* user_a
 	user_agent->products = cain_sip_list_append(user_agent->products ,cain_sip_strdup(product));
 }
 int cain_sip_header_user_agent_get_products_as_string(const cain_sip_header_user_agent_t* user_agent,char* value,unsigned int value_size) {
-	unsigned int result = 0;
+	size_t result = 0;
 	cain_sip_list_t* list = user_agent->products;
 	for(;list!=NULL;list=list->next){
 		cain_sip_snprintf(value,value_size,&result,"%s ",(const char *)list->data);
