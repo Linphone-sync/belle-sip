@@ -76,7 +76,7 @@ typedef struct _cain_sip_header cain_sip_header_t;
 CAINSIP_EXPORT cain_sip_header_t* cain_sip_header_create (const char* name,const char* value);
 CAINSIP_EXPORT const char* cain_sip_header_get_name (const cain_sip_header_t* obj);
 CAINSIP_EXPORT void cain_sip_header_set_name (cain_sip_header_t* obj,const char* value);
-CAINSIP_EXPORT cain_sip_error_code cain_sip_header_marshal(cain_sip_header_t* header, char* buff, size_t buff_size, unsigned int *offset);
+CAINSIP_EXPORT cain_sip_error_code cain_sip_header_marshal(cain_sip_header_t* header, char* buff, size_t buff_size, size_t *offset);
 CAINSIP_EXPORT const char *cain_sip_header_get_unparsed_value(cain_sip_header_t* obj);
 
 #define CAIN_SIP_HEADER(t) CAIN_SIP_CAST(t,cain_sip_header_t)

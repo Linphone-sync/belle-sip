@@ -52,7 +52,7 @@ CAINSIP_EXPORT const cain_sip_list_t *	cain_sip_parameters_get_parameters(const 
 
 CAINSIP_EXPORT void	cain_sip_parameters_remove_parameter(cain_sip_parameters_t* obj,const char* name);
 
-CAINSIP_EXPORT cain_sip_error_code cain_sip_parameters_marshal(const cain_sip_parameters_t* obj, char* buff, size_t buff_size, unsigned int *offset);
+CAINSIP_EXPORT cain_sip_error_code cain_sip_parameters_marshal(const cain_sip_parameters_t* obj, char* buff, size_t buff_size, size_t *offset);
 
 #define CAIN_SIP_PARAMETERS(obj) CAIN_SIP_CAST(obj,cain_sip_parameters_t)
 

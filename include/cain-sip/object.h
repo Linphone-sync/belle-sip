@@ -114,7 +114,7 @@ typedef struct _cain_sip_object cain_sip_object_t;
 
 typedef void (*cain_sip_object_destroy_t)(cain_sip_object_t*);
 typedef void (*cain_sip_object_clone_t)(cain_sip_object_t* obj, const cain_sip_object_t *orig);
-typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff, size_t buff_size, unsigned int *offset);
+typedef int (*cain_sip_object_marshal_t)(cain_sip_object_t* obj, char* buff, size_t buff_size, size_t *offset);
 
 struct _cain_sip_object_vptr{
 	cain_sip_type_id_t id;
@@ -150,6 +150,13 @@ CAINSIP_EXPORT cain_sip_object_t * _cain_sip_object_new(size_t objsize, cain_sip
 
 #define cain_sip_object_new(_type) (_type*)_cain_sip_object_new(sizeof(_type),(cain_sip_object_vptr_t*)&CAIN_SIP_OBJECT_VPTR_NAME(_type))
 
+
+/**
+ * Activates checks on object marshalling.
+ * Useful for debug purposes.
+ * @param enable TRUE to enable, FALSE to disable.
+**/
+CAINSIP_EXPORT void cain_sip_object_enable_marshal_check(int enable);
 
 int cain_sip_object_is_unowed(const cain_sip_object_t *obj);
 
@@ -231,7 +238,7 @@ CAINSIP_EXPORT char* cain_sip_object_to_string(void* obj);
  * Writes a string representation of the object into the supplied buffer.
  * Same as cain_sip_object_to_string(), but without allocating space for the output string.
 **/
-CAINSIP_EXPORT cain_sip_error_code cain_sip_object_marshal(cain_sip_object_t* obj, char* buff, size_t buff_size, unsigned int *offset);
+CAINSIP_EXPORT cain_sip_error_code cain_sip_object_marshal(cain_sip_object_t* obj, char* buff, size_t buff_size, size_t *offset);
 
 CAINSIP_EXPORT int cain_sip_object_is_instance_of(cain_sip_object_t * obj,cain_sip_type_id_t id);
 

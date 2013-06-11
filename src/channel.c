@@ -76,7 +76,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_channel_t)=
 		CAIN_SIP_VPTR_INIT(cain_sip_channel_t,cain_sip_source_t,FALSE),
 		(cain_sip_object_destroy_t)cain_sip_channel_destroy,
 		NULL, /*clone*/
-		NULL, /*marshall*/
+		NULL, /*marshal*/
 	}
 };
 
@@ -458,7 +458,7 @@ void channel_set_state(cain_sip_channel_t *obj, cain_sip_channel_state_t state) 
 
 static void _send_message(cain_sip_channel_t *obj, cain_sip_message_t *msg){
 	char buffer[cain_sip_network_buffer_size];
-	unsigned int len=0;
+	size_t len=0;
 	int ret=0;
 	cain_sip_error_code error=CAIN_SIP_OK;
 	

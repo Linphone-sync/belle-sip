@@ -68,7 +68,7 @@ CAIN_SIP_INSTANCIATE_CUSTOM_VPTR(cain_sip_transaction_t)={
 		CAIN_SIP_VPTR_INIT(cain_sip_transaction_t,cain_sip_object_t,FALSE),
 		(cain_sip_object_destroy_t) transaction_destroy,
 		NULL,/*no clone*/
-		NULL,/*no marshall*/
+		NULL,/*no marshal*/
 	},
 	NULL /*on_terminate*/
 };

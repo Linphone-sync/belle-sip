@@ -106,7 +106,7 @@ char *cain_sip_strdup_printf(const char *fmt,...){
         return ret;
 }
 
-cain_sip_error_code cain_sip_snprintf(char *buff, unsigned int buff_size, unsigned int *offset, const char *fmt, ...) {
+cain_sip_error_code cain_sip_snprintf(char *buff, size_t buff_size, size_t *offset, const char *fmt, ...) {
 	int ret;
 	cain_sip_error_code error = CAIN_SIP_OK;
 	va_list args;

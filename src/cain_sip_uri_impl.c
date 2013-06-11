@@ -69,7 +69,7 @@ static void cain_sip_uri_clone(cain_sip_uri_t* uri, const cain_sip_uri_t *orig){
 	
 }
 
-cain_sip_error_code cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff, size_t buff_size, size_t *offset) {
 	const cain_sip_list_t* list=cain_sip_parameters_get_parameters(uri->header_list);
 	cain_sip_error_code error=CAIN_SIP_OK;
 

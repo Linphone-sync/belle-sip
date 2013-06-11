@@ -185,7 +185,7 @@ CAINSIP_EXPORT void cain_sip_uri_fix(cain_sip_uri_t *uri);
  */
 CAINSIP_EXPORT char*	cain_sip_uri_to_string(cain_sip_uri_t* uri) ;
 
-cain_sip_error_code cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff, size_t buff_size, unsigned int *offset);
+cain_sip_error_code cain_sip_uri_marshal(const cain_sip_uri_t* uri, char* buff, size_t buff_size, size_t *offset);
 
 #define CAIN_SIP_URI(obj) CAIN_SIP_CAST(obj,cain_sip_uri_t)
 

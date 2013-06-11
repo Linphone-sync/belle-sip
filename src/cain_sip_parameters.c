@@ -41,7 +41,7 @@ static void cain_sip_parameters_clone(cain_sip_parameters_t *params, const cain_
 	}
 }
 
-cain_sip_error_code cain_sip_parameters_marshal(const cain_sip_parameters_t* params, char* buff,size_t buff_size,unsigned int *offset) {
+cain_sip_error_code cain_sip_parameters_marshal(const cain_sip_parameters_t* params, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_list_t* list=params->param_list;
 	cain_sip_error_code error=CAIN_SIP_OK;
 	for(;list!=NULL;list=list->next){

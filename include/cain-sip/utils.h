@@ -145,7 +145,7 @@ CAINSIP_EXPORT void cain_sip_set_log_handler(cain_sip_log_function_t func);
 
 CAINSIP_EXPORT char * CAIN_SIP_CHECK_FORMAT_ARGS(1,2) cain_sip_strdup_printf(const char *fmt,...);
 
-CAINSIP_EXPORT cain_sip_error_code cain_sip_snprintf(char *buff, unsigned int buff_size, unsigned int *offset, const char *fmt, ...);
+CAINSIP_EXPORT cain_sip_error_code cain_sip_snprintf(char *buff, size_t buff_size, size_t *offset, const char *fmt, ...);
 
 CAINSIP_EXPORT void cain_sip_set_log_level(int level);
 

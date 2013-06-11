@@ -38,7 +38,7 @@ void cain_sdp_attribute_clone(cain_sdp_attribute_t *attribute, const cain_sdp_at
 	CLONE_STRING(cain_sdp_attribute,value,attribute,orig)
 }
 
-cain_sip_error_code cain_sdp_attribute_marshal(cain_sdp_attribute_t* attribute, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_attribute_marshal(cain_sdp_attribute_t* attribute, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_error_code error=cain_sip_snprintf(buff,buff_size,offset,"a=%s",attribute->name);
 	if (error!=CAIN_SIP_OK) return error;
 	if (attribute->value) {
@@ -79,7 +79,7 @@ void cain_sdp_bandwidth_clone(cain_sdp_bandwidth_t *bandwidth, const cain_sdp_ba
 	bandwidth->value=orig->value;
 }
 
-cain_sip_error_code cain_sdp_bandwidth_marshal(cain_sdp_bandwidth_t* bandwidth, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_bandwidth_marshal(cain_sdp_bandwidth_t* bandwidth, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(buff,buff_size,offset,"b=%s:%i",bandwidth->type,bandwidth->value);
 }
 
@@ -111,7 +111,7 @@ void cain_sdp_connection_clone(cain_sdp_connection_t *connection, const cain_sdp
 
 }
 
-cain_sip_error_code cain_sdp_connection_marshal(cain_sdp_connection_t* connection, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_connection_marshal(cain_sdp_connection_t* connection, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(buff,buff_size,offset,"c=%s %s %s",connection->network_type,connection->address_type,connection->address);
 }
 
@@ -143,7 +143,7 @@ void cain_sdp_email_clone(cain_sdp_email_t *email, const cain_sdp_email_t *orig)
 	CLONE_STRING(cain_sdp_email,value,email,orig)
 }
 
-cain_sip_error_code cain_sdp_email_marshal(cain_sdp_email_t* email, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_email_marshal(cain_sdp_email_t* email, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(buff,buff_size,offset,"e=%s",email->value);
 }
 
@@ -166,7 +166,7 @@ void cain_sdp_info_clone(cain_sdp_info_t *info, const cain_sdp_info_t *orig){
 	CLONE_STRING(cain_sdp_info,value,info,orig)
 }
 
-cain_sip_error_code cain_sdp_info_marshal(cain_sdp_info_t* info, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_info_marshal(cain_sdp_info_t* info, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(buff,buff_size,offset,"i=%s",info->value);
 }
 
@@ -208,7 +208,7 @@ void cain_sdp_media_clone(cain_sdp_media_t *media, const cain_sdp_media_t *orig)
 	CLONE_STRING(cain_sdp_media,protocol,media,orig)
 }
 
-cain_sip_error_code cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_media_marshal(cain_sdp_media_t* media, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_list_t* list=media->media_formats;
 	cain_sip_error_code error=cain_sip_snprintf(buff,buff_size,offset,"m=%s %i",media->media_type,media->media_port);
 	if (error!=CAIN_SIP_OK) return error; 
@@ -279,7 +279,7 @@ static void cain_sdp_base_description_clone(cain_sdp_base_description_t *base_de
 
 }
 
-cain_sip_error_code cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_description, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_base_description_marshal(cain_sdp_base_description_t* base_description, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_error_code error=CAIN_SIP_OK;
 	cain_sip_list_t* bandwidths;
 //	cain_sip_list_t* attributes;
@@ -302,8 +302,8 @@ cain_sip_error_code cain_sdp_base_description_marshal(cain_sdp_base_description_
 		if (error!=CAIN_SIP_OK) return error;
 	}
 //	for(attributes=base_description->attributes;attributes!=NULL;attributes=attributes->next){
-//		current_offset+=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,current_offset,buff_size);
-//		current_offset+=snprintf(buff+current_offset, buff_size-current_offset, "\r\n");
+//		error=cain_sip_object_marshal(CAIN_SIP_OBJECT(attributes->data),buff,buff_size,offset);
+//		error=cain_sip_snprintf(buff, buff_size, offset, "\r\n");
 //	}
 	return error;
 }
@@ -424,7 +424,7 @@ void cain_sdp_media_description_clone(cain_sdp_media_description_t *media_descri
 	if (orig->media) media_description->media = CAIN_SDP_MEDIA(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT((orig->media))));
 }
 
-cain_sip_error_code cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_description, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_media_description_marshal(cain_sdp_media_description_t* media_description, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_list_t* attributes;
 	cain_sip_error_code error=cain_sip_object_marshal(CAIN_SIP_OBJECT(media_description->media),buff,buff_size,offset);
 	if (error!=CAIN_SIP_OK) return error;
@@ -819,7 +819,7 @@ void cain_sdp_origin_clone(cain_sdp_origin_t *origin, const cain_sdp_origin_t *o
 	origin->session_version = orig->session_version;
 }
 
-cain_sip_error_code cain_sdp_origin_marshal(cain_sdp_origin_t* origin, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_origin_marshal(cain_sdp_origin_t* origin, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(	buff
 								,buff_size
 								,offset
@@ -871,7 +871,7 @@ void cain_sdp_session_name_clone(cain_sdp_session_name_t *session_name, const ca
 	CLONE_STRING(cain_sdp_session_name,value,session_name,orig);
 }
 
-cain_sip_error_code cain_sdp_session_name_marshal(cain_sdp_session_name_t* session_name, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_session_name_marshal(cain_sdp_session_name_t* session_name, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(buff,buff_size,offset,"s=%s",session_name->value);
 }
 
@@ -925,7 +925,7 @@ void cain_sdp_session_description_clone(cain_sdp_session_description_t *session_
 	session_description->media_descriptions = cain_sip_list_copy_with_data(orig->media_descriptions,cain_sip_object_copyfunc);
 }
 
-cain_sip_error_code cain_sdp_session_description_marshal(cain_sdp_session_description_t* session_description, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_session_description_marshal(cain_sdp_session_description_t* session_description, char* buff, size_t buff_size, size_t *offset) {
 /*session_description:   proto_version CR LF
                          origin_field
                          session_name_field
@@ -1130,7 +1130,7 @@ void cain_sdp_time_clone(cain_sdp_time_t *time, const cain_sdp_time_t *orig){
 	time->stop=orig->stop;
 }
 
-cain_sip_error_code cain_sdp_time_marshal(cain_sdp_time_t* time, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_time_marshal(cain_sdp_time_t* time, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(buff,buff_size,offset,"%i %i",time->start,time->stop);
 }
 
@@ -1156,7 +1156,7 @@ void cain_sdp_time_description_clone(cain_sdp_time_description_t *time_descripti
 	if (orig->time) time_description->time = CAIN_SDP_TIME(cain_sip_object_clone_and_ref(CAIN_SIP_OBJECT(orig->time)));
 }
 
-cain_sip_error_code cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_description, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_time_description_marshal(cain_sdp_time_description_t* time_description, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_object_marshal(CAIN_SIP_OBJECT(time_description->time),buff,buff_size,offset);
 }
 
@@ -1200,7 +1200,7 @@ void cain_sdp_version_clone(cain_sdp_version_t *version, const cain_sdp_version_
 	version->version = orig->version;
 }
 
-cain_sip_error_code cain_sdp_version_marshal(cain_sdp_version_t* version, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sdp_version_marshal(cain_sdp_version_t* version, char* buff, size_t buff_size, size_t *offset) {
 	return cain_sip_snprintf(buff,buff_size,offset,"v=%i",version->version);
 }
 

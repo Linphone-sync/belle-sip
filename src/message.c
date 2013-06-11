@@ -197,7 +197,7 @@ void cain_sip_message_remove_header(cain_sip_message_t *msg, const char *header_
 
 
 /*
-cain_sip_error_code cain_sip_message_named_headers_marshal(cain_sip_message_t *message, const char* header_name, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sip_message_named_headers_marshal(cain_sip_message_t *message, const char* header_name, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_error_code error=CAIN_SIP_OK;
 	cain_sip_list_t* header_list = cain_sip_message_get_headers(message,header_name);
 	if (!header_list) {
@@ -246,7 +246,7 @@ cain_sip_list_t* cain_sip_message_get_all_headers(const cain_sip_message_t *mess
 	return headers;
 }
 
-cain_sip_error_code cain_sip_headers_marshal(cain_sip_message_t *message, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sip_headers_marshal(cain_sip_message_t *message, char* buff, size_t buff_size, size_t *offset) {
 	/*FIXME, replace this code by cain_sip_message_for_each_header*/
 	cain_sip_list_t* headers_list;
 	cain_sip_list_t* header_list;
@@ -286,7 +286,7 @@ static void cain_sip_request_clone(cain_sip_request_t *request, const cain_sip_r
 	if (orig->uri) request->uri=(cain_sip_uri_t*)cain_sip_object_ref(cain_sip_object_clone((cain_sip_object_t*)orig->uri));
 }
 
-cain_sip_error_code cain_sip_request_marshal(cain_sip_request_t* request, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sip_request_marshal(cain_sip_request_t* request, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_error_code error=cain_sip_snprintf(buff,buff_size,offset,"%s ",cain_sip_request_get_method(request));
 	if (error!=CAIN_SIP_OK) return error;
 	error=cain_sip_uri_marshal(cain_sip_request_get_uri(request),buff,buff_size,offset);
@@ -467,7 +467,7 @@ static void cain_sip_response_clone(cain_sip_response_t *resp, const cain_sip_re
 	if (orig->reason_phrase) resp->reason_phrase=cain_sip_strdup(orig->reason_phrase);
 }
 
-cain_sip_error_code cain_sip_response_marshal(cain_sip_response_t *resp, char* buff, size_t buff_size, unsigned int *offset) {
+cain_sip_error_code cain_sip_response_marshal(cain_sip_response_t *resp, char* buff, size_t buff_size, size_t *offset) {
 	cain_sip_error_code error=cain_sip_snprintf(	buff
 													,buff_size
 													,offset
