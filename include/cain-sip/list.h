@@ -25,32 +25,32 @@ struct _cain_sip_list {
 };
 typedef struct _cain_sip_list cain_sip_list_t;
 
-cain_sip_list_t * cain_sip_list_append(cain_sip_list_t * elem, void * data);
-cain_sip_list_t * cain_sip_list_prepend(cain_sip_list_t * elem, void * data);
-cain_sip_list_t * cain_sip_list_last_elem(const cain_sip_list_t *l);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_append(cain_sip_list_t * elem, void * data);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_prepend(cain_sip_list_t * elem, void * data);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_last_elem(const cain_sip_list_t *l);
 CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_free(cain_sip_list_t * elem);
-cain_sip_list_t * cain_sip_list_concat(cain_sip_list_t * first, cain_sip_list_t * second);
-cain_sip_list_t * cain_sip_list_remove(cain_sip_list_t * first, void *data);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_concat(cain_sip_list_t * first, cain_sip_list_t * second);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_remove(cain_sip_list_t * first, void *data);
 CAINSIP_EXPORT int cain_sip_list_size(const cain_sip_list_t * first);
-void cain_sip_list_for_each(const cain_sip_list_t * list, void (*func)(void *));
+CAINSIP_EXPORT void cain_sip_list_for_each(const cain_sip_list_t * list, void (*func)(void *));
 CAINSIP_EXPORT void cain_sip_list_for_each2(const cain_sip_list_t * list, void (*func)(void *, void *), void *user_data);
-cain_sip_list_t * cain_sip_list_remove_link(cain_sip_list_t * list, cain_sip_list_t * elem);
-cain_sip_list_t * cain_sip_list_delete_link(cain_sip_list_t * list, cain_sip_list_t * elem);
-cain_sip_list_t * cain_sip_list_find(cain_sip_list_t * list, void *data);
-cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_remove_link(cain_sip_list_t * list, cain_sip_list_t * elem);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_delete_link(cain_sip_list_t * list, cain_sip_list_t * elem);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_find(cain_sip_list_t * list, void *data);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_free(cain_sip_list_t *list);
 /*frees list elements and associated data, using the supplied function pointer*/
 CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_free_with_data(cain_sip_list_t *list, void (*freefunc)(void*));
 
 typedef  int (*cain_sip_compare_func)(const void *, const void*);
-cain_sip_list_t * cain_sip_list_find_custom(cain_sip_list_t * list, cain_sip_compare_func cmp, const void *user_data);
-void * cain_sip_list_nth_data(const cain_sip_list_t * list, int index);
-int cain_sip_list_position(const cain_sip_list_t * list, cain_sip_list_t * elem);
-int cain_sip_list_index(const cain_sip_list_t * list, void *data);
-cain_sip_list_t * cain_sip_list_insert_sorted(cain_sip_list_t * list, void *data, cain_sip_compare_func cmp);
-cain_sip_list_t * cain_sip_list_insert(cain_sip_list_t * list, cain_sip_list_t * before, void *data);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_find_custom(cain_sip_list_t * list, cain_sip_compare_func cmp, const void *user_data);
+CAINSIP_EXPORT void * cain_sip_list_nth_data(const cain_sip_list_t * list, int index);
+CAINSIP_EXPORT int cain_sip_list_position(const cain_sip_list_t * list, cain_sip_list_t * elem);
+CAINSIP_EXPORT int cain_sip_list_index(const cain_sip_list_t * list, void *data);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_insert_sorted(cain_sip_list_t * list, void *data, cain_sip_compare_func cmp);
+CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_insert(cain_sip_list_t * list, cain_sip_list_t * before, void *data);
 CAINSIP_EXPORT cain_sip_list_t * cain_sip_list_copy(const cain_sip_list_t * list);
 /*copy list elements and associated data, using the supplied function pointer*/
-cain_sip_list_t* cain_sip_list_copy_with_data(const cain_sip_list_t* list, void* (*copyfunc)(void*));
+CAINSIP_EXPORT cain_sip_list_t* cain_sip_list_copy_with_data(const cain_sip_list_t* list, void* (*copyfunc)(void*));
 
 
 #endif /* CAIN_SIP_LIST_H_ */
