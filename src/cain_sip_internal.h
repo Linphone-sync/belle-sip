@@ -710,6 +710,7 @@ struct cain_sip_dialog{
 	int terminate_on_bye:1;
 	int needs_ack:1;
 	cain_sip_transaction_t* last_transaction;
+	cain_sip_header_privacy_t* privacy;
 };
 
 cain_sip_dialog_t *cain_sip_dialog_new(cain_sip_transaction_t *t);

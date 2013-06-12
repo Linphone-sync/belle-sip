@@ -43,6 +43,10 @@ static void cain_sip_dialog_uninit(cain_sip_dialog_t *obj){
 		cain_sip_object_unref(obj->last_out_ack);
 	if (obj->last_transaction)
 		cain_sip_object_unref(obj->last_transaction);
+	if(obj->privacy)
+		cain_sip_object_unref(obj->privacy);
+/*	if(obj->preferred_identity)
+			cain_sip_object_unref(obj->preferred_identity);*/
 }
 
 CAIN_SIP_DECLARE_NO_IMPLEMENTED_INTERFACES(cain_sip_dialog_t);
@@ -227,6 +231,8 @@ int cain_sip_dialog_establish(cain_sip_dialog_t *obj, cain_sip_request_t *req, c
 		if (obj->state==CAIN_SIP_DIALOG_NULL){
 			set_to_tag(obj,to);
 			obj->call_id=(cain_sip_header_call_id_t*)cain_sip_object_ref(call_id);
+			obj->privacy=cain_sip_message_get_header_by_type(req,cain_sip_header_privacy_t);
+			if(obj->privacy) cain_sip_object_ref(obj->privacy);
 			set_state(obj,CAIN_SIP_DIALOG_EARLY);
 		}
 		return -1;
@@ -504,6 +510,9 @@ cain_sip_request_t *cain_sip_dialog_create_request(cain_sip_dialog_t *obj, const
 	                                                0);
 	if (obj->route_set) {
 		cain_sip_message_add_headers((cain_sip_message_t*)req,obj->route_set);
+	}
+	if (obj->privacy) {
+		cain_sip_message_add_header((cain_sip_message_t*)req,CAIN_SIP_HEADER(obj->privacy));
 	}
 	return req;
 }
