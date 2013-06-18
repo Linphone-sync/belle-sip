@@ -101,13 +101,15 @@ int cain_sip_transaction_state_is_transient(const cain_sip_transaction_state_t s
 	}
 }
 void cain_sip_transaction_terminate(cain_sip_transaction_t *t){
-	cain_sip_transaction_set_state(t,CAIN_SIP_TRANSACTION_TERMINATED);
-	cain_sip_message("%s%s %s transaction [%p] terminated"	,CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_client_transaction_t)?"Client":"Server"
-															,t->is_internal?" internal":""
-															,cain_sip_request_get_method(cain_sip_transaction_get_request(t))
-															,t);
-	CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_terminate(t);
-	cain_sip_provider_set_transaction_terminated(t->provider,t);
+	if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_TERMINATED) {
+		cain_sip_transaction_set_state(t,CAIN_SIP_TRANSACTION_TERMINATED);
+		cain_sip_message("%s%s %s transaction [%p] terminated"	,CAIN_SIP_OBJECT_IS_INSTANCE_OF(t,cain_sip_client_transaction_t)?"Client":"Server"
+									,t->is_internal?" internal":""
+									,cain_sip_request_get_method(cain_sip_transaction_get_request(t))
+									,t);
+		CAIN_SIP_OBJECT_VPTR(t,cain_sip_transaction_t)->on_terminate(t);
+		cain_sip_provider_set_transaction_terminated(t->provider,t);
+	}
 }
 
 cain_sip_request_t *cain_sip_transaction_get_request(const cain_sip_transaction_t *t){
@@ -134,7 +136,10 @@ void cain_sip_transaction_notify_timeout(cain_sip_transaction_t *t){
 	
 	if (strcmp(cain_sip_request_get_method(t->request),"REGISTER")==0 && cain_sip_channel_notify_timeout(t->channel)==TRUE){
 		t->timed_out=TRUE;
-	}else notify_timeout(t);
+	}else {
+		notify_timeout(t);
+		cain_sip_transaction_terminate(t);
+	}
 }
 
 cain_sip_dialog_t*  cain_sip_transaction_get_dialog(const cain_sip_transaction_t *t) {
@@ -432,8 +437,8 @@ static void on_channel_state_changed(cain_sip_channel_listener_t *l, cain_sip_ch
 			}
 			if (t->base.timed_out)
 				notify_timeout((cain_sip_transaction_t*)t);
-			if (cain_sip_transaction_get_state(CAIN_SIP_TRANSACTION(t))!=CAIN_SIP_TRANSACTION_TERMINATED) /*avoid double notification*/
-				cain_sip_transaction_terminate(CAIN_SIP_TRANSACTION(t));
+			
+			cain_sip_transaction_terminate(CAIN_SIP_TRANSACTION(t));
 		break;
 		default:
 			/*ignored*/
