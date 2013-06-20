@@ -56,7 +56,7 @@ static cain_sip_list_t * for_each_weak_unref_free(cain_sip_list_t *l, cain_sip_o
 
 static void cain_sip_channel_destroy(cain_sip_channel_t *obj){
 	if (obj->peer_list) freeaddrinfo(obj->peer_list);
-	cain_sip_free(obj->peer_cname);
+	if (obj->peer_cname) cain_sip_free(obj->peer_cname);
 	cain_sip_free(obj->peer_name);
 	if (obj->local_ip) cain_sip_free(obj->local_ip);
 	obj->listeners=for_each_weak_unref_free(obj->listeners,(cain_sip_object_destroy_notify_t)cain_sip_channel_remove_listener,obj);
@@ -285,7 +285,7 @@ static void update_inactivity_timer(cain_sip_channel_t *obj, int from_recv){
 }
 
 void cain_sip_channel_init(cain_sip_channel_t *obj, cain_sip_stack_t *stack,const char *bindip,int localport,const char *peer_cname, const char *peername, int peer_port){
-	obj->peer_cname=peer_cname ? cain_sip_strdup(peer_cname) : cain_sip_strdup(peername);
+	obj->peer_cname=peer_cname ? cain_sip_strdup(peer_cname) : NULL;
 	obj->peer_name=cain_sip_strdup(peername);
 	obj->peer_port=peer_port;
 	obj->stack=stack;

@@ -290,7 +290,7 @@ cain_sip_channel_t * cain_sip_channel_new_tls(cain_sip_tls_listening_point_t *lp
 	ssl_set_authmode(&obj->sslctx,SSL_VERIFY_REQUIRED);
 	ssl_set_bio(&obj->sslctx,polarssl_read,obj,polarssl_write,obj);
 	if (lp->root_ca && cain_sip_tls_channel_load_root_ca(obj,lp->root_ca)==0){
-		ssl_set_ca_chain(&obj->sslctx,&obj->root_ca,NULL,super->base.peer_cname);
+		ssl_set_ca_chain(&obj->sslctx,&obj->root_ca,NULL,super->base.peer_cname ? super->base.peer_cname : super->base.peer_name );
 	}
 	ssl_set_rng(&obj->sslctx,random_generator,NULL);
 	ssl_set_verify(&obj->sslctx,cain_sip_ssl_verify,lp);
