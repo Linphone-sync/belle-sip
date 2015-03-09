@@ -108,10 +108,10 @@ endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
-
+set(LIB_SUFFIX "" CACHE STRING "Define suffix of libdir" )
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix ${prefix}/bin)
-set(libdir ${prefix}/lib)
+set(libdir ${prefix}/lib${LIB_SUFFIX})
 set(includedir ${prefix}/include)
 get_filename_component(antlr3c_library_path "${ANTLR3C_LIBRARIES}" PATH)
 set(LIBS_PRIVATE "-L${antlr3c_library_path} -lantlr3c")
@@ -195,7 +195,7 @@ configure_file(cmake/BelleSIPConfig.cmake.in
 	@ONLY
 )
 
-set(ConfigPackageLocation lib/cmake/BelleSIP)
+set(ConfigPackageLocation ${libdir}/cmake/BelleSIP)
 install(EXPORT BelleSIPTargets
 	FILE BelleSIPTargets.cmake
 	NAMESPACE BelledonneCommunications::
